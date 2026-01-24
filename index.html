@@ -1,27 +1,267 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Indikation</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Indikation – nach der Moral des Gleichgewichts</title>
+  <style>
+    :root{
+      --bg:#0b0c0f; --fg:#f2f2f2; --muted:#b7b7b7; --line:#2a2d35;
+      --ok:#3bd37a; --mid:#f2c94c; --bad:#ff5c5c; --unk:#6b7280;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; padding:28px 18px;
+      background:var(--bg); color:var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height:1.5;
+    }
+    .wrap{max-width:980px;margin:0 auto}
+    h1{font-size:28px; margin:0 0 4px}
+    .subtitle{color:var(--muted); margin:0 0 18px}
+    .note{
+      border:1px solid var(--line); border-radius:12px;
+      padding:12px 14px; color:var(--muted); margin:16px 0 22px;
+    }
+    .section{
+      border-top:1px solid var(--line);
+      padding-top:18px; margin-top:18px;
+    }
+    h2{font-size:18px;margin:0 0 10px}
+    .q{
+      padding:12px 12px; border:1px solid var(--line);
+      border-radius:12px; margin:10px 0;
+      background:rgba(255,255,255,0.02);
+    }
+    .q p{margin:0 0 10px}
+    .choices{display:flex; gap:10px; flex-wrap:wrap}
+    label{
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid var(--line);
+      border-radius:999px; padding:8px 10px;
+      color:var(--fg); cursor:pointer;
+      user-select:none;
+    }
+    input[type="radio"]{accent-color:var(--fg)}
+    .controls{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin:22px 0 8px;
+    }
+    button{
+      background:#161820; color:var(--fg);
+      border:1px solid var(--line);
+      border-radius:12px; padding:10px 12px;
+      cursor:pointer; font-weight:600;
+    }
+    button:hover{filter:brightness(1.08)}
+    .result{
+      margin-top:16px; border:1px solid var(--line);
+      border-radius:14px; padding:14px;
+      background:rgba(255,255,255,0.02);
+      display:none;
+    }
+    .heatbar{
+      display:grid; grid-template-columns:repeat(8, 1fr);
+      gap:8px; margin:12px 0 8px;
+    }
+    .cell{
+      border:1px solid var(--line);
+      border-radius:10px; padding:10px 8px;
+      text-align:center; font-size:12px;
+      background:#11131a;
+    }
+    .legend{color:var(--muted); font-size:12px; margin:6px 0 0}
+    .details{margin-top:10px}
+    .row{
+      display:flex; justify-content:space-between; gap:12px;
+      border-top:1px dashed var(--line);
+      padding-top:10px; margin-top:10px;
+      color:var(--muted);
+    }
+    .row strong{color:var(--fg)}
+    .footer{
+      margin-top:24px; color:var(--muted); font-size:12px;
+      border-top:1px solid var(--line); padding-top:16px;
+    }
+    .small{font-size:12px;color:var(--muted)}
+  </style>
 </head>
 <body>
-  <h1>Indikation</h1>
-  <p>Orientierung nach der Moral des Gleichgewichts.</p>
-</body>
-  <body>
-  <h1>Indikation</h1>
-  <p>Orientierung nach der Moral des Gleichgewichts.</p>
+  <div class="wrap">
+    <h1>Indikation</h1>
+    <p class="subtitle">nach der Moral des Gleichgewichts</p>
 
-  <h2>Wahrheit</h2>
-  <p>Welche Wahrheit vermeide ich gerade?</p>
-  <p>Was würde sich ändern, wenn ich sie ernst nehme?</p>
+    <div class="note">
+      Diese Seite ist <strong>kein Test</strong> und gibt dir <strong>keine Diagnose</strong>.<br/>
+      Sie hilft dir, Spannungen zu lokalisieren – damit du wieder orientiert handeln kannst.
+      <div class="small" style="margin-top:8px;">
+        Antworten: <strong>Klar</strong> = trifft zu · <strong>Unklar</strong> = gemischt/weiß nicht · <strong>Ohne</strong> = trifft nicht zu
+      </div>
+    </div>
 
-  <h2>Harmonie</h2>
-  <p>Wo halte ich Frieden auf Kosten von Klarheit?</p>
-  <p>Welche Spannung müsste ich aushalten, um ehrlich zu sein?</p>
+    <div id="form"></div>
 
-  <h2>Mittel</h2>
-  <p>Habe ich Mittel, die ich nicht nutze?</p>
-  <p>Oder nutze ich Mittel, um Verantwortung zu vermeiden?</p>
+    <div class="controls">
+      <button id="showBtn">Ergebnis zeigen</button>
+      <button id="resetBtn">Zurücksetzen</button>
+    </div>
+
+    <div class="result" id="result">
+      <strong>Momentaufnahme</strong>
+      <div class="legend">Grün = entlastet · Gelb = gespannt · Rot = kritisch · Grau = zu wenig Antworten</div>
+      <div class="heatbar" id="heatbar"></div>
+      <div class="details" id="details"></div>
+      <div class="footer">
+        Schließe diese Seite, bevor sie zur Gewohnheit wird. Beobachte dich im Alltag – nicht die Grafik.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Werte: Klar=2 (Spannung deutlich), Unklar=1, Ohne=0
+    // Hinweis: Wir formulieren bewusst als "Spannungs-Aussagen".
+    const MODEL = [
+      { key:"wahrheit", name:"Wahrheit", items:[
+        "Ich vermeide gerade eine wichtige Wahrheit.",
+        "Ich weiß etwas, handle aber nicht danach.",
+        "Ich sage nicht aus, was eigentlich gesagt werden müsste."
+      ]},
+      { key:"harmonie", name:"Harmonie", items:[
+        "Ich halte Frieden auf Kosten von Klarheit.",
+        "Ich vermeide Spannung, obwohl sie nötig wäre.",
+        "Ich passe meinen Ton so an, dass Wahrheit weich wird."
+      ]},
+      { key:"mittel", name:"Mittel", items:[
+        "Mir fehlen aktuell Mittel, um Verantwortung zu tragen.",
+        "Ich habe Mittel, nutze sie aber nicht.",
+        "Ich setze Mittel so ein, dass es eher entlastet als löst."
+      ]},
+      { key:"effizienz", name:"Effizienz", items:[
+        "Mein Aufwand steht gerade nicht im Verhältnis zum Ergebnis.",
+        "Ich wiederhole Handlungen, die nichts verändern.",
+        "Ich verliere Energie, ohne dass Wirkung entsteht."
+      ]},
+      { key:"freiheit", name:"Freiheit", items:[
+        "Ich hätte Handlungsspielraum, nutze ihn aber nicht.",
+        "Ich verschiebe eine Entscheidung, die ich treffen könnte.",
+        "Ich halte mich zurück, obwohl ich handeln sollte."
+      ]},
+      { key:"handlungsspielraum", name:"Handlungsspielraum", items:[
+        "Ich tue so, als hätte ich weniger Optionen als ich habe.",
+        "Ich sehe Optionen, entscheide mich aber nicht.",
+        "Ich habe Angst vor den Konsequenzen meiner Optionen."
+      ]},
+      { key:"gerechtigkeit", name:"Gerechtigkeit", items:[
+        "Ich trage Lasten, die nicht meine sind.",
+        "Ich profitiere von Zuständen, die andere belasten.",
+        "Es gibt eine Schieflage, die ich still akzeptiere."
+      ]},
+      { key:"balance", name:"Balance", items:[
+        "Eine Variable dominiert mein Verhalten (z.B. Mittel, Freiheit oder Wahrheit).",
+        "Ich vernachlässige mindestens eine Variable systematisch.",
+        "Ich spüre eine Spannung, aber korrigiere zu spät oder gar nicht."
+      ]}
+    ];
+
+    const form = document.getElementById("form");
+
+    function makeId(sectionKey, idx){
+      return `${sectionKey}_${idx}`;
+    }
+
+    function render(){
+      form.innerHTML = "";
+      MODEL.forEach(sec=>{
+        const section = document.createElement("div");
+        section.className = "section";
+        section.innerHTML = `<h2>${sec.name}</h2>`;
+        sec.items.forEach((text, i)=>{
+          const q = document.createElement("div");
+          q.className = "q";
+          const id = makeId(sec.key, i);
+          q.innerHTML = `
+            <p>${text}</p>
+            <div class="choices">
+              <label><input type="radio" name="${id}" value="2"> Klar</label>
+              <label><input type="radio" name="${id}" value="1"> Unklar</label>
+              <label><input type="radio" name="${id}" value="0"> Ohne</label>
+            </div>
+          `;
+          section.appendChild(q);
+        });
+        form.appendChild(section);
+      });
+    }
+
+    function getAnswers(){
+      const answers = {};
+      MODEL.forEach(sec=>{
+        answers[sec.key] = [];
+        sec.items.forEach((_, i)=>{
+          const name = makeId(sec.key, i);
+          const checked = document.querySelector(`input[name="${name}"]:checked`);
+          answers[sec.key].push(checked ? Number(checked.value) : null);
+        });
+      });
+      return answers;
+    }
+
+    function scoreSection(vals){
+      const picked = vals.filter(v=>v!==null);
+      if(picked.length === 0) return { avg:null, n:0 };
+      const sum = picked.reduce((a,b)=>a+b,0);
+      return { avg: sum / picked.length, n: picked.length };
+    }
+
+    function colorFor(avg, n){
+      if(n < 2) return { bg:"var(--unk)", label:"zu wenig" };
+      if(avg <= 0.66) return { bg:"var(--ok)", label:"entlastet" };
+      if(avg <= 1.33) return { bg:"var(--mid)", label:"gespannt" };
+      return { bg:"var(--bad)", label:"kritisch" };
+    }
+
+    function showResult(){
+      const ans = getAnswers();
+      const heatbar = document.getElementById("heatbar");
+      const details = document.getElementById("details");
+      heatbar.innerHTML = "";
+      details.innerHTML = "";
+
+      MODEL.forEach(sec=>{
+        const {avg, n} = scoreSection(ans[sec.key]);
+        const c = avg===null ? {bg:"var(--unk)", label:"zu wenig"} : colorFor(avg, n);
+
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.style.background = c.bg;
+        cell.style.color = "#0b0c0f";
+        cell.innerHTML = `<strong>${sec.name}</strong><div style="font-size:11px;margin-top:4px;">${c.label}</div>`;
+        heatbar.appendChild(cell);
+
+        const row = document.createElement("div");
+        row.className = "row";
+        const avgText = avg===null ? "—" : avg.toFixed(2);
+        row.innerHTML = `
+          <div><strong>${sec.name}</strong><div class="small">Antworten: ${n}/3 · Spannung: ${avgText}</div></div>
+          <div class="small">${c.label}</div>
+        `;
+        details.appendChild(row);
+      });
+
+      document.getElementById("result").style.display = "block";
+      document.getElementById("result").scrollIntoView({behavior:"smooth", block:"start"});
+    }
+
+    function resetAll(){
+      document.querySelectorAll('input[type="radio"]').forEach(r=>r.checked=false);
+      document.getElementById("result").style.display = "none";
+      window.scrollTo({top:0, behavior:"smooth"});
+    }
+
+    render();
+
+    document.getElementById("showBtn").addEventListener("click", showResult);
+    document.getElementById("resetBtn").addEventListener("click", resetAll);
+  </script>
 </body>
 </html>
