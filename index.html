@@ -1,62 +1,240 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
   <title>Indikation – nach der Moral des Gleichgewichts</title>
-  <meta name="description" content="8 Variablen, 24 Antworten, ein klarer Blick: Was stabilisiert dich – und was kippt?" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; }
-    header { padding:18px 16px; border-bottom:1px solid #eee; }
-    main { padding:16px; max-width: 920px; margin:0 auto; }
-    h1 { margin:0 0 6px; font-size:20px; }
-    .sub { margin:0; color:#444; font-size:14px; }
-    .card { border:1px solid #eee; border-radius:12px; padding:14px; margin:12px 0; }
-    .vtitle { font-weight:700; margin-bottom:8px; }
-    .q { margin:12px 0; }
-    .opts { display:grid; gap:8px; margin-top:8px; }
-    label { display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #eee; border-radius:10px; cursor:pointer; }
-    input[type="radio"] { margin-top:3px; }
-    .btnrow { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0; }
-    button { padding:10px 14px; border-radius:10px; border:1px solid #111; background:#111; color:#fff; cursor:pointer; }
-    button.secondary { background:#fff; color:#111; border:1px solid #ddd; }
-    .note { font-size:12px; color:#555; }
-    .result { display:none; margin-top:18px; padding:14px; border:1px solid #eee; border-radius:12px; }
-    .row { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:10px 0; }
-    .k { font-weight:600; }
-    .bar { flex:1; height:10px; background:#eee; border-radius:999px; overflow:hidden; }
-    .bar > div { height:100%; background:#111; width:0%; }
-    .small { font-size:12px; color:#555; }
-    footer { padding:16px; border-top:1px solid #eee; color:#666; font-size:12px; }
-    a { color:inherit; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fafafa;
+      color: #111;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 0.2rem;
+    }
+    .subtitle {
+      color: #555;
+      margin-bottom: 1.5rem;
+    }
+    .block {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #eee;
+    }
+    .question {
+      margin-bottom: 12px;
+    }
+    .answers label {
+      display: block;
+      margin: 4px 0;
+      cursor: pointer;
+    }
+    button {
+      margin-top: 16px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      background: #111;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .k {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .small {
+      font-size: 0.85rem;
+      color: #555;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Indikation – nach der Moral des Gleichgewichts</h1>
-    <p class="sub">3 Minuten. 8 Variablen. Ein Blick auf deinen Zustand – und eine stabilisierende Indikation.</p>
-  </header>
 
-  <main>
-    <div class="note">
-      Antworten sind bewusst grob: <b>unklar</b> / <b>gemischt</b> / <b>klar</b>.
-      Das verhindert Pseudo-Präzision und hält das Modell ruhig.
+<h1>Indikation</h1>
+<div class="subtitle">nach der Moral des Gleichgewichts</div>
+
+<div id="app"></div>
+
+<script>
+const variables = [
+  {
+    key: "freiheit",
+    label: "Freiheit",
+    questions: [
+      "Kannst du Entscheidungen über dein Leben selbst treffen?",
+      "Fühlst du dich innerlich frei in deinen Beziehungen?",
+      "Kannst du Nein sagen, ohne Angst vor Konsequenzen?"
+    ]
+  },
+  {
+    key: "gerechtigkeit",
+    label: "Gerechtigkeit",
+    questions: [
+      "Werden Entscheidungen dir gegenüber fair getroffen?",
+      "Wirst du für deine Leistungen angemessen behandelt?",
+      "Gibt es klare und gleiche Regeln für alle?"
+    ]
+  },
+  {
+    key: "wahrheit",
+    label: "Wahrheit",
+    questions: [
+      "Kannst du offen sagen, was du wirklich denkst?",
+      "Weißt du, woran du bei anderen bist?",
+      "Werden Probleme ehrlich benannt?"
+    ]
+  },
+  {
+    key: "harmonie",
+    label: "Harmonie",
+    questions: [
+      "Gibt es emotionalen Frieden in deinem Umfeld?",
+      "Fühlst du dich verstanden?",
+      "Sind Konflikte lösbar ohne Eskalation?"
+    ]
+  },
+  {
+    key: "effizienz",
+    label: "Effizienz",
+    questions: [
+      "Erreichen deine Handlungen Wirkung?",
+      "Wird Energie sinnvoll eingesetzt?",
+      "Führen Entscheidungen zu Ergebnissen?"
+    ]
+  },
+  {
+    key: "mittel",
+    label: "Mittel",
+    questions: [
+      "Stehen dir genug Ressourcen zur Verfügung?",
+      "Hast du Zugang zu dem, was du brauchst?",
+      "Fehlen dir finanzielle oder soziale Mittel?"
+    ]
+  },
+  {
+    key: "handlungsspielraum",
+    label: "Handlungsspielraum",
+    questions: [
+      "Kannst du Dinge aktiv verändern?",
+      "Hast du echte Optionen?",
+      "Wirst du gehört, wenn du handelst?"
+    ]
+  },
+  {
+    key: "balance",
+    label: "Balance",
+    questions: [
+      "Fühlen sich die Bereiche deines Lebens ausgeglichen an?",
+      "Kompensierst du Extreme?",
+      "Tragen sich die Teile gegenseitig?"
+    ]
+  }
+];
+
+const answerValues = {
+  "klar": 0.8,
+  "unklar": 0.5,
+  "nein": 0.2
+};
+
+function renderForm() {
+  const app = document.getElementById("app");
+  let html = "";
+
+  variables.forEach(v => {
+    html += `<div class="block"><div class="k">${v.label}</div>`;
+    v.questions.forEach((q, i) => {
+      html += `
+        <div class="question">${q}</div>
+        <div class="answers">
+          <label><input type="radio" name="${v.key}_${i}" value="klar"> klar</label>
+          <label><input type="radio" name="${v.key}_${i}" value="unklar"> unklar</label>
+          <label><input type="radio" name="${v.key}_${i}" value="nein"> nein</label>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  });
+
+  html += `<button onclick="evaluate()">Auswerten</button>`;
+  app.innerHTML = html;
+}
+
+function evaluate() {
+  const scores = {};
+  variables.forEach(v => {
+    let sum = 0;
+    let count = 0;
+    v.questions.forEach((q, i) => {
+      const val = document.querySelector(`input[name="${v.key}_${i}"]:checked`);
+      if (val) {
+        sum += answerValues[val.value];
+        count++;
+      }
+    });
+    scores[v.key] = count > 0 ? sum / count : 0.5;
+  });
+
+  renderResult(scores);
+}
+
+function renderResult(scores) {
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="block">
+      <div class="k">Dein Gleichgewichtszustand</div>
+      ${Object.entries(scores).map(([k,v]) =>
+        `<div class="small">${k}: ${v.toFixed(2)}</div>`
+      ).join("")}
+      ${buildCoordPlotSVG(scores)}
     </div>
+  `;
+}
 
-    <div id="form"></div>
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
 
-    <div class="btnrow">
-      <button id="btnEval">Auswerten</button>
-      <button class="secondary" id="btnReset" type="button">Zurücksetzen</button>
-    </div>
+function buildCoordPlotSVG(scores){
+  const freedom = scores.freiheit;
+  const justice = scores.gerechtigkeit;
+  const truth = scores.wahrheit;
+  const harmony = scores.harmonie;
 
-    <div id="result" class="result"></div>
-  </main>
+  const x = freedom - justice;
+  const y = truth - harmony;
 
-  <footer>
-    © Selim M. Ayrilmaz — mdg-indikation.de · <a href="./impressum.html">Impressum</a>
-  </footer>
+  const W=320,H=320,pad=34,domain=0.6;
+  const nx=clamp(x/domain,-1,1);
+  const ny=clamp(y/domain,-1,1);
 
-  <script src="./script.js"></script>
+  const px = pad + (nx+1)*0.5*(W-2*pad);
+  const py = pad + (1-(ny+1)*0.5)*(H-2*pad);
+
+  const r = Math.sqrt(nx*nx+ny*ny);
+  const color = r<0.33?"#16a34a":r<0.66?"#f59e0b":"#dc2626";
+
+  return `
+  <svg viewBox="0 0 ${W} ${H}" width="100%" height="340">
+    <circle cx="${W/2}" cy="${H/2}" r="40" fill="none" stroke="#eee"/>
+    <circle cx="${W/2}" cy="${H/2}" r="90" fill="none" stroke="#ddd"/>
+    <line x1="${W/2}" y1="20" x2="${W/2}" y2="${H-20}" stroke="#ccc"/>
+    <line x1="20" y1="${H/2}" x2="${W-20}" y2="${H/2}" stroke="#ccc"/>
+    <circle cx="${px}" cy="${py}" r="8" fill="${color}"/>
+  </svg>
+  <div class="small">Grün = stabil · Orange = Übergang · Rot = kritisch</div>
+  `;
+}
+
+renderForm();
+</script>
 </body>
 </html>
