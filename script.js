@@ -184,4 +184,10 @@ document.getElementById("btnReset").addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
+document.addEventListener("click", function(e){
+  if(e.target.id === "evalBtn"){
+    evaluate();
+  }
+});
+
 renderForm();
