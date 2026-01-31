@@ -1,4 +1,4 @@
-// v5 — clean: single evaluate flow, VARS defined, worker optional, no duplicate blocks.
+// v6 — clean: single evaluate flow, VARS defined, worker optional, no duplicate blocks.
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
 // Variablen-Reihenfolge
@@ -16,54 +16,57 @@ const VARS = [
 // Fragen
 const QUESTIONS = [
   // Freiheit (3)
-  { v:"Freiheit", q:"Wie frei kannst du in deinem Alltag Entscheidungen treffen, ohne Angst vor Konsequenzen?" },
-  { v:"Freiheit", q:"Wie oft fühlst du dich in Rollen oder Erwartungen gefangen, die du nicht gewählt hast?" },
-  { v:"Freiheit", q:"Kannst du Grenzen setzen, ohne danach Schuldgefühle oder Druck zu spüren?" },
+  { v: "Freiheit", q: "Wie frei kannst du in deinem Alltag Entscheidungen treffen, ohne Angst vor Konsequenzen?" },
+  { v: "Freiheit", q: "Wie oft fühlst du dich in Rollen oder Erwartungen gefangen, die du nicht gewählt hast?" },
+  { v: "Freiheit", q: "Kannst du Grenzen setzen, ohne danach Schuldgefühle oder Druck zu spüren?" },
 
   // Gerechtigkeit (3)
-  { v:"Gerechtigkeit", q:"Werden in deinem Umfeld Belastungen und Vorteile grundsätzlich fair verteilt?" },
-  { v:"Gerechtigkeit", q:"Gibt es Regeln, die für manche gelten und für andere nicht?" },
-  { v:"Gerechtigkeit", q:"Fühlst du dich in Entscheidungen, die dich betreffen, ausreichend berücksichtigt?" },
+  { v: "Gerechtigkeit", q: "Werden in deinem Umfeld Belastungen und Vorteile grundsätzlich fair verteilt?" },
+  { v: "Gerechtigkeit", q: "Gibt es Regeln, die für manche gelten und für andere nicht?" },
+  { v: "Gerechtigkeit", q: "Fühlst du dich in Entscheidungen, die dich betreffen, ausreichend berücksichtigt?" },
 
   // Wahrheit (3)
-  { v:"Wahrheit", q:"Werden Probleme offen benannt, auch wenn es unangenehm ist?" },
-  { v:"Wahrheit", q:"Kannst du Kritik ansprechen, ohne dass sofort Abwehr oder Schuldzuweisung entsteht?" },
-  { v:"Wahrheit", q:"Gibt es Themen, die „nicht gesagt werden dürfen“, obwohl alle sie spüren?" },
+  { v: "Wahrheit", q: "Werden Probleme offen benannt, auch wenn es unangenehm ist?" },
+  { v: "Wahrheit", q: "Kannst du Kritik ansprechen, ohne dass sofort Abwehr oder Schuldzuweisung entsteht?" },
+  { v: "Wahrheit", q: "Gibt es Themen, die „nicht gesagt werden dürfen“, obwohl alle sie spüren?" },
 
   // Harmonie (3)
-  { v:"Harmonie", q:"Gibt es in deinem Alltag Phasen von Ruhe, in denen du innerlich „runterkommst“?" },
-  { v:"Harmonie", q:"Werden Konflikte so gelöst, dass danach wieder Nähe/Respekt möglich ist?" },
-  { v:"Harmonie", q:"Fühlst du dich mit anderen grundsätzlich verbunden statt dauerhaft im Wettkampf?" },
+  { v: "Harmonie", q: "Gibt es in deinem Alltag Phasen von Ruhe, in denen du innerlich „runterkommst“?" },
+  { v: "Harmonie", q: "Werden Konflikte so gelöst, dass danach wieder Nähe/Respekt möglich ist?" },
+  { v: "Harmonie", q: "Fühlst du dich mit anderen grundsätzlich verbunden statt dauerhaft im Wettkampf?" },
 
   // Effizienz (3)
-  { v:"Effizienz", q:"Führt dein Aufwand meistens zu klaren Ergebnissen?" },
-  { v:"Effizienz", q:"Gibt es unnötige Schleifen, Wiederholungen oder chaotische Zuständigkeiten?" },
-  { v:"Effizienz", q:"Kannst du dich gut fokussieren, ohne ständig von „Feuerwehr-Themen“ abgelenkt zu werden?" },
+  { v: "Effizienz", q: "Führt dein Aufwand meistens zu klaren Ergebnissen?" },
+  { v: "Effizienz", q: "Gibt es unnötige Schleifen, Wiederholungen oder chaotische Zuständigkeiten?" },
+  { v: "Effizienz", q: "Kannst du dich gut fokussieren, ohne ständig von „Feuerwehr-Themen“ abgelenkt zu werden?" },
 
   // Handlungsspielraum (3)
-  { v:"Handlungsspielraum", q:"Hast du realistische Optionen, Dinge zu verändern, wenn etwas nicht passt?" },
-  { v:"Handlungsspielraum", q:"Kannst du „Nein“ sagen, ohne echte Nachteile befürchten zu müssen?" },
-  { v:"Handlungsspielraum", q:"Gibt es Ressourcen/Unterstützung, die du aktiv nutzen kannst?" },
+  { v: "Handlungsspielraum", q: "Hast du realistische Optionen, Dinge zu verändern, wenn etwas nicht passt?" },
+  { v: "Handlungsspielraum", q: "Kannst du „Nein“ sagen, ohne echte Nachteile befürchten zu müssen?" },
+  { v: "Handlungsspielraum", q: "Gibt es Ressourcen/Unterstützung, die du aktiv nutzen kannst?" },
 
   // Mittel (3)
-  { v:"Mittel", q:"Reichen deine verfügbaren Mittel (Zeit, Geld, Energie) für das, was erwartet wird?" },
-  { v:"Mittel", q:"Gibt es Engpässe, die regelmäßig Stress oder Konflikte auslösen?" },
-  { v:"Mittel", q:"Sind Mittel so verteilt, dass das System nicht „ausblutet“ (z.B. dauerhaftes Überziehen)?" },
+  { v: "Mittel", q: "Reichen deine verfügbaren Mittel (Zeit, Geld, Energie) für das, was erwartet wird?" },
+  { v: "Mittel", q: "Gibt es Engpässe, die regelmäßig Stress oder Konflikte auslösen?" },
+  { v: "Mittel", q: "Sind Mittel so verteilt, dass das System nicht „ausblutet“ (z.B. dauerhaftes Überziehen)?" },
 
   // Balance (3)
-  { v:"Balance", q:"Ist die Balance zwischen Geben und Nehmen in deinem Umfeld stimmig?" },
-  { v:"Balance", q:"Gibt es Extrem-Ausschläge (zu viel Kontrolle / zu viel Chaos)?" },
-  { v:"Balance", q:"Fühlst du dich insgesamt „im Gleichgewicht“, auch wenn nicht alles perfekt ist?" }
+  { v: "Balance", q: "Ist die Balance zwischen Geben und Nehmen in deinem Umfeld stimmig?" },
+  { v: "Balance", q: "Gibt es Extrem-Ausschläge (zu viel Kontrolle / zu viel Chaos)?" },
+  { v: "Balance", q: "Fühlst du dich insgesamt „im Gleichgewicht“, auch wenn nicht alles perfekt ist?" },
 ];
 
 // 3 Antwortstufen: 0.2 / 0.5 / 0.8
 const SCALE = [
-  { label:"unklar / schwach", value:0.2 },
-  { label:"teils / gemischt", value:0.5 },
-  { label:"klar / stark", value:0.8 },
+  { label: "unklar / schwach", value: 0.2 },
+  { label: "teils / gemischt", value: 0.5 },
+  { label: "klar / stark", value: 0.8 },
 ];
 
 const el = (id) => document.getElementById(id);
+
+// --- Deep Dive state (set after evaluate) ---
+let LAST_SCORES = null;
 
 // --- Error UI (optional message) ---
 function showErrorBox(msg) {
@@ -82,11 +85,12 @@ function hideErrorBox() {
 window.addEventListener("error", (e) => {
   try {
     const file = (e && e.filename) ? String(e.filename) : "";
-    if (file.includes("script.js")) showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
+    if (file.includes("script.js")) {
+      showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
+    }
   } catch {}
 });
 window.addEventListener("unhandledrejection", () => {
-  // konservativ, aber nicht spammy:
   showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
 });
 
@@ -105,7 +109,7 @@ function buildQuestions() {
 
     const left = document.createElement("div");
     left.className = "qIdx";
-    left.textContent = `${idx+1}/${QUESTIONS.length} · ${item.v}`;
+    left.textContent = `${idx + 1}/${QUESTIONS.length} · ${item.v}`;
 
     const right = document.createElement("div");
     right.className = "qVar";
@@ -149,7 +153,7 @@ function buildQuestions() {
 // --- Collect & score ---
 function collectAnswersByVar() {
   const byVar = {};
-  VARS.forEach(v => byVar[v] = []);
+  VARS.forEach((v) => (byVar[v] = []));
 
   const missing = [];
   for (let i = 0; i < QUESTIONS.length; i++) {
@@ -167,12 +171,12 @@ function collectAnswersByVar() {
 
 function avg(arr) {
   if (!arr || !arr.length) return 0;
-  return arr.reduce((a,b)=>a+b,0) / arr.length;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
 
 function scoreAll(byVar) {
   const scores = {};
-  VARS.forEach(v => scores[v] = avg(byVar[v]));
+  VARS.forEach((v) => (scores[v] = avg(byVar[v])));
   return scores;
 }
 
@@ -229,7 +233,9 @@ function renderBars(scores) {
 function renderWeakest(weak) {
   const host = el("weakest");
   if (!host) return;
-  host.innerHTML = `<span class="badge">${weak.key}</span> <span class="muted">Score:</span> <strong>${weak.val.toFixed(2)}</strong>`;
+  host.innerHTML = `<span class="badge">${weak.key}</span> <span class="muted">Score:</span> <strong>${weak.val.toFixed(
+    2
+  )}</strong>`;
 }
 
 function renderTimewin(weak) {
@@ -246,18 +252,18 @@ function render3D(scores) {
   const rect = host.getBoundingClientRect();
   const cx = rect.width * 0.5;
   const cy = rect.height * 0.62;
-  const R  = Math.min(rect.width, rect.height) * 0.33;
+  const R = Math.min(rect.width, rect.height) * 0.33;
 
   VARS.forEach((v, i) => {
     const a = (Math.PI * 2 * i) / VARS.length;
     const val = scores[v];
-    const x = cx + Math.cos(a) * R * (0.72 + val*0.5);
-    const y = cy + Math.sin(a) * R * (0.38 + (1-val)*0.35);
+    const x = cx + Math.cos(a) * R * (0.72 + val * 0.5);
+    const y = cy + Math.sin(a) * R * (0.38 + (1 - val) * 0.35);
 
     const dot = document.createElement("div");
     dot.className = "dot";
     dot.style.left = `${x}px`;
-    dot.style.top  = `${y}px`;
+    dot.style.top = `${y}px`;
 
     const lab = document.createElement("div");
     lab.className = "dotLabel";
@@ -273,26 +279,26 @@ function renderDeepDiveLocal(scores, maxN = 3) {
   if (!host) return;
   host.innerHTML = "";
 
-  const list = Object.entries(scores).sort((a,b)=>a[1]-b[1]).slice(0, maxN);
-  list.forEach(([v,val]) => {
+  const list = Object.entries(scores)
+    .sort((a, b) => a[1] - b[1])
+    .slice(0, maxN);
+
+  list.forEach(([v, val]) => {
     const div = document.createElement("div");
     div.className = "ddItem";
-    div.innerHTML = `<span class="badge">${v}</span> <span class="muted">Score:</span> <strong>${val.toFixed(2)}</strong>`;
+    div.innerHTML = `<span class="badge">${v}</span> <span class="muted">Score:</span> <strong>${val.toFixed(
+      2
+    )}</strong>`;
     host.appendChild(div);
   });
 }
 
-// --- Worker call (optional) ---
-async function callWorkerAnalyze(byVar) {
-  if (!WORKER_BASE) return null;
-  const r = await fetch(`${WORKER_BASE}/analyze`, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ answers: byVar })
-  });
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok || !data.ok) throw new Error(data?.error || `Worker HTTP ${r.status}`);
-  return data;
+// --- Deep Dive helper ---
+function weakestVars(scores, n = 2) {
+  return Object.entries(scores)
+    .sort((a, b) => a[1] - b[1])
+    .slice(0, n)
+    .map(([k]) => k);
 }
 
 // --- Main evaluate ---
@@ -301,7 +307,11 @@ async function onEvaluate() {
 
   const collected = collectAnswersByVar();
   if (!collected.ok) {
-    showErrorBox(`Bitte beantworte alle Fragen. Fehlend: ${collected.missing.slice(0,5).join(", ")}${collected.missing.length>5?"…":""}`);
+    showErrorBox(
+      `Bitte beantworte alle Fragen. Fehlend: ${collected.missing.slice(0, 5).join(", ")}${
+        collected.missing.length > 5 ? "…" : ""
+      }`
+    );
     return;
   }
 
@@ -315,38 +325,34 @@ async function onEvaluate() {
   renderWeakest(weak);
   renderTimewin(weak);
   renderDeepDiveLocal(scores, 3);
+}
 
 function onReset() {
   hideErrorBox();
-  document.querySelectorAll('input[type="radio"]').forEach(i => i.checked = false);
+  LAST_SCORES = null;
+
+  document.querySelectorAll('input[type="radio"]').forEach((i) => (i.checked = false));
   el("results")?.classList.add("hidden");
-  el("plot3d") && (el("plot3d").innerHTML = "");
-  el("bars") && (el("bars").innerHTML = "");
-  el("weakest") && (el("weakest").innerHTML = "");
-  el("timewin") && (el("timewin").innerHTML = "");
-  const dd = el("deepDive") || el("deepDiveOut");
+
+  if (el("plot3d")) el("plot3d").innerHTML = "";
+  if (el("bars")) el("bars").innerHTML = "";
+  if (el("weakest")) el("weakest").innerHTML = "";
+  if (el("timewin")) el("timewin").innerHTML = "";
+
+  const out = el("deepDiveOut");
+  if (out) {
+    out.style.display = "none";
+    out.textContent = "";
+  }
+  const dd = el("deepDive");
   if (dd) dd.innerHTML = "";
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  buildQuestions();
-  el("btnEval")?.addEventListener("click", onEvaluate);
-  el("btnReset")?.addEventListener("click", onReset);
-});
 // --- Deep Dive (Worker + OpenAI) ---
-let LAST_SCORES = null;
-
-function weakestVars(scores, n = 2) {
-  return Object.entries(scores)
-    .sort((a,b) => a[1] - b[1])
-    .slice(0, n)
-    .map(([k]) => k);
-}
-
 async function runDeepDive() {
-  const deepDiveBtn = document.getElementById("deepDiveBtn");
-  const deepDiveOut = document.getElementById("deepDiveOut");
-  const timeframeSel = document.getElementById("timeframe");
+  const deepDiveBtn = el("deepDiveBtn");
+  const deepDiveOut = el("deepDiveOut");
+  const timeframeSel = el("timeframe");
 
   if (!deepDiveBtn || !deepDiveOut) return;
 
@@ -363,7 +369,7 @@ async function runDeepDive() {
     language: "de",
     timeframe,
     scores: LAST_SCORES,
-    weakest
+    weakest,
   };
 
   try {
@@ -373,11 +379,10 @@ async function runDeepDive() {
     const resp = await fetch(`${WORKER_BASE}/deepdive`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     const data = await resp.json().catch(() => ({}));
-
     if (!resp.ok || !data.ok) {
       throw new Error(data?.error || `Worker HTTP ${resp.status}`);
     }
@@ -394,6 +399,8 @@ async function runDeepDive() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const deepDiveBtn = document.getElementById("deepDiveBtn");
-  if (deepDiveBtn) deepDiveBtn.addEventListener("click", runDeepDive);
+  buildQuestions();
+  el("btnEval")?.addEventListener("click", onEvaluate);
+  el("btnReset")?.addEventListener("click", onReset);
+  el("deepDiveBtn")?.addEventListener("click", runDeepDive);
 });
