@@ -1,7 +1,19 @@
-// v3 – fix: valid JS constants, no stray strings, no duplicate declarations.
+// v4 — clean: single evaluate flow, VARS defined, worker optional, no duplicate blocks.
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
-// Reihenfolge: emotionaler Einstieg bleibt vorn, Mittel nicht zuerst.
+// Variablen-Reihenfolge
+const VARS = [
+  "Freiheit",
+  "Gerechtigkeit",
+  "Wahrheit",
+  "Harmonie",
+  "Effizienz",
+  "Handlungsspielraum",
+  "Mittel",
+  "Balance",
+];
+
+// Fragen
 const QUESTIONS = [
   // Freiheit (3)
   { v:"Freiheit", q:"Wie frei kannst du in deinem Alltag Entscheidungen treffen, ohne Angst vor Konsequenzen?" },
@@ -53,32 +65,35 @@ const SCALE = [
 
 const el = (id) => document.getElementById(id);
 
-function showErrorBox() {
-  el("errorBox").classList.remove("hidden");
+// --- Error UI (optional message) ---
+function showErrorBox(msg) {
+  const box = el("errorBox");
+  if (!box) return;
+  box.classList.remove("hidden");
+  if (msg) box.textContent = msg;
 }
 function hideErrorBox() {
-  el("errorBox").classList.add("hidden");
+  const box = el("errorBox");
+  if (!box) return;
+  box.classList.add("hidden");
 }
 
-/**
- * ONLY show the warning if the error originates from our own script.js
- * This avoids permanent banners triggered by extensions or cross-origin "Script error."
- */
+// Nur anzeigen, wenn es wirklich unser script.js betrifft (keine Addons)
 window.addEventListener("error", (e) => {
   try {
     const file = (e && e.filename) ? String(e.filename) : "";
-    if (file.includes("script.js")) showErrorBox();
-  } catch { /* noop */ }
+    if (file.includes("script.js")) showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
+  } catch {}
+});
+window.addEventListener("unhandledrejection", () => {
+  // konservativ, aber nicht spammy:
+  showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
 });
 
-window.addEventListener("unhandledrejection", (e) => {
-  // only show if it looks like our code / network call.
-  // keep conservative: do NOT spam.
-  showErrorBox();
-});
-
+// --- Build Questions UI ---
 function buildQuestions() {
   const host = el("questions");
+  if (!host) return;
   host.innerHTML = "";
 
   QUESTIONS.forEach((item, idx) => {
@@ -106,7 +121,7 @@ function buildQuestions() {
     const opts = document.createElement("div");
     opts.className = "opts";
 
-    SCALE.forEach((o, j) => {
+    SCALE.forEach((o) => {
       const label = document.createElement("label");
       label.className = "opt";
 
@@ -131,19 +146,23 @@ function buildQuestions() {
   });
 }
 
-function collectAnswers() {
+// --- Collect & score ---
+function collectAnswersByVar() {
   const byVar = {};
   VARS.forEach(v => byVar[v] = []);
 
-  for (let i=0; i<QUESTIONS.length; i++) {
+  const missing = [];
+  for (let i = 0; i < QUESTIONS.length; i++) {
     const chosen = document.querySelector(`input[name="q_${i}"]:checked`);
-    if (!chosen) return { ok:false, missing:i+1 };
-
+    if (!chosen) {
+      missing.push(i + 1);
+      continue;
+    }
     const v = chosen.getAttribute("data-var");
     byVar[v].push(Number(chosen.value));
   }
 
-  return { ok:true, byVar };
+  return { ok: missing.length === 0, byVar, missing };
 }
 
 function avg(arr) {
@@ -159,21 +178,23 @@ function scoreAll(byVar) {
 
 function weakestVar(scores) {
   let w = null;
-  for (const [k,val] of Object.entries(scores)) {
-    if (w === null || val < w.val) w = { key:k, val };
+  for (const v of VARS) {
+    const val = scores[v];
+    if (w === null || val < w.val) w = { key: v, val };
   }
   return w;
 }
 
 function timeWindowFor(value) {
-  // simple helper text, no mini-essay
   if (value <= 0.3) return "jetzt (akut) · 24–72h Fokus";
   if (value <= 0.55) return "bald · 1–2 Wochen Fokus";
   return "stabil · nur Feintuning nötig";
 }
 
+// --- Render helpers ---
 function renderBars(scores) {
   const host = el("bars");
+  if (!host) return;
   host.innerHTML = "";
 
   for (const v of VARS) {
@@ -207,23 +228,19 @@ function renderBars(scores) {
 
 function renderWeakest(weak) {
   const host = el("weakest");
-  host.innerHTML = `
-    <span class="badge">${weak.key}</span>
-    <span class="muted">Score:</span> <strong>${weak.val.toFixed(2)}</strong>
-  `;
+  if (!host) return;
+  host.innerHTML = `<span class="badge">${weak.key}</span> <span class="muted">Score:</span> <strong>${weak.val.toFixed(2)}</strong>`;
 }
 
 function renderTimewin(weak) {
   const host = el("timewin");
-  host.innerHTML = `
-    <span class="badge">${timeWindowFor(weak.val)}</span>
-  `;
+  if (!host) return;
+  host.innerHTML = `<span class="badge">${timeWindowFor(weak.val)}</span>`;
 }
 
 function render3D(scores) {
-  // pseudo-3D: map 8 variables as dots on a tilted grid.
-  // We place them in a circle; height depends on score.
   const host = el("plot3d");
+  if (!host) return;
   host.innerHTML = "";
 
   const rect = host.getBoundingClientRect();
@@ -233,7 +250,7 @@ function render3D(scores) {
 
   VARS.forEach((v, i) => {
     const a = (Math.PI * 2 * i) / VARS.length;
-    const val = scores[v]; // 0..1
+    const val = scores[v];
     const x = cx + Math.cos(a) * R * (0.72 + val*0.5);
     const y = cy + Math.sin(a) * R * (0.38 + (1-val)*0.35);
 
@@ -251,12 +268,12 @@ function render3D(scores) {
   });
 }
 
-function renderDeepDive(scores) {
-  // take up to 2 weakest
-  const list = Object.entries(scores).sort((a,b)=>a[1]-b[1]).slice(0,2);
-  const host = el("deepDive");
+function renderDeepDiveLocal(scores, maxN = 3) {
+  const host = el("deepDive") || el("deepDiveOut");
+  if (!host) return;
   host.innerHTML = "";
 
+  const list = Object.entries(scores).sort((a,b)=>a[1]-b[1]).slice(0, maxN);
   list.forEach(([v,val]) => {
     const div = document.createElement("div");
     div.className = "ddItem";
@@ -265,7 +282,7 @@ function renderDeepDive(scores) {
   });
 }
 
-// --- Worker calls (optional) ---
+// --- Worker call (optional) ---
 async function callWorkerAnalyze(byVar) {
   if (!WORKER_BASE) return null;
   const r = await fetch(`${WORKER_BASE}/analyze`, {
@@ -273,176 +290,82 @@ async function callWorkerAnalyze(byVar) {
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({ answers: byVar })
   });
-  if (!r.ok) throw new Error(`Worker HTTP ${r.status}`);
-  return r.json();
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || !data.ok) throw new Error(data?.error || `Worker HTTP ${r.status}`);
+  return data;
 }
 
+// --- Main evaluate ---
 async function onEvaluate() {
   hideErrorBox();
 
-  // Sammeln
-  const answersByVar = {};
-  const missing = [];
-
-  QUESTIONS.forEach((q, idx) => {
-    const picked = document.querySelector(`input[name="q_${idx}"]:checked`);
-    if (!picked) {
-      missing.push(idx + 1);
-      return;
-    }
-    const v = picked.getAttribute("data-var");
-    const val = Number(picked.value);
-    if (!answersByVar[v]) answersByVar[v] = [];
-    answersByVar[v].push(val);
-  });
-
-  if (missing.length) {
-    showErrorBox(`Bitte beantworte alle Fragen. Fehlend: ${missing.slice(0,5).join(", ")}${missing.length>5?"…":""}`);
+  const collected = collectAnswersByVar();
+  if (!collected.ok) {
+    showErrorBox(`Bitte beantworte alle Fragen. Fehlend: ${collected.missing.slice(0,5).join(", ")}${collected.missing.length>5?"…":""}`);
     return;
   }
 
-  try {
-    const res = await fetch(`${WORKER_BASE}/analyze`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ answers: answersByVar }),
-    });
-
-    const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data?.error || "Analyze failed");
-
-    // Ergebnis anzeigen (du hast schon Ergebnis-Boxen)
-    const out = el("coordOut");      // deine Koordinaten-DIV
-    const bars = el("barsOut");      // deine Balken-DIV
-    const weak = el("weakOut");      // schwächste Variable
-    const time = el("timeOut");      // Zeitfenster
-
-    if (weak) weak.textContent = data.weakest ? `Schwächste Variable: ${data.weakest}` : "—";
-
-    // Balken simpel:
-    if (bars) {
-      bars.innerHTML = "";
-      Object.entries(data.perVar).forEach(([k, v]) => {
-        const row = document.createElement("div");
-        row.className = "barRow";
-        row.innerHTML = `<div class="barLabel">${k}</div>
-          <div class="barTrack"><div class="barFill" style="width:${Math.round(v*100)}%"></div></div>
-          <div class="barVal">${Math.round(v*100)}%</div>`;
-        bars.appendChild(row);
-      });
-    }
-
-    // Zeitfenster (simple Logik):
-    const wVal = data.perVar?.[data.weakest] ?? 0.5;
-    let tf = "Diese Woche";
-    if (wVal <= 0.3) tf = "Sofort (heute)";
-    else if (wVal <= 0.5) tf = "Diese Woche";
-    else tf = "30 Tage (Feintuning)";
-    if (time) time.textContent = `Zeitfenster: ${tf}`;
-
-    el("results")?.classList.remove("hidden");
-  } catch (e) {
-    showErrorBox(String(e));
-  }
-}
-
-  const data = collectAnswers();
-  if (!data.ok) {
-    alert(`Bitte Frage ${data.missing} beantworten.`);
-    return;
-  }
-
-  const scores = scoreAll(data.byVar);
+  const scores = scoreAll(collected.byVar);
   const weak = weakestVar(scores);
 
-  el("results").classList.remove("hidden");
+  el("results")?.classList.remove("hidden");
   render3D(scores);
   renderBars(scores);
   renderWeakest(weak);
   renderTimewin(weak);
-  renderDeepDive(scores);
+  renderDeepDiveLocal(scores, 3);
 
-  // optional: if worker is configured, later replace/extend deep dive with AI
-  try {
-    const ai = await callWorkerAnalyze(data.byVar);
-    if (ai && ai.suggestion) {
-      // keep minimal: add 1 extra line, not a mini text wall
-      const host = el("deepDive");
-      const div = document.createElement("div");
-      div.className = "ddItem";
-      div.innerHTML = `<span class="badge">KI</span> ${ai.suggestion}`;
-      host.appendChild(div);
-    }
-  } catch (e) {
-    // do not scare the user — just show the banner for dev, and keep local result working
-    showErrorBox();
+  // Optional: Worker ergänzt später “stabilisierende Indikation”
+  const deepDiveBtn = el("deepDiveBtn");
+  const deepDiveOut = el("deepDiveOut") || el("deepDive");
+  const timeframeSel = el("timeframe");
+
+  if (deepDiveBtn && deepDiveOut) {
+    deepDiveBtn.onclick = async () => {
+      try {
+        deepDiveBtn.disabled = true;
+        deepDiveBtn.textContent = "…denke nach";
+
+        const timeframe = timeframeSel?.value || "heute";
+        const weakest = Object.entries(scores).sort((a,b)=>a[1]-b[1]).slice(0, 3).map(x => x[0]);
+
+        const ai = await callWorkerAnalyze(collected.byVar);
+        // wenn dein Worker später mehr liefert (z.B. text), kannst du hier umstellen:
+        const text = ai?.text || ai?.suggestion || ai?.recommendation || null;
+
+        deepDiveOut.style.display = "block";
+        deepDiveOut.textContent =
+          text
+            ? text
+            : `Zeitfenster: ${timeframe} · Fokus: ${weakest.join(", ")}`;
+      } catch (e) {
+        showErrorBox("Worker-Fehler (optional). Lokal funktioniert es trotzdem.");
+        if (deepDiveOut) {
+          deepDiveOut.style.display = "block";
+          deepDiveOut.textContent = `Fehler: ${String(e?.message || e)}`;
+        }
+      } finally {
+        deepDiveBtn.disabled = false;
+        deepDiveBtn.textContent = "Stabilisierende Indikation erzeugen";
+      }
+    };
   }
 }
 
 function onReset() {
   hideErrorBox();
   document.querySelectorAll('input[type="radio"]').forEach(i => i.checked = false);
-  el("results").classList.add("hidden");
-  el("plot3d").innerHTML = "";
-  el("bars").innerHTML = "";
-  el("weakest").innerHTML = "";
-  el("timewin").innerHTML = "";
-  el("deepDive").innerHTML = "";
+  el("results")?.classList.add("hidden");
+  el("plot3d") && (el("plot3d").innerHTML = "");
+  el("bars") && (el("bars").innerHTML = "");
+  el("weakest") && (el("weakest").innerHTML = "");
+  el("timewin") && (el("timewin").innerHTML = "");
+  const dd = el("deepDive") || el("deepDiveOut");
+  if (dd) dd.innerHTML = "";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   buildQuestions();
-  el("btnEval").addEventListener("click", onEvaluate);
-  el("btnReset").addEventListener("click", onReset);
+  el("btnEval")?.addEventListener("click", onEvaluate);
+  el("btnReset")?.addEventListener("click", onReset);
 });
-const deepDiveBtn = document.getElementById("deepDiveBtn");
-const deepDiveOut = document.getElementById("deepDiveOut");
-const timeframeSel = document.getElementById("timeframe");
-
-if (deepDiveBtn) {
-  deepDiveBtn.addEventListener("click", async () => {
-    try {
-      deepDiveBtn.disabled = true;
-      deepDiveBtn.textContent = "…denke nach";
-
-      // Diese Funktionen/Namen müssen zu deinem Code passen:
-      // - getScores0to1(): liefert { freiheit:0.66, ... }
-      // - getWeakestVars(scores): liefert ["gerechtigkeit","handlungsspielraum"]
-      // Falls du die noch nicht hast, sag Bescheid – ich passe es exakt an deinen aktuellen script.js an.
-      const scores = getScores0to1();
-      const weakest = getWeakestVars(scores).slice(0, 3); // du wolltest ggf. mehr als 2 → wir lassen 3 zu
-      const timeframe = timeframeSel?.value || "heute";
-
-      const payload = {
-        language: "de",
-        scores,
-        weakest,
-        notes: {
-          timeframe,
-          intensity: "auto"
-        }
-      };
-
-      const resp = await fetch(`${WORKER_BASE_URL}/deepdive`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await resp.json();
-
-      if (!resp.ok || !data.ok) {
-        throw new Error(data?.error || "Deep Dive fehlgeschlagen");
-      }
-
-      deepDiveOut.style.display = "block";
-      deepDiveOut.textContent = data.text;
-    } catch (e) {
-      deepDiveOut.style.display = "block";
-      deepDiveOut.textContent = `Fehler: ${String(e.message || e)}`;
-    } finally {
-      deepDiveBtn.disabled = false;
-      deepDiveBtn.textContent = "Stabilisierende Indikation erzeugen";
-    }
-  });
-}
