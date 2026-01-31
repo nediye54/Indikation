@@ -306,6 +306,7 @@ async function onEvaluate() {
   }
 
   const scores = scoreAll(collected.byVar);
+  LAST_SCORES = scores;
   const weak = weakestVar(scores);
 
   el("results")?.classList.remove("hidden");
@@ -314,43 +315,6 @@ async function onEvaluate() {
   renderWeakest(weak);
   renderTimewin(weak);
   renderDeepDiveLocal(scores, 3);
-
-  // Optional: Worker ergänzt später “stabilisierende Indikation”
-  const deepDiveBtn = el("deepDiveBtn");
-  const deepDiveOut = el("deepDiveOut") || el("deepDive");
-  const timeframeSel = el("timeframe");
-
-  if (deepDiveBtn && deepDiveOut) {
-    deepDiveBtn.onclick = async () => {
-      try {
-        deepDiveBtn.disabled = true;
-        deepDiveBtn.textContent = "…denke nach";
-
-        const timeframe = timeframeSel?.value || "heute";
-        const weakest = Object.entries(scores).sort((a,b)=>a[1]-b[1]).slice(0, 3).map(x => x[0]);
-
-        const ai = await callWorkerAnalyze(collected.byVar);
-        // wenn dein Worker später mehr liefert (z.B. text), kannst du hier umstellen:
-        const text = ai?.text || ai?.suggestion || ai?.recommendation || null;
-
-        deepDiveOut.style.display = "block";
-        deepDiveOut.textContent =
-          text
-            ? text
-            : `Zeitfenster: ${timeframe} · Fokus: ${weakest.join(", ")}`;
-      } catch (e) {
-        showErrorBox("Worker-Fehler (optional). Lokal funktioniert es trotzdem.");
-        if (deepDiveOut) {
-          deepDiveOut.style.display = "block";
-          deepDiveOut.textContent = `Fehler: ${String(e?.message || e)}`;
-        }
-      } finally {
-        deepDiveBtn.disabled = false;
-        deepDiveBtn.textContent = "Stabilisierende Indikation erzeugen";
-      }
-    };
-  }
-}
 
 function onReset() {
   hideErrorBox();
@@ -368,4 +332,68 @@ document.addEventListener("DOMContentLoaded", () => {
   buildQuestions();
   el("btnEval")?.addEventListener("click", onEvaluate);
   el("btnReset")?.addEventListener("click", onReset);
+});
+// --- Deep Dive (Worker + OpenAI) ---
+let LAST_SCORES = null;
+
+function weakestVars(scores, n = 2) {
+  return Object.entries(scores)
+    .sort((a,b) => a[1] - b[1])
+    .slice(0, n)
+    .map(([k]) => k);
+}
+
+async function runDeepDive() {
+  const deepDiveBtn = document.getElementById("deepDiveBtn");
+  const deepDiveOut = document.getElementById("deepDiveOut");
+  const timeframeSel = document.getElementById("timeframe");
+
+  if (!deepDiveBtn || !deepDiveOut) return;
+
+  if (!LAST_SCORES) {
+    deepDiveOut.style.display = "block";
+    deepDiveOut.textContent = "Bitte zuerst Quick Scan auswerten.";
+    return;
+  }
+
+  const timeframe = timeframeSel?.value || "heute";
+  const weakest = weakestVars(LAST_SCORES, 2);
+
+  const payload = {
+    language: "de",
+    timeframe,
+    scores: LAST_SCORES,
+    weakest
+  };
+
+  try {
+    deepDiveBtn.disabled = true;
+    deepDiveBtn.textContent = "…denke nach";
+
+    const resp = await fetch(`${WORKER_BASE}/deepdive`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await resp.json().catch(() => ({}));
+
+    if (!resp.ok || !data.ok) {
+      throw new Error(data?.error || `Worker HTTP ${resp.status}`);
+    }
+
+    deepDiveOut.style.display = "block";
+    deepDiveOut.textContent = data.text || "(keine Ausgabe)";
+  } catch (e) {
+    deepDiveOut.style.display = "block";
+    deepDiveOut.textContent = `Fehler: ${String(e.message || e)}`;
+  } finally {
+    deepDiveBtn.disabled = false;
+    deepDiveBtn.textContent = "Stabilisierende Indikation erzeugen";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const deepDiveBtn = document.getElementById("deepDiveBtn");
+  if (deepDiveBtn) deepDiveBtn.addEventListener("click", runDeepDive);
 });
