@@ -2,14 +2,7 @@ const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
 // v2 — robust: show error only for OUR script.js problems, avoid permanent banner.
 
-const VERSION = 2;
-
-// === OPTIONAL: worker endpoint (später aktivieren) ===
-// Wenn du den Worker einbaust, setze hier die URL:
-// const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
-const WORKER_BASE = ""; // leer = kein Worker, rein lokal
-
-const VARS = [
+const VERSION = 2; = [
   "Freiheit",
   "Gerechtigkeit",
   "Wahrheit",
