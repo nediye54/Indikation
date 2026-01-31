@@ -1,370 +1,348 @@
-// ------------------------------------------------------------
-// Robustheit (mobil): "Script error" abfangen statt White Screen
-// ------------------------------------------------------------
-window.addEventListener("error", (e) => {
-  const box = document.getElementById("statusBox");
-  if (box) {
-    box.textContent = "Hinweis: Ein Skript-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).";
-    box.style.display = "block";
-  }
-  console.warn("Global error caught:", e?.message || e);
-});
+// v2 — robust: show error only for OUR script.js problems, avoid permanent banner.
 
-// ------------------------------------------------------------
-// Modell: 8 Variablen (Reihenfolge wie von dir festgelegt)
-// ------------------------------------------------------------
-const VARIABLES = [
-  { key: "freiheit", label: "Freiheit" },
-  { key: "gerechtigkeit", label: "Gerechtigkeit" },
-  { key: "effizienz", label: "Effizienz" },
-  { key: "wahrheit", label: "Wahrheit" },
-  { key: "harmonie", label: "Harmonie" },
-  { key: "mittel", label: "Mittel" },
-  { key: "handlungsspielraum", label: "Handlungsspielraum" },
-  { key: "balance", label: "Balance" },
+const VERSION = 2;
+
+// === OPTIONAL: worker endpoint (später aktivieren) ===
+// Wenn du den Worker einbaust, setze hier die URL:
+// const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
+const WORKER_BASE = ""; // leer = kein Worker, rein lokal
+
+const VARS = [
+  "Freiheit",
+  "Gerechtigkeit",
+  "Wahrheit",
+  "Harmonie",
+  "Effizienz",
+  "Handlungsspielraum",
+  "Mittel",
+  "Balance"
 ];
 
-// ------------------------------------------------------------
-// Antworten: exakt 3 Optionen (0.2 / 0.5 / 0.8)
-// ------------------------------------------------------------
-const ANSWERS = [
-  { value: 0.2, label: "unklar / schwach" },
-  { value: 0.5, label: "teils / gemischt" },
-  { value: 0.8, label: "klar / stark" },
-];
-
-// ------------------------------------------------------------
-// Fragen: 24 (3 pro Variable)
-// -> Du kannst Texte später leicht austauschen (nur Strings)
-// ------------------------------------------------------------
+// Reihenfolge: emotionaler Einstieg bleibt vorn, Mittel nicht zuerst.
 const QUESTIONS = [
-  // Freiheit
-  { v: "freiheit", t: "Wie frei kannst du in deinem Alltag Entscheidungen treffen, ohne Angst vor Konsequenzen?" },
-  { v: "freiheit", t: "Wie oft fühlst du dich in Rollen oder Erwartungen gefangen, die du nicht gewählt hast?" },
-  { v: "freiheit", t: "Kannst du Grenzen setzen, ohne danach Schuldgefühle oder Druck zu spüren?" },
+  // Freiheit (3)
+  { v:"Freiheit", q:"Wie frei kannst du in deinem Alltag Entscheidungen treffen, ohne Angst vor Konsequenzen?" },
+  { v:"Freiheit", q:"Wie oft fühlst du dich in Rollen oder Erwartungen gefangen, die du nicht gewählt hast?" },
+  { v:"Freiheit", q:"Kannst du Grenzen setzen, ohne danach Schuldgefühle oder Druck zu spüren?" },
 
-  // Gerechtigkeit
-  { v: "gerechtigkeit", t: "Werden in deinem Umfeld Belastungen und Vorteile grundsätzlich fair verteilt?" },
-  { v: "gerechtigkeit", t: "Werden Konflikte so geklärt, dass sich niemand dauerhaft übergangen fühlt?" },
-  { v: "gerechtigkeit", t: "Fühlt sich Anerkennung (Respekt, Zeit, Aufmerksamkeit) bei euch grundsätzlich gerecht an?" },
+  // Gerechtigkeit (3)
+  { v:"Gerechtigkeit", q:"Werden in deinem Umfeld Belastungen und Vorteile grundsätzlich fair verteilt?" },
+  { v:"Gerechtigkeit", q:"Gibt es Regeln, die für manche gelten und für andere nicht?" },
+  { v:"Gerechtigkeit", q:"Fühlst du dich in Entscheidungen, die dich betreffen, ausreichend berücksichtigt?" },
 
-  // Effizienz
-  { v: "effizienz", t: "Werden Probleme bei euch eher praktisch gelöst als endlos diskutiert?" },
-  { v: "effizienz", t: "Gelingt es, Pläne umzusetzen, ohne dass dabei Beziehungen leiden?" },
-  { v: "effizienz", t: "Wie oft führt „Optimierung“ bei euch zu Stress statt Entlastung?" },
+  // Wahrheit (3)
+  { v:"Wahrheit", q:"Werden Probleme offen benannt, auch wenn es unangenehm ist?" },
+  { v:"Wahrheit", q:"Kannst du Kritik ansprechen, ohne dass sofort Abwehr oder Schuldzuweisung entsteht?" },
+  { v:"Wahrheit", q:"Gibt es Themen, die „nicht gesagt werden dürfen“, obwohl alle sie spüren?" },
 
-  // Wahrheit
-  { v: "wahrheit", t: "Werden schwierige Themen bei euch offen angesprochen, statt umgangen?" },
-  { v: "wahrheit", t: "Kannst du ehrlich sein, ohne dass es sofort eskaliert?" },
-  { v: "wahrheit", t: "Wie zuverlässig stimmen Worte und Taten in deinem Umfeld überein?" },
+  // Harmonie (3)
+  { v:"Harmonie", q:"Gibt es in deinem Alltag Phasen von Ruhe, in denen du innerlich „runterkommst“?" },
+  { v:"Harmonie", q:"Werden Konflikte so gelöst, dass danach wieder Nähe/Respekt möglich ist?" },
+  { v:"Harmonie", q:"Fühlst du dich mit anderen grundsätzlich verbunden statt dauerhaft im Wettkampf?" },
 
-  // Harmonie
-  { v: "harmonie", t: "Fühlst du dich in deinem Alltag emotional eher getragen als ausgelaugt?" },
-  { v: "harmonie", t: "Gibt es in deinem Umfeld spürbar mehr Ruhe als Spannung?" },
-  { v: "harmonie", t: "Kannst du dich erholen, ohne dass sofort neue Konflikte entstehen?" },
+  // Effizienz (3)
+  { v:"Effizienz", q:"Führt dein Aufwand meistens zu klaren Ergebnissen?" },
+  { v:"Effizienz", q:"Gibt es unnötige Schleifen, Wiederholungen oder chaotische Zuständigkeiten?" },
+  { v:"Effizienz", q:"Kannst du dich gut fokussieren, ohne ständig von „Feuerwehr-Themen“ abgelenkt zu werden?" },
 
-  // Mittel
-  { v: "mittel", t: "Hast du ausreichend Ressourcen (Zeit, Geld, Energie), um stabil zu handeln?" },
-  { v: "mittel", t: "Wie oft führen fehlende Mittel bei euch zu Streit oder Druck?" },
-  { v: "mittel", t: "Kannst du Mittel so einsetzen, dass sie wirklich entlasten (statt nur kurzfristig)?" },
+  // Handlungsspielraum (3)
+  { v:"Handlungsspielraum", q:"Hast du realistische Optionen, Dinge zu verändern, wenn etwas nicht passt?" },
+  { v:"Handlungsspielraum", q:"Kannst du „Nein“ sagen, ohne echte Nachteile befürchten zu müssen?" },
+  { v:"Handlungsspielraum", q:"Gibt es Ressourcen/Unterstützung, die du aktiv nutzen kannst?" },
 
-  // Handlungsspielraum
-  { v: "handlungsspielraum", t: "Gibt es bei euch realistische Optionen, wenn etwas schief läuft?" },
-  { v: "handlungsspielraum", t: "Könnt ihr Regeln/Strukturen anpassen, ohne dass jemand blockiert?" },
-  { v: "handlungsspielraum", t: "Wie oft fühlst du dich in einer Lage, in der du gar nichts tun kannst?" },
+  // Mittel (3)
+  { v:"Mittel", q:"Reichen deine verfügbaren Mittel (Zeit, Geld, Energie) für das, was erwartet wird?" },
+  { v:"Mittel", q:"Gibt es Engpässe, die regelmäßig Stress oder Konflikte auslösen?" },
+  { v:"Mittel", q:"Sind Mittel so verteilt, dass das System nicht „ausblutet“ (z.B. dauerhaftes Überziehen)?" },
 
-  // Balance
-  { v: "balance", t: "Halten sich Geben und Nehmen in deinen Beziehungen ungefähr die Waage?" },
-  { v: "balance", t: "Werden Freiheit und Grenzen so gesetzt, dass beides tragbar bleibt?" },
-  { v: "balance", t: "Ist das Gesamtsystem für dich eher stabil als fragil?" },
+  // Balance (3)
+  { v:"Balance", q:"Ist die Balance zwischen Geben und Nehmen in deinem Umfeld stimmig?" },
+  { v:"Balance", q:"Gibt es Extrem-Ausschläge (zu viel Kontrolle / zu viel Chaos)?" },
+  { v:"Balance", q:"Fühlst du dich insgesamt „im Gleichgewicht“, auch wenn nicht alles perfekt ist?" }
 ];
 
-// ------------------------------------------------------------
-// Zeitfenster-Hinweise (vereinfachte, praktische Deutung)
-// ------------------------------------------------------------
-const TIMEWINDOW = {
-  harmonie: "Harmonie wirkt sofort – wächst langsam. Intervention: kleine, sichere Schritte jetzt; Geduld bei Aufbau.",
-  wahrheit: "Wahrheit wirkt verzögert – erschüttert schnell. Intervention: vorbereiten, dosieren, klarer Rahmen statt „alles auf einmal“.",
-  balance: "Balance entsteht langsam – bricht schnell. Intervention: keine Schnellschüsse; zuerst Spannungen entladen, dann neu austarieren.",
-  handlungsspielraum: "Handlungsspielraum muss früh kommen – wirkt lange. Intervention: Optionen sofort schaffen (Plan A/B), bevor du diskutierst.",
-  gerechtigkeit: "Gerechtigkeit wirkt spät – aber tief. Intervention: Konsequenzen sauber setzen, aber erst nachdem Stabilität gesichert ist.",
-  effizienz: "Effizienz wirkt schnell – verschleißt. Intervention: nur begrenzt optimieren; Pausen/Reserven bewusst einplanen.",
-  mittel: "Mittel wirken sofort – aber instabil. Intervention: kurzfristig helfen sie, langfristig braucht es Struktur & Grenzen.",
-  freiheit: "Freiheit wirkt sofort – kann gefährlich sein. Intervention: Freiheit dosieren + klare Leitplanken, sonst Chaos/Überforderung."
-};
+// 3 Antwortstufen: 0.2 / 0.5 / 0.8
+const SCALE = [
+  { label:"unklar / schwach", value:0.2 },
+  { label:"teils / gemischt", value:0.5 },
+  { label:"klar / stark", value:0.8 },
+];
 
-// ------------------------------------------------------------
-// UI Boot
-// ------------------------------------------------------------
-const formArea = document.getElementById("formArea");
-const btnEvaluate = document.getElementById("btnEvaluate");
-const btnReset = document.getElementById("btnReset");
-const results = document.getElementById("results");
-const barsEl = document.getElementById("bars");
-const weakestEl = document.getElementById("weakest");
-const timeWindowEl = document.getElementById("timeWindow");
+const el = (id) => document.getElementById(id);
 
-buildForm();
+function showErrorBox() {
+  el("errorBox").classList.remove("hidden");
+}
+function hideErrorBox() {
+  el("errorBox").classList.add("hidden");
+}
 
-btnEvaluate.addEventListener("click", () => {
-  const data = readAnswers();
-  if (!data.ok) {
-    showStatus("Bitte beantworte alle Fragen, bevor du auswertest.");
-    return;
-  }
-  hideStatus();
-  const score = computeScores(data.answers);
-  renderBars(score.perVar);
-  renderWeakest(score.weakest);
-  renderTimeWindow(score.weakest);
-  drawCoordinateSystem(score.perVar);
-  results.style.display = "block";
-  results.scrollIntoView({ behavior: "smooth", block: "start" });
+/**
+ * ONLY show the warning if the error originates from our own script.js
+ * This avoids permanent banners triggered by extensions or cross-origin "Script error."
+ */
+window.addEventListener("error", (e) => {
+  try {
+    const file = (e && e.filename) ? String(e.filename) : "";
+    if (file.includes("script.js")) showErrorBox();
+  } catch { /* noop */ }
 });
 
-btnReset.addEventListener("click", () => {
-  document.querySelectorAll("input[type=radio]").forEach(r => r.checked = false);
-  results.style.display = "none";
-  hideStatus();
+window.addEventListener("unhandledrejection", (e) => {
+  // only show if it looks like our code / network call.
+  // keep conservative: do NOT spam.
+  showErrorBox();
 });
 
-// ------------------------------------------------------------
-// Form Builder
-// ------------------------------------------------------------
-function buildForm(){
-  formArea.innerHTML = "";
-  QUESTIONS.forEach((q, idx) => {
-    const box = document.createElement("div");
-    box.className = "q";
+function buildQuestions() {
+  const host = el("questions");
+  host.innerHTML = "";
+
+  QUESTIONS.forEach((item, idx) => {
+    const qWrap = document.createElement("div");
+    qWrap.className = "q";
 
     const top = document.createElement("div");
     top.className = "qTop";
 
-    const title = document.createElement("p");
-    title.className = "qTitle";
-    title.textContent = q.t;
+    const left = document.createElement("div");
+    left.className = "qIdx";
+    left.textContent = `${idx+1}/${QUESTIONS.length} · ${item.v}`;
 
-    const meta = document.createElement("div");
-    meta.className = "qMeta";
-    meta.textContent = `${idx+1}/24 · ${labelOf(q.v)}`;
+    const right = document.createElement("div");
+    right.className = "qVar";
+    right.textContent = item.v;
 
-    top.appendChild(title);
-    top.appendChild(meta);
+    top.appendChild(left);
+    top.appendChild(right);
+
+    const p = document.createElement("p");
+    p.className = "qText";
+    p.textContent = item.q;
 
     const opts = document.createElement("div");
     opts.className = "opts";
 
-    ANSWERS.forEach((a) => {
-      const lab = document.createElement("label");
-      lab.className = "opt";
+    SCALE.forEach((o, j) => {
+      const label = document.createElement("label");
+      label.className = "opt";
 
       const input = document.createElement("input");
       input.type = "radio";
       input.name = `q_${idx}`;
-      input.value = a.value;
+      input.value = String(o.value);
+      input.setAttribute("data-var", item.v);
 
       const span = document.createElement("span");
-      span.textContent = a.label;
+      span.textContent = o.label;
 
-      lab.appendChild(input);
-      lab.appendChild(span);
-      opts.appendChild(lab);
+      label.appendChild(input);
+      label.appendChild(span);
+      opts.appendChild(label);
     });
 
-    box.appendChild(top);
-    box.appendChild(opts);
-    formArea.appendChild(box);
+    qWrap.appendChild(top);
+    qWrap.appendChild(p);
+    qWrap.appendChild(opts);
+    host.appendChild(qWrap);
   });
 }
 
-function labelOf(key){
-  return (VARIABLES.find(v => v.key === key)?.label) || key;
-}
+function collectAnswers() {
+  const byVar = {};
+  VARS.forEach(v => byVar[v] = []);
 
-// ------------------------------------------------------------
-// Read + Compute
-// ------------------------------------------------------------
-function readAnswers(){
-  const answers = [];
-  for (let i=0; i<QUESTIONS.length; i++){
-    const selected = document.querySelector(`input[name="q_${i}"]:checked`);
-    if (!selected) return { ok:false };
-    answers.push({ var: QUESTIONS[i].v, val: Number(selected.value) });
+  for (let i=0; i<QUESTIONS.length; i++) {
+    const chosen = document.querySelector(`input[name="q_${i}"]:checked`);
+    if (!chosen) return { ok:false, missing:i+1 };
+
+    const v = chosen.getAttribute("data-var");
+    byVar[v].push(Number(chosen.value));
   }
-  return { ok:true, answers };
+
+  return { ok:true, byVar };
 }
 
-function computeScores(ans){
-  const per = {};
-  VARIABLES.forEach(v => per[v.key] = []);
-  ans.forEach(a => per[a.var].push(a.val));
-
-  const perVar = {};
-  VARIABLES.forEach(v => {
-    const arr = per[v.key];
-    const avg = arr.reduce((s,x)=>s+x,0) / arr.length;
-    perVar[v.key] = round2(avg);
-  });
-
-  let weakest = VARIABLES[0].key;
-  VARIABLES.forEach(v => {
-    if (perVar[v.key] < perVar[weakest]) weakest = v.key;
-  });
-
-  return { perVar, weakest };
+function avg(arr) {
+  if (!arr || !arr.length) return 0;
+  return arr.reduce((a,b)=>a+b,0) / arr.length;
 }
 
-function round2(n){ return Math.round(n*100)/100; }
+function scoreAll(byVar) {
+  const scores = {};
+  VARS.forEach(v => scores[v] = avg(byVar[v]));
+  return scores;
+}
 
-// ------------------------------------------------------------
-// Render: Bars, Weakest, TimeWindow
-// ------------------------------------------------------------
-function renderBars(perVar){
-  barsEl.innerHTML = "";
-  VARIABLES.forEach(v => {
-    const val = perVar[v.key];
+function weakestVar(scores) {
+  let w = null;
+  for (const [k,val] of Object.entries(scores)) {
+    if (w === null || val < w.val) w = { key:k, val };
+  }
+  return w;
+}
+
+function timeWindowFor(value) {
+  // simple helper text, no mini-essay
+  if (value <= 0.3) return "jetzt (akut) · 24–72h Fokus";
+  if (value <= 0.55) return "bald · 1–2 Wochen Fokus";
+  return "stabil · nur Feintuning nötig";
+}
+
+function renderBars(scores) {
+  const host = el("bars");
+  host.innerHTML = "";
+
+  for (const v of VARS) {
+    const val = scores[v];
     const row = document.createElement("div");
     row.className = "barRow";
 
     const name = document.createElement("div");
     name.className = "barName";
-    name.textContent = v.label;
+    name.textContent = v;
 
     const track = document.createElement("div");
     track.className = "barTrack";
 
     const fill = document.createElement("div");
     fill.className = "barFill";
-    fill.style.width = `${Math.round(val*100)}%`;
+    fill.style.width = `${Math.round(val * 100)}%`;
 
     track.appendChild(fill);
 
-    const out = document.createElement("div");
-    out.className = "barVal";
-    out.textContent = val.toFixed(2);
+    const num = document.createElement("div");
+    num.className = "barVal";
+    num.textContent = val.toFixed(2);
 
     row.appendChild(name);
     row.appendChild(track);
-    row.appendChild(out);
+    row.appendChild(num);
+    host.appendChild(row);
+  }
+}
 
-    barsEl.appendChild(row);
+function renderWeakest(weak) {
+  const host = el("weakest");
+  host.innerHTML = `
+    <span class="badge">${weak.key}</span>
+    <span class="muted">Score:</span> <strong>${weak.val.toFixed(2)}</strong>
+  `;
+}
+
+function renderTimewin(weak) {
+  const host = el("timewin");
+  host.innerHTML = `
+    <span class="badge">${timeWindowFor(weak.val)}</span>
+  `;
+}
+
+function render3D(scores) {
+  // pseudo-3D: map 8 variables as dots on a tilted grid.
+  // We place them in a circle; height depends on score.
+  const host = el("plot3d");
+  host.innerHTML = "";
+
+  const rect = host.getBoundingClientRect();
+  const cx = rect.width * 0.5;
+  const cy = rect.height * 0.62;
+  const R  = Math.min(rect.width, rect.height) * 0.33;
+
+  VARS.forEach((v, i) => {
+    const a = (Math.PI * 2 * i) / VARS.length;
+    const val = scores[v]; // 0..1
+    const x = cx + Math.cos(a) * R * (0.72 + val*0.5);
+    const y = cy + Math.sin(a) * R * (0.38 + (1-val)*0.35);
+
+    const dot = document.createElement("div");
+    dot.className = "dot";
+    dot.style.left = `${x}px`;
+    dot.style.top  = `${y}px`;
+
+    const lab = document.createElement("div");
+    lab.className = "dotLabel";
+    lab.textContent = v;
+
+    dot.appendChild(lab);
+    host.appendChild(dot);
   });
 }
 
-function renderWeakest(weakKey){
-  const label = labelOf(weakKey);
-  weakestEl.innerHTML =
-    `<strong>${label}</strong> ist aktuell der schwächste Punkt (Ansatzpunkt).<br>` +
-    `Wenn du stabilisieren willst, beginne dort: kleine Interventionen, die diese Variable entlasten – ohne die anderen zu überfordern.`;
-}
+function renderDeepDive(scores) {
+  // take up to 2 weakest
+  const list = Object.entries(scores).sort((a,b)=>a[1]-b[1]).slice(0,2);
+  const host = el("deepDive");
+  host.innerHTML = "";
 
-function renderTimeWindow(weakKey){
-  const txt = TIMEWINDOW[weakKey] || "Zeitfenster: Für diese Variable liegt kein Hinweis vor.";
-  timeWindowEl.innerHTML = `<strong>${labelOf(weakKey)}</strong><br>${txt}`;
-}
-
-// ------------------------------------------------------------
-// Plot: Koordinatensystem (Vanilla Canvas)
-// Idee: 8 Achsen als „Radar-ähnliches“ Koordinatensystem + Punkte
-// (Du wolltest 3D – ohne Library ist echtes 3D unnötig fragil.
-//  Das hier ist die stabile, „funktional starke“ Variante.)
-// ------------------------------------------------------------
-function drawCoordinateSystem(perVar){
-  const c = document.getElementById("plot");
-  const ctx = c.getContext("2d");
-
-  const W = c.width, H = c.height;
-  ctx.clearRect(0,0,W,H);
-
-  // Hintergrund
-  ctx.fillStyle = "#0a0b10";
-  ctx.fillRect(0,0,W,H);
-
-  const cx = W/2, cy = H/2;
-  const R = Math.min(W,H)*0.36;
-
-  // Gitter (Kreise)
-  ctx.strokeStyle = "rgba(255,255,255,0.08)";
-  ctx.lineWidth = 1;
-  [0.25,0.5,0.75,1.0].forEach(k=>{
-    ctx.beginPath();
-    ctx.arc(cx,cy,R*k,0,Math.PI*2);
-    ctx.stroke();
+  list.forEach(([v,val]) => {
+    const div = document.createElement("div");
+    div.className = "ddItem";
+    div.innerHTML = `<span class="badge">${v}</span> <span class="muted">Score:</span> <strong>${val.toFixed(2)}</strong>`;
+    host.appendChild(div);
   });
-
-  // Achsen
-  const n = VARIABLES.length;
-  for (let i=0;i<n;i++){
-    const a = (Math.PI*2)*(i/n) - Math.PI/2;
-    const x = cx + Math.cos(a)*R;
-    const y = cy + Math.sin(a)*R;
-    ctx.strokeStyle = "rgba(255,255,255,0.12)";
-    ctx.beginPath();
-    ctx.moveTo(cx,cy);
-    ctx.lineTo(x,y);
-    ctx.stroke();
-
-    // Labels
-    const lx = cx + Math.cos(a)*(R+22);
-    const ly = cy + Math.sin(a)*(R+22);
-    ctx.fillStyle = "rgba(230,234,245,0.9)";
-    ctx.font = "12px system-ui";
-    ctx.textAlign = (Math.cos(a) > 0.2) ? "left" : (Math.cos(a) < -0.2 ? "right" : "center");
-    ctx.textBaseline = (Math.sin(a) > 0.2) ? "top" : (Math.sin(a) < -0.2 ? "bottom" : "middle");
-    ctx.fillText(VARIABLES[i].label, lx, ly);
-  }
-
-  // Polygon (dein Zustand)
-  ctx.beginPath();
-  for (let i=0;i<n;i++){
-    const key = VARIABLES[i].key;
-    const v = perVar[key]; // 0.2..0.8
-    const a = (Math.PI*2)*(i/n) - Math.PI/2;
-    const rr = R * v;
-    const x = cx + Math.cos(a)*rr;
-    const y = cy + Math.sin(a)*rr;
-    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-  }
-  ctx.closePath();
-  ctx.fillStyle = "rgba(231,231,231,0.10)";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(231,231,231,0.65)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Punkte
-  for (let i=0;i<n;i++){
-    const key = VARIABLES[i].key;
-    const v = perVar[key];
-    const a = (Math.PI*2)*(i/n) - Math.PI/2;
-    const rr = R * v;
-    const x = cx + Math.cos(a)*rr;
-    const y = cy + Math.sin(a)*rr;
-
-    ctx.beginPath();
-    ctx.arc(x,y,4.2,0,Math.PI*2);
-    ctx.fillStyle = "rgba(231,231,231,0.95)";
-    ctx.fill();
-  }
-
-  // Zentrum
-  ctx.beginPath();
-  ctx.arc(cx,cy,3,0,Math.PI*2);
-  ctx.fillStyle = "rgba(255,255,255,0.35)";
-  ctx.fill();
 }
 
-// ------------------------------------------------------------
-// Status helper
-// ------------------------------------------------------------
-function showStatus(msg){
-  const box = document.getElementById("statusBox");
-  if (!box) return;
-  box.textContent = msg;
-  box.style.display = "block";
+// --- Worker calls (optional) ---
+async function callWorkerAnalyze(byVar) {
+  if (!WORKER_BASE) return null;
+  const r = await fetch(`${WORKER_BASE}/analyze`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ answers: byVar })
+  });
+  if (!r.ok) throw new Error(`Worker HTTP ${r.status}`);
+  return r.json();
 }
-function hideStatus(){
-  const box = document.getElementById("statusBox");
-  if (!box) return;
-  box.style.display = "none";
+
+async function onEvaluate() {
+  hideErrorBox();
+
+  const data = collectAnswers();
+  if (!data.ok) {
+    alert(`Bitte Frage ${data.missing} beantworten.`);
+    return;
+  }
+
+  const scores = scoreAll(data.byVar);
+  const weak = weakestVar(scores);
+
+  el("results").classList.remove("hidden");
+  render3D(scores);
+  renderBars(scores);
+  renderWeakest(weak);
+  renderTimewin(weak);
+  renderDeepDive(scores);
+
+  // optional: if worker is configured, later replace/extend deep dive with AI
+  try {
+    const ai = await callWorkerAnalyze(data.byVar);
+    if (ai && ai.suggestion) {
+      // keep minimal: add 1 extra line, not a mini text wall
+      const host = el("deepDive");
+      const div = document.createElement("div");
+      div.className = "ddItem";
+      div.innerHTML = `<span class="badge">KI</span> ${ai.suggestion}`;
+      host.appendChild(div);
+    }
+  } catch (e) {
+    // do not scare the user — just show the banner for dev, and keep local result working
+    showErrorBox();
+  }
 }
+
+function onReset() {
+  hideErrorBox();
+  document.querySelectorAll('input[type="radio"]').forEach(i => i.checked = false);
+  el("results").classList.add("hidden");
+  el("plot3d").innerHTML = "";
+  el("bars").innerHTML = "";
+  el("weakest").innerHTML = "";
+  el("timewin").innerHTML = "";
+  el("deepDive").innerHTML = "";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  buildQuestions();
+  el("btnEval").addEventListener("click", onEvaluate);
+  el("btnReset").addEventListener("click", onReset);
+});
