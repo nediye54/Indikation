@@ -1,4 +1,4 @@
-// v4 — clean: single evaluate flow, VARS defined, worker optional, no duplicate blocks.
+// v5 — clean: single evaluate flow, VARS defined, worker optional, no duplicate blocks.
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
 // Variablen-Reihenfolge
