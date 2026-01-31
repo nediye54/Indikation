@@ -78,7 +78,24 @@
         <div id="deepDive" class="deepDiveBody"></div>
       </div>
     </section>
+<div class="card" id="deepDiveCard">
+  <h3>Deep Dive</h3>
+  <p class="muted">Optional: Wenn du willst, erzeugt der Worker eine stabilisierende Indikation.</p>
 
+  <div class="row">
+    <label class="muted">Zeitfenster</label>
+    <select id="timeframe">
+      <option value="heute">heute</option>
+      <option value="7tage">7 Tage</option>
+      <option value="30tage">30 Tage</option>
+    </select>
+  </div>
+
+  <button id="deepDiveBtn" class="btn">Stabilisierende Indikation erzeugen</button>
+
+  <div id="deepDiveOut" class="box" style="display:none; white-space:pre-wrap;"></div>
+</div>
+    
     <footer class="foot muted">
       v2 · Vanilla · Dark UI · 3 Antwortstufen
     </footer>
