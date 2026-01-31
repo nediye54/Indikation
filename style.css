@@ -1,73 +1,212 @@
-// ------------------------------------------------------------
-// Robustheit (mobil): "Script error" abfangen statt White Screen
-// ------------------------------------------------------------
-window.addEventListener("error", (e) => {
-  const box = document.getElementById("statusBox");
-  if (box) {
-    box.textContent = "Hinweis: Ein Skript-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).";
-    box.style.display = "block";
-  }
-  console.warn("Global error caught:", e?.message || e);
-});
+:root{
+  --bg:#0b0c0f;
+  --card:#12141a;
+  --muted:#9aa3b2;
+  --text:#eef1f6;
+  --line:#222734;
+  --soft:#1a1f2a;
+  --accent:#e7e7e7;
+  --danger:#ff5b5b;
+}
 
-// ------------------------------------------------------------
-// Modell: 8 Variablen (Reihenfolge wie von dir festgelegt)
-// ------------------------------------------------------------
-const VARIABLES = [
-  { key: "freiheit", label: "Freiheit" },
-  { key: "gerechtigkeit", label: "Gerechtigkeit" },
-  { key: "effizienz", label: "Effizienz" },
-  { key: "wahrheit", label: "Wahrheit" },
-  { key: "harmonie", label: "Harmonie" },
-  { key: "mittel", label: "Mittel" },
-  { key: "handlungsspielraum", label: "Handlungsspielraum" },
-  { key: "balance", label: "Balance" },
-];
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: radial-gradient(1200px 700px at 30% 10%, #151927 0%, var(--bg) 55%);
+  color:var(--text);
+}
 
-// ------------------------------------------------------------
-// Antworten: exakt 3 Optionen (0.2 / 0.5 / 0.8)
-// ------------------------------------------------------------
-const ANSWERS = [
-  { value: 0.2, label: "unklar / schwach" },
-  { value: 0.5, label: "teils / gemischt" },
-  { value: 0.8, label: "klar / stark" },
-];
+.wrap{
+  width:min(980px, 92vw);
+  margin:32px auto 56px;
+}
 
-// ------------------------------------------------------------
-// Fragen: 24 (3 pro Variable)
-// -> Du kannst Texte später leicht austauschen (nur Strings)
-// ------------------------------------------------------------
-const QUESTIONS = [
-  // Freiheit
-  { v: "freiheit", t: "Wie frei kannst du in deinem Alltag Entscheidungen treffen, ohne Angst vor Konsequenzen?" },
-  { v: "freiheit", t: "Wie oft fühlst du dich in Rollen oder Erwartungen gefangen, die du nicht gewählt hast?" },
-  { v: "freiheit", t: "Kannst du Grenzen setzen, ohne danach Schuldgefühle oder Druck zu spüren?" },
+.hero{ margin-bottom:18px; }
+.hero h1{ margin:0; font-size:42px; letter-spacing:0.2px; }
+.sub{ margin:4px 0 0; color:var(--muted); font-size:18px; }
+.path{ margin:10px 0 0; color:#c8ceda; font-size:13px; opacity:.9; }
 
-  // Gerechtigkeit
-  { v: "gerechtigkeit", t: "Werden in deinem Umfeld Belastungen und Vorteile grundsätzlich fair verteilt?" },
-  { v: "gerechtigkeit", t: "Werden Konflikte so geklärt, dass sich niemand dauerhaft übergangen fühlt?" },
-  { v: "gerechtigkeit", t: "Fühlt sich Anerkennung (Respekt, Zeit, Aufmerksamkeit) bei euch grundsätzlich gerecht an?" },
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:18px 18px 14px;
+  margin-top:14px;
+}
 
-  // Effizienz
-  { v: "effizienz", t: "Werden Probleme bei euch eher praktisch gelöst als endlos diskutiert?" },
-  { v: "effizienz", t: "Gelingt es, Pläne umzusetzen, ohne dass dabei Beziehungen leiden?" },
-  { v: "effizienz", t: "Wie oft führt „Optimierung“ bei euch zu Stress statt Entlastung?" },
+.cardHead h2{ margin:0; font-size:20px; }
+.hint{ margin:8px 0 0; color:var(--muted); font-size:13px; line-height:1.45; }
 
-  // Wahrheit
-  { v: "wahrheit", t: "Werden schwierige Themen bei euch offen angesprochen, statt umgangen?" },
-  { v: "wahrheit", t: "Kannst du ehrlich sein, ohne dass es sofort eskaliert?" },
-  { v: "wahrheit", t: "Wie zuverlässig stimmen Worte und Taten in deinem Umfeld überein?" },
+.controls{
+  display:flex;
+  gap:10px;
+  margin:14px 0 10px;
+  flex-wrap:wrap;
+}
 
-  // Harmonie
-  { v: "harmonie", t: "Fühlst du dich in deinem Alltag emotional eher getragen als ausgelaugt?" },
-  { v: "harmonie", t: "Gibt es in deinem Umfeld spürbar mehr Ruhe als Spannung?" },
-  { v: "harmonie", t: "Kannst du dich erholen, ohne dass sofort neue Konflikte entstehen?" },
+.btn{
+  appearance:none;
+  border:1px solid var(--line);
+  background:transparent;
+  color:var(--text);
+  border-radius:12px;
+  padding:10px 14px;
+  cursor:pointer;
+  transition:transform .05s ease, background .2s ease, border-color .2s ease;
+}
+.btn:hover{ background:rgba(255,255,255,0.04); }
+.btn:active{ transform:translateY(1px); }
+.btn.primary{
+  border-color:#3b4256;
+  background:rgba(255,255,255,0.06);
+}
 
-  // Mittel
-  { v: "mittel", t: "Hast du ausreichend Ressourcen (Zeit, Geld, Energie), um stabil zu handeln?" },
-  { v: "mittel", t: "Wie oft führen fehlende Mittel bei euch zu Streit oder Druck?" },
-  { v: "mittel", t: "Kannst du Mittel so einsetzen, dass sie wirklich entlasten (statt nur kurzfristig)?" },
+.status{
+  border:1px solid rgba(255,91,91,0.5);
+  background:rgba(255,91,91,0.08);
+  color:#ffd7d7;
+  padding:10px 12px;
+  border-radius:12px;
+  margin:14px 0 0;
+  font-size:13px;
+}
 
-  // Handlungsspielraum
-  { v: "handlungsspielraum", t: "Gibt es bei euch realistische Optionen, wenn etwas schief läuft?" },
-  {
+.formArea{
+  margin-top:12px;
+  display:grid;
+  gap:10px;
+}
+
+.q{
+  border:1px solid var(--line);
+  background:rgba(0,0,0,0.18);
+  border-radius:14px;
+  padding:12px 12px 10px;
+}
+.qTop{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  justify-content:space-between;
+}
+.qTitle{
+  margin:0;
+  font-size:14px;
+  line-height:1.35;
+}
+.qMeta{
+  color:var(--muted);
+  font-size:12px;
+  white-space:nowrap;
+  opacity:.85;
+}
+
+.opts{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+  flex-wrap:wrap;
+}
+.opt{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid var(--line);
+  padding:8px 10px;
+  border-radius:12px;
+  cursor:pointer;
+  user-select:none;
+  background:rgba(255,255,255,0.02);
+}
+.opt input{ accent-color:#cfd6e6; }
+.opt span{ font-size:13px; color:#dfe6f4; }
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+  margin-top:12px;
+}
+@media (max-width: 860px){
+  .grid{ grid-template-columns: 1fr; }
+  .hero h1{ font-size:34px; }
+}
+
+.panel{
+  border:1px solid var(--line);
+  background:rgba(0,0,0,0.15);
+  border-radius:14px;
+  padding:12px;
+}
+.panel h3{
+  margin:0 0 10px;
+  font-size:14px;
+  color:#e9edf7;
+}
+
+.canvas{
+  width:100%;
+  height:auto;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:#0a0b10;
+}
+
+.mini{
+  margin:8px 0 0;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.bars{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.barRow{
+  display:grid;
+  grid-template-columns: 110px 1fr 52px;
+  gap:10px;
+  align-items:center;
+}
+.barName{
+  font-size:13px;
+  color:#dfe6f4;
+}
+.barTrack{
+  height:12px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  overflow:hidden;
+  background:rgba(255,255,255,0.02);
+}
+.barFill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg, #cfd6e6, #7e879a);
+}
+.barVal{
+  text-align:right;
+  font-variant-numeric: tabular-nums;
+  color:#cfd6e6;
+  font-size:13px;
+}
+
+.callout{
+  border:1px solid #2b3142;
+  background:rgba(255,255,255,0.03);
+  border-radius:14px;
+  padding:12px;
+  color:#e8ecf6;
+  line-height:1.45;
+  font-size:13px;
+}
+
+.foot{
+  margin-top:14px;
+  color:var(--muted);
+  font-size:12px;
+  opacity:.85;
+}
