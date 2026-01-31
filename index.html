@@ -3,6 +3,80 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Indikation – nach der Moral des Gleichgewichts</title>
+
+  <!-- Cache-Buster: bei späteren Updates bitte v=2, v=3, ... -->
+  <link rel="stylesheet" href="./style.css?v=1">
+</head>
+
+<body>
+  <main class="wrap">
+    <header class="hero">
+      <h1>Indikation</h1>
+      <p class="sub">nach der Moral des Gleichgewichts</p>
+      <p class="path">Quick Scan (24) → Deep Dive (optional) → stabilisierende Indikation</p>
+    </header>
+
+    <!-- Statusbox (z.B. für abgefangene Scriptfehler auf Mobilgeräten) -->
+    <div id="statusBox" class="status" style="display:none;"></div>
+
+    <section class="card">
+      <div class="cardHead">
+        <h2>Quick Scan</h2>
+        <p class="hint">Beantworte jede Frage mit einer von drei Optionen. Danach erhältst du: Koordinatensystem + Balken + schwächste Variable + Zeitfenster.</p>
+      </div>
+
+      <div class="controls">
+        <button id="btnEvaluate" class="btn primary">Auswerten</button>
+        <button id="btnReset" class="btn">Zurücksetzen</button>
+      </div>
+
+      <div id="formArea" class="formArea"></div>
+    </section>
+
+    <section id="results" class="card" style="display:none;">
+      <div class="cardHead">
+        <h2>Auswertung</h2>
+        <p class="hint">Koordinatensystem zeigt die Struktur. Balken übersetzen Zahlen. Schwächste Variable zeigt Ansatzpunkt. Zeitfenster hilft beim Timing.</p>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h3>Koordinatensystem</h3>
+          <canvas id="plot" width="520" height="360" class="canvas"></canvas>
+          <p class="mini">Visualisiert: Achsen = Variablen, Intensität = deine Werte. (Vanilla Canvas)</p>
+        </div>
+
+        <div class="panel">
+          <h3>Balken</h3>
+          <div id="bars" class="bars"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Schwächste Variable</h3>
+          <div id="weakest" class="callout"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Zeitfenster</h3>
+          <div id="timeWindow" class="callout"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <span class="ver">v1.0 — Quick Scan + Koordinatensystem + Balken + Schwächste Variable + Zeitfenster (ohne Worker)</span>
+    </footer>
+  </main>
+
+  <!-- Cache-Buster: bei späteren Updates bitte v=2, v=3, ... -->
+  <script defer src="./script.js?v=1"></script>
+</body>
+</html><!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>mdg-Indikation – Quick Scan</title>
   <link rel="stylesheet" href="./style.css?v=1" />
 </head>
