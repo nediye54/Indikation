@@ -1,3 +1,5 @@
+const WORKER_BASE = "https://DEIN-WORKER.workers.dev";
+
 // v2 — robust: show error only for OUR script.js problems, avoid permanent banner.
 
 const VERSION = 2;
@@ -296,6 +298,72 @@ async function callWorkerAnalyze(byVar) {
 
 async function onEvaluate() {
   hideErrorBox();
+
+  // Sammeln
+  const answersByVar = {};
+  const missing = [];
+
+  QUESTIONS.forEach((q, idx) => {
+    const picked = document.querySelector(`input[name="q_${idx}"]:checked`);
+    if (!picked) {
+      missing.push(idx + 1);
+      return;
+    }
+    const v = picked.getAttribute("data-var");
+    const val = Number(picked.value);
+    if (!answersByVar[v]) answersByVar[v] = [];
+    answersByVar[v].push(val);
+  });
+
+  if (missing.length) {
+    showErrorBox(`Bitte beantworte alle Fragen. Fehlend: ${missing.slice(0,5).join(", ")}${missing.length>5?"…":""}`);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${WORKER_BASE}/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ answers: answersByVar }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data?.error || "Analyze failed");
+
+    // Ergebnis anzeigen (du hast schon Ergebnis-Boxen)
+    const out = el("coordOut");      // deine Koordinaten-DIV
+    const bars = el("barsOut");      // deine Balken-DIV
+    const weak = el("weakOut");      // schwächste Variable
+    const time = el("timeOut");      // Zeitfenster
+
+    if (weak) weak.textContent = data.weakest ? `Schwächste Variable: ${data.weakest}` : "—";
+
+    // Balken simpel:
+    if (bars) {
+      bars.innerHTML = "";
+      Object.entries(data.perVar).forEach(([k, v]) => {
+        const row = document.createElement("div");
+        row.className = "barRow";
+        row.innerHTML = `<div class="barLabel">${k}</div>
+          <div class="barTrack"><div class="barFill" style="width:${Math.round(v*100)}%"></div></div>
+          <div class="barVal">${Math.round(v*100)}%</div>`;
+        bars.appendChild(row);
+      });
+    }
+
+    // Zeitfenster (simple Logik):
+    const wVal = data.perVar?.[data.weakest] ?? 0.5;
+    let tf = "Diese Woche";
+    if (wVal <= 0.3) tf = "Sofort (heute)";
+    else if (wVal <= 0.5) tf = "Diese Woche";
+    else tf = "30 Tage (Feintuning)";
+    if (time) time.textContent = `Zeitfenster: ${tf}`;
+
+    el("results")?.classList.remove("hidden");
+  } catch (e) {
+    showErrorBox(String(e));
+  }
+}
 
   const data = collectAnswers();
   if (!data.ok) {
