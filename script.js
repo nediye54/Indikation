@@ -1,17 +1,5 @@
+// v3 – fix: valid JS constants, no stray strings, no duplicate declarations.
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
-
-// v2 — robust: show error only for OUR script.js problems, avoid permanent banner.
-
-const VERSION = 2;
-  "Freiheit",
-  "Gerechtigkeit",
-  "Wahrheit",
-  "Harmonie",
-  "Effizienz",
-  "Handlungsspielraum",
-  "Mittel",
-  "Balance"
-];
 
 // Reihenfolge: emotionaler Einstieg bleibt vorn, Mittel nicht zuerst.
 const QUESTIONS = [
