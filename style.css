@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>mdg-Indikation – Quick Scan</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">mdg</div>
+        <div class="titles">
+          <h1>Indikation – nach der Moral des Gleichgewichts</h1>
+          <p class="sub">Quick Scan (24) → Deep Dive (optional) → stabilisierende Indikation</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="card">
+      <section id="quickScan">
+        <h2>Quick Scan</h2>
+        <p class="hint">
+          Beantworte jede Frage mit einer von drei Optionen. Das Ergebnis zeigt dein Gleichgewicht (3D) + Balken + schwächste Variable + Zeitfenster.
+        </p>
+
+        <div id="qsContainer" class="qs-grid"></div>
+
+        <div class="actions">
+          <button id="btnEvaluate" class="btn primary" type="button">Auswerten</button>
+          <button id="btnReset" class="btn" type="button">Zurücksetzen</button>
+        </div>
+
+        <div id="qsError" class="error" hidden></div>
+      </section>
+
+      <section id="results" hidden>
+        <div class="divider"></div>
+        <h2>Auswertung</h2>
+
+        <div class="result-grid">
+          <div class="panel">
+            <h3>3D-Gleichgewicht</h3>
+            <p class="mini">
+              Achsen: <span class="pill">Wahrheit</span> (X), <span class="pill">Freiheit</span> (Y), <span class="pill">Gerechtigkeit</span> (Z)
+            </p>
+            <canvas id="plot3d" width="520" height="360"></canvas>
+            <div class="legend">
+              <div><span class="dot"></span> dein Punkt</div>
+              <div class="muted">Wertebereich: 0.2–0.8 (Quick Scan)</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Variablen (Balken)</h3>
+            <div id="bars" class="bars"></div>
+
+            <div class="focus">
+              <div>
+                <div class="label">Schwächste Variable</div>
+                <div id="weakest" class="value"></div>
+              </div>
+              <div>
+                <div class="label">Zeitfenster</div>
+                <div id="timeWindow" class="value"></div>
+              </div>
+            </div>
+
+            <div class="actions inline">
+              <button id="btnDeepDive" class="btn primary" type="button">Deep Dive starten</button>
+            </div>
+
+            <div class="toggleRow">
+              <label class="toggle">
+                <input id="toggleMoreDeepDive" type="checkbox" />
+                <span>Wenn mehrere kritisch sind: mehr als 2 Variablen im Deep Dive</span>
+              </label>
+              <div class="muted small">
+                Standard: max. 2 Variablen. Mit Schalter: alle unter dem Schwellenwert.
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <section id="deepDive" hidden>
+        <div class="divider"></div>
+        <h2>Deep Dive</h2>
+        <p class="hint">
+          Deep Dive fokussiert auf die schwächsten Variablen. Je tiefer du gehst, desto präziser wird die Indikation.
+        </p>
+
+        <div id="ddContainer" class="dd"></div>
+
+        <div class="actions">
+          <button id="btnDeepDiveEvaluate" class="btn primary" type="button">Deep Dive auswerten</button>
+          <button id="btnDeepDiveBack" class="btn" type="button">Zurück zur Auswertung</button>
+        </div>
+
+        <div id="ddError" class="error" hidden></div>
+
+        <div id="ddResult" class="panel" hidden>
+          <h3>Stabilisierende Indikation</h3>
+          <div id="ddIndication" class="indication"></div>
+          <div class="muted small">
+            Hinweis: Das ist eine funktionale Indikation (erste Version). Später ersetzt der KI-Worker dies durch kontextuelle Rückfragen + präzisere Indikationen.
+          </div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <div class="muted small">
+          v1.0 – Quick Scan + Deep Dive (ohne Worker). Dark UI. 3D-Plot. 3 Antwortstufen.
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
