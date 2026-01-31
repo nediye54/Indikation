@@ -1,4 +1,4 @@
-const WORKER_BASE = "https://DEIN-WORKER.workers.dev";
+const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
 // v2 — robust: show error only for OUR script.js problems, avoid permanent banner.
 
