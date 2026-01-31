@@ -1,228 +1,123 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <title>Indikation – nach der Moral des Gleichgewichts</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;background:#fafafa;color:#111;margin:0;padding:20px}
-    h1{font-size:1.6rem;margin:0 0 .2rem}
-    .subtitle{color:#555;margin:0 0 1.2rem}
-    .block{background:#fff;padding:16px;border-radius:12px;margin:0 0 16px;border:1px solid #eee}
-    .k{font-weight:700;margin:0 0 6px}
-    .small{font-size:.85rem;color:#555}
-    .question{margin:10px 0 6px}
-    .answers label{display:block;margin:4px 0;cursor:pointer}
-    button{margin-top:14px;padding:10px 18px;border:0;border-radius:10px;background:#111;color:#fff;font-size:1rem;cursor:pointer}
-    button:hover{opacity:.92}
-    .err{color:#b91c1c;font-weight:600}
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>mdg-Indikation – Quick Scan</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">mdg</div>
+        <div class="titles">
+          <h1>Indikation – nach der Moral des Gleichgewichts</h1>
+          <p class="sub">Quick Scan (24) → Deep Dive (optional) → stabilisierende Indikation</p>
+        </div>
+      </div>
+    </header>
 
-  <h1>Indikation</h1>
-  <div class="subtitle">nach der Moral des Gleichgewichts</div>
+    <main class="card">
+      <section id="quickScan">
+        <h2>Quick Scan</h2>
+        <p class="hint">
+          Beantworte jede Frage mit einer von drei Optionen. Das Ergebnis zeigt dein Gleichgewicht (3D) + Balken + schwächste Variable + Zeitfenster.
+        </p>
 
-  <div id="app"></div>
+        <div id="qsContainer" class="qs-grid"></div>
 
-<script>
-(() => {
-  const variables = [
-    { key:"freiheit", label:"Freiheit", questions:[
-      "Kannst du Entscheidungen über dein Leben selbst treffen?",
-      "Fühlst du dich innerlich frei in deinen Beziehungen?",
-      "Kannst du Nein sagen, ohne Angst vor Konsequenzen?"
-    ]},
-    { key:"gerechtigkeit", label:"Gerechtigkeit", questions:[
-      "Werden Entscheidungen dir gegenüber fair getroffen?",
-      "Wirst du für deine Leistungen angemessen behandelt?",
-      "Gibt es klare und gleiche Regeln für alle?"
-    ]},
-    { key:"wahrheit", label:"Wahrheit", questions:[
-      "Kannst du offen sagen, was du wirklich denkst?",
-      "Weißt du, woran du bei anderen bist?",
-      "Werden Probleme ehrlich benannt?"
-    ]},
-    { key:"harmonie", label:"Harmonie", questions:[
-      "Gibt es emotionalen Frieden in deinem Umfeld?",
-      "Fühlst du dich verstanden?",
-      "Sind Konflikte lösbar ohne Eskalation?"
-    ]},
-    { key:"effizienz", label:"Effizienz", questions:[
-      "Erreichen deine Handlungen Wirkung?",
-      "Wird Energie sinnvoll eingesetzt?",
-      "Führen Entscheidungen zu Ergebnissen?"
-    ]},
-    { key:"mittel", label:"Mittel", questions:[
-      "Stehen dir genug Ressourcen zur Verfügung?",
-      "Hast du Zugang zu dem, was du brauchst?",
-      "Fehlen dir finanzielle oder soziale Mittel?"
-    ]},
-    { key:"handlungsspielraum", label:"Handlungsspielraum", questions:[
-      "Kannst du Dinge aktiv verändern?",
-      "Hast du echte Optionen?",
-      "Wirst du gehört, wenn du handelst?"
-    ]},
-    { key:"balance", label:"Balance", questions:[
-      "Fühlen sich die Bereiche deines Lebens ausgeglichen an?",
-      "Kompensierst du Extreme?",
-      "Tragen sich die Teile gegenseitig?"
-    ]}
-  ];
+        <div class="actions">
+          <button id="btnEvaluate" class="btn primary" type="button">Auswerten</button>
+          <button id="btnReset" class="btn" type="button">Zurücksetzen</button>
+        </div>
 
-  const answerValues = { klar:0.8, unklar:0.5, nein:0.2 };
+        <div id="qsError" class="error" hidden></div>
+      </section>
 
-  function el(id){ return document.getElementById(id); }
+      <section id="results" hidden>
+        <div class="divider"></div>
+        <h2>Auswertung</h2>
 
-  function renderForm() {
-    const app = el("app");
-    let html = "";
-
-    variables.forEach(v => {
-      html += `<div class="block"><div class="k">${v.label}</div>`;
-      v.questions.forEach((q, i) => {
-        html += `
-          <div class="question">${q}</div>
-          <div class="answers">
-            <label><input type="radio" name="${v.key}_${i}" value="klar"> klar</label>
-            <label><input type="radio" name="${v.key}_${i}" value="unklar"> unklar</label>
-            <label><input type="radio" name="${v.key}_${i}" value="nein"> nein</label>
+        <div class="result-grid">
+          <div class="panel">
+            <h3>3D-Gleichgewicht</h3>
+            <p class="mini">
+              Achsen: <span class="pill">Wahrheit</span> (X), <span class="pill">Freiheit</span> (Y), <span class="pill">Gerechtigkeit</span> (Z)
+            </p>
+            <canvas id="plot3d" width="520" height="360"></canvas>
+            <div class="legend">
+              <div><span class="dot"></span> dein Punkt</div>
+              <div class="muted">Wertebereich: 0.2–0.8 (Quick Scan)</div>
+            </div>
           </div>
-        `;
-      });
-      html += `</div>`;
-    });
 
-    html += `<button id="evalBtn" type="button">Auswerten</button>`;
-    app.innerHTML = html;
+          <div class="panel">
+            <h3>Variablen (Balken)</h3>
+            <div id="bars" class="bars"></div>
 
-    // <<< WICHTIG: Click-Handler DIREKT nach dem Rendern binden
-    const btn = el("evalBtn");
-    if (btn) btn.addEventListener("click", evaluate);
-  }
+            <div class="focus">
+              <div>
+                <div class="label">Schwächste Variable</div>
+                <div id="weakest" class="value"></div>
+              </div>
+              <div>
+                <div class="label">Zeitfenster</div>
+                <div id="timeWindow" class="value"></div>
+              </div>
+            </div>
 
-  function evaluate() {
-    const scores = {};
-    variables.forEach(v => {
-      let sum = 0, count = 0;
-      v.questions.forEach((_, i) => {
-        const chosen = document.querySelector(`input[name="${v.key}_${i}"]:checked`);
-        if (chosen) { sum += answerValues[chosen.value]; count++; }
-      });
-      scores[v.key] = count > 0 ? (sum / count) : 0.5;
-    });
-    renderResult(scores);
-  }
+            <div class="actions inline">
+              <button id="btnDeepDive" class="btn primary" type="button">Deep Dive starten</button>
+            </div>
 
-  function renderResult(scores) {
-    const app = el("app");
-    app.innerHTML = `
-      <div class="block">
-        <div class="k">Dein Gleichgewichtszustand</div>
-        ${Object.entries(scores).map(([k,v]) => `<div class="small">${k}: ${v.toFixed(2)}</div>`).join("")}
-        ${buildCoordPlotSVG(scores)}
-        <div style="margin-top:10px;">
-          <button id="backBtn" type="button">Zurück</button>
+            <div class="toggleRow">
+              <label class="toggle">
+                <input id="toggleMoreDeepDive" type="checkbox" />
+                <span>Wenn mehrere kritisch sind: mehr als 2 Variablen im Deep Dive</span>
+              </label>
+              <div class="muted small">
+                Standard: max. 2 Variablen. Mit Schalter: alle unter dem Schwellenwert.
+              </div>
+            </div>
+
+          </div>
         </div>
-      </div>
-    `;
-    const back = el("backBtn");
-    if (back) back.addEventListener("click", renderForm);
-  }
+      </section>
 
-  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+      <section id="deepDive" hidden>
+        <div class="divider"></div>
+        <h2>Deep Dive</h2>
+        <p class="hint">
+          Deep Dive fokussiert auf die schwächsten Variablen. Je tiefer du gehst, desto präziser wird die Indikation.
+        </p>
 
-  function buildCoordPlotSVG(scores){
-    const freedom = scores.freiheit ?? 0.5;
-    const justice = scores.gerechtigkeit ?? 0.5;
-    const truth   = scores.wahrheit ?? 0.5;
-    const harmony = scores.harmonie ?? 0.5;
+        <div id="ddContainer" class="dd"></div>
 
-    const x = freedom - justice;   // Freiheit ↔ Gerechtigkeit
-    const y = truth - harmony;     // Wahrheit ↔ Harmonie
-
-    const W=340,H=340,pad=40,domain=0.6;
-    const nx=clamp(x/domain,-1,1), ny=clamp(y/domain,-1,1);
-
-    const px = pad + (nx+1)*0.5*(W-2*pad);
-    const py = pad + (1-(ny+1)*0.5)*(H-2*pad);
-
-    const r = Math.sqrt(nx*nx + ny*ny);
-    const stableR = 0.33, transR = 0.66;
-
-    const color = (r<=stableR) ? "#16a34a" : (r<=transR) ? "#f59e0b" : "#dc2626";
-    const zoneLabel = (r<=stableR) ? "Stabilitätskorridor" : (r<=transR) ? "Übergangszone" : "Kritische Zone";
-
-    const cx = W/2, cy = H/2;
-    const Rpx = (normR) => normR * 0.5 * (W - 2*pad);
-
-    // Pfeil zum Zentrum (stabilisierende Richtung)
-    const dx = -nx, dy = -ny;
-    const mag = Math.sqrt(dx*dx + dy*dy) || 1;
-    const ux = dx/mag, uy = dy/mag;
-    const len = 62;
-    const ax2 = clamp(px + ux*len, pad, W-pad);
-    const ay2 = clamp(py - uy*len, pad, H-pad);
-
-    return `
-      <div style="margin-top:14px;">
-        <div class="k">Koordinatenbild</div>
-        <div class="small">X: Freiheit ↔ Gerechtigkeit · Y: Wahrheit ↔ Harmonie</div>
-
-        <svg viewBox="0 0 ${W} ${H}" width="100%" height="360"
-             style="margin-top:10px;border:1px solid #eee;border-radius:12px;background:#fff;">
-          <defs>
-            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L10,3 L0,6 Z" fill="#111"></path>
-            </marker>
-          </defs>
-
-          <!-- Stabilitätskorridor -->
-          <circle cx="${cx}" cy="${cy}" r="${Rpx(transR)}" fill="none" stroke="#eee" stroke-width="2"></circle>
-          <circle cx="${cx}" cy="${cy}" r="${Rpx(stableR)}" fill="none" stroke="#e5e7eb" stroke-width="2"></circle>
-
-          <!-- Achsen -->
-          <line x1="${cx}" y1="${pad}" x2="${cx}" y2="${H-pad}" stroke="#ddd"></line>
-          <line x1="${pad}" y1="${cy}" x2="${W-pad}" y2="${cy}" stroke="#ddd"></line>
-
-          <!-- Rahmen -->
-          <rect x="${pad}" y="${pad}" width="${W-2*pad}" height="${H-2*pad}" fill="none" stroke="#eee"></rect>
-
-          <!-- Labels -->
-          <text x="${pad}" y="${cy-12}" font-size="12" fill="#555">Gerechtigkeit</text>
-          <text x="${W-pad}" y="${cy-12}" text-anchor="end" font-size="12" fill="#555">Freiheit</text>
-          <text x="${cx}" y="${pad-12}" text-anchor="middle" font-size="12" fill="#555">Wahrheit</text>
-          <text x="${cx}" y="${H-10}" text-anchor="middle" font-size="12" fill="#555">Harmonie</text>
-
-          <!-- Pfeil -->
-          <line x1="${px}" y1="${py}" x2="${ax2}" y2="${ay2}" stroke="#111" stroke-width="2" marker-end="url(#arrow)"></line>
-
-          <!-- Punkt -->
-          <circle cx="${px}" cy="${py}" r="7" fill="${color}"></circle>
-          <circle cx="${px}" cy="${py}" r="18" fill="none" stroke="${color}" opacity="0.18"></circle>
-
-          <text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="11" fill="#9ca3af">${zoneLabel}</text>
-        </svg>
-
-        <div class="small" style="margin-top:8px;">
-          <b>Punkt</b> = Zustand · <b>Pfeil</b> = stabilisierende Richtung · <b>Innenkreis</b> = stabiler Korridor
+        <div class="actions">
+          <button id="btnDeepDiveEvaluate" class="btn primary" type="button">Deep Dive auswerten</button>
+          <button id="btnDeepDiveBack" class="btn" type="button">Zurück zur Auswertung</button>
         </div>
-      </div>
-    `;
-  }
 
-  // Globaler Fehlerfang: Wenn JS irgendwo abbricht, siehst du wenigstens eine Meldung
-  window.addEventListener("error", (e) => {
-    const app = el("app");
-    if (app) {
-      app.innerHTML = `<div class="block err">Fehler im Script: ${String(e.message || e.error || e)}</div>`;
-    }
-  });
+        <div id="ddError" class="error" hidden></div>
 
-  // Start
-  renderForm();
-})();
-</script>
+        <div id="ddResult" class="panel" hidden>
+          <h3>Stabilisierende Indikation</h3>
+          <div id="ddIndication" class="indication"></div>
+          <div class="muted small">
+            Hinweis: Das ist eine funktionale Indikation (erste Version). Später ersetzt der KI-Worker dies durch kontextuelle Rückfragen + präzisere Indikationen.
+          </div>
+        </div>
+      </section>
 
+      <footer class="foot">
+        <div class="muted small">
+          v1.0 – Quick Scan + Deep Dive (ohne Worker). Dark UI. 3D-Plot. 3 Antwortstufen.
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="script.js" defer></script>
 </body>
 </html>
