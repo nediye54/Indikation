@@ -414,3 +414,54 @@ document.addEventListener("DOMContentLoaded", () => {
   el("btnEval").addEventListener("click", onEvaluate);
   el("btnReset").addEventListener("click", onReset);
 });
+const deepDiveBtn = document.getElementById("deepDiveBtn");
+const deepDiveOut = document.getElementById("deepDiveOut");
+const timeframeSel = document.getElementById("timeframe");
+
+if (deepDiveBtn) {
+  deepDiveBtn.addEventListener("click", async () => {
+    try {
+      deepDiveBtn.disabled = true;
+      deepDiveBtn.textContent = "…denke nach";
+
+      // Diese Funktionen/Namen müssen zu deinem Code passen:
+      // - getScores0to1(): liefert { freiheit:0.66, ... }
+      // - getWeakestVars(scores): liefert ["gerechtigkeit","handlungsspielraum"]
+      // Falls du die noch nicht hast, sag Bescheid – ich passe es exakt an deinen aktuellen script.js an.
+      const scores = getScores0to1();
+      const weakest = getWeakestVars(scores).slice(0, 3); // du wolltest ggf. mehr als 2 → wir lassen 3 zu
+      const timeframe = timeframeSel?.value || "heute";
+
+      const payload = {
+        language: "de",
+        scores,
+        weakest,
+        notes: {
+          timeframe,
+          intensity: "auto"
+        }
+      };
+
+      const resp = await fetch(`${WORKER_BASE_URL}/deepdive`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await resp.json();
+
+      if (!resp.ok || !data.ok) {
+        throw new Error(data?.error || "Deep Dive fehlgeschlagen");
+      }
+
+      deepDiveOut.style.display = "block";
+      deepDiveOut.textContent = data.text;
+    } catch (e) {
+      deepDiveOut.style.display = "block";
+      deepDiveOut.textContent = `Fehler: ${String(e.message || e)}`;
+    } finally {
+      deepDiveBtn.disabled = false;
+      deepDiveBtn.textContent = "Stabilisierende Indikation erzeugen";
+    }
+  });
+}
