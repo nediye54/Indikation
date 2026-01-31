@@ -2,7 +2,7 @@ const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
 // v2 — robust: show error only for OUR script.js problems, avoid permanent banner.
 
-const VERSION = 2; [
+const VERSION = 2;
   "Freiheit",
   "Gerechtigkeit",
   "Wahrheit",
