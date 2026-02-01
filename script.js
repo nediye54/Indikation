@@ -406,36 +406,25 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* =========================
-   WOW Radar / Spinnennetz (Add-on)
-   -> NICHTS ersetzen, nur unten anfügen
+   WOW Radar + 2D-Pfeil (Add-on)  ✅ ersetzt den alten Radar-Add-on Block
    ========================= */
 
-/**
- * Render a radar/spider chart into the existing #plot3d container.
- * Uses <canvas> so it stays crisp and "wow".
- * Works with VARS + scores object { "Freiheit":0.4, ... }.
- */
-function renderRadar(scores) {
+function renderRadarWithArrow(scores) {
   const host = document.getElementById("plot3d");
   if (!host) return;
 
-  // Ensure host has size; if not, give it a minimum so canvas can render
+  // Ensure host has size
   const rect0 = host.getBoundingClientRect();
-  if (rect0.width < 10 || rect0.height < 10) {
-    host.style.minHeight = "320px";
-  }
+  if (rect0.width < 10 || rect0.height < 10) host.style.minHeight = "320px";
 
   // Create/find canvas
   let canvas = host.querySelector("canvas.radarCanvas");
   if (!canvas) {
-    // Keep your existing background (if any) – we don't wipe host completely.
-    // We just overlay a canvas at the end.
     canvas = document.createElement("canvas");
     canvas.className = "radarCanvas";
     host.appendChild(canvas);
   }
 
-  // Measure again
   const rect = host.getBoundingClientRect();
   const w = Math.max(320, Math.floor(rect.width));
   const h = Math.max(280, Math.floor(rect.height));
@@ -450,7 +439,6 @@ function renderRadar(scores) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, w, h);
 
-  // Layout
   const vars = (typeof VARS !== "undefined" && Array.isArray(VARS)) ? VARS.slice() : Object.keys(scores || {});
   const n = vars.length || 1;
 
@@ -458,7 +446,7 @@ function renderRadar(scores) {
   const cy = h * 0.54;
   const R = Math.min(w, h) * 0.34;
 
-  // Find weakest/strongest for subtle emphasis
+  // Weakest + strongest
   let weakest = null;
   let strongest = null;
   for (const v of vars) {
@@ -489,9 +477,7 @@ function renderRadar(scores) {
       else ctx.lineTo(x, y);
     }
     ctx.closePath();
-    ctx.strokeStyle = (r === rings)
-      ? "rgba(255,255,255,0.18)"
-      : "rgba(255,255,255,0.08)";
+    ctx.strokeStyle = (r === rings) ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)";
     ctx.stroke();
   }
 
@@ -507,13 +493,13 @@ function renderRadar(scores) {
     ctx.stroke();
   }
 
-  // Points for polygon
+  // Polygon points
   const pts = [];
   for (let i = 0; i < n; i++) {
     const v = vars[i];
     const val = Math.max(0, Math.min(1, (scores && scores[v] != null) ? Number(scores[v]) : 0));
     const a = -Math.PI / 2 + (Math.PI * 2 * i) / n;
-    const rr = R * (0.12 + 0.88 * val); // avoid collapsing to center
+    const rr = R * (0.12 + 0.88 * val);
     const x = cx + Math.cos(a) * rr;
     const y = cy + Math.sin(a) * rr;
     pts.push({ v, val, a, x, y });
@@ -540,7 +526,7 @@ function renderRadar(scores) {
   ctx.strokeStyle = "rgba(170,230,255,0.55)";
   ctx.stroke();
 
-  // Dots (highlight weakest/strongest)
+  // Dots
   for (const p of pts) {
     let r = 3.6;
     let fill = "rgba(255,255,255,0.85)";
@@ -565,25 +551,23 @@ function renderRadar(scores) {
     ctx.stroke();
   }
 
-  // Labels (outside ring)
+  // Labels
   ctx.font = "12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial";
   ctx.fillStyle = "rgba(255,255,255,0.85)";
-
   const labelR = R * 1.15;
+
   for (let i = 0; i < n; i++) {
     const v = vars[i];
     const a = -Math.PI / 2 + (Math.PI * 2 * i) / n;
     const x = cx + Math.cos(a) * labelR;
     const y = cy + Math.sin(a) * labelR;
 
-    // align based on side
     const cos = Math.cos(a);
     if (cos > 0.25) ctx.textAlign = "left";
     else if (cos < -0.25) ctx.textAlign = "right";
     else ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // Subtle shadow for readability
     ctx.save();
     ctx.shadowColor = "rgba(0,0,0,0.55)";
     ctx.shadowBlur = 6;
@@ -591,51 +575,126 @@ function renderRadar(scores) {
     ctx.restore();
   }
 
-  // Mini legend text
-  const legend = `Radar-Profil · niedrig = innen, hoch = außen`;
+  // ===== 2D-Pfeil auf schwächste Achse (der "aha"-Teil) =====
+  if (weakest) {
+    const idx = vars.indexOf(weakest.v);
+    const a = -Math.PI / 2 + (Math.PI * 2 * idx) / n;
+
+    // Arrow geometry
+    const startR = R * 0.18;
+    const endR = R * 1.02; // slightly outside ring
+    const sx = cx + Math.cos(a) * startR;
+    const sy = cy + Math.sin(a) * startR;
+    const ex = cx + Math.cos(a) * endR;
+    const ey = cy + Math.sin(a) * endR;
+
+    // Arrow glow
+    ctx.save();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "rgba(255,180,120,0.18)";
+    ctx.shadowColor = "rgba(255,180,120,0.45)";
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+    ctx.restore();
+
+    // Arrow main line
+    ctx.save();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(255,180,120,0.85)";
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+    ctx.restore();
+
+    // Arrow head
+    const headLen = 14;
+    const left = a + Math.PI * 0.88;
+    const right = a - Math.PI * 0.88;
+    ctx.save();
+    ctx.fillStyle = "rgba(255,180,120,0.95)";
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(ex + Math.cos(left) * headLen, ey + Math.sin(left) * headLen);
+    ctx.lineTo(ex + Math.cos(right) * headLen, ey + Math.sin(right) * headLen);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Callout label near arrow tip
+    const bx = ex + Math.cos(a) * 16;
+    const by = ey + Math.sin(a) * 16;
+    const text = `Schwach: ${weakest.v} · ${weakest.val.toFixed(2)}`;
+
+    ctx.save();
+    ctx.font = "12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial";
+    const padX = 10, padY = 7;
+    const tw = Math.min(320, ctx.measureText(text).width);
+    const bw = tw + padX * 2;
+    const bh = 28;
+
+    // Position box so it stays on canvas
+    let x0 = bx;
+    let y0 = by;
+    if (x0 + bw > w - 10) x0 = w - 10 - bw;
+    if (x0 < 10) x0 = 10;
+    if (y0 + bh > h - 10) y0 = h - 10 - bh;
+    if (y0 < 10) y0 = 10;
+
+    // Box
+    ctx.fillStyle = "rgba(0,0,0,0.45)";
+    ctx.strokeStyle = "rgba(255,180,120,0.40)";
+    ctx.lineWidth = 1;
+
+    // rounded rect
+    const r0 = 10;
+    ctx.beginPath();
+    ctx.moveTo(x0 + r0, y0);
+    ctx.arcTo(x0 + bw, y0, x0 + bw, y0 + bh, r0);
+    ctx.arcTo(x0 + bw, y0 + bh, x0, y0 + bh, r0);
+    ctx.arcTo(x0, y0 + bh, x0, y0, r0);
+    ctx.arcTo(x0, y0, x0 + bw, y0, r0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Text
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, x0 + padX, y0 + bh / 2);
+    ctx.restore();
+  }
+
+  // Legend
   ctx.font = "11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial";
   ctx.fillStyle = "rgba(255,255,255,0.55)";
   ctx.textAlign = "left";
   ctx.textBaseline = "bottom";
-  ctx.fillText(legend, 14, h - 12);
+  ctx.fillText("Radar-Profil · niedrig = innen, hoch = außen · Pfeil = schwächste Variable", 14, h - 12);
 }
 
 /**
- * Hook: Whenever results become visible, try to render radar.
- * Works without changing your existing onEvaluate().
+ * Auto-render hook (no changes to your onEvaluate needed)
  */
 (function setupRadarAutoRender() {
   function tryRender() {
-    // Prefer LAST_SCORES if your app provides it, else try to reconstruct from bars
-    let scores = null;
-
     if (typeof LAST_SCORES !== "undefined" && LAST_SCORES) {
-      scores = LAST_SCORES;
+      renderRadarWithArrow(LAST_SCORES);
     }
-
-    // Fallback: if bars exist with text values, skip (your app already has scores).
-    if (scores) renderRadar(scores);
   }
 
-  // 1) Try after evaluate button click (capturing)
   document.addEventListener("click", (e) => {
     const t = e.target;
-    if (!t) return;
-    // Works whether you use btnEval or something else, but primary:
-    if (t.id === "btnEval") {
-      // wait for DOM updates
-      setTimeout(tryRender, 50);
-      setTimeout(tryRender, 200);
+    if (t && t.id === "btnEval") {
+      setTimeout(tryRender, 60);
+      setTimeout(tryRender, 220);
     }
   }, true);
 
-  // 2) Also try once on load (in case results are already visible)
-  window.addEventListener("load", () => {
-    setTimeout(tryRender, 200);
-  });
-
-  // 3) Re-render on resize (nice)
-  window.addEventListener("resize", () => {
-    setTimeout(tryRender, 150);
-  });
+  window.addEventListener("load", () => setTimeout(tryRender, 220));
+  window.addEventListener("resize", () => setTimeout(tryRender, 160));
 })();
