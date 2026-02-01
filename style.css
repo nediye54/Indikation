@@ -170,16 +170,17 @@ body{
 .foot{margin-top:14px;font-size:13px}
 
 /* =========================
-   WOW Radar / Spinnennetz (Add-on)
+   WOW Radar + 2D-Pfeil (Add-on)
    ========================= */
 
 #plot3d {
   position: relative;
   overflow: hidden;
   border-radius: 18px;
+  min-height: 320px;
 }
 
-/* Canvas overlay for crisp radar */
+/* Canvas overlay */
 #plot3d .radarCanvas {
   position: absolute;
   inset: 0;
@@ -190,8 +191,6 @@ body{
   border-radius: 18px;
 }
 
-/* If your plot3d already has a background image/grid, keep it.
-   Otherwise we add a subtle layered look (won’t break existing design). */
 #plot3d::before {
   content: "";
   position: absolute;
