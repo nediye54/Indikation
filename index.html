@@ -6,8 +6,8 @@
   <title>Indikation – nach der Moral des Gleichgewichts</title>
 
   <!-- Cache busting -->
-  <link rel="stylesheet" href="style.css?v=20" />
-  <script src="script.js?v=20" defer></script>
+  <link rel="stylesheet" href="style.css?v=10" />
+  <script src="script.js?v=10" defer></script>
 </head>
 
 <body>
@@ -18,32 +18,17 @@
       <p class="path">Quick Scan (24) → Deep Dive (optional) → stabilisierende Indikation</p>
     </header>
 
-    <!-- IMPORTANT: Standard = hidden. Nur bei echten script.js Fehlern anzeigen -->
+    <!-- WICHTIG: Standard = hidden. Nur bei echten script.js Fehlern anzeigen -->
     <section id="errorBox" class="errorBox hidden" role="alert" aria-live="polite">
-      <strong>Hinweis:</strong> Ein Skript-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).
+      <strong>Hinweis:</strong> Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).
     </section>
 
-    <!-- TOP CONTROLS -->
     <section class="card">
       <div class="cardHead">
         <h2>Quick Scan</h2>
-        <p class="muted" id="introText">
-          Beantworte jede Frage mit einer von drei Optionen. Danach erhältst du:
-          Koordinatensystem + Balken + schwächste Variable + Zeitfenster.
+        <p class="muted">
+          Beantworte jede Frage mit einer von drei Optionen. Danach erhältst du: Koordinatensystem, Balken, schwächste Variable, Zeitfenster.
         </p>
-      </div>
-
-      <div class="topControls">
-        <div class="row">
-          <label class="muted" for="language">Sprache</label>
-          <select id="language">
-            <option value="de" selected>Deutsch</option>
-            <option value="en">English</option>
-            <option value="fr">Français</option>
-            <option value="es">Español</option>
-            <option value="tr">Türkçe</option>
-          </select>
-        </div>
       </div>
 
       <div id="questions" class="questions"></div>
@@ -54,73 +39,67 @@
       </div>
     </section>
 
-    <!-- RESULTS -->
     <section id="results" class="card hidden">
       <div class="cardHead">
-        <h2 id="resultsTitle">Ergebnis</h2>
-        <p class="muted" id="resultsSubtitle">Koordinatensystem, Balken, schwächste Variable, Zeitfenster.</p>
+        <h2>Ergebnis</h2>
+        <p class="muted">Koordinatensystem (Radar), Balken, schwächste Variable, Zeitfenster.</p>
       </div>
 
       <div class="grid2">
         <div class="panel">
-          <h3 class="panelTitle" id="radarTitle">Koordinatensystem</h3>
-          <div class="radarWrap">
-            <canvas id="radarCanvas" aria-label="Koordinatensystem"></canvas>
-            <div class="radarHint" id="radarHint">
-              Radar-Profil: niedrig = innen, hoch = außen · Pfeil = schwächste Variable
-            </div>
-          </div>
+          <h3 class="panelTitle">Radar</h3>
+          <div id="plot3d" class="plot3d" aria-label="Radar-Koordinatensystem"></div>
+          <div class="plotHint">Radar-Profil: niedrig = innen, hoch = außen · Pfeil = schwächste Variable</div>
         </div>
 
         <div class="panel">
-          <h3 class="panelTitle" id="barsTitle">Balken</h3>
+          <h3 class="panelTitle">Bars</h3>
           <div id="bars" class="bars"></div>
 
           <div class="divider"></div>
 
-          <h3 class="panelTitle" id="weakestTitle">Schwächste Variable</h3>
+          <h3 class="panelTitle">Schwächste Variable</h3>
           <div id="weakest" class="weakest"></div>
 
           <div class="divider"></div>
 
-          <h3 class="panelTitle" id="timewinTitle">Zeitfenster</h3>
+          <h3 class="panelTitle">Zeitfenster</h3>
           <div id="timewin" class="timewin"></div>
         </div>
       </div>
 
       <div class="divider"></div>
 
-      <!-- Deep Dive (Preview / local list) -->
       <div class="deepDive">
         <div class="deepDiveHead">
-          <h3 class="panelTitle" id="ddPreviewTitle">Deep Dive (max. 2 Variablen)</h3>
-          <p class="muted" id="ddPreviewText">Optional: Nur wenn du willst. (Mit Worker + OpenAI wird’s später „smart“.)</p>
+          <h3 class="panelTitle">Deep Dive (max. 2 Variablen)</h3>
+          <p class="muted">Optional: Wenn du willst, erzeugt der Worker eine stabilisierende Indikation.</p>
         </div>
-        <div id="deepDive" class="deepDiveBody"></div>
-      </div>
 
+        <div class="row">
+          <label class="muted" for="timeframe">Zeitfenster</label>
+          <select id="timeframe">
+            <option value="heute">heute</option>
+            <option value="7tage">7 Tage</option>
+            <option value="30tage">30 Tage</option>
+          </select>
+        </div>
+
+        <button id="deepDiveBtn" class="btn" type="button">Stabilisierende Indikation erzeugen</button>
+        <div id="deepDiveOut" class="box" style="display:none; white-space:pre-wrap;"></div>
+
+        <div class="divider"></div>
+
+        <div class="deepDiveMini">
+          <h4 class="miniTitle">Deep Dive (max. 3 Variablen)</h4>
+          <div id="deepDive" class="deepDiveBody"></div>
+        </div>
+      </div>
     </section>
 
-    <!-- DEEP DIVE WORKER -->
-    <section class="card" id="deepDiveCard">
-      <h3 id="ddTitle">Deep Dive</h3>
-      <p class="muted" id="ddText">Optional: Wenn du willst, erzeugt der Worker eine stabilisierende Indikation.</p>
-
-      <div class="row">
-        <label class="muted" for="timeframe" id="timeframeLabel">Zeitfenster</label>
-        <select id="timeframe">
-          <option value="heute">heute</option>
-          <option value="7tage">7 Tage</option>
-          <option value="30tage">30 Tage</option>
-        </select>
-      </div>
-
-      <button id="deepDiveBtn" class="btn" type="button">Stabilisierende Indikation erzeugen</button>
-
-      <div id="deepDiveOut" class="box" style="display:none; white-space:pre-wrap;"></div>
-
-      <footer class="foot muted">v2 · Vanilla · Dark UI · 3 Antwortstufen</footer>
-    </section>
+    <footer class="foot muted">
+      v2 · Vanilla · Dark UI · 3 Antwortstufen
+    </footer>
   </main>
 </body>
 </html>
