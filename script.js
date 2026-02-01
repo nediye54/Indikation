@@ -404,3 +404,238 @@ document.addEventListener("DOMContentLoaded", () => {
   el("btnReset")?.addEventListener("click", onReset);
   el("deepDiveBtn")?.addEventListener("click", runDeepDive);
 });
+
+/* =========================
+   WOW Radar / Spinnennetz (Add-on)
+   -> NICHTS ersetzen, nur unten anfügen
+   ========================= */
+
+/**
+ * Render a radar/spider chart into the existing #plot3d container.
+ * Uses <canvas> so it stays crisp and "wow".
+ * Works with VARS + scores object { "Freiheit":0.4, ... }.
+ */
+function renderRadar(scores) {
+  const host = document.getElementById("plot3d");
+  if (!host) return;
+
+  // Ensure host has size; if not, give it a minimum so canvas can render
+  const rect0 = host.getBoundingClientRect();
+  if (rect0.width < 10 || rect0.height < 10) {
+    host.style.minHeight = "320px";
+  }
+
+  // Create/find canvas
+  let canvas = host.querySelector("canvas.radarCanvas");
+  if (!canvas) {
+    // Keep your existing background (if any) – we don't wipe host completely.
+    // We just overlay a canvas at the end.
+    canvas = document.createElement("canvas");
+    canvas.className = "radarCanvas";
+    host.appendChild(canvas);
+  }
+
+  // Measure again
+  const rect = host.getBoundingClientRect();
+  const w = Math.max(320, Math.floor(rect.width));
+  const h = Math.max(280, Math.floor(rect.height));
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+  canvas.style.width = w + "px";
+  canvas.style.height = h + "px";
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+
+  // Layout
+  const vars = (typeof VARS !== "undefined" && Array.isArray(VARS)) ? VARS.slice() : Object.keys(scores || {});
+  const n = vars.length || 1;
+
+  const cx = w * 0.5;
+  const cy = h * 0.54;
+  const R = Math.min(w, h) * 0.34;
+
+  // Find weakest/strongest for subtle emphasis
+  let weakest = null;
+  let strongest = null;
+  for (const v of vars) {
+    const val = Math.max(0, Math.min(1, (scores && scores[v] != null) ? Number(scores[v]) : 0));
+    if (!weakest || val < weakest.val) weakest = { v, val };
+    if (!strongest || val > strongest.val) strongest = { v, val };
+  }
+
+  // Background vignette
+  const vign = ctx.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 1.9);
+  vign.addColorStop(0, "rgba(255,255,255,0.06)");
+  vign.addColorStop(1, "rgba(0,0,0,0.55)");
+  ctx.fillStyle = vign;
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid rings
+  const rings = 5;
+  ctx.lineWidth = 1;
+
+  for (let r = 1; r <= rings; r++) {
+    const rr = (R * r) / rings;
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const a = -Math.PI / 2 + (Math.PI * 2 * i) / n;
+      const x = cx + Math.cos(a) * rr;
+      const y = cy + Math.sin(a) * rr;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = (r === rings)
+      ? "rgba(255,255,255,0.18)"
+      : "rgba(255,255,255,0.08)";
+    ctx.stroke();
+  }
+
+  // Axes
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI / 2 + (Math.PI * 2 * i) / n;
+    const x = cx + Math.cos(a) * R;
+    const y = cy + Math.sin(a) * R;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = "rgba(255,255,255,0.10)";
+    ctx.stroke();
+  }
+
+  // Points for polygon
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const v = vars[i];
+    const val = Math.max(0, Math.min(1, (scores && scores[v] != null) ? Number(scores[v]) : 0));
+    const a = -Math.PI / 2 + (Math.PI * 2 * i) / n;
+    const rr = R * (0.12 + 0.88 * val); // avoid collapsing to center
+    const x = cx + Math.cos(a) * rr;
+    const y = cy + Math.sin(a) * rr;
+    pts.push({ v, val, a, x, y });
+  }
+
+  // Glow fill
+  ctx.beginPath();
+  pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+  ctx.closePath();
+  ctx.fillStyle = "rgba(120,200,255,0.10)";
+  ctx.shadowColor = "rgba(120,200,255,0.35)";
+  ctx.shadowBlur = 18;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Main fill + outline
+  ctx.beginPath();
+  pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+  ctx.closePath();
+  ctx.fillStyle = "rgba(255,255,255,0.06)";
+  ctx.fill();
+
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgba(170,230,255,0.55)";
+  ctx.stroke();
+
+  // Dots (highlight weakest/strongest)
+  for (const p of pts) {
+    let r = 3.6;
+    let fill = "rgba(255,255,255,0.85)";
+    let stroke = "rgba(0,0,0,0.35)";
+
+    if (weakest && p.v === weakest.v) {
+      r = 5.2;
+      fill = "rgba(255,180,120,0.95)";
+      stroke = "rgba(255,180,120,0.35)";
+    } else if (strongest && p.v === strongest.v) {
+      r = 5.2;
+      fill = "rgba(140,255,200,0.92)";
+      stroke = "rgba(140,255,200,0.35)";
+    }
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = stroke;
+    ctx.stroke();
+  }
+
+  // Labels (outside ring)
+  ctx.font = "12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial";
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+
+  const labelR = R * 1.15;
+  for (let i = 0; i < n; i++) {
+    const v = vars[i];
+    const a = -Math.PI / 2 + (Math.PI * 2 * i) / n;
+    const x = cx + Math.cos(a) * labelR;
+    const y = cy + Math.sin(a) * labelR;
+
+    // align based on side
+    const cos = Math.cos(a);
+    if (cos > 0.25) ctx.textAlign = "left";
+    else if (cos < -0.25) ctx.textAlign = "right";
+    else ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Subtle shadow for readability
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.55)";
+    ctx.shadowBlur = 6;
+    ctx.fillText(v, x, y);
+    ctx.restore();
+  }
+
+  // Mini legend text
+  const legend = `Radar-Profil · niedrig = innen, hoch = außen`;
+  ctx.font = "11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial";
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "bottom";
+  ctx.fillText(legend, 14, h - 12);
+}
+
+/**
+ * Hook: Whenever results become visible, try to render radar.
+ * Works without changing your existing onEvaluate().
+ */
+(function setupRadarAutoRender() {
+  function tryRender() {
+    // Prefer LAST_SCORES if your app provides it, else try to reconstruct from bars
+    let scores = null;
+
+    if (typeof LAST_SCORES !== "undefined" && LAST_SCORES) {
+      scores = LAST_SCORES;
+    }
+
+    // Fallback: if bars exist with text values, skip (your app already has scores).
+    if (scores) renderRadar(scores);
+  }
+
+  // 1) Try after evaluate button click (capturing)
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    if (!t) return;
+    // Works whether you use btnEval or something else, but primary:
+    if (t.id === "btnEval") {
+      // wait for DOM updates
+      setTimeout(tryRender, 50);
+      setTimeout(tryRender, 200);
+    }
+  }, true);
+
+  // 2) Also try once on load (in case results are already visible)
+  window.addEventListener("load", () => {
+    setTimeout(tryRender, 200);
+  });
+
+  // 3) Re-render on resize (nice)
+  window.addEventListener("resize", () => {
+    setTimeout(tryRender, 150);
+  });
+})();
