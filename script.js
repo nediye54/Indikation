@@ -1,6 +1,7 @@
-// v10 — stable i18n + polished radar + worker deepdive
+// v10 — Deutsch-only. Stabil. Radar (Canvas) polished + longer arrow + label box.
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
+// Variablen (Deutsch)
 const VARS = [
   "Freiheit",
   "Gerechtigkeit",
@@ -12,447 +13,89 @@ const VARS = [
   "Balance",
 ];
 
-const SCALE_VALUES = [
-  { key: "low", value: 0.2 },
-  { key: "mid", value: 0.5 },
-  { key: "high", value: 0.8 },
+// Fragen (Deutsch)
+const QUESTIONS = [
+  // Freiheit (3)
+  { v:"Freiheit", q:"Wie frei kannst du in deinem Alltag Entscheidungen treffen, ohne Angst vor Konsequenzen?" },
+  { v:"Freiheit", q:"Wie oft fühlst du dich in Rollen oder Erwartungen gefangen, die du nicht gewählt hast?" },
+  { v:"Freiheit", q:"Kannst du Grenzen setzen, ohne danach Schuldgefühle oder Druck zu spüren?" },
+
+  // Gerechtigkeit (3)
+  { v:"Gerechtigkeit", q:"Werden in deinem Umfeld Belastungen und Vorteile grundsätzlich fair verteilt?" },
+  { v:"Gerechtigkeit", q:"Gibt es Regeln, die für manche gelten und für andere nicht?" },
+  { v:"Gerechtigkeit", q:"Fühlst du dich in Entscheidungen, die dich betreffen, ausreichend berücksichtigt?" },
+
+  // Wahrheit (3)
+  { v:"Wahrheit", q:"Werden Probleme offen benannt, auch wenn es unangenehm ist?" },
+  { v:"Wahrheit", q:"Kannst du Kritik ansprechen, ohne dass sofort Abwehr oder Schuldzuweisung entsteht?" },
+  { v:"Wahrheit", q:"Gibt es Themen, die „nicht gesagt werden dürfen“, obwohl alle sie spüren?" },
+
+  // Harmonie (3)
+  { v:"Harmonie", q:"Gibt es in deinem Alltag Phasen von Ruhe, in denen du innerlich „runterkommst“?" },
+  { v:"Harmonie", q:"Werden Konflikte so gelöst, dass danach wieder Nähe/Respekt möglich ist?" },
+  { v:"Harmonie", q:"Fühlst du dich mit anderen grundsätzlich verbunden statt dauerhaft im Wettkampf?" },
+
+  // Effizienz (3)
+  { v:"Effizienz", q:"Führt dein Aufwand meistens zu klaren Ergebnissen?" },
+  { v:"Effizienz", q:"Gibt es unnötige Schleifen, Wiederholungen oder chaotische Zuständigkeiten?" },
+  { v:"Effizienz", q:"Kannst du dich gut fokussieren, ohne ständig von „Feuerwehr-Themen“ abgelenkt zu werden?" },
+
+  // Handlungsspielraum (3)
+  { v:"Handlungsspielraum", q:"Hast du realistische Optionen, Dinge zu verändern, wenn etwas nicht passt?" },
+  { v:"Handlungsspielraum", q:"Kannst du „Nein“ sagen, ohne echte Nachteile befürchten zu müssen?" },
+  { v:"Handlungsspielraum", q:"Gibt es Ressourcen/Unterstützung, die du aktiv nutzen kannst?" },
+
+  // Mittel (3)
+  { v:"Mittel", q:"Reichen deine verfügbaren Mittel (Zeit, Geld, Energie) für das, was erwartet wird?" },
+  { v:"Mittel", q:"Gibt es Engpässe, die regelmäßig Stress oder Konflikte auslösen?" },
+  { v:"Mittel", q:"Sind Mittel so verteilt, dass das System nicht „ausblutet“ (z.B. dauerhaftes Überziehen)?" },
+
+  // Balance (3)
+  { v:"Balance", q:"Ist die Balance zwischen Geben und Nehmen in deinem Umfeld stimmig?" },
+  { v:"Balance", q:"Gibt es Extrem-Ausschläge (zu viel Kontrolle / zu viel Chaos)?" },
+  { v:"Balance", q:"Fühlst du dich insgesamt „im Gleichgewicht“, auch wenn nicht alles perfekt ist?" }
 ];
 
-let LAST_SCORES = null;
+// 3 Antwortstufen
+const SCALE = [
+  { label:"unklar / schwach", value:0.2 },
+  { label:"teils / gemischt", value:0.5 },
+  { label:"klar / stark", value:0.8 },
+];
 
 const el = (id) => document.getElementById(id);
 
-// ---------------- i18n ----------------
-const I18N = {
-  de: {
-    subtitle: "nach der Moral des Gleichgewichts",
-    pathline: "Quick Scan (24) → Deep Dive (optional) → stabilisierende Indikation",
-    langLabel: "Sprache",
-    quickScanTitle: "Quick Scan",
-    quickScanHint: "Beantworte jede Frage. Danach erhältst du: Koordinatensystem + Balken + schwächste Variable + Zeitfenster.",
-    btnEval: "Auswerten",
-    btnReset: "Zurücksetzen",
-    resultTitle: "Ergebnis",
-    resultHint: "Koordinatensystem (Radar), Balken, schwächste Variable, Zeitfenster.",
-    radarTitle: "Koordinatensystem",
-    radarLegend: "Radar-Profil: niedrig = innen, hoch = außen · Pfeil = schwächste Variable",
-    barsTitle: "Balken",
-    weakestTitle: "Schwächste Variable",
-    timewinTitle: "Zeitfenster",
-    deepDiveTitle: "Deep Dive",
-    deepDiveHint: "Optional: Wenn du willst, erzeugt der Worker eine stabilisierende Indikation.",
-    timeframeLabel: "Zeitfenster",
-    ddBtn: "Stabilisierende Indikation erzeugen",
-    ddThinking: "…denke nach",
-    ddFirstScan: "Bitte zuerst Quick Scan auswerten.",
-    errMissing: (list) => `Bitte beantworte alle Fragen. Fehlend: ${list}`,
-    low: "unklar / schwach",
-    mid: "teils / gemischt",
-    high: "klar / stark",
-    timeframe: { heute:"heute", "7tage":"7 Tage", "30tage":"30 Tage" },
-    timewin: (v) => (v <= 0.3 ? "jetzt (akut) · 24–72h Fokus" : v <= 0.55 ? "bald · 1–2 Wochen Fokus" : "stabil · nur Feintuning nötig"),
-    weakestLabel: "Schwach",
-    scoreLabel: "Score",
-    ddNoOutput: "(keine Ausgabe)",
-    footer: "v2 · Vanilla · Dark UI · 3 Antwortstufen",
-  },
-
-  en: {
-    subtitle: "after the moral logic of balance",
-    pathline: "Quick Scan (24) → Deep Dive (optional) → stabilizing indication",
-    langLabel: "Language",
-    quickScanTitle: "Quick Scan",
-    quickScanHint: "Answer each question. Then you get: radar chart + bars + weakest variable + time window.",
-    btnEval: "Evaluate",
-    btnReset: "Reset",
-    resultTitle: "Result",
-    resultHint: "Radar chart, bars, weakest variable, time window.",
-    radarTitle: "Radar",
-    radarLegend: "Radar profile: low = center, high = outside · Arrow = weakest variable",
-    barsTitle: "Bars",
-    weakestTitle: "Weakest variable",
-    timewinTitle: "Time window",
-    deepDiveTitle: "Deep Dive",
-    deepDiveHint: "Optional: If you want, the worker generates a stabilizing indication.",
-    timeframeLabel: "Timeframe",
-    ddBtn: "Generate stabilizing indication",
-    ddThinking: "…thinking",
-    ddFirstScan: "Please evaluate the Quick Scan first.",
-    errMissing: (list) => `Please answer all questions. Missing: ${list}`,
-    low: "unclear / weak",
-    mid: "mixed / partial",
-    high: "clear / strong",
-    timeframe: { heute:"today", "7tage":"7 days", "30tage":"30 days" },
-    timewin: (v) => (v <= 0.3 ? "now (acute) · 24–72h focus" : v <= 0.55 ? "soon · 1–2 weeks focus" : "stable · only fine-tuning"),
-    weakestLabel: "Weak",
-    scoreLabel: "Score",
-    ddNoOutput: "(no output)",
-    footer: "v2 · Vanilla · Dark UI · 3 answer levels",
-  },
-
-  fr: {
-    subtitle: "selon la morale de l’équilibre",
-    pathline: "Quick Scan (24) → Deep Dive (optionnel) → indication stabilisante",
-    langLabel: "Langue",
-    quickScanTitle: "Quick Scan",
-    quickScanHint: "Réponds à chaque question. Ensuite : radar + barres + variable la plus faible + fenêtre de temps.",
-    btnEval: "Évaluer",
-    btnReset: "Réinitialiser",
-    resultTitle: "Résultat",
-    resultHint: "Radar, barres, variable la plus faible, fenêtre de temps.",
-    radarTitle: "Radar",
-    radarLegend: "Profil radar : faible = centre, fort = extérieur · Flèche = variable la plus faible",
-    barsTitle: "Barres",
-    weakestTitle: "Variable la plus faible",
-    timewinTitle: "Fenêtre de temps",
-    deepDiveTitle: "Deep Dive",
-    deepDiveHint: "Optionnel : le worker génère une indication stabilisante.",
-    timeframeLabel: "Fenêtre",
-    ddBtn: "Générer une indication stabilisante",
-    ddThinking: "…réflexion",
-    ddFirstScan: "Évalue d’abord le Quick Scan.",
-    errMissing: (list) => `Merci de répondre à toutes les questions. Manquantes : ${list}`,
-    low: "flou / faible",
-    mid: "mixte / partiel",
-    high: "clair / fort",
-    timeframe: { heute:"aujourd’hui", "7tage":"7 jours", "30tage":"30 jours" },
-    timewin: (v) => (v <= 0.3 ? "maintenant (aigu) · 24–72h" : v <= 0.55 ? "bientôt · 1–2 semaines" : "stable · ajustements"),
-    weakestLabel: "Faible",
-    scoreLabel: "Score",
-    ddNoOutput: "(pas de sortie)",
-    footer: "v2 · Vanilla · Dark UI · 3 niveaux",
-  },
-
-  es: {
-    subtitle: "según la moral del equilibrio",
-    pathline: "Quick Scan (24) → Deep Dive (opcional) → indicación estabilizadora",
-    langLabel: "Idioma",
-    quickScanTitle: "Quick Scan",
-    quickScanHint: "Responde cada pregunta. Luego: radar + barras + variable más débil + ventana de tiempo.",
-    btnEval: "Evaluar",
-    btnReset: "Restablecer",
-    resultTitle: "Resultado",
-    resultHint: "Radar, barras, variable más débil, ventana de tiempo.",
-    radarTitle: "Radar",
-    radarLegend: "Perfil: bajo = centro, alto = exterior · Flecha = variable más débil",
-    barsTitle: "Barras",
-    weakestTitle: "Variable más débil",
-    timewinTitle: "Ventana de tiempo",
-    deepDiveTitle: "Deep Dive",
-    deepDiveHint: "Opcional: el worker genera una indicación estabilizadora.",
-    timeframeLabel: "Horizonte",
-    ddBtn: "Generar indicación estabilizadora",
-    ddThinking: "…pensando",
-    ddFirstScan: "Primero evalúa el Quick Scan.",
-    errMissing: (list) => `Responde todas las preguntas. Faltan: ${list}`,
-    low: "incierto / débil",
-    mid: "mixto / parcial",
-    high: "claro / fuerte",
-    timeframe: { heute:"hoy", "7tage":"7 días", "30tage":"30 días" },
-    timewin: (v) => (v <= 0.3 ? "ahora (agudo) · 24–72h" : v <= 0.55 ? "pronto · 1–2 semanas" : "estable · ajustes"),
-    weakestLabel: "Débil",
-    scoreLabel: "Puntuación",
-    ddNoOutput: "(sin salida)",
-    footer: "v2 · Vanilla · Dark UI · 3 niveles",
-  },
-
-  tr: {
-    subtitle: "denge ahlakına göre",
-    pathline: "Quick Scan (24) → Deep Dive (opsiyonel) → dengeleyici öneri",
-    langLabel: "Dil",
-    quickScanTitle: "Quick Scan",
-    quickScanHint: "Her soruyu cevapla. Sonra: radar + çubuklar + en zayıf değişken + zaman penceresi.",
-    btnEval: "Değerlendir",
-    btnReset: "Sıfırla",
-    resultTitle: "Sonuç",
-    resultHint: "Radar, çubuklar, en zayıf değişken, zaman penceresi.",
-    radarTitle: "Radar",
-    radarLegend: "Profil: düşük = iç, yüksek = dış · Ok = en zayıf değişken",
-    barsTitle: "Çubuklar",
-    weakestTitle: "En zayıf değişken",
-    timewinTitle: "Zaman penceresi",
-    deepDiveTitle: "Deep Dive",
-    deepDiveHint: "Opsiyonel: Worker dengeleyici bir çıktı üretir.",
-    timeframeLabel: "Zaman",
-    ddBtn: "Dengeleyici çıktı üret",
-    ddThinking: "…düşünüyor",
-    ddFirstScan: "Önce Quick Scan’i değerlendir.",
-    errMissing: (list) => `Lütfen tüm soruları cevapla. Eksik: ${list}`,
-    low: "belirsiz / zayıf",
-    mid: "karışık / kısmi",
-    high: "net / güçlü",
-    timeframe: { heute:"bugün", "7tage":"7 gün", "30tage":"30 gün" },
-    timewin: (v) => (v <= 0.3 ? "şimdi (akut) · 24–72s" : v <= 0.55 ? "yakında · 1–2 hafta" : "stabil · ince ayar"),
-    weakestLabel: "Zayıf",
-    scoreLabel: "Skor",
-    ddNoOutput: "(çıktı yok)",
-    footer: "v2 · Vanilla · Dark UI · 3 seviye",
-  },
-};
-
-// Questions per language (same variable keys)
-const QUESTIONS_BY_LANG = {
-  de: [
-    // Freiheit
-    { v:"Freiheit", q:"Wie frei kannst du in deinem Alltag Entscheidungen treffen, ohne Angst vor Konsequenzen?" },
-    { v:"Freiheit", q:"Wie oft fühlst du dich in Rollen oder Erwartungen gefangen, die du nicht gewählt hast?" },
-    { v:"Freiheit", q:"Kannst du Grenzen setzen, ohne danach Schuldgefühle oder Druck zu spüren?" },
-    // Gerechtigkeit
-    { v:"Gerechtigkeit", q:"Werden in deinem Umfeld Belastungen und Vorteile grundsätzlich fair verteilt?" },
-    { v:"Gerechtigkeit", q:"Gibt es Regeln, die für manche gelten und für andere nicht?" },
-    { v:"Gerechtigkeit", q:"Fühlst du dich in Entscheidungen, die dich betreffen, ausreichend berücksichtigt?" },
-    // Wahrheit
-    { v:"Wahrheit", q:"Werden Probleme offen benannt, auch wenn es unangenehm ist?" },
-    { v:"Wahrheit", q:"Kannst du Kritik ansprechen, ohne dass sofort Abwehr oder Schuldzuweisung entsteht?" },
-    { v:"Wahrheit", q:"Gibt es Themen, die „nicht gesagt werden dürfen“, obwohl alle sie spüren?" },
-    // Harmonie
-    { v:"Harmonie", q:"Gibt es in deinem Alltag Phasen von Ruhe, in denen du innerlich „runterkommst“?" },
-    { v:"Harmonie", q:"Werden Konflikte so gelöst, dass danach wieder Nähe/Respekt möglich ist?" },
-    { v:"Harmonie", q:"Fühlst du dich mit anderen grundsätzlich verbunden statt dauerhaft im Wettkampf?" },
-    // Effizienz
-    { v:"Effizienz", q:"Führt dein Aufwand meistens zu klaren Ergebnissen?" },
-    { v:"Effizienz", q:"Gibt es unnötige Schleifen, Wiederholungen oder chaotische Zuständigkeiten?" },
-    { v:"Effizienz", q:"Kannst du dich gut fokussieren, ohne ständig von „Feuerwehr-Themen“ abgelenkt zu werden?" },
-    // Handlungsspielraum
-    { v:"Handlungsspielraum", q:"Hast du realistische Optionen, Dinge zu verändern, wenn etwas nicht passt?" },
-    { v:"Handlungsspielraum", q:"Kannst du „Nein“ sagen, ohne echte Nachteile befürchten zu müssen?" },
-    { v:"Handlungsspielraum", q:"Gibt es Ressourcen/Unterstützung, die du aktiv nutzen kannst?" },
-    // Mittel
-    { v:"Mittel", q:"Reichen deine verfügbaren Mittel (Zeit, Geld, Energie) für das, was erwartet wird?" },
-    { v:"Mittel", q:"Gibt es Engpässe, die regelmäßig Stress oder Konflikte auslösen?" },
-    { v:"Mittel", q:"Sind Mittel so verteilt, dass das System nicht „ausblutet“ (z.B. dauerhaftes Überziehen)?" },
-    // Balance
-    { v:"Balance", q:"Ist die Balance zwischen Geben und Nehmen in deinem Umfeld stimmig?" },
-    { v:"Balance", q:"Gibt es Extrem-Ausschläge (zu viel Kontrolle / zu viel Chaos)?" },
-    { v:"Balance", q:"Fühlst du dich insgesamt „im Gleichgewicht“, auch wenn nicht alles perfekt ist?" },
-  ],
-};
-
-// Derived translations for other languages (careful, natural)
-QUESTIONS_BY_LANG.en = [
-  { v:"Freiheit", q:"How free are you in daily life to make decisions without fear of consequences?" },
-  { v:"Freiheit", q:"How often do you feel trapped in roles or expectations you didn’t choose?" },
-  { v:"Freiheit", q:"Can you set boundaries without guilt or pressure afterwards?" },
-
-  { v:"Gerechtigkeit", q:"Are burdens and benefits in your environment generally distributed fairly?" },
-  { v:"Gerechtigkeit", q:"Are there rules that apply to some people but not to others?" },
-  { v:"Gerechtigkeit", q:"Do you feel sufficiently considered in decisions that affect you?" },
-
-  { v:"Wahrheit", q:"Are problems named openly, even when it’s uncomfortable?" },
-  { v:"Wahrheit", q:"Can you voice criticism without immediate defensiveness or blame?" },
-  { v:"Wahrheit", q:"Are there topics that ‘cannot be said’ even though everyone feels them?" },
-
-  { v:"Harmonie", q:"Do you have phases of calm in your day where you can truly unwind?" },
-  { v:"Harmonie", q:"Are conflicts resolved in a way that restores closeness/respect afterwards?" },
-  { v:"Harmonie", q:"Do you feel generally connected with others rather than constantly competing?" },
-
-  { v:"Effizienz", q:"Does your effort usually lead to clear results?" },
-  { v:"Effizienz", q:"Are there unnecessary loops, repetitions, or chaotic responsibilities?" },
-  { v:"Effizienz", q:"Can you focus well without being constantly pulled into ‘firefighting’?" },
-
-  { v:"Handlungsspielraum", q:"Do you have realistic options to change things when something doesn’t fit?" },
-  { v:"Handlungsspielraum", q:"Can you say ‘no’ without fearing real disadvantages?" },
-  { v:"Handlungsspielraum", q:"Are there resources/support you can actively use?" },
-
-  { v:"Mittel", q:"Do your available resources (time, money, energy) match what’s expected?" },
-  { v:"Mittel", q:"Are there bottlenecks that regularly trigger stress or conflict?" },
-  { v:"Mittel", q:"Are resources distributed so the system doesn’t ‘bleed out’ (e.g., constant overuse)?" },
-
-  { v:"Balance", q:"Is the balance between giving and taking in your environment right?" },
-  { v:"Balance", q:"Are there extreme swings (too much control / too much chaos)?" },
-  { v:"Balance", q:"Do you feel overall ‘in balance’, even if not everything is perfect?" },
-];
-
-QUESTIONS_BY_LANG.fr = [
-  { v:"Freiheit", q:"À quel point peux-tu prendre des décisions au quotidien sans craindre des conséquences ?" },
-  { v:"Freiheit", q:"À quelle fréquence te sens-tu coincé·e dans des rôles ou attentes que tu n’as pas choisis ?" },
-  { v:"Freiheit", q:"Peux-tu poser des limites sans culpabilité ni pression après coup ?" },
-
-  { v:"Gerechtigkeit", q:"Dans ton environnement, charges et avantages sont-ils globalement répartis équitablement ?" },
-  { v:"Gerechtigkeit", q:"Y a-t-il des règles qui s’appliquent à certains et pas à d’autres ?" },
-  { v:"Gerechtigkeit", q:"Te sens-tu suffisamment pris·e en compte dans les décisions qui te concernent ?" },
-
-  { v:"Wahrheit", q:"Les problèmes sont-ils nommés ouvertement, même si c’est inconfortable ?" },
-  { v:"Wahrheit", q:"Peux-tu exprimer une critique sans défense immédiate ni accusation ?" },
-  { v:"Wahrheit", q:"Existe-t-il des sujets ‘qu’on ne peut pas dire’ alors que tout le monde les ressent ?" },
-
-  { v:"Harmonie", q:"As-tu des moments de calme où tu peux vraiment redescendre ?" },
-  { v:"Harmonie", q:"Les conflits sont-ils résolus de manière à retrouver proximité/respect ensuite ?" },
-  { v:"Harmonie", q:"Te sens-tu plutôt relié·e aux autres que constamment en compétition ?" },
-
-  { v:"Effizienz", q:"Ton effort mène-t-il le plus souvent à des résultats clairs ?" },
-  { v:"Effizienz", q:"Y a-t-il des boucles inutiles, répétitions, ou responsabilités chaotiques ?" },
-  { v:"Effizienz", q:"Peux-tu te concentrer sans être sans cesse happé·e par des urgences ?" },
-
-  { v:"Handlungsspielraum", q:"As-tu des options réalistes pour changer les choses quand ça ne va pas ?" },
-  { v:"Handlungsspielraum", q:"Peux-tu dire ‘non’ sans craindre de vraies conséquences ?" },
-  { v:"Handlungsspielraum", q:"Y a-t-il des ressources/soutiens que tu peux utiliser activement ?" },
-
-  { v:"Mittel", q:"Tes moyens (temps, argent, énergie) suffisent-ils à ce qui est attendu ?" },
-  { v:"Mittel", q:"Y a-t-il des goulots d’étranglement qui déclenchent régulièrement stress ou conflits ?" },
-  { v:"Mittel", q:"Les moyens sont-ils répartis pour que le système ne ‘s’épuise’ pas ?" },
-
-  { v:"Balance", q:"L’équilibre entre donner et recevoir te paraît-il juste ?" },
-  { v:"Balance", q:"Y a-t-il des extrêmes (trop de contrôle / trop de chaos) ?" },
-  { v:"Balance", q:"Te sens-tu globalement ‘en équilibre’, même si tout n’est pas parfait ?" },
-];
-
-QUESTIONS_BY_LANG.es = [
-  { v:"Freiheit", q:"¿Qué tan libre eres en tu día a día para decidir sin miedo a consecuencias?" },
-  { v:"Freiheit", q:"¿Con qué frecuencia te sientes atrapado/a en roles o expectativas que no elegiste?" },
-  { v:"Freiheit", q:"¿Puedes poner límites sin culpa ni presión después?" },
-
-  { v:"Gerechtigkeit", q:"¿En tu entorno se reparten cargas y beneficios de forma justa?" },
-  { v:"Gerechtigkeit", q:"¿Hay reglas que valen para unos y no para otros?" },
-  { v:"Gerechtigkeit", q:"¿Te sientes suficientemente tenido/a en cuenta en decisiones que te afectan?" },
-
-  { v:"Wahrheit", q:"¿Se nombran los problemas abiertamente, aunque incomode?" },
-  { v:"Wahrheit", q:"¿Puedes expresar crítica sin defensiva inmediata o culpas?" },
-  { v:"Wahrheit", q:"¿Hay temas que ‘no se pueden decir’ aunque todos los sientan?" },
-
-  { v:"Harmonie", q:"¿Tienes momentos de calma en los que realmente bajas revoluciones?" },
-  { v:"Harmonie", q:"¿Los conflictos se resuelven de forma que vuelva el respeto/cercanía?" },
-  { v:"Harmonie", q:"¿Te sientes conectado/a con otros en vez de competir todo el tiempo?" },
-
-  { v:"Effizienz", q:"¿Tu esfuerzo suele llevar a resultados claros?" },
-  { v:"Effizienz", q:"¿Hay bucles innecesarios, repeticiones o responsabilidades caóticas?" },
-  { v:"Effizienz", q:"¿Puedes enfocarte sin estar siempre apagando incendios?" },
-
-  { v:"Handlungsspielraum", q:"¿Tienes opciones reales para cambiar cosas cuando algo no encaja?" },
-  { v:"Handlungsspielraum", q:"¿Puedes decir ‘no’ sin temer desventajas reales?" },
-  { v:"Handlungsspielraum", q:"¿Hay recursos/apoyo que puedas usar activamente?" },
-
-  { v:"Mittel", q:"¿Tus recursos (tiempo, dinero, energía) alcanzan para lo esperado?" },
-  { v:"Mittel", q:"¿Hay cuellos de botella que causan estrés o conflicto con frecuencia?" },
-  { v:"Mittel", q:"¿Los recursos están repartidos para que el sistema no se agote?" },
-
-  { v:"Balance", q:"¿La relación entre dar y recibir está equilibrada?" },
-  { v:"Balance", q:"¿Hay extremos (demasiado control / demasiado caos)?" },
-  { v:"Balance", q:"¿Te sientes en equilibrio aunque no todo sea perfecto?" },
-];
-
-QUESTIONS_BY_LANG.tr = [
-  { v:"Freiheit", q:"Günlük hayatta karar alırken sonuçlardan korkmadan ne kadar özgürsün?" },
-  { v:"Freiheit", q:"Seçmediğin rol ve beklentilerde ne sıklıkla sıkışmış hissediyorsun?" },
-  { v:"Freiheit", q:"Suçluluk ya da baskı hissetmeden sınır koyabiliyor musun?" },
-
-  { v:"Gerechtigkeit", q:"Çevrende yükler ve avantajlar genel olarak adil dağıtılıyor mu?" },
-  { v:"Gerechtigkeit", q:"Bazıları için geçerli olan ama diğerleri için geçerli olmayan kurallar var mı?" },
-  { v:"Gerechtigkeit", q:"Seni etkileyen kararlarda yeterince dikkate alındığını hissediyor musun?" },
-
-  { v:"Wahrheit", q:"Sorunlar rahatsız edici olsa bile açıkça dile getiriliyor mu?" },
-  { v:"Wahrheit", q:"Savunma ya da suçlama olmadan eleştiri dile getirebiliyor musun?" },
-  { v:"Wahrheit", q:"Herkesin hissettiği ama ‘konuşulmayan’ konular var mı?" },
-
-  { v:"Harmonie", q:"Gün içinde gerçekten sakinleşebildiğin anlar oluyor mu?" },
-  { v:"Harmonie", q:"Çatışmalar, sonrasında saygı/yakınlık dönecek şekilde çözülüyor mu?" },
-  { v:"Harmonie", q:"Sürekli rekabet yerine genel olarak bağlı/bağlı hissediyor musun?" },
-
-  { v:"Effizienz", q:"Çaban genelde net sonuçlara dönüşüyor mu?" },
-  { v:"Effizienz", q:"Gereksiz döngüler, tekrarlar veya kaotik sorumluluklar var mı?" },
-  { v:"Effizienz", q:"Sürekli ‘yangın söndürmeden’ odaklanabiliyor musun?" },
-
-  { v:"Handlungsspielraum", q:"Bir şey uymadığında değiştirmek için gerçekçi seçeneklerin var mı?" },
-  { v:"Handlungsspielraum", q:"Gerçek bir dezavantaj korkusu olmadan ‘hayır’ diyebiliyor musun?" },
-  { v:"Handlungsspielraum", q:"Aktif kullanabileceğin kaynak/destek var mı?" },
-
-  { v:"Mittel", q:"Kaynakların (zaman, para, enerji) beklenenler için yeterli mi?" },
-  { v:"Mittel", q:"Düzenli stres/çatışma yaratan darboğazlar var mı?" },
-  { v:"Mittel", q:"Sistem ‘kan kaybetmeyecek’ şekilde kaynaklar dağıtılmış mı?" },
-
-  { v:"Balance", q:"Verme-alma dengesi sence yerinde mi?" },
-  { v:"Balance", q:"Aşırı uçlar var mı (fazla kontrol / fazla kaos)?" },
-  { v:"Balance", q:"Her şey mükemmel olmasa da genel olarak dengede misin?" },
-];
-
-// ---------------- Error UI ----------------
+// --- Error UI ---
 function showErrorBox(msg) {
   const box = el("errorBox");
   if (!box) return;
   box.classList.remove("hidden");
-  box.textContent = msg || "";
+  if (msg) box.textContent = msg;
 }
 function hideErrorBox() {
   const box = el("errorBox");
   if (!box) return;
   box.classList.add("hidden");
-  box.textContent = "";
 }
 
+// Nur anzeigen, wenn es wirklich unser script.js betrifft (keine Addons)
 window.addEventListener("error", (e) => {
   try {
     const file = (e && e.filename) ? String(e.filename) : "";
-    if (file.includes("script.js")) {
-      showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
-    }
+    if (file.includes("script.js")) showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
   } catch {}
 });
 window.addEventListener("unhandledrejection", () => {
   showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
 });
 
-// ---------------- Language helpers ----------------
-function getLang() {
-  const v = el("language")?.value || "de";
-  return I18N[v] ? v : "de";
-}
-function t() {
-  return I18N[getLang()];
-}
-function setText(id, text) {
-  const node = el(id);
-  if (node) node.textContent = text;
-}
-
-// ---------------- Build UI ----------------
-function applyStaticUI() {
-  const L = t();
-
-  document.documentElement.lang = getLang();
-
-  setText("subtitle", L.subtitle);
-  setText("pathline", L.pathline);
-  setText("langLabel", L.langLabel);
-
-  setText("quickScanTitle", L.quickScanTitle);
-  setText("quickScanHint", L.quickScanHint);
-  setText("btnEval", L.btnEval);
-  setText("btnReset", L.btnReset);
-
-  setText("resultTitle", L.resultTitle);
-  setText("resultHint", L.resultHint);
-  setText("radarTitle", L.radarTitle);
-  setText("radarLegend", L.radarLegend);
-  setText("barsTitle", L.barsTitle);
-  setText("weakestTitle", L.weakestTitle);
-  setText("timewinTitle", L.timewinTitle);
-
-  setText("deepDiveTitle", L.deepDiveTitle);
-  setText("deepDiveHint", L.deepDiveHint);
-  setText("timeframeLabel", L.timeframeLabel);
-  setText("deepDiveBtn", L.ddBtn);
-
-  setText("footerLine", L.footer);
-
-  // Localize timeframe option labels (keeping values stable)
-  const tf = el("timeframe");
-  if (tf) {
-    [...tf.options].forEach(opt => {
-      const label = L.timeframe?.[opt.value];
-      if (label) opt.textContent = label;
-    });
-  }
-}
-
+// --- Build Questions UI ---
 function buildQuestions() {
   const host = el("questions");
   if (!host) return;
   host.innerHTML = "";
 
-  const L = t();
-  const Q = QUESTIONS_BY_LANG[getLang()] || QUESTIONS_BY_LANG.de;
-
-  Q.forEach((item, idx) => {
+  QUESTIONS.forEach((item, idx) => {
     const qWrap = document.createElement("div");
     qWrap.className = "q";
 
@@ -461,7 +104,7 @@ function buildQuestions() {
 
     const left = document.createElement("div");
     left.className = "qIdx";
-    left.textContent = `${idx + 1}/${Q.length} · ${item.v}`;
+    left.textContent = `${idx+1}/${QUESTIONS.length} · ${item.v}`;
 
     const right = document.createElement("div");
     right.className = "qVar";
@@ -477,7 +120,7 @@ function buildQuestions() {
     const opts = document.createElement("div");
     opts.className = "opts";
 
-    SCALE_VALUES.forEach((o) => {
+    SCALE.forEach((o) => {
       const label = document.createElement("label");
       label.className = "opt";
 
@@ -488,7 +131,7 @@ function buildQuestions() {
       input.setAttribute("data-var", item.v);
 
       const span = document.createElement("span");
-      span.textContent = L[o.key];
+      span.textContent = o.label;
 
       label.appendChild(input);
       label.appendChild(span);
@@ -502,15 +145,13 @@ function buildQuestions() {
   });
 }
 
-// ---------------- Collect & score ----------------
+// --- Collect & score ---
 function collectAnswersByVar() {
   const byVar = {};
-  VARS.forEach(v => (byVar[v] = []));
-
-  const Q = QUESTIONS_BY_LANG[getLang()] || QUESTIONS_BY_LANG.de;
+  VARS.forEach(v => byVar[v] = []);
 
   const missing = [];
-  for (let i = 0; i < Q.length; i++) {
+  for (let i = 0; i < QUESTIONS.length; i++) {
     const chosen = document.querySelector(`input[name="q_${i}"]:checked`);
     if (!chosen) {
       missing.push(i + 1);
@@ -530,7 +171,7 @@ function avg(arr) {
 
 function scoreAll(byVar) {
   const scores = {};
-  VARS.forEach(v => (scores[v] = avg(byVar[v])));
+  VARS.forEach(v => scores[v] = avg(byVar[v]));
   return scores;
 }
 
@@ -543,14 +184,13 @@ function weakestVar(scores) {
   return w;
 }
 
-function weakestVars(scores, n = 2) {
-  return Object.entries(scores)
-    .sort((a,b)=>a[1]-b[1])
-    .slice(0, n)
-    .map(([k]) => k);
+function timeWindowFor(value) {
+  if (value <= 0.3) return "jetzt (akut) · 24–72h Fokus";
+  if (value <= 0.55) return "bald · 1–2 Wochen Fokus";
+  return "stabil · nur Feintuning nötig";
 }
 
-// ---------------- Render: Bars / labels ----------------
+// --- Render helpers ---
 function renderBars(scores) {
   const host = el("bars");
   if (!host) return;
@@ -588,223 +228,257 @@ function renderBars(scores) {
 function renderWeakest(weak) {
   const host = el("weakest");
   if (!host) return;
-  const L = t();
-  host.innerHTML = `<span class="badge">${weak.key}</span> <span class="muted">${L.scoreLabel}:</span> <strong>${weak.val.toFixed(2)}</strong>`;
+  host.innerHTML = `<span class="badge">${weak.key}</span> <span class="muted">Score:</span> <strong>${weak.val.toFixed(2)}</strong>`;
 }
 
 function renderTimewin(weak) {
   const host = el("timewin");
   if (!host) return;
-  const L = t();
-  host.innerHTML = `<span class="badge">${L.timewin(weak.val)}</span>`;
+  host.innerHTML = `<span class="badge">${timeWindowFor(weak.val)}</span>`;
 }
 
-// ---------------- Radar Canvas (polished + arrow + label box) ----------------
-function drawRadar(scores, weak) {
-  const canvas = el("radarCanvas");
-  if (!canvas) return;
+function renderDeepDiveLocal(scores, maxN = 3) {
+  const host = el("deepDive");
+  if (!host) return;
+  host.innerHTML = "";
 
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  const list = Object.entries(scores).sort((a,b)=>a[1]-b[1]).slice(0, maxN);
+  list.forEach(([v,val]) => {
+    const div = document.createElement("div");
+    div.className = "ddItem";
+    div.innerHTML = `<span class="badge">${v}</span> <span class="muted">Score:</span> <strong>${val.toFixed(2)}</strong>`;
+    host.appendChild(div);
+  });
+}
 
-  // Handle high-DPI crispness
-  const cssW = canvas.clientWidth || canvas.width;
-  const cssH = canvas.clientHeight || canvas.height;
-  const dpr = Math.max(1, window.devicePixelRatio || 1);
+// ========= Radar (Canvas, polished) =========
+let _radarResizeObserver = null;
 
-  canvas.width = Math.floor(cssW * dpr);
-  canvas.height = Math.floor(cssH * dpr);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+function renderRadar(scores, weak) {
+  const host = el("plot3d");
+  if (!host) return;
 
-  const W = cssW, H = cssH;
+  // Clear
+  host.innerHTML = "";
 
-  // Background
-  ctx.clearRect(0, 0, W, H);
+  const canvas = document.createElement("canvas");
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  canvas.style.display = "block";
+  host.appendChild(canvas);
 
-  const cx = W * 0.50;
-  const cy = H * 0.54;
-  const R = Math.min(W, H) * 0.34;
+  const draw = () => {
+    const rect = host.getBoundingClientRect();
+    const cssW = Math.max(260, Math.floor(rect.width));
+    const cssH = Math.max(260, Math.floor(rect.height));
 
-  const levels = 5;
-  const angleStep = (Math.PI * 2) / VARS.length;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.floor(cssW * dpr);
+    canvas.height = Math.floor(cssH * dpr);
 
-  // Colors
-  const gridCol = "rgba(255,255,255,.10)";
-  const gridCol2 = "rgba(255,255,255,.06)";
-  const textCol = "rgba(255,255,255,.82)";
-  const polyFill = "rgba(159,231,210,.16)";
-  const polyStroke = "rgba(159,231,210,.85)";
-  const pointCol = "rgba(255,255,255,.85)";
-  const arrowCol = "rgba(255,208,138,.95)";
-  const glowCol = "rgba(255,208,138,.15)";
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  // Subtle vignette glow
-  const grad = ctx.createRadialGradient(cx, cy, R*0.2, cx, cy, R*1.7);
-  grad.addColorStop(0, "rgba(255,255,255,.08)");
-  grad.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0,0,W,H);
+    ctx.clearRect(0,0,cssW,cssH);
 
-  // Grid rings
-  for (let l = 1; l <= levels; l++) {
-    const rr = (R * l) / levels;
-    ctx.beginPath();
-    for (let i = 0; i < VARS.length; i++) {
-      const a = -Math.PI/2 + i * angleStep;
-      const x = cx + Math.cos(a) * rr;
-      const y = cy + Math.sin(a) * rr;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    // Layout tuning (damit nichts “sprengt”)
+    const pad = 42;                 // mehr Luft für Labels
+    const cx = cssW * 0.50;
+    const cy = cssH * 0.52;
+    const R  = Math.min(cssW, cssH) * 0.34; // etwas kleiner, stabil in jedem Layout
+    const labelR = R * 1.18;        // Labels weiter außen (lesbarer)
+    const levels = 5;
+
+    // Helpers
+    const angleFor = (i) => (-Math.PI/2) + (Math.PI * 2 * i / VARS.length);
+
+    // Styles (nicht übertreiben, aber “wow”)
+    const gridStroke = "rgba(255,255,255,0.18)";
+    const gridStroke2 = "rgba(255,255,255,0.10)";
+    const axisStroke = "rgba(255,255,255,0.10)";
+    const polyStroke = "rgba(158,240,216,0.85)";
+    const polyFill   = "rgba(158,240,216,0.16)";
+    const dotFill    = "rgba(255,255,255,0.78)";
+    const dotStroke  = "rgba(0,0,0,0.35)";
+    const arrowStroke= "rgba(246,204,114,0.95)";
+    const arrowGlow  = "rgba(246,204,114,0.22)";
+
+    // Background vignette (subtil)
+    const g = ctx.createRadialGradient(cx, cy, R*0.2, cx, cy, R*1.45);
+    g.addColorStop(0, "rgba(158,240,216,0.09)");
+    g.addColorStop(0.6, "rgba(0,0,0,0.00)");
+    g.addColorStop(1, "rgba(0,0,0,0.20)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,cssW,cssH);
+
+    // Grid levels
+    for (let lv=1; lv<=levels; lv++){
+      const rr = (R * lv/levels);
+      ctx.beginPath();
+      for (let i=0;i<VARS.length;i++){
+        const a = angleFor(i);
+        const x = cx + Math.cos(a)*rr;
+        const y = cy + Math.sin(a)*rr;
+        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = (lv === levels) ? gridStroke : gridStroke2;
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
+
+    // Axes
+    for (let i=0;i<VARS.length;i++){
+      const a = angleFor(i);
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      ctx.lineTo(cx + Math.cos(a)*R, cy + Math.sin(a)*R);
+      ctx.strokeStyle = axisStroke;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Polygon path (scores)
+    const pts = VARS.map((v,i)=>{
+      const val = scores[v] || 0;
+      const a = angleFor(i);
+      const rr = R * (0.18 + 0.82*val); // innen nie komplett “tot” (schöner)
+      return { v, val, a, x: cx + Math.cos(a)*rr, y: cy + Math.sin(a)*rr };
+    });
+
+    // Fill polygon
+    ctx.beginPath();
+    pts.forEach((p, i) => (i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y)));
     ctx.closePath();
-    ctx.strokeStyle = l === levels ? gridCol : gridCol2;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-
-  // Axes + labels
-  ctx.font = "600 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial";
-  ctx.fillStyle = textCol;
-  ctx.textBaseline = "middle";
-
-  for (let i = 0; i < VARS.length; i++) {
-    const a = -Math.PI/2 + i * angleStep;
-    const x2 = cx + Math.cos(a) * R;
-    const y2 = cy + Math.sin(a) * R;
-
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(x2, y2);
-    ctx.strokeStyle = gridCol2;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Label positioning
-    const lx = cx + Math.cos(a) * (R + 22);
-    const ly = cy + Math.sin(a) * (R + 22);
-
-    const name = VARS[i];
-    const align = Math.cos(a) > 0.2 ? "left" : Math.cos(a) < -0.2 ? "right" : "center";
-    ctx.textAlign = align;
-    ctx.fillText(name, lx, ly);
-  }
-
-  // Polygon points
-  const pts = VARS.map((v, i) => {
-    const val = clamp01(scores[v] ?? 0);
-    const a = -Math.PI/2 + i * angleStep;
-    const rr = R * (0.20 + 0.80 * val); // keep a bit away from center for readability
-    return { v, val, a, x: cx + Math.cos(a)*rr, y: cy + Math.sin(a)*rr };
-  });
-
-  // Profile polygon
-  ctx.beginPath();
-  pts.forEach((p, i) => {
-    if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-  });
-  ctx.closePath();
-  ctx.fillStyle = polyFill;
-  ctx.fill();
-
-  ctx.strokeStyle = polyStroke;
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Points
-  pts.forEach((p) => {
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 4.2, 0, Math.PI*2);
-    ctx.fillStyle = pointCol;
+    ctx.fillStyle = polyFill;
     ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,.35)";
+
+    // Stroke polygon
+    ctx.beginPath();
+    pts.forEach((p, i) => (i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y)));
+    ctx.closePath();
+    ctx.strokeStyle = polyStroke;
     ctx.lineWidth = 2;
     ctx.stroke();
-  });
 
-  // Arrow to weakest
-  const weakIdx = Math.max(0, VARS.indexOf(weak.key));
-  const wp = pts[weakIdx];
+    // Dots
+    pts.forEach((p)=>{
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4.6, 0, Math.PI*2);
+      ctx.fillStyle = dotFill;
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = dotStroke;
+      ctx.stroke();
+    });
 
-  // 10–15% longer: we use 12% longer
-  const arrowLen = R * 1.12;
-  const ax = cx + Math.cos(wp.a) * arrowLen;
-  const ay = cy + Math.sin(wp.a) * arrowLen;
+    // Labels (Deutsch)
+    ctx.font = "600 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.fillStyle = "rgba(255,255,255,0.86)";
 
-  // glow behind arrow
-  ctx.beginPath();
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(ax, ay);
-  ctx.strokeStyle = glowCol;
-  ctx.lineWidth = 10;
-  ctx.lineCap = "round";
-  ctx.stroke();
+    pts.forEach((p)=>{
+      const lx = cx + Math.cos(p.a)*labelR;
+      const ly = cy + Math.sin(p.a)*labelR;
 
-  // main arrow line
-  ctx.beginPath();
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(ax, ay);
-  ctx.strokeStyle = arrowCol;
-  ctx.lineWidth = 3.2;
-  ctx.lineCap = "round";
-  ctx.stroke();
+      // Align by quadrant
+      const c = Math.cos(p.a);
+      ctx.textAlign = (c > 0.25) ? "left" : (c < -0.25 ? "right" : "center");
+      ctx.textBaseline = "middle";
 
-  // arrow head
-  const headSize = 12;
-  const hx = ax, hy = ay;
-  const leftA = wp.a + Math.PI - 0.35;
-  const rightA = wp.a + Math.PI + 0.35;
+      // tiny shadow for readability
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.55)";
+      ctx.shadowBlur = 6;
+      ctx.fillText(p.v, lx, ly);
+      ctx.restore();
+    });
 
-  ctx.beginPath();
-  ctx.moveTo(hx, hy);
-  ctx.lineTo(hx + Math.cos(leftA)*headSize, hy + Math.sin(leftA)*headSize);
-  ctx.lineTo(hx + Math.cos(rightA)*headSize, hy + Math.sin(rightA)*headSize);
-  ctx.closePath();
-  ctx.fillStyle = arrowCol;
-  ctx.fill();
+    // Arrow to weakest (longer by ~12%)
+    const wIdx = VARS.indexOf(weak.key);
+    if (wIdx >= 0){
+      const a = angleFor(wIdx);
+      const endR = R * 1.12;  // <-- länger (10–15%)
+      const tipX = cx + Math.cos(a) * endR;
+      const tipY = cy + Math.sin(a) * endR;
 
-  // Label box near arrow end
-  const L = t();
-  const label = `${L.weakestLabel}: ${weak.key} · ${weak.val.toFixed(2)}`;
+      // glow line behind
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      ctx.lineTo(tipX, tipY);
+      ctx.strokeStyle = arrowGlow;
+      ctx.lineWidth = 10;
+      ctx.lineCap = "round";
+      ctx.stroke();
 
-  ctx.font = "600 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial";
-  const padding = 10;
-  const tw = ctx.measureText(label).width;
-  const bw = tw + padding*2;
-  const bh = 34;
+      // main line
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      ctx.lineTo(tipX, tipY);
+      ctx.strokeStyle = arrowStroke;
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      ctx.stroke();
 
-  // place box offset from arrow end, avoid outside canvas
-  let bx = hx + (Math.cos(wp.a) * 16);
-  let by = hy + (Math.sin(wp.a) * 16);
+      // arrow head
+      const head = 10;
+      const leftA = a + Math.PI*0.86;
+      const rightA= a - Math.PI*0.86;
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(tipX + Math.cos(leftA)*head,  tipY + Math.sin(leftA)*head);
+      ctx.lineTo(tipX + Math.cos(rightA)*head, tipY + Math.sin(rightA)*head);
+      ctx.closePath();
+      ctx.fillStyle = arrowStroke;
+      ctx.fill();
 
-  // normalize anchor to keep inside bounds
-  bx = clamp(bx, 10, W - bw - 10);
-  by = clamp(by, 10, H - bh - 10);
+      // Label box (tooltip)
+      const label = `Schwach: ${weak.key} · ${weak.val.toFixed(2)}`;
 
-  // box background
-  roundRect(ctx, bx, by, bw, bh, 12);
-  ctx.fillStyle = "rgba(0,0,0,.55)";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255,208,138,.55)";
-  ctx.lineWidth = 1.2;
-  ctx.stroke();
+      ctx.font = "700 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+      const m = 10;
+      const tw = ctx.measureText(label).width;
+      const bw = tw + m*2;
+      const bh = 30;
 
-  // text
-  ctx.fillStyle = "rgba(255,255,255,.92)";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillText(label, bx + padding, by + bh/2);
+      // Position near tip but inside canvas
+      let bx = tipX + (Math.cos(a) * 14);
+      let by = tipY + (Math.sin(a) * 14);
 
-  // subtle connector line from box to arrow head
-  const cx2 = clamp(hx, bx + 10, bx + bw - 10);
-  const cy2 = clamp(hy, by + 8, by + bh - 8);
-  ctx.beginPath();
-  ctx.moveTo(cx2, cy2);
-  ctx.lineTo(hx, hy);
-  ctx.strokeStyle = "rgba(255,208,138,.35)";
-  ctx.lineWidth = 1.2;
-  ctx.stroke();
+      // Clamp inside
+      bx = Math.max(10, Math.min(cssW - bw - 10, bx));
+      by = Math.max(10, Math.min(cssH - bh - 10, by));
+
+      // Box
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.45)";
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = "rgba(15,21,34,0.86)";
+      ctx.strokeStyle = "rgba(246,204,114,0.65)";
+      ctx.lineWidth = 1.5;
+
+      roundRect(ctx, bx, by, bw, bh, 10);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // Text
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(label, bx + m, by + bh/2);
+    }
+  };
+
+  // Draw now
+  draw();
+
+  // Redraw on resize
+  if (_radarResizeObserver) _radarResizeObserver.disconnect();
+  _radarResizeObserver = new ResizeObserver(() => draw());
+  _radarResizeObserver.observe(host);
 }
 
-function roundRect(ctx, x, y, w, h, r) {
+function roundRect(ctx, x, y, w, h, r){
   const rr = Math.min(r, w/2, h/2);
   ctx.beginPath();
   ctx.moveTo(x+rr, y);
@@ -815,124 +489,117 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function clamp01(v){ return Math.max(0, Math.min(1, Number(v) || 0)); }
-function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+// --- Deep Dive (Worker) ---
+let LAST_SCORES = null;
 
-// ---------------- Worker call ----------------
+function weakestVars(scores, n = 2) {
+  return Object.entries(scores)
+    .sort((a,b) => a[1] - b[1])
+    .slice(0, n)
+    .map(([k]) => k);
+}
+
 async function runDeepDive() {
-  const btn = el("deepDiveBtn");
-  const out = el("deepDiveOut");
-  const tf = el("timeframe");
+  const deepDiveBtn = el("deepDiveBtn");
+  const deepDiveOut = el("deepDiveOut");
+  const timeframeSel = el("timeframe");
 
-  if (!btn || !out) return;
-
-  const L = t();
+  if (!deepDiveBtn || !deepDiveOut) return;
 
   if (!LAST_SCORES) {
-    out.style.display = "block";
-    out.textContent = L.ddFirstScan;
+    deepDiveOut.style.display = "block";
+    deepDiveOut.textContent = "Bitte zuerst Quick Scan auswerten.";
     return;
   }
 
+  const timeframe = timeframeSel?.value || "heute";
+  const weakest = weakestVars(LAST_SCORES, 2);
+
   const payload = {
-    language: getLang(),
-    timeframe: tf?.value || "heute",
+    language: "de",           // HART DEUTSCH
+    timeframe,
     scores: LAST_SCORES,
-    weakest: weakestVars(LAST_SCORES, 2),
+    weakest
   };
 
   try {
-    btn.disabled = true;
-    btn.textContent = L.ddThinking;
+    deepDiveBtn.disabled = true;
+    deepDiveBtn.textContent = "…denke nach";
 
     const resp = await fetch(`${WORKER_BASE}/deepdive`, {
       method: "POST",
-      headers: { "Content-Type":"application/json" },
-      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
     });
 
     const data = await resp.json().catch(() => ({}));
+
     if (!resp.ok || !data.ok) {
       throw new Error(data?.error || `Worker HTTP ${resp.status}`);
     }
 
-    out.style.display = "block";
-    out.textContent = data.text || L.ddNoOutput;
+    deepDiveOut.style.display = "block";
+    deepDiveOut.textContent = data.text || "(keine Ausgabe)";
   } catch (e) {
-    out.style.display = "block";
-    out.textContent = `Fehler: ${String(e?.message || e)}`;
+    deepDiveOut.style.display = "block";
+    deepDiveOut.textContent = `Fehler: ${String(e.message || e)}`;
   } finally {
-    btn.disabled = false;
-    btn.textContent = L.ddBtn;
+    deepDiveBtn.disabled = false;
+    deepDiveBtn.textContent = "Stabilisierende Indikation erzeugen";
   }
 }
 
-// ---------------- Main evaluate/reset ----------------
+// --- Main evaluate ---
 async function onEvaluate() {
   hideErrorBox();
 
   const collected = collectAnswersByVar();
   if (!collected.ok) {
-    const L = t();
-    const list = collected.missing.slice(0,5).join(", ") + (collected.missing.length > 5 ? "…" : "");
-    showErrorBox(L.errMissing(list));
+    showErrorBox(`Bitte beantworte alle Fragen. Fehlend: ${collected.missing.slice(0,5).join(", ")}${collected.missing.length>5?"…":""}`);
     return;
   }
 
   const scores = scoreAll(collected.byVar);
   LAST_SCORES = scores;
-
   const weak = weakestVar(scores);
 
   el("results")?.classList.remove("hidden");
+
+  // Radar polished
+  renderRadar(scores, weak);
+
+  // Right panel
   renderBars(scores);
   renderWeakest(weak);
   renderTimewin(weak);
-  drawRadar(scores, weak);
+
+  // Mini deep dive list
+  renderDeepDiveLocal(scores, 3);
 }
 
 function onReset() {
   hideErrorBox();
-  document.querySelectorAll('input[type="radio"]').forEach(i => (i.checked = false));
+  document.querySelectorAll('input[type="radio"]').forEach(i => i.checked = false);
 
   el("results")?.classList.add("hidden");
-  el("bars") && (el("bars").innerHTML = "");
-  el("weakest") && (el("weakest").innerHTML = "");
-  el("timewin") && (el("timewin").innerHTML = "");
 
-  const out = el("deepDiveOut");
-  if (out) { out.innerHTML = ""; out.style.display = "none"; }
+  // Clear outputs safely
+  if (el("plot3d")) el("plot3d").innerHTML = "";
+  if (el("bars")) el("bars").innerHTML = "";
+  if (el("weakest")) el("weakest").innerHTML = "";
+  if (el("timewin")) el("timewin").innerHTML = "";
+  if (el("deepDive")) el("deepDive").innerHTML = "";
+  if (el("deepDiveOut")) {
+    el("deepDiveOut").innerHTML = "";
+    el("deepDiveOut").style.display = "none";
+  }
 
   LAST_SCORES = null;
-
-  // clear canvas
-  const c = el("radarCanvas");
-  const ctx = c?.getContext("2d");
-  if (ctx && c) ctx.clearRect(0,0,c.width,c.height);
 }
 
-// ---------------- Boot ----------------
-function boot() {
-  applyStaticUI();
+document.addEventListener("DOMContentLoaded", () => {
   buildQuestions();
-
   el("btnEval")?.addEventListener("click", onEvaluate);
   el("btnReset")?.addEventListener("click", onReset);
   el("deepDiveBtn")?.addEventListener("click", runDeepDive);
-
-  // language change: rebuild everything & reset results (avoid mixed-language state)
-  el("language")?.addEventListener("change", () => {
-    onReset();
-    applyStaticUI();
-    buildQuestions();
-  });
-
-  // redraw radar on resize if results visible
-  window.addEventListener("resize", () => {
-    if (!LAST_SCORES) return;
-    const weak = weakestVar(LAST_SCORES);
-    drawRadar(LAST_SCORES, weak);
-  });
-}
-
-document.addEventListener("DOMContentLoaded", boot);
+});
