@@ -5,113 +5,110 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Indikation – nach der Moral des Gleichgewichts</title>
 
-  <!-- v=2: Cache busting -->
-  <link rel="stylesheet" href="style.css?v=12" />
-  <script src="script.js?v=12" defer></script>
+  <!-- Cache busting -->
+  <link rel="stylesheet" href="style.css?v=10" />
+  <script src="script.js?v=10" defer></script>
 </head>
 
 <body>
   <main class="wrap">
     <header class="hero">
       <h1>Indikation</h1>
-      <p class="sub">nach der Moral des Gleichgewichts</p>
-      <p class="path">Quick Scan (24) → Deep Dive (optional) → stabilisierende Indikation</p>
+      <p class="sub" id="subtitle">nach der Moral des Gleichgewichts</p>
+      <p class="path" id="pathline">Quick Scan (24) → Deep Dive (optional) → stabilisierende Indikation</p>
     </header>
 
-    <!-- WICHTIG: Standard = hidden. Nur bei echten script.js Fehlern anzeigen -->
-    <section id="errorBox" class="errorBox hidden" role="alert" aria-live="polite">
-      <strong>Hinweis:</strong> Ein Skript-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).
+    <!-- Error Box -->
+    <section id="errorBox" class="errorBox hidden" role="alert" aria-live="polite"></section>
+
+    <!-- Language selector (TOP) -->
+    <section class="card">
+      <div class="row topRow">
+        <label class="muted" for="language" id="langLabel">Sprache</label>
+        <select id="language">
+          <option value="de" selected>Deutsch</option>
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="es">Español</option>
+          <option value="tr">Türkçe</option>
+        </select>
+      </div>
     </section>
 
+    <!-- Quick Scan -->
     <section class="card">
       <div class="cardHead">
-        <h2>Quick Scan</h2>
-        <p class="muted">
-          Beantworte jede Frage mit einer von drei Optionen. Danach erhältst du:
-          Koordinatensystem + Balken + schwächste Variable + Zeitfenster.
+        <h2 id="quickScanTitle">Quick Scan</h2>
+        <p class="muted" id="quickScanHint">
+          Beantworte jede Frage. Danach erhältst du: Koordinatensystem + Balken + schwächste Variable + Zeitfenster.
         </p>
-
-        <div id="questions"></div>
-        
-        <div class="actions">
-          <button id="btnEval" class="btn primary" type="button">Auswerten</button>
-          <button id="btnReset" class="btn" type="button">Zurücksetzen</button>
-        </div>
       </div>
 
       <div id="questions" class="questions"></div>
+
+      <div class="actions">
+        <button id="btnEval" class="btn primary" type="button">Auswerten</button>
+        <button id="btnReset" class="btn" type="button">Zurücksetzen</button>
+      </div>
     </section>
 
+    <!-- Results -->
     <section id="results" class="card hidden">
       <div class="cardHead">
-        <h2>Ergebnis</h2>
-        <p class="muted">Koordinatensystem (3D-Look), Balken, schwächste Variable, Zeitfenster.</p>
+        <h2 id="resultTitle">Ergebnis</h2>
+        <p class="muted" id="resultHint">Koordinatensystem (Radar), Balken, schwächste Variable, Zeitfenster.</p>
       </div>
 
       <div class="grid2">
         <div class="panel">
-          <h3 class="panelTitle">Koordinatensystem</h3>
-          <div id="plot3d" class="plot3d" aria-label="Koordinatensystem"></div>
+          <h3 class="panelTitle" id="radarTitle">Koordinatensystem</h3>
+
+          <div class="radarWrap">
+            <canvas id="radarCanvas" width="760" height="520" aria-label="Radar Chart"></canvas>
+          </div>
+
+          <p class="small muted" id="radarLegend">
+            Radar-Profil: niedrig = innen, hoch = außen · Pfeil = schwächste Variable
+          </p>
         </div>
 
         <div class="panel">
-          <h3 class="panelTitle">Balken</h3>
+          <h3 class="panelTitle" id="barsTitle">Balken</h3>
           <div id="bars" class="bars"></div>
 
           <div class="divider"></div>
 
-          <h3 class="panelTitle">Schwächste Variable</h3>
+          <h3 class="panelTitle" id="weakestTitle">Schwächste Variable</h3>
           <div id="weakest" class="weakest"></div>
 
           <div class="divider"></div>
 
-          <h3 class="panelTitle">Zeitfenster</h3>
+          <h3 class="panelTitle" id="timewinTitle">Zeitfenster</h3>
           <div id="timewin" class="timewin"></div>
         </div>
       </div>
-
-      <div class="divider"></div>
-
-      <div class="deepDive">
-        <div class="deepDiveHead">
-          <h3 class="panelTitle">Deep Dive (max. 2 Variablen)</h3>
-          <p class="muted">Optional: Nur wenn du willst. (Mit Worker + OpenAI wird’s später “smart”.)</p>
-        </div>
-        <div id="deepDive" class="deepDiveBody"></div>
-      </div>
     </section>
-<div class="card" id="deepDiveCard">
-  <h3>Deep Dive</h3>
-  <p class="muted">Optional: Wenn du willst, erzeugt der Worker eine stabilisierende Indikation.</p>
 
-  <div class="row">
-    <label class="muted">Zeitfenster</label>
-    <select id="timeframe">
-      <option value="heute">heute</option>
-      <option value="7tage">7 Tage</option>
-      <option value="30tage">30 Tage</option>
-    </select>
-  </div>
-  
-  <div class="row">
-  <label class="muted">Sprache</label>
-  <select id="language">
-    <option value="de" selected>Deutsch</option>
-    <option value="en">English</option>
-    <option value="fr">Français</option>
-    <option value="es">Español</option>
-    <option value="tr">Türkçe</option>
-  </select>
-</div>
+    <!-- Deep Dive -->
+    <section class="card" id="deepDiveCard">
+      <h3 id="deepDiveTitle">Deep Dive</h3>
+      <p class="muted" id="deepDiveHint">Optional: Wenn du willst, erzeugt der Worker eine stabilisierende Indikation.</p>
 
-  <button id="deepDiveBtn" class="btn">Stabilisierende Indikation erzeugen</button>
+      <div class="row">
+        <label class="muted" for="timeframe" id="timeframeLabel">Zeitfenster</label>
+        <select id="timeframe">
+          <option value="heute" selected>heute</option>
+          <option value="7tage">7 Tage</option>
+          <option value="30tage">30 Tage</option>
+        </select>
+      </div>
 
-  <div id="deepDiveOut" class="box" style="display:none; white-space:pre-wrap;"></div>
-</div>
-    
-    <footer class="foot muted">
-      v2 · Vanilla · Dark UI · 3 Antwortstufen
-    </footer>
+      <button id="deepDiveBtn" class="btn" type="button">Stabilisierende Indikation erzeugen</button>
+
+      <div id="deepDiveOut" class="box" style="display:none; white-space:pre-wrap;"></div>
+    </section>
+
+    <footer class="foot muted" id="footerLine">v2 · Vanilla · Dark UI · 3 Antwortstufen</footer>
   </main>
 </body>
 </html>
