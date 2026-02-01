@@ -168,3 +168,48 @@ body{
 }
 
 .foot{margin-top:14px;font-size:13px}
+
+/* =========================
+   WOW Radar / Spinnennetz (Add-on)
+   ========================= */
+
+#plot3d {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+}
+
+/* Canvas overlay for crisp radar */
+#plot3d .radarCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  border-radius: 18px;
+}
+
+/* If your plot3d already has a background image/grid, keep it.
+   Otherwise we add a subtle layered look (won’t break existing design). */
+#plot3d::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background:
+    radial-gradient(1200px 420px at 50% 15%, rgba(255,255,255,0.06), rgba(0,0,0,0) 60%),
+    radial-gradient(900px 520px at 50% 85%, rgba(120,200,255,0.06), rgba(0,0,0,0) 65%);
+  pointer-events: none;
+}
+
+#plot3d::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.08),
+    inset 0 0 40px rgba(0,0,0,0.35);
+  pointer-events: none;
+}
