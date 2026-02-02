@@ -1,4 +1,4 @@
-// v10 — Deutsch-only. Stabil. Radar (Canvas) polished + longer arrow + label box.
+// v11 — Deutsch-only. Stabil. Radar polished + Overall score + Modals + DeepDive render blocks.
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
 // Variablen (Deutsch)
@@ -70,7 +70,7 @@ function showErrorBox(msg) {
   const box = el("errorBox");
   if (!box) return;
   box.classList.remove("hidden");
-  if (msg) box.textContent = msg;
+  if (msg) box.innerHTML = `<strong>Hinweis:</strong> ${escapeHtml(msg)}`;
 }
 function hideErrorBox() {
   const box = el("errorBox");
@@ -82,11 +82,11 @@ function hideErrorBox() {
 window.addEventListener("error", (e) => {
   try {
     const file = (e && e.filename) ? String(e.filename) : "";
-    if (file.includes("script.js")) showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
+    if (file.includes("script.js")) showErrorBox("Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
   } catch {}
 });
 window.addEventListener("unhandledrejection", () => {
-  showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
+  showErrorBox("Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
 });
 
 // --- Build Questions UI ---
@@ -175,6 +175,11 @@ function scoreAll(byVar) {
   return scores;
 }
 
+function overallScore(scores){
+  const vals = VARS.map(v => scores[v] ?? 0);
+  return avg(vals);
+}
+
 function weakestVar(scores) {
   let w = null;
   for (const v of VARS) {
@@ -228,13 +233,13 @@ function renderBars(scores) {
 function renderWeakest(weak) {
   const host = el("weakest");
   if (!host) return;
-  host.innerHTML = `<span class="badge">${weak.key}</span> <span class="muted">Score:</span> <strong>${weak.val.toFixed(2)}</strong>`;
+  host.innerHTML = `<span class="badge">${escapeHtml(weak.key)}</span> <span class="muted">Score:</span> <strong>${weak.val.toFixed(2)}</strong>`;
 }
 
 function renderTimewin(weak) {
   const host = el("timewin");
   if (!host) return;
-  host.innerHTML = `<span class="badge">${timeWindowFor(weak.val)}</span>`;
+  host.innerHTML = `<span class="badge">${escapeHtml(timeWindowFor(weak.val))}</span>`;
 }
 
 function renderDeepDiveLocal(scores, maxN = 3) {
@@ -246,7 +251,7 @@ function renderDeepDiveLocal(scores, maxN = 3) {
   list.forEach(([v,val]) => {
     const div = document.createElement("div");
     div.className = "ddItem";
-    div.innerHTML = `<span class="badge">${v}</span> <span class="muted">Score:</span> <strong>${val.toFixed(2)}</strong>`;
+    div.innerHTML = `<span class="badge">${escapeHtml(v)}</span> <span class="muted">Score:</span> <strong>${val.toFixed(2)}</strong>`;
     host.appendChild(div);
   });
 }
@@ -258,7 +263,6 @@ function renderRadar(scores, weak) {
   const host = el("plot3d");
   if (!host) return;
 
-  // Clear
   host.innerHTML = "";
 
   const canvas = document.createElement("canvas");
@@ -278,21 +282,16 @@ function renderRadar(scores, weak) {
 
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
     ctx.clearRect(0,0,cssW,cssH);
 
-    // Layout tuning (damit nichts “sprengt”)
-    const pad = 42;                 // mehr Luft für Labels
     const cx = cssW * 0.50;
     const cy = cssH * 0.52;
-    const R  = Math.min(cssW, cssH) * 0.34; // etwas kleiner, stabil in jedem Layout
-    const labelR = R * 1.18;        // Labels weiter außen (lesbarer)
+    const R  = Math.min(cssW, cssH) * 0.34;
+    const labelR = R * 1.18;
     const levels = 5;
 
-    // Helpers
     const angleFor = (i) => (-Math.PI/2) + (Math.PI * 2 * i / VARS.length);
 
-    // Styles (nicht übertreiben, aber “wow”)
     const gridStroke = "rgba(255,255,255,0.18)";
     const gridStroke2 = "rgba(255,255,255,0.10)";
     const axisStroke = "rgba(255,255,255,0.10)";
@@ -303,7 +302,7 @@ function renderRadar(scores, weak) {
     const arrowStroke= "rgba(246,204,114,0.95)";
     const arrowGlow  = "rgba(246,204,114,0.22)";
 
-    // Background vignette (subtil)
+    // Background vignette
     const g = ctx.createRadialGradient(cx, cy, R*0.2, cx, cy, R*1.45);
     g.addColorStop(0, "rgba(158,240,216,0.09)");
     g.addColorStop(0.6, "rgba(0,0,0,0.00)");
@@ -311,7 +310,7 @@ function renderRadar(scores, weak) {
     ctx.fillStyle = g;
     ctx.fillRect(0,0,cssW,cssH);
 
-    // Grid levels
+    // Grid
     for (let lv=1; lv<=levels; lv++){
       const rr = (R * lv/levels);
       ctx.beginPath();
@@ -338,22 +337,21 @@ function renderRadar(scores, weak) {
       ctx.stroke();
     }
 
-    // Polygon path (scores)
+    // Points
     const pts = VARS.map((v,i)=>{
       const val = scores[v] || 0;
       const a = angleFor(i);
-      const rr = R * (0.18 + 0.82*val); // innen nie komplett “tot” (schöner)
+      const rr = R * (0.18 + 0.82*val);
       return { v, val, a, x: cx + Math.cos(a)*rr, y: cy + Math.sin(a)*rr };
     });
 
-    // Fill polygon
+    // Polygon fill + stroke
     ctx.beginPath();
     pts.forEach((p, i) => (i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y)));
     ctx.closePath();
     ctx.fillStyle = polyFill;
     ctx.fill();
 
-    // Stroke polygon
     ctx.beginPath();
     pts.forEach((p, i) => (i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y)));
     ctx.closePath();
@@ -372,7 +370,7 @@ function renderRadar(scores, weak) {
       ctx.stroke();
     });
 
-    // Labels (Deutsch)
+    // Labels
     ctx.font = "600 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
     ctx.fillStyle = "rgba(255,255,255,0.86)";
 
@@ -380,12 +378,10 @@ function renderRadar(scores, weak) {
       const lx = cx + Math.cos(p.a)*labelR;
       const ly = cy + Math.sin(p.a)*labelR;
 
-      // Align by quadrant
       const c = Math.cos(p.a);
       ctx.textAlign = (c > 0.25) ? "left" : (c < -0.25 ? "right" : "center");
       ctx.textBaseline = "middle";
 
-      // tiny shadow for readability
       ctx.save();
       ctx.shadowColor = "rgba(0,0,0,0.55)";
       ctx.shadowBlur = 6;
@@ -393,15 +389,14 @@ function renderRadar(scores, weak) {
       ctx.restore();
     });
 
-    // Arrow to weakest (longer by ~12%)
+    // Arrow to weakest
     const wIdx = VARS.indexOf(weak.key);
     if (wIdx >= 0){
       const a = angleFor(wIdx);
-      const endR = R * 1.12;  // <-- länger (10–15%)
+      const endR = R * 1.12;
       const tipX = cx + Math.cos(a) * endR;
       const tipY = cy + Math.sin(a) * endR;
 
-      // glow line behind
       ctx.beginPath();
       ctx.moveTo(cx,cy);
       ctx.lineTo(tipX, tipY);
@@ -410,7 +405,6 @@ function renderRadar(scores, weak) {
       ctx.lineCap = "round";
       ctx.stroke();
 
-      // main line
       ctx.beginPath();
       ctx.moveTo(cx,cy);
       ctx.lineTo(tipX, tipY);
@@ -419,7 +413,6 @@ function renderRadar(scores, weak) {
       ctx.lineCap = "round";
       ctx.stroke();
 
-      // arrow head
       const head = 10;
       const leftA = a + Math.PI*0.86;
       const rightA= a - Math.PI*0.86;
@@ -431,24 +424,20 @@ function renderRadar(scores, weak) {
       ctx.fillStyle = arrowStroke;
       ctx.fill();
 
-      // Label box (tooltip)
+      // Label box
       const label = `Schwach: ${weak.key} · ${weak.val.toFixed(2)}`;
-
       ctx.font = "700 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
       const m = 10;
       const tw = ctx.measureText(label).width;
       const bw = tw + m*2;
       const bh = 30;
 
-      // Position near tip but inside canvas
       let bx = tipX + (Math.cos(a) * 14);
       let by = tipY + (Math.sin(a) * 14);
 
-      // Clamp inside
       bx = Math.max(10, Math.min(cssW - bw - 10, bx));
       by = Math.max(10, Math.min(cssH - bh - 10, by));
 
-      // Box
       ctx.save();
       ctx.shadowColor = "rgba(0,0,0,0.45)";
       ctx.shadowBlur = 12;
@@ -461,7 +450,6 @@ function renderRadar(scores, weak) {
       ctx.stroke();
       ctx.restore();
 
-      // Text
       ctx.fillStyle = "rgba(255,255,255,0.92)";
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
@@ -469,10 +457,8 @@ function renderRadar(scores, weak) {
     }
   };
 
-  // Draw now
   draw();
 
-  // Redraw on resize
   if (_radarResizeObserver) _radarResizeObserver.disconnect();
   _radarResizeObserver = new ResizeObserver(() => draw());
   _radarResizeObserver.observe(host);
@@ -499,6 +485,35 @@ function weakestVars(scores, n = 2) {
     .map(([k]) => k);
 }
 
+function renderDeepDiveBlocks(container, data){
+  // Supports:
+  // 1) data.text (string) -> plain text
+  // 2) data.blocks (array) -> structured blocks [{title, bullets[], text}]
+  container.style.display = "block";
+  container.innerHTML = "";
+
+  if (data?.blocks && Array.isArray(data.blocks) && data.blocks.length){
+    data.blocks.forEach((b) => {
+      const sec = document.createElement("div");
+      sec.className = "ddItem";
+      const t = b.title ? `<div style="font-weight:700; margin-bottom:6px;">${escapeHtml(b.title)}</div>` : "";
+      const txt = b.text ? `<div style="margin-bottom:8px;">${escapeHtml(b.text)}</div>` : "";
+      let ul = "";
+      if (b.bullets && Array.isArray(b.bullets) && b.bullets.length){
+        ul = "<ul style='margin:0; padding-left:18px; line-height:1.5;'>" +
+          b.bullets.map(x => `<li>${escapeHtml(String(x))}</li>`).join("") +
+          "</ul>";
+      }
+      sec.innerHTML = t + txt + ul;
+      container.appendChild(sec);
+    });
+    return;
+  }
+
+  // Fallback: plain text
+  container.textContent = data?.text || "(keine Ausgabe)";
+}
+
 async function runDeepDive() {
   const deepDiveBtn = el("deepDiveBtn");
   const deepDiveOut = el("deepDiveOut");
@@ -516,7 +531,7 @@ async function runDeepDive() {
   const weakest = weakestVars(LAST_SCORES, 2);
 
   const payload = {
-    language: "de",           // HART DEUTSCH
+    language: "de",
     timeframe,
     scores: LAST_SCORES,
     weakest
@@ -538,8 +553,7 @@ async function runDeepDive() {
       throw new Error(data?.error || `Worker HTTP ${resp.status}`);
     }
 
-    deepDiveOut.style.display = "block";
-    deepDiveOut.textContent = data.text || "(keine Ausgabe)";
+    renderDeepDiveBlocks(deepDiveOut, data);
   } catch (e) {
     deepDiveOut.style.display = "block";
     deepDiveOut.textContent = `Fehler: ${String(e.message || e)}`;
@@ -565,7 +579,12 @@ async function onEvaluate() {
 
   el("results")?.classList.remove("hidden");
 
-  // Radar polished
+  // Meta: overall score
+  const ov = overallScore(scores);
+  const overallEl = el("overallScore");
+  if (overallEl) overallEl.textContent = ov.toFixed(2);
+
+  // Radar
   renderRadar(scores, weak);
 
   // Right panel
@@ -575,6 +594,10 @@ async function onEvaluate() {
 
   // Mini deep dive list
   renderDeepDiveLocal(scores, 3);
+
+  // Reset deep dive output view
+  const ddOut = el("deepDiveOut");
+  if (ddOut) { ddOut.innerHTML = ""; ddOut.style.display = "none"; }
 }
 
 function onReset() {
@@ -583,7 +606,6 @@ function onReset() {
 
   el("results")?.classList.add("hidden");
 
-  // Clear outputs safely
   if (el("plot3d")) el("plot3d").innerHTML = "";
   if (el("bars")) el("bars").innerHTML = "";
   if (el("weakest")) el("weakest").innerHTML = "";
@@ -594,7 +616,131 @@ function onReset() {
     el("deepDiveOut").style.display = "none";
   }
 
+  const overallEl = el("overallScore");
+  if (overallEl) overallEl.textContent = "—";
+
   LAST_SCORES = null;
+}
+
+/* =======================
+   Modals: Über/Impressum/Datenschutz
+======================= */
+function openModal(title, html){
+  const back = el("modalBackdrop");
+  const modal = el("modal");
+  const t = el("modalTitle");
+  const body = el("modalBody");
+  if (!back || !modal || !t || !body) return;
+
+  t.textContent = title;
+  body.innerHTML = html;
+
+  back.classList.remove("hidden");
+  modal.classList.remove("hidden");
+  back.setAttribute("aria-hidden", "false");
+
+  // Prevent background scroll
+  document.body.style.overflow = "hidden";
+}
+function closeModal(){
+  const back = el("modalBackdrop");
+  const modal = el("modal");
+  if (!back || !modal) return;
+
+  back.classList.add("hidden");
+  modal.classList.add("hidden");
+  back.setAttribute("aria-hidden", "true");
+
+  document.body.style.overflow = "";
+}
+function wireModals(){
+  el("modalClose")?.addEventListener("click", closeModal);
+  el("modalBackdrop")?.addEventListener("click", closeModal);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+  });
+
+  el("openAbout")?.addEventListener("click", () => {
+    openModal("Über", `
+      <div class="kv">
+        <strong>Indikation</strong> ist ein Werkzeug zur Diagnose und Stabilisierung sozialer Systeme
+        (Person, Paar, Familie, Team). Es übersetzt diffuse Spannungen in ein klares Profil aus 8 Variablen.
+      </div>
+      <h4>Wie Coaches es nutzen</h4>
+      <ul>
+        <li>Quick Scan: Ausgangslage sichtbar machen</li>
+        <li>Schwächste Variable + Zeitfenster: Ansatzpunkt bestimmen</li>
+        <li>Deep Dive: stabilisierende Indikation formulieren</li>
+      </ul>
+      <h4>Hinweis</h4>
+      <div class="kv">
+        Dieses Tool ersetzt keine medizinische oder psychotherapeutische Diagnose.
+        Bei akuter Gefahr oder Krisen: bitte professionelle Hilfe hinzuziehen.
+      </div>
+    `);
+  });
+
+  el("openImprint")?.addEventListener("click", () => {
+    openModal("Impressum", `
+      <div class="kv">
+        <strong>Anbieter</strong><br/>
+        Selim M. Ayrilmaz<br/>
+        Moosacher Straße 18<br/>
+        80809 München<br/><br/>
+        <strong>Kontakt</strong><br/>
+        <a href="mailto:selim.ayrilmaz@me.com">selim.ayrilmaz@me.com</a><br/>
+        Tel.: 016091489988<br/><br/>
+        <strong>Verantwortlich i.S.d. § 18 Abs. 2 MStV</strong><br/>
+        Selim M. Ayrilmaz
+      </div>
+      <div class="kv">
+        <strong>Haftungshinweis</strong><br/>
+        Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung
+        für die Inhalte externer Links. Für den Inhalt der verlinkten Seiten
+        sind ausschließlich deren Betreiber verantwortlich.
+      </div>
+    `);
+  });
+
+  el("openPrivacy")?.addEventListener("click", () => {
+    openModal("Datenschutz", `
+      <div class="kv">
+        <strong>Grundsatz</strong><br/>
+        Dieses Tool ist auf Datensparsamkeit ausgelegt. Es werden keine Nutzerkonten benötigt.
+      </div>
+
+      <h4>Welche Daten werden verarbeitet?</h4>
+      <div class="kv">
+        <strong>Quick Scan</strong> läuft lokal im Browser.<br/>
+        <strong>Deep Dive</strong> sendet die ausgewählten Werte (Scores) an den Worker,
+        um eine Textausgabe zu erzeugen. Es werden keine Freitext-Eingaben abgefragt.
+      </div>
+
+      <h4>Speicherung</h4>
+      <div class="kv">
+        Es ist nicht beabsichtigt, personenbezogene Daten zu speichern.
+        Der Worker ist so konzipiert, dass er die Anfrage verarbeitet und eine Antwort zurückgibt.
+      </div>
+
+      <h4>Kontakt</h4>
+      <div class="kv">
+        Wenn du per E-Mail Kontakt aufnimmst, werden die übermittelten Daten
+        zur Bearbeitung der Anfrage verarbeitet.
+      </div>
+    `);
+  });
+}
+
+/* =======================
+   Utils
+======================= */
+function escapeHtml(str){
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -602,4 +748,5 @@ document.addEventListener("DOMContentLoaded", () => {
   el("btnEval")?.addEventListener("click", onEvaluate);
   el("btnReset")?.addEventListener("click", onReset);
   el("deepDiveBtn")?.addEventListener("click", runDeepDive);
+  wireModals();
 });
