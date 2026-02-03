@@ -1,4 +1,4 @@
-// v11 — Deutsch-only. Stabil. Radar polished + Overall score + Modals + DeepDive render blocks.
+// v11 — Deutsch-only. Stabil. Radar (Canvas) polished + arrow/label gap + DeepDive premium cards.
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
 // Variablen (Deutsch)
@@ -70,7 +70,7 @@ function showErrorBox(msg) {
   const box = el("errorBox");
   if (!box) return;
   box.classList.remove("hidden");
-  if (msg) box.innerHTML = `<strong>Hinweis:</strong> ${escapeHtml(msg)}`;
+  if (msg) box.textContent = msg;
 }
 function hideErrorBox() {
   const box = el("errorBox");
@@ -82,11 +82,11 @@ function hideErrorBox() {
 window.addEventListener("error", (e) => {
   try {
     const file = (e && e.filename) ? String(e.filename) : "";
-    if (file.includes("script.js")) showErrorBox("Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
+    if (file.includes("script.js")) showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
   } catch {}
 });
 window.addEventListener("unhandledrejection", () => {
-  showErrorBox("Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
+  showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
 });
 
 // --- Build Questions UI ---
@@ -175,11 +175,6 @@ function scoreAll(byVar) {
   return scores;
 }
 
-function overallScore(scores){
-  const vals = VARS.map(v => scores[v] ?? 0);
-  return avg(vals);
-}
-
 function weakestVar(scores) {
   let w = null;
   for (const v of VARS) {
@@ -233,13 +228,13 @@ function renderBars(scores) {
 function renderWeakest(weak) {
   const host = el("weakest");
   if (!host) return;
-  host.innerHTML = `<span class="badge">${escapeHtml(weak.key)}</span> <span class="muted">Score:</span> <strong>${weak.val.toFixed(2)}</strong>`;
+  host.innerHTML = `<span class="badge">${weak.key}</span> <span class="muted">Score:</span> <strong>${weak.val.toFixed(2)}</strong>`;
 }
 
 function renderTimewin(weak) {
   const host = el("timewin");
   if (!host) return;
-  host.innerHTML = `<span class="badge">${escapeHtml(timeWindowFor(weak.val))}</span>`;
+  host.innerHTML = `<span class="badge">${timeWindowFor(weak.val)}</span>`;
 }
 
 function renderDeepDiveLocal(scores, maxN = 3) {
@@ -251,12 +246,12 @@ function renderDeepDiveLocal(scores, maxN = 3) {
   list.forEach(([v,val]) => {
     const div = document.createElement("div");
     div.className = "ddItem";
-    div.innerHTML = `<span class="badge">${escapeHtml(v)}</span> <span class="muted">Score:</span> <strong>${val.toFixed(2)}</strong>`;
+    div.innerHTML = `<span class="badge">${v}</span> <span class="muted">Score:</span> <strong>${val.toFixed(2)}</strong>`;
     host.appendChild(div);
   });
 }
 
-// ========= Radar (Canvas, polished) =========
+// ========= Radar (Canvas) =========
 let _radarResizeObserver = null;
 
 function renderRadar(scores, weak) {
@@ -282,6 +277,7 @@ function renderRadar(scores, weak) {
 
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
     ctx.clearRect(0,0,cssW,cssH);
 
     const cx = cssW * 0.50;
@@ -302,7 +298,6 @@ function renderRadar(scores, weak) {
     const arrowStroke= "rgba(246,204,114,0.95)";
     const arrowGlow  = "rgba(246,204,114,0.22)";
 
-    // Background vignette
     const g = ctx.createRadialGradient(cx, cy, R*0.2, cx, cy, R*1.45);
     g.addColorStop(0, "rgba(158,240,216,0.09)");
     g.addColorStop(0.6, "rgba(0,0,0,0.00)");
@@ -345,13 +340,14 @@ function renderRadar(scores, weak) {
       return { v, val, a, x: cx + Math.cos(a)*rr, y: cy + Math.sin(a)*rr };
     });
 
-    // Polygon fill + stroke
+    // Fill polygon
     ctx.beginPath();
     pts.forEach((p, i) => (i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y)));
     ctx.closePath();
     ctx.fillStyle = polyFill;
     ctx.fill();
 
+    // Stroke polygon
     ctx.beginPath();
     pts.forEach((p, i) => (i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y)));
     ctx.closePath();
@@ -389,7 +385,7 @@ function renderRadar(scores, weak) {
       ctx.restore();
     });
 
-    // Arrow to weakest
+    // Arrow to weakest + label (mit Abstand & seitlichem Versatz)
     const wIdx = VARS.indexOf(weak.key);
     if (wIdx >= 0){
       const a = angleFor(wIdx);
@@ -397,6 +393,7 @@ function renderRadar(scores, weak) {
       const tipX = cx + Math.cos(a) * endR;
       const tipY = cy + Math.sin(a) * endR;
 
+      // glow
       ctx.beginPath();
       ctx.moveTo(cx,cy);
       ctx.lineTo(tipX, tipY);
@@ -405,6 +402,7 @@ function renderRadar(scores, weak) {
       ctx.lineCap = "round";
       ctx.stroke();
 
+      // main
       ctx.beginPath();
       ctx.moveTo(cx,cy);
       ctx.lineTo(tipX, tipY);
@@ -413,6 +411,7 @@ function renderRadar(scores, weak) {
       ctx.lineCap = "round";
       ctx.stroke();
 
+      // head
       const head = 10;
       const leftA = a + Math.PI*0.86;
       const rightA= a - Math.PI*0.86;
@@ -426,15 +425,21 @@ function renderRadar(scores, weak) {
 
       // Label box
       const label = `Schwach: ${weak.key} · ${weak.val.toFixed(2)}`;
+
       ctx.font = "700 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
       const m = 10;
       const tw = ctx.measureText(label).width;
       const bw = tw + m*2;
       const bh = 30;
 
-      let bx = tipX + (Math.cos(a) * 28);
-      let by = tipY + (Math.sin(a) * 28);
+      // Abstand + seitlicher Versatz (damit Pfeil erkennbar bleibt)
+      const gap = 28;   // <- hier kannst du später feinjustieren
+      const side = 10;  // <- seitlicher Versatz
 
+      let bx = tipX + (Math.cos(a) * gap) + (-Math.sin(a) * side);
+      let by = tipY + (Math.sin(a) * gap) + ( Math.cos(a) * side);
+
+      // Clamp inside
       bx = Math.max(10, Math.min(cssW - bw - 10, bx));
       by = Math.max(10, Math.min(cssH - bh - 10, by));
 
@@ -444,7 +449,6 @@ function renderRadar(scores, weak) {
       ctx.fillStyle = "rgba(15,21,34,0.86)";
       ctx.strokeStyle = "rgba(246,204,114,0.65)";
       ctx.lineWidth = 1.5;
-
       roundRect(ctx, bx, by, bw, bh, 10);
       ctx.fill();
       ctx.stroke();
@@ -485,33 +489,195 @@ function weakestVars(scores, n = 2) {
     .map(([k]) => k);
 }
 
-function renderDeepDiveBlocks(container, data){
-  // Supports:
-  // 1) data.text (string) -> plain text
-  // 2) data.blocks (array) -> structured blocks [{title, bullets[], text}]
-  container.style.display = "block";
-  container.innerHTML = "";
+function escapeHTML(str){
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
-  if (data?.blocks && Array.isArray(data.blocks) && data.blocks.length){
-    data.blocks.forEach((b) => {
-      const sec = document.createElement("div");
-      sec.className = "ddItem";
-      const t = b.title ? `<div style="font-weight:700; margin-bottom:6px;">${escapeHtml(b.title)}</div>` : "";
-      const txt = b.text ? `<div style="margin-bottom:8px;">${escapeHtml(b.text)}</div>` : "";
-      let ul = "";
-      if (b.bullets && Array.isArray(b.bullets) && b.bullets.length){
-        ul = "<ul style='margin:0; padding-left:18px; line-height:1.5;'>" +
-          b.bullets.map(x => `<li>${escapeHtml(String(x))}</li>`).join("") +
-          "</ul>";
-      }
-      sec.innerHTML = t + txt + ul;
-      container.appendChild(sec);
-    });
+/**
+ * Premium Renderer:
+ * - akzeptiert plain text (data.text)
+ * - akzeptiert später strukturiert: data.cards = [{title,pill,bullets,body,timeline:[{t,txt}]}]
+ */
+function renderDeepDivePremium(data, meta){
+  const host = el("deepDiveOut");
+  if (!host) return;
+
+  host.style.display = "block";
+
+  // Structured mode (future-proof)
+  if (data && Array.isArray(data.cards) && data.cards.length){
+    host.innerHTML = buildCardsHTML(data.cards);
     return;
   }
 
-  // Fallback: plain text
-  container.textContent = data?.text || "(keine Ausgabe)";
+  // Plain text -> heuristisch zerlegen
+  const raw = (data && (data.text || data.output || data.result)) ? String(data.text || data.output || data.result) : "";
+  const text = raw.trim();
+
+  // Fallback (falls Worker nix liefert)
+  if (!text){
+    host.innerHTML = `<div class="ddCards">
+      <div class="ddCard">
+        <div class="ddTitle"><h4>Hinweis</h4><span class="ddPill">keine Ausgabe</span></div>
+        <div class="ddText">Der Worker hat keine Textausgabe geliefert.</div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // Split into paragraphs & bullets
+  const lines = text.split("\n").map(l=>l.trim()).filter(Boolean);
+  const bullets = [];
+  const paras = [];
+
+  for (const l of lines){
+    if (l.startsWith("- ") || l.startsWith("• ") || l.startsWith("* ")){
+      bullets.push(l.replace(/^[-•*]\s+/, ""));
+    } else {
+      paras.push(l);
+    }
+  }
+
+  // Meta info
+  const weakest = meta?.weakest?.join(", ") || "";
+  const tf = meta?.timeframe || "";
+  const pill = (weakest && tf) ? `${weakest} · ${tf}` : (weakest || tf || "Analyse");
+
+  // Build 5 cards (holy-shit Layout)
+  const cards = [];
+
+  // 1) Executive Summary
+  cards.push({
+    title: "Executive Summary",
+    pill,
+    body: paras.slice(0, 2).join(" ")
+  });
+
+  // 2) Kernhypothesen (aus den nächsten Sätzen)
+  cards.push({
+    title: "Kernhypothesen",
+    pill: "Systembild",
+    bullets: (paras.slice(2, 6).length ? paras.slice(2, 6) : bullets.slice(0, 4))
+  });
+
+  // 3) Hebel & Interventionen
+  cards.push({
+    title: "Hebel & Interventionen",
+    pill: "Handlung",
+    bullets: (bullets.length ? bullets.slice(0, 7) : guessActionBulletsFromText(text))
+  });
+
+  // 4) Zeitfenster-Plan (Timeline)
+  cards.push({
+    title: "Plan nach Zeitfenster",
+    pill: "Ablauf",
+    timeline: buildTimeline(meta?.timeframe || "heute", text)
+  });
+
+  // 5) Coach Guide
+  cards.push({
+    title: "Coach Guide",
+    pill: "Session",
+    bullets: buildCoachQuestions(meta?.weakest || [])
+  });
+
+  host.innerHTML = buildCardsHTML(cards);
+}
+
+function buildCardsHTML(cards){
+  const html = [`<div class="ddCards">`];
+
+  for (const c of cards){
+    const title = escapeHTML(c.title || "Abschnitt");
+    const pill = escapeHTML(c.pill || "");
+    const body = c.body ? `<div class="ddText">${escapeHTML(c.body)}</div>` : "";
+
+    const bullets = Array.isArray(c.bullets) && c.bullets.length
+      ? `<ul class="ddList">${c.bullets.map(b=>`
+          <li><span class="ddBullet"></span><div>${escapeHTML(b)}</div></li>
+        `).join("")}</ul>`
+      : "";
+
+    const timeline = Array.isArray(c.timeline) && c.timeline.length
+      ? `<div class="ddTimeline">${
+          c.timeline.map(step => `
+            <div class="ddTime">${escapeHTML(step.t)}</div>
+            <div class="ddStep">${escapeHTML(step.txt)}</div>
+          `).join("")
+        }</div>`
+      : "";
+
+    html.push(`
+      <div class="ddCard">
+        <div class="ddTitle">
+          <h4>${title}</h4>
+          ${pill ? `<span class="ddPill">${pill}</span>` : ``}
+        </div>
+        ${body}
+        ${bullets}
+        ${timeline}
+        ${c.small ? `<div class="ddSmall">${escapeHTML(c.small)}</div>` : ``}
+      </div>
+    `);
+  }
+
+  html.push(`</div>`);
+  return html.join("");
+}
+
+function guessActionBulletsFromText(text){
+  // ultra-sicherer Fallback, wenn Worker keine Bulletpoints liefert
+  const base = [
+    "Benennen: Was genau wird im System vermieden oder verdrängt?",
+    "Grenze: Wo brauchst du eine klare Linie (ohne Eskalation)?",
+    "Ressource: Welche Unterstützung ist realistisch aktivierbar?",
+    "Struktur: Was lässt sich in 7 Tagen messbar vereinfachen?",
+    "Dialog: Welches Gespräch ist fällig – mit welchem Ziel?"
+  ];
+  return base;
+}
+
+function buildTimeline(timeframe, text){
+  // stabile Default-Timeline (Coach-tauglich), unabhängig vom Worker-Text
+  if (timeframe === "30tage"){
+    return [
+      { t: "Heute", txt: "1 klare Beobachtung formulieren (ohne Urteil). 1 Mini-Schritt festlegen (≤10 Minuten)." },
+      { t: "7 Tage", txt: "1 Gespräch/Intervention durchführen. Reaktion protokollieren: besser/schlechter/gleich." },
+      { t: "30 Tage", txt: "Stabilisierungsroutine definieren: Was bleibt, was endet, was wird delegiert?" },
+    ];
+  }
+  if (timeframe === "7tage"){
+    return [
+      { t: "Heute", txt: "Trigger + Muster identifizieren: Was kippt wann? 1 Schutzregel setzen." },
+      { t: "72h", txt: "Kleine Strukturänderung testen (z.B. klare Zuständigkeit / klare Grenze)." },
+      { t: "7 Tage", txt: "Wirksamkeit prüfen: Welche Variable bewegt sich? Nächste Intervention auswählen." },
+    ];
+  }
+  return [
+    { t: "Jetzt", txt: "Akuter Fokus: Was schadet gerade unmittelbar? Sofortmaßnahme definieren." },
+    { t: "24–72h", txt: "1 Intervention mit maximaler Hebelwirkung: Grenze / Wahrheit / Entlastung." },
+    { t: "1–2 Wochen", txt: "Stabilisierung: Regel, Routine oder Struktur einführen, die Rückfälle verhindert." },
+  ];
+}
+
+function buildCoachQuestions(weakest){
+  const w = weakest && weakest.length ? weakest : ["(Schwerpunkt)"];
+  const v1 = w[0] || "(Variable)";
+  const v2 = w[1] || null;
+
+  const qs = [
+    `Wenn ${v1} „kippt“: Woran merkt man es als Erstes – im Verhalten, im Körper, im Denken?`,
+    `Welche Wahrheit wird vermieden, weil sie kurzfristig Konflikt erzeugen könnte – langfristig aber Stabilität bringt?`,
+    `Welche Grenze wäre fair – und welche Konsequenz ist realistisch, wenn sie nicht respektiert wird?`,
+    `Was ist die kleinste Intervention, die man in 24h wirklich umsetzen kann (ohne neue Abhängigkeiten)?`,
+  ];
+  if (v2) qs.push(`Was ist die Wechselwirkung zwischen ${v1} und ${v2}? (z.B. „wenn X sinkt, steigt Y“).`);
+  return qs;
 }
 
 async function runDeepDive() {
@@ -553,10 +719,18 @@ async function runDeepDive() {
       throw new Error(data?.error || `Worker HTTP ${resp.status}`);
     }
 
-    renderDeepDiveBlocks(deepDiveOut, data);
+    // Premium render
+    renderDeepDivePremium(data, { weakest, timeframe });
+
   } catch (e) {
     deepDiveOut.style.display = "block";
-    deepDiveOut.textContent = `Fehler: ${String(e.message || e)}`;
+    deepDiveOut.innerHTML = `<div class="ddCards">
+      <div class="ddCard">
+        <div class="ddTitle"><h4>Fehler</h4><span class="ddPill">Request</span></div>
+        <div class="ddText">${escapeHTML(String(e.message || e))}</div>
+        <div class="ddSmall">Hinweis: Wenn das wiederholt auftritt, ist es fast immer CORS / CSP oder ein Worker-Fehler.</div>
+      </div>
+    </div>`;
   } finally {
     deepDiveBtn.disabled = false;
     deepDiveBtn.textContent = "Stabilisierende Indikation erzeugen";
@@ -579,25 +753,11 @@ async function onEvaluate() {
 
   el("results")?.classList.remove("hidden");
 
-  // Meta: overall score
-  const ov = overallScore(scores);
-  const overallEl = el("overallScore");
-  if (overallEl) overallEl.textContent = ov.toFixed(2);
-
-  // Radar
   renderRadar(scores, weak);
-
-  // Right panel
   renderBars(scores);
   renderWeakest(weak);
   renderTimewin(weak);
-
-  // Mini deep dive list
   renderDeepDiveLocal(scores, 3);
-
-  // Reset deep dive output view
-  const ddOut = el("deepDiveOut");
-  if (ddOut) { ddOut.innerHTML = ""; ddOut.style.display = "none"; }
 }
 
 function onReset() {
@@ -616,131 +776,7 @@ function onReset() {
     el("deepDiveOut").style.display = "none";
   }
 
-  const overallEl = el("overallScore");
-  if (overallEl) overallEl.textContent = "—";
-
   LAST_SCORES = null;
-}
-
-/* =======================
-   Modals: Über/Impressum/Datenschutz
-======================= */
-function openModal(title, html){
-  const back = el("modalBackdrop");
-  const modal = el("modal");
-  const t = el("modalTitle");
-  const body = el("modalBody");
-  if (!back || !modal || !t || !body) return;
-
-  t.textContent = title;
-  body.innerHTML = html;
-
-  back.classList.remove("hidden");
-  modal.classList.remove("hidden");
-  back.setAttribute("aria-hidden", "false");
-
-  // Prevent background scroll
-  document.body.style.overflow = "hidden";
-}
-function closeModal(){
-  const back = el("modalBackdrop");
-  const modal = el("modal");
-  if (!back || !modal) return;
-
-  back.classList.add("hidden");
-  modal.classList.add("hidden");
-  back.setAttribute("aria-hidden", "true");
-
-  document.body.style.overflow = "";
-}
-function wireModals(){
-  el("modalClose")?.addEventListener("click", closeModal);
-  el("modalBackdrop")?.addEventListener("click", closeModal);
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeModal();
-  });
-
-  el("openAbout")?.addEventListener("click", () => {
-    openModal("Über", `
-      <div class="kv">
-        <strong>Indikation</strong> ist ein Werkzeug zur Diagnose und Stabilisierung sozialer Systeme
-        (Person, Paar, Familie, Team). Es übersetzt diffuse Spannungen in ein klares Profil aus 8 Variablen.
-      </div>
-      <h4>Wie Coaches es nutzen</h4>
-      <ul>
-        <li>Quick Scan: Ausgangslage sichtbar machen</li>
-        <li>Schwächste Variable + Zeitfenster: Ansatzpunkt bestimmen</li>
-        <li>Deep Dive: stabilisierende Indikation formulieren</li>
-      </ul>
-      <h4>Hinweis</h4>
-      <div class="kv">
-        Dieses Tool ersetzt keine medizinische oder psychotherapeutische Diagnose.
-        Bei akuter Gefahr oder Krisen: bitte professionelle Hilfe hinzuziehen.
-      </div>
-    `);
-  });
-
-  el("openImprint")?.addEventListener("click", () => {
-    openModal("Impressum", `
-      <div class="kv">
-        <strong>Anbieter</strong><br/>
-        Selim M. Ayrilmaz<br/>
-        Moosacher Straße 18<br/>
-        80809 München<br/><br/>
-        <strong>Kontakt</strong><br/>
-        <a href="mailto:selim.ayrilmaz@me.com">selim.ayrilmaz@me.com</a><br/>
-        Tel.: 016091489988<br/><br/>
-        <strong>Verantwortlich i.S.d. § 18 Abs. 2 MStV</strong><br/>
-        Selim M. Ayrilmaz
-      </div>
-      <div class="kv">
-        <strong>Haftungshinweis</strong><br/>
-        Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung
-        für die Inhalte externer Links. Für den Inhalt der verlinkten Seiten
-        sind ausschließlich deren Betreiber verantwortlich.
-      </div>
-    `);
-  });
-
-  el("openPrivacy")?.addEventListener("click", () => {
-    openModal("Datenschutz", `
-      <div class="kv">
-        <strong>Grundsatz</strong><br/>
-        Dieses Tool ist auf Datensparsamkeit ausgelegt. Es werden keine Nutzerkonten benötigt.
-      </div>
-
-      <h4>Welche Daten werden verarbeitet?</h4>
-      <div class="kv">
-        <strong>Quick Scan</strong> läuft lokal im Browser.<br/>
-        <strong>Deep Dive</strong> sendet die ausgewählten Werte (Scores) an den Worker,
-        um eine Textausgabe zu erzeugen. Es werden keine Freitext-Eingaben abgefragt.
-      </div>
-
-      <h4>Speicherung</h4>
-      <div class="kv">
-        Es ist nicht beabsichtigt, personenbezogene Daten zu speichern.
-        Der Worker ist so konzipiert, dass er die Anfrage verarbeitet und eine Antwort zurückgibt.
-      </div>
-
-      <h4>Kontakt</h4>
-      <div class="kv">
-        Wenn du per E-Mail Kontakt aufnimmst, werden die übermittelten Daten
-        zur Bearbeitung der Anfrage verarbeitet.
-      </div>
-    `);
-  });
-}
-
-/* =======================
-   Utils
-======================= */
-function escapeHtml(str){
-  return String(str)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -748,5 +784,4 @@ document.addEventListener("DOMContentLoaded", () => {
   el("btnEval")?.addEventListener("click", onEvaluate);
   el("btnReset")?.addEventListener("click", onReset);
   el("deepDiveBtn")?.addEventListener("click", runDeepDive);
-  wireModals();
 });
