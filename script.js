@@ -1,4 +1,7 @@
-// v11 — Deutsch-only. Stabil. Radar (Canvas) polished + arrow/label gap + DeepDive premium cards.
+// v12 — Deutsch-only. Stabil. Radar (Canvas) polished + arrow/label gap.
+// Deep Dive: Premium Cards "holy shit" mit robustem Parser.
+// Zeitfenster-Auswahl im UI wird NICHT mehr verwendet (Deep Dive zeigt immer Heute/7/30).
+
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
 // Variablen (Deutsch)
@@ -433,8 +436,8 @@ function renderRadar(scores, weak) {
       const bh = 30;
 
       // Abstand + seitlicher Versatz (damit Pfeil erkennbar bleibt)
-      const gap = 38;   // <- hier kannst du später feinjustieren
-      const side = 15;  // <- seitlicher Versatz
+      const gap = 30;   // <- Feinjustierung hier
+      const side = 12;  // <- und hier
 
       let bx = tipX + (Math.cos(a) * gap) + (-Math.sin(a) * side);
       let by = tipY + (Math.sin(a) * gap) + ( Math.cos(a) * side);
@@ -490,7 +493,7 @@ function weakestVars(scores, n = 2) {
 }
 
 function escapeHTML(str){
-  return String(str)
+  return String(str ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -498,10 +501,267 @@ function escapeHTML(str){
     .replaceAll("'", "&#039;");
 }
 
+// Entfernt einfache Markdown-Marker, ohne Struktur zu zerstören
+function stripMd(s){
+  return String(s ?? "")
+    .replace(/\*\*/g, "")     // **bold**
+    .replace(/__+/g, "")      // __bold__
+    .replace(/`+/g, "")       // `code`
+    .replace(/\s+$/g, "")
+    .trim();
+}
+
+// Normalisiert Überschriften-Token aus Worker-Text
+function normKey(s){
+  return stripMd(s)
+    .toLowerCase()
+    .replace(/[:：]/g, "")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Heuristischer Parser: erkennt Headings/Abschnitte und zieht Inhalte sauber in Cards
+function parseDeepDiveToCards(rawText, meta){
+  const text = String(rawText ?? "").trim();
+  const weakest = meta?.weakest?.join(", ") || "";
+  const pillMain = weakest ? `Fokus: ${weakest}` : "Analyse";
+
+  // 1) In Zeilen aufteilen
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+  // 2) Abschnitte sammeln anhand von Headings (#, ##, ###) oder "Titel:" Mustern
+  const sections = []; // {title, lines:[]}
+  let current = { title: "Text", lines: [] };
+
+  const pushCurrent = () => {
+    const has = current.lines.length && current.lines.join(" ").trim().length;
+    if (has) sections.push(current);
+  };
+
+  for (const l of lines){
+    const mdHeading = l.match(/^(#{1,6})\s*(.+)$/);
+    const colonHeading = l.match(/^([A-Za-zÄÖÜäöüß0-9 \-()]{4,60})\s*[:：]\s*(.*)$/);
+
+    if (mdHeading){
+      pushCurrent();
+      current = { title: stripMd(mdHeading[2]), lines: [] };
+      continue;
+    }
+
+    // Ein Zeilen-Titel mit ":" und danach Text (z.B. "Executive Summary: ...")
+    if (colonHeading){
+      const t = stripMd(colonHeading[1]);
+      const rest = stripMd(colonHeading[2] || "");
+      // Nur als Abschnitt werten, wenn Titel "nach Section klingt"
+      const key = normKey(t);
+      const looksLikeSection =
+        key.includes("executive summary") ||
+        key.includes("systembild") ||
+        key.includes("kernhypothesen") ||
+        key.includes("hebel") ||
+        key.includes("intervention") ||
+        key.includes("plan") ||
+        key.includes("zeitfenster") ||
+        key.includes("coach");
+
+      if (looksLikeSection){
+        pushCurrent();
+        current = { title: t, lines: [] };
+        if (rest) current.lines.push(rest);
+        continue;
+      }
+    }
+
+    current.lines.push(l);
+  }
+  pushCurrent();
+
+  // 3) Helper: finde Abschnitt per Keywords
+  const pick = (kwArr) => {
+    for (const s of sections){
+      const key = normKey(s.title);
+      if (kwArr.some(kw => key.includes(kw))) return s;
+    }
+    return null;
+  };
+
+  const secExec =
+    pick(["executive summary", "zusammenfassung", "kurzfassung"]) || sections[0] || null;
+
+  const secSystem =
+    pick(["systembild"]) || null;
+
+  const secHyp =
+    pick(["kernhypothesen", "hypothesen"]) || null;
+
+  const secHebel =
+    pick(["hebel", "intervention", "interventionen", "hebelwirkung"]) || null;
+
+  const secPlan =
+    pick(["plan", "zeitfenster"]) || null;
+
+  const secCoach =
+    pick(["coach guide", "coach-guide", "coach", "session", "leitfaden"]) || null;
+
+  // 4) Bullets aus Text ziehen
+  const extractBullets = (arrLines) => {
+    const bullets = [];
+    for (const l of (arrLines || [])){
+      if (/^[-•*]\s+/.test(l)) bullets.push(stripMd(l.replace(/^[-•*]\s+/, "")));
+    }
+    return bullets;
+  };
+
+  // 5) “Plan” Zeitfenster aus einem Block robust ziehen
+  const planFromText = (planLines) => {
+    const src = (planLines || []).join("\n");
+    const out = [];
+
+    // grob: Teilstrings ab "Heute", "7 Tage", "30 Tage"
+    // wir nehmen jeweils 1–3 sinnvolle Zeilen danach, bis nächste Marke kommt
+    const grab = (label, nextLabels) => {
+      const r = new RegExp(`(?:^|\\n)\\s*${label}\\b[\\s:：-]*`, "i");
+      const m = src.search(r);
+      if (m < 0) return null;
+
+      const after = src.slice(m).replace(r, "");
+      // Stop an nächstem Label
+      let stop = after.length;
+      for (const nl of nextLabels){
+        const rm = after.search(new RegExp(`(?:^|\\n)\\s*${nl}\\b`, "i"));
+        if (rm >= 0) stop = Math.min(stop, rm);
+      }
+      const chunk = after.slice(0, stop).trim();
+      // Nimm erste 2–4 Zeilen oder 1–2 Sätze
+      const lines = chunk.split(/\r?\n/).map(x=>stripMd(x.trim())).filter(Boolean);
+      const short = lines.slice(0, 4).join(" ");
+      return short || null;
+    };
+
+    const h = grab("Heute", ["7\\s*Tage", "30\\s*Tage"]);
+    const d7 = grab("7\\s*Tage", ["30\\s*Tage"]);
+    const d30 = grab("30\\s*Tage", ["Coach", "Coach-Guide", "Guide", "Fragen"]);
+
+    if (h) out.push({ t: "Heute", txt: h });
+    if (d7) out.push({ t: "7 Tage", txt: d7 });
+    if (d30) out.push({ t: "30 Tage", txt: d30 });
+
+    // Wenn nix gefunden: Default immer
+    if (!out.length) return buildTimelineMulti();
+    return out;
+  };
+
+  // 6) Cards bauen
+  const cards = [];
+
+  // Executive Summary: 1–2 Zeilen / 1–2 Absätze
+  if (secExec){
+    const body = stripMd(secExec.lines.slice(0, 3).join(" ")).trim();
+    cards.push({
+      title: "Executive Summary",
+      pill: pillMain,
+      body: body || "—"
+    });
+  }
+
+  // Systembild / Kern
+  if (secSystem){
+    const body = stripMd(secSystem.lines.slice(0, 6).join(" ")).trim();
+    cards.push({
+      title: "Systembild",
+      pill: "Diagnostik",
+      body: body || stripMd(secSystem.lines.join(" ")).trim() || "—"
+    });
+  } else {
+    // fallback: kurzer System-Absatz aus dem Exec-Text, wenn vorhanden
+    const fallback = secExec ? stripMd(secExec.lines.slice(2, 6).join(" ")).trim() : "";
+    if (fallback){
+      cards.push({
+        title: "Systembild",
+        pill: "Diagnostik",
+        body: fallback
+      });
+    }
+  }
+
+  // Kernhypothesen: bullets oder kurze Sätze
+  if (secHyp){
+    const bul = extractBullets(secHyp.lines);
+    const bodyLines = secHyp.lines.map(stripMd);
+    const list = bul.length ? bul : bodyLines.slice(0, 5).filter(Boolean);
+    cards.push({
+      title: "Kernhypothesen",
+      pill: "Wenn–Dann",
+      bullets: list.slice(0, 6)
+    });
+  }
+
+  // Hebel & Interventionen
+  if (secHebel){
+    const bul = extractBullets(secHebel.lines);
+    let list = bul;
+    if (!list.length){
+      // versuch: Sätze anhand von Nummern 1. 2. 3.
+      const joined = secHebel.lines.join(" ");
+      const parts = joined.split(/\s(?=\d+\.)/g).map(stripMd).filter(Boolean);
+      list = parts.length ? parts : guessActionBulletsFromText(text);
+    }
+    cards.push({
+      title: "Hebel & Interventionen",
+      pill: "Handlung",
+      bullets: list.slice(0, 10)
+    });
+  } else {
+    cards.push({
+      title: "Hebel & Interventionen",
+      pill: "Handlung",
+      bullets: guessActionBulletsFromText(text)
+    });
+  }
+
+  // Plan nach Zeitfenster: IMMER alle 3 (logisch konsistent)
+  const planTimeline = secPlan ? planFromText(secPlan.lines) : buildTimelineMulti();
+  cards.push({
+    title: "Plan nach Zeitfenster",
+    pill: "Heute · 7 Tage · 30 Tage",
+    timeline: planTimeline
+  });
+
+  // Coach Guide: aus Abschnitt oder Fallback aus Variablen
+  if (secCoach){
+    const bul = extractBullets(secCoach.lines);
+    const bodyLines = secCoach.lines.map(stripMd).filter(Boolean);
+    const list = bul.length ? bul : bodyLines.slice(0, 10);
+    cards.push({
+      title: "Coach Guide",
+      pill: "Session",
+      bullets: list.length ? list : buildCoachQuestions(meta?.weakest || [])
+    });
+  } else {
+    cards.push({
+      title: "Coach Guide",
+      pill: "Session",
+      bullets: buildCoachQuestions(meta?.weakest || [])
+    });
+  }
+
+  // Mini-Finish: wenn Cards < 4, dann einfach Raw-Text als Extra
+  if (cards.length < 4){
+    cards.push({
+      title: "Rohtext",
+      pill: "Output",
+      body: stripMd(text).slice(0, 1200) + (stripMd(text).length > 1200 ? " …" : "")
+    });
+  }
+
+  return cards;
+}
+
 /**
  * Premium Renderer:
  * - akzeptiert plain text (data.text)
- * - akzeptiert später strukturiert: data.cards = [{title,pill,bullets,body,timeline:[{t,txt}]}]
+ * - akzeptiert strukturiert: data.cards = [{title,pill,bullets,body,timeline:[{t,txt}]}]
  */
 function renderDeepDivePremium(data, meta){
   const host = el("deepDiveOut");
@@ -509,13 +769,12 @@ function renderDeepDivePremium(data, meta){
 
   host.style.display = "block";
 
-  // Structured mode (falls du später data.cards aus dem Worker lieferst)
+  // Structured mode (future-proof)
   if (data && Array.isArray(data.cards) && data.cards.length){
     host.innerHTML = buildCardsHTML(data.cards);
     return;
   }
 
-  // Plain text / Markdown
   const raw = (data && (data.text || data.output || data.result)) ? String(data.text || data.output || data.result) : "";
   const text = raw.trim();
 
@@ -529,144 +788,9 @@ function renderDeepDivePremium(data, meta){
     return;
   }
 
-  // === MARKDOWN -> Sections ===
-  const sections = splitByMarkdownHeadings(text);
-
-  // Erwartete Reihenfolge / Titel normalisieren
-  const cards = [];
-
-  for (const s of sections){
-    const title = normalizeTitle(s.title);
-    const pill = makePill(meta);
-
-    // Inhalte: Bullets + Resttext
-    const { bullets, paragraphs, timeline } = parseSectionBody(s.body, meta);
-
-    // Card bauen – je nach Typ
-    if (title.includes("plan") && timeline.length){
-      cards.push({ title: "Plan nach Zeitfenster", pill: "Ablauf", timeline });
-      continue;
-    }
-
-    if (title.includes("hebel")){
-      cards.push({ title: "Hebel & Interventionen", pill: "Handlung", bullets: bullets.length ? bullets : guessActionBulletsFromText(s.body) });
-      continue;
-    }
-
-    if (title.includes("coach")){
-      cards.push({ title: "Coach Guide", pill: "Session", bullets: bullets.length ? bullets : buildCoachQuestions(meta?.weakest || []) });
-      continue;
-    }
-
-    if (title.includes("kernhypothesen")){
-      cards.push({ title: "Kernhypothesen", pill: "Systembild", bullets: bullets.length ? bullets : paragraphs.slice(0,6) });
-      continue;
-    }
-
-    if (title.includes("systembild")){
-      cards.push({ title: "Systembild", pill: pill, body: paragraphs.join(" ") || s.body });
-      continue;
-    }
-
-    if (title.includes("executive")){
-      cards.push({ title: "Executive Summary", pill: pill, body: paragraphs.join(" ") || s.body });
-      continue;
-    }
-
-    // Fallback: generische Card
-    cards.push({
-      title: s.title || "Deep Dive",
-      pill: pill,
-      body: paragraphs.join(" ") || s.body,
-      bullets: bullets.length ? bullets : null
-    });
-  }
-
-  // Falls Worker manche Sections nicht liefert: stabil auffüllen
-  const have = (name) => cards.some(c => (c.title || "").toLowerCase().includes(name));
-  if (!have("executive")) cards.unshift({ title:"Executive Summary", pill: makePill(meta), body: text.split("\n").slice(0,4).join(" ") });
-  if (!have("plan")) cards.push({ title:"Plan nach Zeitfenster", pill:"Ablauf", timeline: buildTimeline(meta?.timeframe || "heute", text) });
-  if (!have("coach")) cards.push({ title:"Coach Guide", pill:"Session", bullets: buildCoachQuestions(meta?.weakest || []) });
-
+  // HOLY-SHIT: echte Cards aus Text parsen
+  const cards = parseDeepDiveToCards(text, meta);
   host.innerHTML = buildCardsHTML(cards);
-}
-
-function splitByMarkdownHeadings(text){
-  // Splittet nach ### Überschriften (dein Output nutzt das)
-  const lines = text.split("\n");
-  const out = [];
-  let cur = { title: "", body: [] };
-
-  const push = () => {
-    const body = cur.body.join("\n").trim();
-    if (cur.title || body) out.push({ title: (cur.title || "").trim(), body });
-  };
-
-  for (const line of lines){
-    const m = line.match(/^#{2,4}\s*(.+?)\s*$/); // ## / ### / ####
-    if (m){
-      push();
-      cur = { title: m[1], body: [] };
-      continue;
-    }
-    cur.body.push(line);
-  }
-  push();
-  return out.filter(s => (s.title || s.body).trim().length);
-}
-
-function normalizeTitle(t){
-  const s = String(t || "").toLowerCase();
-  if (s.includes("executive")) return "executive summary";
-  if (s.includes("systembild")) return "systembild";
-  if (s.includes("kernhypoth")) return "kernhypothesen";
-  if (s.includes("hebel")) return "hebel";
-  if (s.includes("plan")) return "plan";
-  if (s.includes("coach")) return "coach";
-  return s || "deep dive";
-}
-
-function parseSectionBody(body, meta){
-  const lines = String(body || "").split("\n").map(x=>x.trim()).filter(Boolean);
-
-  const bullets = [];
-  const paragraphs = [];
-  for (const l of lines){
-    // Entfernt Markdown-Sternchen **Text**
-    const clean = l.replace(/\*\*(.*?)\*\*/g, "$1").trim();
-
-    // Bullet-Erkennung
-    if (/^[-•*]\s+/.test(clean)){
-      bullets.push(clean.replace(/^[-•*]\s+/, ""));
-      continue;
-    }
-
-    // Viele deiner Zeilen sind "1. ..." -> auch als Bullet behandeln
-    if (/^\d+\.\s+/.test(clean)){
-      bullets.push(clean.replace(/^\d+\.\s+/, ""));
-      continue;
-    }
-
-    paragraphs.push(clean);
-  }
-
-  // Timeline aus Plan-Sektion extrahieren (Heut/7 Tage/30 Tage/Woche etc.)
-  const timeline = [];
-  const joined = paragraphs.join(" \n");
-  const re = /(Heute|Jetzt|24–72h|72h|7 Tage|30 Tage|Woche\s*\d+)[^\n]*?:\s*([^#]+)/gi;
-  let m;
-  while ((m = re.exec(joined)) !== null){
-    timeline.push({ t: m[1], txt: m[2].trim().replace(/\s+/g, " ") });
-  }
-
-  return { bullets, paragraphs, timeline };
-}
-
-function makePill(meta){
-  const weakest = meta?.weakest?.join(", ") || "";
-  const tf = meta?.timeframe || "";
-  if (weakest && tf) return `${weakest} · ${tf}`;
-  return weakest || tf || "Analyse";
 }
 
 function buildCardsHTML(cards){
@@ -710,38 +834,23 @@ function buildCardsHTML(cards){
   return html.join("");
 }
 
-function guessActionBulletsFromText(text){
+function guessActionBulletsFromText(_text){
   // ultra-sicherer Fallback, wenn Worker keine Bulletpoints liefert
-  const base = [
+  return [
     "Benennen: Was genau wird im System vermieden oder verdrängt?",
     "Grenze: Wo brauchst du eine klare Linie (ohne Eskalation)?",
     "Ressource: Welche Unterstützung ist realistisch aktivierbar?",
     "Struktur: Was lässt sich in 7 Tagen messbar vereinfachen?",
     "Dialog: Welches Gespräch ist fällig – mit welchem Ziel?"
   ];
-  return base;
 }
 
-function buildTimeline(timeframe, text){
-  // stabile Default-Timeline (Coach-tauglich), unabhängig vom Worker-Text
-  if (timeframe === "30tage"){
-    return [
-      { t: "Heute", txt: "1 klare Beobachtung formulieren (ohne Urteil). 1 Mini-Schritt festlegen (≤10 Minuten)." },
-      { t: "7 Tage", txt: "1 Gespräch/Intervention durchführen. Reaktion protokollieren: besser/schlechter/gleich." },
-      { t: "30 Tage", txt: "Stabilisierungsroutine definieren: Was bleibt, was endet, was wird delegiert?" },
-    ];
-  }
-  if (timeframe === "7tage"){
-    return [
-      { t: "Heute", txt: "Trigger + Muster identifizieren: Was kippt wann? 1 Schutzregel setzen." },
-      { t: "72h", txt: "Kleine Strukturänderung testen (z.B. klare Zuständigkeit / klare Grenze)." },
-      { t: "7 Tage", txt: "Wirksamkeit prüfen: Welche Variable bewegt sich? Nächste Intervention auswählen." },
-    ];
-  }
+// IMMER alle drei Zeitfenster (weil Auswahl entfernt/ignoriert)
+function buildTimelineMulti(){
   return [
-    { t: "Jetzt", txt: "Akuter Fokus: Was schadet gerade unmittelbar? Sofortmaßnahme definieren." },
-    { t: "24–72h", txt: "1 Intervention mit maximaler Hebelwirkung: Grenze / Wahrheit / Entlastung." },
-    { t: "1–2 Wochen", txt: "Stabilisierung: Regel, Routine oder Struktur einführen, die Rückfälle verhindert." },
+    { t: "Heute", txt: "1 klare Beobachtung formulieren (ohne Urteil). 1 Mini-Schritt festlegen (≤10 Minuten)." },
+    { t: "7 Tage", txt: "1 Gespräch/Intervention durchführen. Reaktion protokollieren: besser/schlechter/gleich." },
+    { t: "30 Tage", txt: "Stabilisierungsroutine definieren: Was bleibt, was endet, was wird delegiert?" },
   ];
 }
 
@@ -763,7 +872,6 @@ function buildCoachQuestions(weakest){
 async function runDeepDive() {
   const deepDiveBtn = el("deepDiveBtn");
   const deepDiveOut = el("deepDiveOut");
-  const timeframeSel = el("timeframe");
 
   if (!deepDiveBtn || !deepDiveOut) return;
 
@@ -773,12 +881,12 @@ async function runDeepDive() {
     return;
   }
 
-  const timeframe = timeframeSel?.value || "heute";
   const weakest = weakestVars(LAST_SCORES, 2);
 
+  // Zeitfenster wird NICHT mehr übergeben:
+  // Der Worker darf (und soll) Heute/7/30 liefern, und wir rendern das sauber.
   const payload = {
     language: "de",
-    timeframe,
     scores: LAST_SCORES,
     weakest
   };
@@ -799,8 +907,8 @@ async function runDeepDive() {
       throw new Error(data?.error || `Worker HTTP ${resp.status}`);
     }
 
-    // Premium render
-    renderDeepDivePremium(data, { weakest, timeframe });
+    // Premium render (holy shit)
+    renderDeepDivePremium(data, { weakest });
 
   } catch (e) {
     deepDiveOut.style.display = "block";
