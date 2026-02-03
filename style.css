@@ -590,22 +590,3 @@ select{
   .ddTimeline{ grid-template-columns: 1fr; }
   .ddTime{ justify-self:start; }
 }
-
-/* Optional: 2-Spalten Layout für Deep Dive Cards */
-@media (min-width: 980px){
-  .ddCards{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:12px;
-  }
-  /* Executive Summary & Systembild full width oben */
-  .ddCard:nth-child(1),
-  .ddCard:nth-child(2){
-    grid-column: 1 / -1;
-  }
-  /* Plan + Coach Guide full width unten */
-  .ddCard:nth-child(4),
-  .ddCard:nth-child(5){
-    grid-column: 1 / -1;
-  }
-}
