@@ -432,8 +432,8 @@ function renderRadar(scores, weak) {
       const bw = tw + m*2;
       const bh = 30;
 
-      let bx = tipX + (Math.cos(a) * 14);
-      let by = tipY + (Math.sin(a) * 14);
+      let bx = tipX + (Math.cos(a) * 28);
+      let by = tipY + (Math.sin(a) * 28);
 
       bx = Math.max(10, Math.min(cssW - bw - 10, bx));
       by = Math.max(10, Math.min(cssH - bh - 10, by));
