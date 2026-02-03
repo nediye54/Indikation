@@ -509,17 +509,16 @@ function renderDeepDivePremium(data, meta){
 
   host.style.display = "block";
 
-  // Structured mode (future-proof)
+  // Structured mode (falls du später data.cards aus dem Worker lieferst)
   if (data && Array.isArray(data.cards) && data.cards.length){
     host.innerHTML = buildCardsHTML(data.cards);
     return;
   }
 
-  // Plain text -> heuristisch zerlegen
+  // Plain text / Markdown
   const raw = (data && (data.text || data.output || data.result)) ? String(data.text || data.output || data.result) : "";
   const text = raw.trim();
 
-  // Fallback (falls Worker nix liefert)
   if (!text){
     host.innerHTML = `<div class="ddCards">
       <div class="ddCard">
@@ -530,63 +529,144 @@ function renderDeepDivePremium(data, meta){
     return;
   }
 
-  // Split into paragraphs & bullets
-  const lines = text.split("\n").map(l=>l.trim()).filter(Boolean);
-  const bullets = [];
-  const paras = [];
+  // === MARKDOWN -> Sections ===
+  const sections = splitByMarkdownHeadings(text);
 
-  for (const l of lines){
-    if (l.startsWith("- ") || l.startsWith("• ") || l.startsWith("* ")){
-      bullets.push(l.replace(/^[-•*]\s+/, ""));
-    } else {
-      paras.push(l);
-    }
-  }
-
-  // Meta info
-  const weakest = meta?.weakest?.join(", ") || "";
-  const tf = meta?.timeframe || "";
-  const pill = (weakest && tf) ? `${weakest} · ${tf}` : (weakest || tf || "Analyse");
-
-  // Build 5 cards (holy-shit Layout)
+  // Erwartete Reihenfolge / Titel normalisieren
   const cards = [];
 
-  // 1) Executive Summary
-  cards.push({
-    title: "Executive Summary",
-    pill,
-    body: paras.slice(0, 2).join(" ")
-  });
+  for (const s of sections){
+    const title = normalizeTitle(s.title);
+    const pill = makePill(meta);
 
-  // 2) Kernhypothesen (aus den nächsten Sätzen)
-  cards.push({
-    title: "Kernhypothesen",
-    pill: "Systembild",
-    bullets: (paras.slice(2, 6).length ? paras.slice(2, 6) : bullets.slice(0, 4))
-  });
+    // Inhalte: Bullets + Resttext
+    const { bullets, paragraphs, timeline } = parseSectionBody(s.body, meta);
 
-  // 3) Hebel & Interventionen
-  cards.push({
-    title: "Hebel & Interventionen",
-    pill: "Handlung",
-    bullets: (bullets.length ? bullets.slice(0, 7) : guessActionBulletsFromText(text))
-  });
+    // Card bauen – je nach Typ
+    if (title.includes("plan") && timeline.length){
+      cards.push({ title: "Plan nach Zeitfenster", pill: "Ablauf", timeline });
+      continue;
+    }
 
-  // 4) Zeitfenster-Plan (Timeline)
-  cards.push({
-    title: "Plan nach Zeitfenster",
-    pill: "Ablauf",
-    timeline: buildTimeline(meta?.timeframe || "heute", text)
-  });
+    if (title.includes("hebel")){
+      cards.push({ title: "Hebel & Interventionen", pill: "Handlung", bullets: bullets.length ? bullets : guessActionBulletsFromText(s.body) });
+      continue;
+    }
 
-  // 5) Coach Guide
-  cards.push({
-    title: "Coach Guide",
-    pill: "Session",
-    bullets: buildCoachQuestions(meta?.weakest || [])
-  });
+    if (title.includes("coach")){
+      cards.push({ title: "Coach Guide", pill: "Session", bullets: bullets.length ? bullets : buildCoachQuestions(meta?.weakest || []) });
+      continue;
+    }
+
+    if (title.includes("kernhypothesen")){
+      cards.push({ title: "Kernhypothesen", pill: "Systembild", bullets: bullets.length ? bullets : paragraphs.slice(0,6) });
+      continue;
+    }
+
+    if (title.includes("systembild")){
+      cards.push({ title: "Systembild", pill: pill, body: paragraphs.join(" ") || s.body });
+      continue;
+    }
+
+    if (title.includes("executive")){
+      cards.push({ title: "Executive Summary", pill: pill, body: paragraphs.join(" ") || s.body });
+      continue;
+    }
+
+    // Fallback: generische Card
+    cards.push({
+      title: s.title || "Deep Dive",
+      pill: pill,
+      body: paragraphs.join(" ") || s.body,
+      bullets: bullets.length ? bullets : null
+    });
+  }
+
+  // Falls Worker manche Sections nicht liefert: stabil auffüllen
+  const have = (name) => cards.some(c => (c.title || "").toLowerCase().includes(name));
+  if (!have("executive")) cards.unshift({ title:"Executive Summary", pill: makePill(meta), body: text.split("\n").slice(0,4).join(" ") });
+  if (!have("plan")) cards.push({ title:"Plan nach Zeitfenster", pill:"Ablauf", timeline: buildTimeline(meta?.timeframe || "heute", text) });
+  if (!have("coach")) cards.push({ title:"Coach Guide", pill:"Session", bullets: buildCoachQuestions(meta?.weakest || []) });
 
   host.innerHTML = buildCardsHTML(cards);
+}
+
+function splitByMarkdownHeadings(text){
+  // Splittet nach ### Überschriften (dein Output nutzt das)
+  const lines = text.split("\n");
+  const out = [];
+  let cur = { title: "", body: [] };
+
+  const push = () => {
+    const body = cur.body.join("\n").trim();
+    if (cur.title || body) out.push({ title: (cur.title || "").trim(), body });
+  };
+
+  for (const line of lines){
+    const m = line.match(/^#{2,4}\s*(.+?)\s*$/); // ## / ### / ####
+    if (m){
+      push();
+      cur = { title: m[1], body: [] };
+      continue;
+    }
+    cur.body.push(line);
+  }
+  push();
+  return out.filter(s => (s.title || s.body).trim().length);
+}
+
+function normalizeTitle(t){
+  const s = String(t || "").toLowerCase();
+  if (s.includes("executive")) return "executive summary";
+  if (s.includes("systembild")) return "systembild";
+  if (s.includes("kernhypoth")) return "kernhypothesen";
+  if (s.includes("hebel")) return "hebel";
+  if (s.includes("plan")) return "plan";
+  if (s.includes("coach")) return "coach";
+  return s || "deep dive";
+}
+
+function parseSectionBody(body, meta){
+  const lines = String(body || "").split("\n").map(x=>x.trim()).filter(Boolean);
+
+  const bullets = [];
+  const paragraphs = [];
+  for (const l of lines){
+    // Entfernt Markdown-Sternchen **Text**
+    const clean = l.replace(/\*\*(.*?)\*\*/g, "$1").trim();
+
+    // Bullet-Erkennung
+    if (/^[-•*]\s+/.test(clean)){
+      bullets.push(clean.replace(/^[-•*]\s+/, ""));
+      continue;
+    }
+
+    // Viele deiner Zeilen sind "1. ..." -> auch als Bullet behandeln
+    if (/^\d+\.\s+/.test(clean)){
+      bullets.push(clean.replace(/^\d+\.\s+/, ""));
+      continue;
+    }
+
+    paragraphs.push(clean);
+  }
+
+  // Timeline aus Plan-Sektion extrahieren (Heut/7 Tage/30 Tage/Woche etc.)
+  const timeline = [];
+  const joined = paragraphs.join(" \n");
+  const re = /(Heute|Jetzt|24–72h|72h|7 Tage|30 Tage|Woche\s*\d+)[^\n]*?:\s*([^#]+)/gi;
+  let m;
+  while ((m = re.exec(joined)) !== null){
+    timeline.push({ t: m[1], txt: m[2].trim().replace(/\s+/g, " ") });
+  }
+
+  return { bullets, paragraphs, timeline };
+}
+
+function makePill(meta){
+  const weakest = meta?.weakest?.join(", ") || "";
+  const tf = meta?.timeframe || "";
+  if (weakest && tf) return `${weakest} · ${tf}`;
+  return weakest || tf || "Analyse";
 }
 
 function buildCardsHTML(cards){
