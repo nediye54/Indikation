@@ -6,28 +6,15 @@
   <title>Indikation – nach der Moral des Gleichgewichts</title>
 
   <!-- Cache busting -->
-  <link rel="stylesheet" href="style.css?v=27" />
-  <script src="script.js?v=27" defer></script>
+  <link rel="stylesheet" href="style.css?v=23" />
+  <script src="script.js?v=23" defer></script>
 </head>
 
 <body>
   <main class="wrap">
     <header class="hero">
-      <div class="heroTop">
-        <div>
-          <h1>Indikation</h1>
-          <p class="sub">nach der Moral des Gleichgewichts</p>
-        </div>
-        <div class="heroBadge">für Coaches · Berater · Teams</div>
-      </div>
-
-      <div class="miniCard">
-        <div class="miniCardTitle">Wofür ist das?</div>
-        <div class="miniCardText">
-          Ein schneller Scan, der Spannungen in sozialen Systemen sichtbar macht – inklusive Ansatzpunkt zur Korrektur und Zeitfenster.
-          Der Deep Dive liefert daraus eine stabilisierende Indikation.
-        </div>
-      </div>
+      <h1>Indikation</h1>
+      <p class="sub">nach der Moral des Gleichgewichts</p>
     </header>
 
     <!-- WICHTIG: Standard = hidden. Nur bei echten script.js Fehlern anzeigen -->
@@ -53,29 +40,15 @@
 
     <section id="results" class="card hidden">
       <div class="cardHead">
-        <div class="resultHead">
-          <div>
-            <h2>Ergebnis</h2>
-            <p class="muted">Radar, Balken, schwächste Variable, Zeitfenster.</p>
-          </div>
-          <div class="resultMeta">
-            <div class="metaChip">
-              <div class="metaLabel">Gesamtprofil</div>
-              <div id="overallScore" class="metaValue">—</div>
-            </div>
-            <div class="metaChip">
-              <div class="metaLabel">Skala</div>
-              <div class="metaValue">0.2 · 0.5 · 0.8</div>
-            </div>
-          </div>
-        </div>
+        <h2>Ergebnis</h2>
+        <p class="muted">Koordinatensystem (Radar), Balken, schwächste Variable, Zeitfenster.</p>
       </div>
 
       <div class="grid2">
         <div class="panel">
           <h3 class="panelTitle">Radar</h3>
           <div id="plot3d" class="plot3d" aria-label="Radar-Koordinatensystem"></div>
-          <div class="plotHint">Niedrig = innen, hoch = außen · Pfeil = schwächste Variable</div>
+          <div class="plotHint">Radar-Profil: niedrig = innen, hoch = außen · Pfeil = schwächste Variable</div>
         </div>
 
         <div class="panel">
@@ -99,7 +72,7 @@
       <div class="deepDive">
         <div class="deepDiveHead">
           <h3 class="panelTitle">Deep Dive (max. 2 Variablen)</h3>
-          <p class="muted">Kostenpflichtig: Erzeugt eine stabilisierende Indikation.</p>
+          <p class="muted">Kostenpflichtig: Anzeige einer stabilisierenden Indikation.</p>
         </div>
 
         <div class="row">
@@ -112,38 +85,22 @@
         </div>
 
         <button id="deepDiveBtn" class="btn" type="button">Stabilisierende Indikation erzeugen</button>
-        <div id="deepDiveOut" class="box" style="display:none;"></div>
+
+        <!-- Premium Output Container -->
+        <div id="deepDiveOut" class="ddOut" style="display:none;"></div>
 
         <div class="divider"></div>
 
         <div class="deepDiveMini">
-          <h4 class="miniTitle">Quick Scan – Fokusliste</h4>
+          <h4 class="miniTitle">Deep Dive (max. 3 Variablen)</h4>
           <div id="deepDive" class="deepDiveBody"></div>
         </div>
       </div>
     </section>
 
     <footer class="foot muted">
-      <div class="footLeft">v2 · Vanilla · Dark UI · 3 Antwortstufen</div>
-      <div class="footRight">
-        <button class="linkBtn" id="openAbout" type="button">Über</button>
-        <span class="dotSep">·</span>
-        <button class="linkBtn" id="openImprint" type="button">Impressum</button>
-        <span class="dotSep">·</span>
-        <button class="linkBtn" id="openPrivacy" type="button">Datenschutz</button>
-      </div>
+      v2 · Vanilla · Dark UI · 3 Antwortstufen
     </footer>
   </main>
-
-  <!-- MODALS -->
-  <div id="modalBackdrop" class="modalBackdrop hidden" aria-hidden="true"></div>
-
-  <section id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modalHead">
-      <div id="modalTitle" class="modalTitle">Titel</div>
-      <button id="modalClose" class="modalClose" type="button" aria-label="Schließen">✕</button>
-    </div>
-    <div id="modalBody" class="modalBody"></div>
-  </section>
 </body>
 </html>
