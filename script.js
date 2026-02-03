@@ -433,8 +433,8 @@ function renderRadar(scores, weak) {
       const bh = 30;
 
       // Abstand + seitlicher Versatz (damit Pfeil erkennbar bleibt)
-      const gap = 28;   // <- hier kannst du später feinjustieren
-      const side = 10;  // <- seitlicher Versatz
+      const gap = 38;   // <- hier kannst du später feinjustieren
+      const side = 15;  // <- seitlicher Versatz
 
       let bx = tipX + (Math.cos(a) * gap) + (-Math.sin(a) * side);
       let by = tipY + (Math.sin(a) * gap) + ( Math.cos(a) * side);
