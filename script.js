@@ -437,7 +437,7 @@ function renderRadar(scores, weak) {
 
       // Abstand + seitlicher Versatz (damit Pfeil erkennbar bleibt)
       const gap = 30;   // <- Feinjustierung hier
-      const side = 12;  // <- und hier
+      const side = 20;  // <- und hier
 
       let bx = tipX + (Math.cos(a) * gap) + (-Math.sin(a) * side);
       let by = tipY + (Math.sin(a) * gap) + ( Math.cos(a) * side);
@@ -724,7 +724,7 @@ function parseDeepDiveToCards(rawText, meta){
   const planTimeline = secPlan ? planFromText(secPlan.lines) : buildTimelineMulti();
   cards.push({
     title: "Plan nach Zeitfenster",
-    pill: "Heute · 7 Tage · 30 Tage",
+    pill: "Zeit",
     timeline: planTimeline
   });
 
