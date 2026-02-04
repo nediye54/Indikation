@@ -107,7 +107,7 @@ function buildQuestions() {
 
     const left = document.createElement("div");
     left.className = "qIdx";
-    left.textContent = `${idx+1}/${QUESTIONS.length} · ${item.v}`;
+    left.textContent = `${idx+1}/${QUESTIONS.length};
 
     const right = document.createElement("div");
     right.className = "qVar";
