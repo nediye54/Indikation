@@ -92,7 +92,6 @@ window.addEventListener("unhandledrejection", () => {
   showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
 });
 
-// --- Build Questions UI ---
 function buildQuestions() {
   const host = el("questions");
   if (!host) return;
@@ -105,10 +104,12 @@ function buildQuestions() {
     const top = document.createElement("div");
     top.className = "qTop";
 
+    // Links: nur Fortschritt
     const left = document.createElement("div");
     left.className = "qIdx";
-    left.textContent = `${idx+1}/${QUESTIONS.length};
+    left.textContent = `${idx+1}/${QUESTIONS.length}`;
 
+    // Rechts: Pill mit Variable
     const right = document.createElement("div");
     right.className = "qVar";
     right.textContent = item.v;
@@ -146,98 +147,6 @@ function buildQuestions() {
     qWrap.appendChild(opts);
     host.appendChild(qWrap);
   });
-}
-
-// --- Collect & score ---
-function collectAnswersByVar() {
-  const byVar = {};
-  VARS.forEach(v => byVar[v] = []);
-
-  const missing = [];
-  for (let i = 0; i < QUESTIONS.length; i++) {
-    const chosen = document.querySelector(`input[name="q_${i}"]:checked`);
-    if (!chosen) {
-      missing.push(i + 1);
-      continue;
-    }
-    const v = chosen.getAttribute("data-var");
-    byVar[v].push(Number(chosen.value));
-  }
-
-  return { ok: missing.length === 0, byVar, missing };
-}
-
-function avg(arr) {
-  if (!arr || !arr.length) return 0;
-  return arr.reduce((a,b)=>a+b,0) / arr.length;
-}
-
-function scoreAll(byVar) {
-  const scores = {};
-  VARS.forEach(v => scores[v] = avg(byVar[v]));
-  return scores;
-}
-
-function weakestVar(scores) {
-  let w = null;
-  for (const v of VARS) {
-    const val = scores[v];
-    if (w === null || val < w.val) w = { key: v, val };
-  }
-  return w;
-}
-
-function timeWindowFor(value) {
-  if (value <= 0.3) return "jetzt (akut) · 24–72h Fokus";
-  if (value <= 0.55) return "bald · 1–2 Wochen Fokus";
-  return "stabil · nur Feintuning nötig";
-}
-
-// --- Render helpers ---
-function renderBars(scores) {
-  const host = el("bars");
-  if (!host) return;
-  host.innerHTML = "";
-
-  for (const v of VARS) {
-    const val = scores[v];
-    const row = document.createElement("div");
-    row.className = "barRow";
-
-    const name = document.createElement("div");
-    name.className = "barName";
-    name.textContent = v;
-
-    const track = document.createElement("div");
-    track.className = "barTrack";
-
-    const fill = document.createElement("div");
-    fill.className = "barFill";
-    fill.style.width = `${Math.round(val * 100)}%`;
-
-    track.appendChild(fill);
-
-    const num = document.createElement("div");
-    num.className = "barVal";
-    num.textContent = val.toFixed(2);
-
-    row.appendChild(name);
-    row.appendChild(track);
-    row.appendChild(num);
-    host.appendChild(row);
-  }
-}
-
-function renderWeakest(weak) {
-  const host = el("weakest");
-  if (!host) return;
-  host.innerHTML = `<span class="badge">${weak.key}</span> <span class="muted">Score:</span> <strong>${weak.val.toFixed(2)}</strong>`;
-}
-
-function renderTimewin(weak) {
-  const host = el("timewin");
-  if (!host) return;
-  host.innerHTML = `<span class="badge">${timeWindowFor(weak.val)}</span>`;
 }
 
 function renderDeepDiveLocal(scores, maxN = 3) {
