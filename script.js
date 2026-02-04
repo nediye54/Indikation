@@ -1,4 +1,6 @@
-// v12 — Deutsch-only. Stabil. Radar (Canvas) polished + arrow/label gap.
+// v13 — Deutsch-only. Stabil.
+// Fix: vollständige Evaluate-Pipeline wieder drin (collect/score/render fehlten).
+// Radar (Canvas) polished + arrow/label gap.
 // Deep Dive: Premium Cards "holy shit" mit robustem Parser.
 // Zeitfenster-Auswahl im UI wird NICHT mehr verwendet (Deep Dive zeigt immer Heute/7/30).
 
@@ -92,6 +94,7 @@ window.addEventListener("unhandledrejection", () => {
   showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
 });
 
+// --- Build Questions UI ---
 function buildQuestions() {
   const host = el("questions");
   if (!host) return;
@@ -104,7 +107,7 @@ function buildQuestions() {
     const top = document.createElement("div");
     top.className = "qTop";
 
-    // Links: nur Fortschritt
+    // Links: nur Fortschritt (kein doppeltes "Freiheit")
     const left = document.createElement("div");
     left.className = "qIdx";
     left.textContent = `${idx+1}/${QUESTIONS.length}`;
@@ -147,6 +150,98 @@ function buildQuestions() {
     qWrap.appendChild(opts);
     host.appendChild(qWrap);
   });
+}
+
+// --- Collect & score (FEHLTE in v12, ist jetzt wieder drin) ---
+function collectAnswersByVar() {
+  const byVar = {};
+  VARS.forEach(v => byVar[v] = []);
+
+  const missing = [];
+  for (let i = 0; i < QUESTIONS.length; i++) {
+    const chosen = document.querySelector(`input[name="q_${i}"]:checked`);
+    if (!chosen) {
+      missing.push(i + 1);
+      continue;
+    }
+    const v = chosen.getAttribute("data-var");
+    byVar[v].push(Number(chosen.value));
+  }
+
+  return { ok: missing.length === 0, byVar, missing };
+}
+
+function avg(arr) {
+  if (!arr || !arr.length) return 0;
+  return arr.reduce((a,b)=>a+b,0) / arr.length;
+}
+
+function scoreAll(byVar) {
+  const scores = {};
+  VARS.forEach(v => scores[v] = avg(byVar[v]));
+  return scores;
+}
+
+function weakestVar(scores) {
+  let w = null;
+  for (const v of VARS) {
+    const val = scores[v];
+    if (w === null || val < w.val) w = { key: v, val };
+  }
+  return w;
+}
+
+function timeWindowFor(value) {
+  if (value <= 0.3) return "jetzt (akut) · 24–72h Fokus";
+  if (value <= 0.55) return "bald · 1–2 Wochen Fokus";
+  return "stabil · nur Feintuning nötig";
+}
+
+// --- Render helpers (FEHLTE in v12, ist jetzt wieder drin) ---
+function renderBars(scores) {
+  const host = el("bars");
+  if (!host) return;
+  host.innerHTML = "";
+
+  for (const v of VARS) {
+    const val = scores[v];
+    const row = document.createElement("div");
+    row.className = "barRow";
+
+    const name = document.createElement("div");
+    name.className = "barName";
+    name.textContent = v;
+
+    const track = document.createElement("div");
+    track.className = "barTrack";
+
+    const fill = document.createElement("div");
+    fill.className = "barFill";
+    fill.style.width = `${Math.round(val * 100)}%`;
+
+    track.appendChild(fill);
+
+    const num = document.createElement("div");
+    num.className = "barVal";
+    num.textContent = val.toFixed(2);
+
+    row.appendChild(name);
+    row.appendChild(track);
+    row.appendChild(num);
+    host.appendChild(row);
+  }
+}
+
+function renderWeakest(weak) {
+  const host = el("weakest");
+  if (!host) return;
+  host.innerHTML = `<span class="badge">${weak.key}</span> <span class="muted">Score:</span> <strong>${weak.val.toFixed(2)}</strong>`;
+}
+
+function renderTimewin(weak) {
+  const host = el("timewin");
+  if (!host) return;
+  host.innerHTML = `<span class="badge">${timeWindowFor(weak.val)}</span>`;
 }
 
 function renderDeepDiveLocal(scores, maxN = 3) {
@@ -344,9 +439,9 @@ function renderRadar(scores, weak) {
       const bw = tw + m*2;
       const bh = 30;
 
-      // Abstand + seitlicher Versatz (damit Pfeil erkennbar bleibt)
-      const gap = 30;   // <- Feinjustierung hier
-      const side = 20;  // <- und hier
+      // Feinjustierung: Abstand + seitlicher Versatz
+      const gap = 30;
+      const side = 20;
 
       let bx = tipX + (Math.cos(a) * gap) + (-Math.sin(a) * side);
       let by = tipY + (Math.sin(a) * gap) + ( Math.cos(a) * side);
@@ -410,37 +505,33 @@ function escapeHTML(str){
     .replaceAll("'", "&#039;");
 }
 
-// Entfernt einfache Markdown-Marker, ohne Struktur zu zerstören
 function stripMd(s){
   return String(s ?? "")
-    .replace(/\*\*/g, "")     // **bold**
-    .replace(/__+/g, "")      // __bold__
-    .replace(/`+/g, "")       // `code`
+    .replace(/\*\*/g, "")
+    .replace(/__+/g, "")
+    .replace(/`+/g, "")
     .replace(/\s+$/g, "")
     .trim();
 }
 
-// Normalisiert Überschriften-Token aus Worker-Text
+// bewusst "einfach": keine \p{L} (Browser-Kompatibilität)
 function normKey(s){
   return stripMd(s)
     .toLowerCase()
     .replace(/[:：]/g, "")
-    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/[^a-z0-9äöüß \-()]/gi, "")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-// Heuristischer Parser: erkennt Headings/Abschnitte und zieht Inhalte sauber in Cards
 function parseDeepDiveToCards(rawText, meta){
   const text = String(rawText ?? "").trim();
   const weakest = meta?.weakest?.join(", ") || "";
   const pillMain = weakest ? `Fokus: ${weakest}` : "Analyse";
 
-  // 1) In Zeilen aufteilen
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
-  // 2) Abschnitte sammeln anhand von Headings (#, ##, ###) oder "Titel:" Mustern
-  const sections = []; // {title, lines:[]}
+  const sections = [];
   let current = { title: "Text", lines: [] };
 
   const pushCurrent = () => {
@@ -458,21 +549,24 @@ function parseDeepDiveToCards(rawText, meta){
       continue;
     }
 
-    // Ein Zeilen-Titel mit ":" und danach Text (z.B. "Executive Summary: ...")
     if (colonHeading){
       const t = stripMd(colonHeading[1]);
       const rest = stripMd(colonHeading[2] || "");
-      // Nur als Abschnitt werten, wenn Titel "nach Section klingt"
       const key = normKey(t);
+
       const looksLikeSection =
         key.includes("executive summary") ||
+        key.includes("zusammenfassung") ||
+        key.includes("kurzfassung") ||
         key.includes("systembild") ||
         key.includes("kernhypothesen") ||
+        key.includes("hypothesen") ||
         key.includes("hebel") ||
         key.includes("intervention") ||
         key.includes("plan") ||
         key.includes("zeitfenster") ||
-        key.includes("coach");
+        key.includes("coach") ||
+        key.includes("leitfaden");
 
       if (looksLikeSection){
         pushCurrent();
@@ -486,7 +580,6 @@ function parseDeepDiveToCards(rawText, meta){
   }
   pushCurrent();
 
-  // 3) Helper: finde Abschnitt per Keywords
   const pick = (kwArr) => {
     for (const s of sections){
       const key = normKey(s.title);
@@ -497,23 +590,12 @@ function parseDeepDiveToCards(rawText, meta){
 
   const secExec =
     pick(["executive summary", "zusammenfassung", "kurzfassung"]) || sections[0] || null;
+  const secSystem = pick(["systembild"]) || null;
+  const secHyp = pick(["kernhypothesen", "hypothesen"]) || null;
+  const secHebel = pick(["hebel", "intervention", "interventionen"]) || null;
+  const secPlan = pick(["plan", "zeitfenster"]) || null;
+  const secCoach = pick(["coach guide", "coach-guide", "coach", "session", "leitfaden"]) || null;
 
-  const secSystem =
-    pick(["systembild"]) || null;
-
-  const secHyp =
-    pick(["kernhypothesen", "hypothesen"]) || null;
-
-  const secHebel =
-    pick(["hebel", "intervention", "interventionen", "hebelwirkung"]) || null;
-
-  const secPlan =
-    pick(["plan", "zeitfenster"]) || null;
-
-  const secCoach =
-    pick(["coach guide", "coach-guide", "coach", "session", "leitfaden"]) || null;
-
-  // 4) Bullets aus Text ziehen
   const extractBullets = (arrLines) => {
     const bullets = [];
     for (const l of (arrLines || [])){
@@ -522,163 +604,94 @@ function parseDeepDiveToCards(rawText, meta){
     return bullets;
   };
 
-  // 5) “Plan” Zeitfenster aus einem Block robust ziehen
   const planFromText = (planLines) => {
     const src = (planLines || []).join("\n");
     const out = [];
 
-    // grob: Teilstrings ab "Heute", "7 Tage", "30 Tage"
-    // wir nehmen jeweils 1–3 sinnvolle Zeilen danach, bis nächste Marke kommt
     const grab = (label, nextLabels) => {
       const r = new RegExp(`(?:^|\\n)\\s*${label}\\b[\\s:：-]*`, "i");
       const m = src.search(r);
       if (m < 0) return null;
 
       const after = src.slice(m).replace(r, "");
-      // Stop an nächstem Label
       let stop = after.length;
       for (const nl of nextLabels){
         const rm = after.search(new RegExp(`(?:^|\\n)\\s*${nl}\\b`, "i"));
         if (rm >= 0) stop = Math.min(stop, rm);
       }
       const chunk = after.slice(0, stop).trim();
-      // Nimm erste 2–4 Zeilen oder 1–2 Sätze
-      const lines = chunk.split(/\r?\n/).map(x=>stripMd(x.trim())).filter(Boolean);
-      const short = lines.slice(0, 4).join(" ");
+      const ls = chunk.split(/\r?\n/).map(x=>stripMd(x.trim())).filter(Boolean);
+      const short = ls.slice(0, 4).join(" ");
       return short || null;
     };
 
     const h = grab("Heute", ["7\\s*Tage", "30\\s*Tage"]);
     const d7 = grab("7\\s*Tage", ["30\\s*Tage"]);
-    const d30 = grab("30\\s*Tage", ["Coach", "Coach-Guide", "Guide", "Fragen"]);
+    const d30 = grab("30\\s*Tage", ["Coach", "Guide", "Fragen"]);
 
     if (h) out.push({ t: "Heute", txt: h });
     if (d7) out.push({ t: "7 Tage", txt: d7 });
     if (d30) out.push({ t: "30 Tage", txt: d30 });
 
-    // Wenn nix gefunden: Default immer
-    if (!out.length) return buildTimelineMulti();
-    return out;
+    return out.length ? out : buildTimelineMulti();
   };
 
-  // 6) Cards bauen
   const cards = [];
 
-  // Executive Summary: 1–2 Zeilen / 1–2 Absätze
   if (secExec){
     const body = stripMd(secExec.lines.slice(0, 3).join(" ")).trim();
-    cards.push({
-      title: "Executive Summary",
-      pill: pillMain,
-      body: body || "—"
-    });
+    cards.push({ title: "Executive Summary", pill: pillMain, body: body || "—" });
   }
 
-  // Systembild / Kern
   if (secSystem){
     const body = stripMd(secSystem.lines.slice(0, 6).join(" ")).trim();
-    cards.push({
-      title: "Systembild",
-      pill: "Diagnostik",
-      body: body || stripMd(secSystem.lines.join(" ")).trim() || "—"
-    });
-  } else {
-    // fallback: kurzer System-Absatz aus dem Exec-Text, wenn vorhanden
-    const fallback = secExec ? stripMd(secExec.lines.slice(2, 6).join(" ")).trim() : "";
-    if (fallback){
-      cards.push({
-        title: "Systembild",
-        pill: "Diagnostik",
-        body: fallback
-      });
-    }
+    cards.push({ title: "Systembild", pill: "Diagnostik", body: body || "—" });
+  } else if (secExec) {
+    const fallback = stripMd(secExec.lines.slice(2, 6).join(" ")).trim();
+    if (fallback) cards.push({ title: "Systembild", pill: "Diagnostik", body: fallback });
   }
 
-  // Kernhypothesen: bullets oder kurze Sätze
   if (secHyp){
     const bul = extractBullets(secHyp.lines);
-    const bodyLines = secHyp.lines.map(stripMd);
-    const list = bul.length ? bul : bodyLines.slice(0, 5).filter(Boolean);
-    cards.push({
-      title: "Kernhypothesen",
-      pill: "Wenn–Dann",
-      bullets: list.slice(0, 6)
-    });
+    const bodyLines = secHyp.lines.map(stripMd).filter(Boolean);
+    const list = bul.length ? bul : bodyLines.slice(0, 5);
+    cards.push({ title: "Kernhypothesen", pill: "Wenn–Dann", bullets: list.slice(0, 6) });
   }
 
-  // Hebel & Interventionen
   if (secHebel){
     const bul = extractBullets(secHebel.lines);
     let list = bul;
     if (!list.length){
-      // versuch: Sätze anhand von Nummern 1. 2. 3.
       const joined = secHebel.lines.join(" ");
       const parts = joined.split(/\s(?=\d+\.)/g).map(stripMd).filter(Boolean);
       list = parts.length ? parts : guessActionBulletsFromText(text);
     }
-    cards.push({
-      title: "Hebel & Interventionen",
-      pill: "Handlung",
-      bullets: list.slice(0, 10)
-    });
+    cards.push({ title: "Hebel & Interventionen", pill: "Handlung", bullets: list.slice(0, 10) });
   } else {
-    cards.push({
-      title: "Hebel & Interventionen",
-      pill: "Handlung",
-      bullets: guessActionBulletsFromText(text)
-    });
+    cards.push({ title: "Hebel & Interventionen", pill: "Handlung", bullets: guessActionBulletsFromText(text) });
   }
 
-  // Plan nach Zeitfenster: IMMER alle 3 (logisch konsistent)
   const planTimeline = secPlan ? planFromText(secPlan.lines) : buildTimelineMulti();
-  cards.push({
-    title: "Plan nach Zeitfenster",
-    pill: "Zeit",
-    timeline: planTimeline
-  });
+  cards.push({ title: "Plan nach Zeitfenster", pill: "Zeit", timeline: planTimeline });
 
-  // Coach Guide: aus Abschnitt oder Fallback aus Variablen
   if (secCoach){
     const bul = extractBullets(secCoach.lines);
     const bodyLines = secCoach.lines.map(stripMd).filter(Boolean);
     const list = bul.length ? bul : bodyLines.slice(0, 10);
-    cards.push({
-      title: "Coach Guide",
-      pill: "Session",
-      bullets: list.length ? list : buildCoachQuestions(meta?.weakest || [])
-    });
+    cards.push({ title: "Coach Guide", pill: "Session", bullets: list.length ? list : buildCoachQuestions(meta?.weakest || []) });
   } else {
-    cards.push({
-      title: "Coach Guide",
-      pill: "Session",
-      bullets: buildCoachQuestions(meta?.weakest || [])
-    });
-  }
-
-  // Mini-Finish: wenn Cards < 4, dann einfach Raw-Text als Extra
-  if (cards.length < 4){
-    cards.push({
-      title: "Rohtext",
-      pill: "Output",
-      body: stripMd(text).slice(0, 1200) + (stripMd(text).length > 1200 ? " …" : "")
-    });
+    cards.push({ title: "Coach Guide", pill: "Session", bullets: buildCoachQuestions(meta?.weakest || []) });
   }
 
   return cards;
 }
 
-/**
- * Premium Renderer:
- * - akzeptiert plain text (data.text)
- * - akzeptiert strukturiert: data.cards = [{title,pill,bullets,body,timeline:[{t,txt}]}]
- */
 function renderDeepDivePremium(data, meta){
   const host = el("deepDiveOut");
   if (!host) return;
 
   host.style.display = "block";
 
-  // Structured mode (future-proof)
   if (data && Array.isArray(data.cards) && data.cards.length){
     host.innerHTML = buildCardsHTML(data.cards);
     return;
@@ -697,7 +710,6 @@ function renderDeepDivePremium(data, meta){
     return;
   }
 
-  // HOLY-SHIT: echte Cards aus Text parsen
   const cards = parseDeepDiveToCards(text, meta);
   host.innerHTML = buildCardsHTML(cards);
 }
@@ -744,7 +756,6 @@ function buildCardsHTML(cards){
 }
 
 function guessActionBulletsFromText(_text){
-  // ultra-sicherer Fallback, wenn Worker keine Bulletpoints liefert
   return [
     "Benennen: Was genau wird im System vermieden oder verdrängt?",
     "Grenze: Wo brauchst du eine klare Linie (ohne Eskalation)?",
@@ -754,7 +765,6 @@ function guessActionBulletsFromText(_text){
   ];
 }
 
-// IMMER alle drei Zeitfenster (weil Auswahl entfernt/ignoriert)
 function buildTimelineMulti(){
   return [
     { t: "Heute", txt: "1 klare Beobachtung formulieren (ohne Urteil). 1 Mini-Schritt festlegen (≤10 Minuten)." },
@@ -792,8 +802,6 @@ async function runDeepDive() {
 
   const weakest = weakestVars(LAST_SCORES, 2);
 
-  // Zeitfenster wird NICHT mehr übergeben:
-  // Der Worker darf (und soll) Heute/7/30 liefern, und wir rendern das sauber.
   const payload = {
     language: "de",
     scores: LAST_SCORES,
@@ -816,7 +824,6 @@ async function runDeepDive() {
       throw new Error(data?.error || `Worker HTTP ${resp.status}`);
     }
 
-    // Premium render (holy shit)
     renderDeepDivePremium(data, { weakest });
 
   } catch (e) {
