@@ -6,8 +6,8 @@
   <title>Indikation – nach der Moral des Gleichgewichts</title>
 
   <!-- Cache busting -->
-  <link rel="stylesheet" href="style.css?v=23" />
-  <script src="script.js?v=23" defer></script>
+  <link rel="stylesheet" href="style.css?v=36" />
+  <script src="script.js?v=36" defer></script>
 </head>
 
 <body>
@@ -73,28 +73,36 @@
       <div class="deepDive">
         <div class="deepDiveHead">
           <h3 class="panelTitle">Deep Dive</h3>
-          <p class="muted">Optional: erzeugt eine stabilisierende Indikation. Modus steuert Ton & Tiefe.</p>
+          <p class="muted">
+            <strong>Privat</strong> ist niedrigschwellig & kompakt. <strong>Business</strong> ist ausführlicher und kann tokenbasiert freigeschaltet werden.
+          </p>
+        </div>
 
-          <!-- MODE SWITCH (NEU) -->
-          <div class="modeSwitch" role="group" aria-label="Deep Dive Modus">
-            <input type="radio" id="ddModePrivate" name="ddMode" value="private" checked>
-            <label for="ddModePrivate">Private</label>
-
-            <input type="radio" id="ddModeBusiness" name="ddMode" value="business">
-            <label for="ddModeBusiness">Business</label>
+        <!-- MODE SWITCH + TOKEN -->
+        <div class="modeRow">
+          <div class="modeLeft">
+            <div class="modeLabel">Modus</div>
+            <div class="modePills">
+              <button id="modePrivate" class="modePillBtn" type="button" data-active="true">Privat</button>
+              <button id="modeBusiness" class="modePillBtn" type="button" data-active="false">Business</button>
+            </div>
           </div>
 
-          <!-- TOKEN (NEU, nur Business) -->
-          <div id="tokenRow" class="tokenRow hidden">
-            <label class="muted" for="tokenInput">Token</label>
-            <input id="tokenInput" type="text" inputmode="text" autocomplete="off" spellcheck="false"
-              placeholder="z.B. BL-XXXX-XXXX" />
-            <div id="tokenHelp" class="tokenHelp muted">Nur für Business Deep Dive erforderlich.</div>
+          <div id="tokenRow" class="tokenRow" style="display:none;">
+            <input id="tokenInput" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="Business-Token eingeben (z.B. ABCD-1234)" />
+            <span class="tokenHint">Nur für Business erforderlich.</span>
           </div>
         </div>
 
         <button id="deepDiveBtn" class="btn" type="button">Stabilisierende Indikation erzeugen</button>
         <div id="deepDiveOut" class="box" style="display:none; white-space:pre-wrap;"></div>
+
+        <div class="divider"></div>
+
+        <div class="deepDiveMini">
+          <h4 class="miniTitle">Quick-Übersicht (3 schwächste)</h4>
+          <div id="deepDive" class="deepDiveBody"></div>
+        </div>
       </div>
     </section>
 
