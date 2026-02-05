@@ -6,8 +6,8 @@
   <title>Indikation – nach der Moral des Gleichgewichts</title>
 
   <!-- Cache busting -->
-  <link rel="stylesheet" href="style.css?v=35" />
-  <script src="script.js?v=35" defer></script>
+  <link rel="stylesheet" href="style.css?v=23" />
+  <script src="script.js?v=23" defer></script>
 </head>
 
 <body>
@@ -15,6 +15,7 @@
     <header class="hero">
       <h1>Indikation</h1>
       <p class="sub">nach der Moral des Gleichgewichts</p>
+      <p class="path">Quick Scan (24) → Deep Dive (optional) → stabilisierende Indikation</p>
     </header>
 
     <!-- WICHTIG: Standard = hidden. Nur bei echten script.js Fehlern anzeigen -->
@@ -26,7 +27,7 @@
       <div class="cardHead">
         <h2>Quick Scan</h2>
         <p class="muted">
-          Denke an das zu messende soziale System und beantworte jede Frage mit einer von drei Antwortoptionen
+          Beantworte jede Frage mit einer von drei Optionen. Danach erhältst du: Koordinatensystem, Balken, schwächste Variable, Zeitfenster.
         </p>
       </div>
 
@@ -71,23 +72,29 @@
 
       <div class="deepDive">
         <div class="deepDiveHead">
-          <h3 class="panelTitle">Deep Dive (max. 2 Variablen)</h3>
-          <p class="muted">Anzeige einer stabilisierenden Indikation.</p>
+          <h3 class="panelTitle">Deep Dive</h3>
+          <p class="muted">Optional: erzeugt eine stabilisierende Indikation. Modus steuert Ton & Tiefe.</p>
+
+          <!-- MODE SWITCH (NEU) -->
+          <div class="modeSwitch" role="group" aria-label="Deep Dive Modus">
+            <input type="radio" id="ddModePrivate" name="ddMode" value="private" checked>
+            <label for="ddModePrivate">Private</label>
+
+            <input type="radio" id="ddModeBusiness" name="ddMode" value="business">
+            <label for="ddModeBusiness">Business</label>
+          </div>
+
+          <!-- TOKEN (NEU, nur Business) -->
+          <div id="tokenRow" class="tokenRow hidden">
+            <label class="muted" for="tokenInput">Token</label>
+            <input id="tokenInput" type="text" inputmode="text" autocomplete="off" spellcheck="false"
+              placeholder="z.B. BL-XXXX-XXXX" />
+            <div id="tokenHelp" class="tokenHelp muted">Nur für Business Deep Dive erforderlich.</div>
+          </div>
         </div>
 
-        <p class="muted">Zeitfenster: Heute · 7 Tage · 30 Tage</p>
-        
         <button id="deepDiveBtn" class="btn" type="button">Stabilisierende Indikation erzeugen</button>
-
-        <!-- Premium Output Container -->
-        <div id="deepDiveOut" class="ddOut" style="display:none;"></div>
-
-        <div class="divider"></div>
-
-        <div class="deepDiveMini">
-          <h4 class="miniTitle">Deep Dive (max. 3 Variablen)</h4>
-          <div id="deepDive" class="deepDiveBody"></div>
-        </div>
+        <div id="deepDiveOut" class="box" style="display:none; white-space:pre-wrap;"></div>
       </div>
     </section>
 
