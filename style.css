@@ -280,140 +280,22 @@ body{
   margin:8px 0 10px;
   flex-wrap:wrap;
 }
-select{
+
+.input{
   background: rgba(255,255,255,.04);
   color: var(--text);
   border:1px solid var(--stroke2);
   border-radius:12px;
   padding:8px 10px;
+  min-width: 220px;
 }
 
-/* ===== Premium Deep Dive Output ===== */
-.ddOut{
+.box{
   margin-top:10px;
   border:1px solid var(--stroke2);
   background: rgba(0,0,0,.16);
   border-radius:14px;
   padding:12px;
-}
-
-.ddCards{
-  display:grid;
-  grid-template-columns: 1fr;
-  gap:10px;
-}
-
-.ddCard{
-  border:1px solid var(--stroke2);
-  border-radius:14px;
-  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-  padding:12px;
-  position:relative;
-  overflow:hidden;
-}
-
-.ddCard::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background: radial-gradient(420px 240px at 18% 25%, rgba(158,240,216,.06), transparent 60%),
-              radial-gradient(520px 280px at 80% 45%, rgba(246,204,114,.05), transparent 65%);
-  pointer-events:none;
-}
-
-.ddTitle{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:8px;
-  position:relative;
-}
-
-.ddTitle h4{
-  margin:0;
-  font-size:12px;
-  letter-spacing:.5px;
-  text-transform:uppercase;
-  color: rgba(255,255,255,.70);
-}
-
-.ddPill{
-  font-size:12px;
-  padding:6px 10px;
-  border-radius:999px;
-  border:1px solid rgba(246,204,114,.35);
-  background: rgba(246,204,114,.10);
-  color: rgba(255,255,255,.88);
-  white-space:nowrap;
-  position:relative;
-}
-
-.ddText{
-  position:relative;
-  color: rgba(255,255,255,.88);
-  line-height:1.45;
-  font-size:14px;
-}
-
-.ddList{
-  margin:8px 0 0;
-  padding:0;
-  list-style:none;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  position:relative;
-}
-
-.ddList li{
-  display:flex;
-  gap:10px;
-  align-items:flex-start;
-  padding:10px;
-  border:1px solid rgba(255,255,255,.07);
-  border-radius:12px;
-  background: rgba(255,255,255,.02);
-}
-
-.ddBullet{
-  width:10px;
-  height:10px;
-  border-radius:999px;
-  margin-top:4px;
-  background: linear-gradient(180deg, rgba(158,240,216,.85), rgba(246,204,114,.85));
-  flex:0 0 auto;
-}
-
-.ddSmall{
-  color: rgba(255,255,255,.62);
-  font-size:12px;
-  margin-top:6px;
-  position:relative;
-}
-
-.ddTimeline{
-  display:grid;
-  grid-template-columns: 110px 1fr;
-  gap:10px;
-  margin-top:8px;
-  position:relative;
-}
-
-.ddTime{
-  font-size:12px;
-  color: rgba(255,255,255,.70);
-  text-transform:uppercase;
-  letter-spacing:.3px;
-  padding-top:3px;
-}
-
-.ddStep{
-  border:1px solid rgba(255,255,255,.07);
-  background: rgba(255,255,255,.02);
-  border-radius:12px;
-  padding:10px;
-  color: rgba(255,255,255,.88);
 }
 
 .deepDiveMini .miniTitle{
@@ -441,152 +323,123 @@ select{
   opacity:.7;
 }
 
-/* =========================
-   Deep Dive Premium Cards
-   ========================= */
+/* ===== Mode Switch (NEU) ===== */
+.ddModeSwitch{
+  display:flex;
+  gap:10px;
+  margin:14px 0 10px 0;
+}
+.ddModeBtn{
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.18);
+  background:rgba(255,255,255,0.06);
+  color:rgba(255,255,255,0.8);
+  cursor:pointer;
+  font-size:13px;
+}
+.ddModeBtn.active{
+  background:rgba(158,240,216,0.18);
+  border-color:rgba(158,240,216,0.6);
+  color:#fff;
+}
+.bizUnlock{
+  border:1px solid rgba(246,204,114,.25);
+  background: rgba(246,204,114,.06);
+  border-radius:14px;
+  padding:10px;
+}
 
+/* ===== Premium Cards (für Business) ===== */
 .ddCards{
   display:flex;
   flex-direction:column;
-  gap:12px;
-  margin-top:10px;
+  gap:10px;
 }
-
-/* Card: mehr Tiefe + klarere Trennung */
 .ddCard{
-  border:1px solid rgba(255,255,255,.08);
-  background:
-    radial-gradient(900px 240px at 25% 0%, rgba(158,240,216,.06), transparent 55%),
-    radial-gradient(900px 240px at 85% 0%, rgba(246,204,114,.05), transparent 58%),
-    rgba(0,0,0,.18);
-  border-radius:16px;
-  padding:14px 14px;
-  box-shadow: 0 10px 26px rgba(0,0,0,.35);
+  border:1px solid var(--stroke2);
+  background: rgba(255,255,255,.02);
+  border-radius:14px;
+  padding:12px;
 }
-
-/* Header: Titel + Pill auf einer Linie */
 .ddTitle{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  padding-bottom:10px;
   margin-bottom:10px;
-  border-bottom:1px solid rgba(255,255,255,.06);
 }
-
 .ddTitle h4{
   margin:0;
   font-size:12px;
-  letter-spacing:.9px;
+  letter-spacing:.6px;
   text-transform:uppercase;
   color: rgba(255,255,255,.78);
 }
-
-/* Pill: "glassy", knackiger */
 .ddPill{
   display:inline-flex;
   align-items:center;
-  gap:8px;
+  gap:6px;
   padding:6px 10px;
   border-radius:999px;
-  border:1px solid rgba(246,204,114,.28);
-  background: rgba(15,21,34,.45);
-  color: rgba(255,255,255,.88);
+  border:1px solid rgba(246,204,114,.35);
+  background: rgba(246,204,114,.08);
+  color: rgba(255,255,255,.86);
   font-size:12px;
   white-space:nowrap;
 }
-
-/* Text: mehr Coach-Lesbarkeit */
 .ddText{
-  color: rgba(255,255,255,.88);
-  line-height:1.55;
-  font-size:14px;
-  letter-spacing:.1px;
-  max-width: 72ch;
+  color: rgba(255,255,255,.86);
+  line-height:1.45;
 }
-
-/* Listen: weniger "wall of text" */
+.ddSmall{
+  margin-top:10px;
+  font-size:12px;
+  color: rgba(255,255,255,.62);
+}
 .ddList{
   list-style:none;
   padding:0;
   margin:10px 0 0;
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:8px;
 }
-
 .ddList li{
   display:flex;
   gap:10px;
   align-items:flex-start;
-  padding:10px 10px;
-  border-radius:14px;
   border:1px solid rgba(255,255,255,.06);
-  background: rgba(255,255,255,.02);
+  background: rgba(0,0,0,.12);
+  padding:10px;
+  border-radius:12px;
 }
-
-.ddList li > div{
-  color: rgba(255,255,255,.88);
-  line-height:1.5;
-  font-size:14px;
-}
-
-/* Bullet: kleiner "Signalpunkt" */
 .ddBullet{
-  width:10px;
-  height:10px;
+  width:10px; height:10px;
+  margin-top:4px;
   border-radius:999px;
-  margin-top:6px;
-  flex: 0 0 auto;
   background: rgba(158,240,216,.85);
-  box-shadow: 0 0 0 3px rgba(158,240,216,.12);
+  flex: 0 0 10px;
 }
-
-/* Timeline: echtes Grid (Zeit links, Inhalt rechts) */
 .ddTimeline{
-  margin-top:10px;
   display:grid;
-  grid-template-columns: 92px 1fr;
+  grid-template-columns: 110px 1fr;
   gap:10px 12px;
+  margin-top:10px;
 }
-
 .ddTime{
-  align-self:start;
-  justify-self:start;
-  padding:7px 10px;
-  border-radius:999px;
-  border:1px solid rgba(158,240,216,.22);
-  background: rgba(158,240,216,.07);
-  color: rgba(255,255,255,.86);
   font-size:12px;
-  text-transform:uppercase;
-  letter-spacing:.6px;
-  white-space:nowrap;
+  color: rgba(255,255,255,.65);
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(0,0,0,.14);
+  padding:8px 10px;
+  border-radius:12px;
 }
-
 .ddStep{
   border:1px solid rgba(255,255,255,.06);
-  background: rgba(255,255,255,.02);
-  border-radius:14px;
-  padding:10px 12px;
-  color: rgba(255,255,255,.88);
-  line-height:1.5;
-  font-size:14px;
-}
-/* kleine Fußnote/Hint */
-.ddSmall{
-  margin-top:10px;
-  color: rgba(255,255,255,.62);
-  font-size:12px;
-  line-height:1.45;
-  border-top:1px dashed rgba(255,255,255,.08);
-  padding-top:10px;
-}
-
-/* Mobile: Timeline untereinander */
-@media (max-width: 560px){
-  .ddText{ max-width: 100%; }
-  .ddTimeline{ grid-template-columns: 1fr; }
-  .ddTime{ justify-self:start; }
+  background: rgba(0,0,0,.12);
+  padding:8px 10px;
+  border-radius:12px;
+  color: rgba(255,255,255,.86);
+  line-height:1.4;
 }
