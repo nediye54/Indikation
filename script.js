@@ -1,13 +1,8 @@
-// v30 — Deutsch-only. Stabil.
-// Quick Scan + Radar (Canvas) polished + arrow/label gap.
-// Deep Dive: Privat vs Business + Business-Lock (Code/Voucher) + Payload vorbereitet.
+// v13 — Deutsch-only. Stabil. Radar polished.
+// Deep Dive: Mode Switch (Privat/Business). Business erfordert Token.
+// Worker liefert Text (oder später cards), Frontend rendert Premium Cards.
 
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
-
-// Deep Dive Mode + Unlock
-let DD_MODE = "private"; // private | business
-let BIZ_TOKEN = null;    // string | null
-const LS_TOKEN_KEY = "mdg_biz_token_v1";
 
 // Variablen (Deutsch)
 const VARS = [
@@ -23,42 +18,34 @@ const VARS = [
 
 // Fragen (Deutsch)
 const QUESTIONS = [
-  // Freiheit (3)
   { v:"Freiheit", q:"Wie frei kannst du in deinem Alltag Entscheidungen treffen, ohne Angst vor Konsequenzen?" },
   { v:"Freiheit", q:"Wie oft fühlst du dich in Rollen oder Erwartungen gefangen, die du nicht gewählt hast?" },
   { v:"Freiheit", q:"Kannst du Grenzen setzen, ohne danach Schuldgefühle oder Druck zu spüren?" },
 
-  // Gerechtigkeit (3)
   { v:"Gerechtigkeit", q:"Werden in deinem Umfeld Belastungen und Vorteile grundsätzlich fair verteilt?" },
   { v:"Gerechtigkeit", q:"Gibt es Regeln, die für manche gelten und für andere nicht?" },
   { v:"Gerechtigkeit", q:"Fühlst du dich in Entscheidungen, die dich betreffen, ausreichend berücksichtigt?" },
 
-  // Wahrheit (3)
   { v:"Wahrheit", q:"Werden Probleme offen benannt, auch wenn es unangenehm ist?" },
   { v:"Wahrheit", q:"Kannst du Kritik ansprechen, ohne dass sofort Abwehr oder Schuldzuweisung entsteht?" },
   { v:"Wahrheit", q:"Gibt es Themen, die „nicht gesagt werden dürfen“, obwohl alle sie spüren?" },
 
-  // Harmonie (3)
   { v:"Harmonie", q:"Gibt es in deinem Alltag Phasen von Ruhe, in denen du innerlich „runterkommst“?" },
   { v:"Harmonie", q:"Werden Konflikte so gelöst, dass danach wieder Nähe/Respekt möglich ist?" },
   { v:"Harmonie", q:"Fühlst du dich mit anderen grundsätzlich verbunden statt dauerhaft im Wettkampf?" },
 
-  // Effizienz (3)
   { v:"Effizienz", q:"Führt dein Aufwand meistens zu klaren Ergebnissen?" },
   { v:"Effizienz", q:"Gibt es unnötige Schleifen, Wiederholungen oder chaotische Zuständigkeiten?" },
   { v:"Effizienz", q:"Kannst du dich gut fokussieren, ohne ständig von „Feuerwehr-Themen“ abgelenkt zu werden?" },
 
-  // Handlungsspielraum (3)
   { v:"Handlungsspielraum", q:"Hast du realistische Optionen, Dinge zu verändern, wenn etwas nicht passt?" },
   { v:"Handlungsspielraum", q:"Kannst du „Nein“ sagen, ohne echte Nachteile befürchten zu müssen?" },
   { v:"Handlungsspielraum", q:"Gibt es Ressourcen/Unterstützung, die du aktiv nutzen kannst?" },
 
-  // Mittel (3)
   { v:"Mittel", q:"Reichen deine verfügbaren Mittel (Zeit, Geld, Energie) für das, was erwartet wird?" },
   { v:"Mittel", q:"Gibt es Engpässe, die regelmäßig Stress oder Konflikte auslösen?" },
   { v:"Mittel", q:"Sind Mittel so verteilt, dass das System nicht „ausblutet“ (z.B. dauerhaftes Überziehen)?" },
 
-  // Balance (3)
   { v:"Balance", q:"Ist die Balance zwischen Geben und Nehmen in deinem Umfeld stimmig?" },
   { v:"Balance", q:"Gibt es Extrem-Ausschläge (zu viel Kontrolle / zu viel Chaos)?" },
   { v:"Balance", q:"Fühlst du dich insgesamt „im Gleichgewicht“, auch wenn nicht alles perfekt ist?" }
@@ -72,6 +59,11 @@ const SCALE = [
 ];
 
 const el = (id) => document.getElementById(id);
+
+// ===== Mode Switch State =====
+const MODE_PRIVATE = "private";
+const MODE_BUSINESS = "business";
+let DEEPDIVE_MODE = MODE_PRIVATE;
 
 // --- Error UI ---
 function showErrorBox(msg) {
@@ -109,12 +101,10 @@ function buildQuestions() {
     const top = document.createElement("div");
     top.className = "qTop";
 
-    // Links: nur Fortschritt
     const left = document.createElement("div");
     left.className = "qIdx";
     left.textContent = `${idx+1}/${QUESTIONS.length}`;
 
-    // Rechts: Pill mit Variable
     const right = document.createElement("div");
     right.className = "qVar";
     right.textContent = item.v;
@@ -199,7 +189,7 @@ function timeWindowFor(value) {
   return "stabil · nur Feintuning nötig";
 }
 
-// --- Render helpers ---
+// --- Render: Bars / Weakest / Timewin ---
 function renderBars(scores) {
   const host = el("bars");
   if (!host) return;
@@ -263,6 +253,17 @@ function renderDeepDiveLocal(scores, maxN = 3) {
 // ========= Radar (Canvas) =========
 let _radarResizeObserver = null;
 
+function roundRect(ctx, x, y, w, h, r){
+  const rr = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr, y);
+  ctx.arcTo(x+w, y, x+w, y+h, rr);
+  ctx.arcTo(x+w, y+h, x, y+h, rr);
+  ctx.arcTo(x, y+h, x, y, rr);
+  ctx.arcTo(x, y, x+w, y, rr);
+  ctx.closePath();
+}
+
 function renderRadar(scores, weak) {
   const host = el("plot3d");
   if (!host) return;
@@ -286,7 +287,6 @@ function renderRadar(scores, weak) {
 
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
     ctx.clearRect(0,0,cssW,cssH);
 
     const cx = cssW * 0.50;
@@ -341,7 +341,6 @@ function renderRadar(scores, weak) {
       ctx.stroke();
     }
 
-    // Points
     const pts = VARS.map((v,i)=>{
       const val = scores[v] || 0;
       const a = angleFor(i);
@@ -394,7 +393,7 @@ function renderRadar(scores, weak) {
       ctx.restore();
     });
 
-    // Arrow to weakest + label (mit Abstand & seitlichem Versatz)
+    // Arrow + label box (gap/side = feinjustierbar)
     const wIdx = VARS.indexOf(weak.key);
     if (wIdx >= 0){
       const a = angleFor(wIdx);
@@ -402,7 +401,6 @@ function renderRadar(scores, weak) {
       const tipX = cx + Math.cos(a) * endR;
       const tipY = cy + Math.sin(a) * endR;
 
-      // glow
       ctx.beginPath();
       ctx.moveTo(cx,cy);
       ctx.lineTo(tipX, tipY);
@@ -411,7 +409,6 @@ function renderRadar(scores, weak) {
       ctx.lineCap = "round";
       ctx.stroke();
 
-      // main
       ctx.beginPath();
       ctx.moveTo(cx,cy);
       ctx.lineTo(tipX, tipY);
@@ -420,7 +417,6 @@ function renderRadar(scores, weak) {
       ctx.lineCap = "round";
       ctx.stroke();
 
-      // head
       const head = 10;
       const leftA = a + Math.PI*0.86;
       const rightA= a - Math.PI*0.86;
@@ -432,7 +428,6 @@ function renderRadar(scores, weak) {
       ctx.fillStyle = arrowStroke;
       ctx.fill();
 
-      // Label box
       const label = `Schwach: ${weak.key} · ${weak.val.toFixed(2)}`;
 
       ctx.font = "700 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
@@ -441,14 +436,13 @@ function renderRadar(scores, weak) {
       const bw = tw + m*2;
       const bh = 30;
 
-      // Abstand + seitlicher Versatz
-      const gap = 30;
-      const side = 20;
+      // <-- HIER kannst du später selbst feinjustieren
+      const gap = 34;   // Abstand vom Pfeil-Tip
+      const side = 22;  // seitlicher Versatz
 
       let bx = tipX + (Math.cos(a) * gap) + (-Math.sin(a) * side);
       let by = tipY + (Math.sin(a) * gap) + ( Math.cos(a) * side);
 
-      // Clamp inside
       bx = Math.max(10, Math.min(cssW - bw - 10, bx));
       by = Math.max(10, Math.min(cssH - bh - 10, by));
 
@@ -477,18 +471,7 @@ function renderRadar(scores, weak) {
   _radarResizeObserver.observe(host);
 }
 
-function roundRect(ctx, x, y, w, h, r){
-  const rr = Math.min(r, w/2, h/2);
-  ctx.beginPath();
-  ctx.moveTo(x+rr, y);
-  ctx.arcTo(x+w, y, x+w, y+h, rr);
-  ctx.arcTo(x+w, y+h, x, y+h, rr);
-  ctx.arcTo(x, y+h, x, y, rr);
-  ctx.arcTo(x, y, x+w, y, rr);
-  ctx.closePath();
-}
-
-// --- Deep Dive (Worker) ---
+// --- Deep Dive Premium (Cards) ---
 let LAST_SCORES = null;
 
 function weakestVars(scores, n = 2) {
@@ -507,210 +490,12 @@ function escapeHTML(str){
     .replaceAll("'", "&#039;");
 }
 
-// Entfernt einfache Markdown-Marker, ohne Struktur zu zerstören
 function stripMd(s){
   return String(s ?? "")
     .replace(/\*\*/g, "")
     .replace(/__+/g, "")
     .replace(/`+/g, "")
-    .replace(/\s+$/g, "")
     .trim();
-}
-
-function normKey(s){
-  return stripMd(s)
-    .toLowerCase()
-    .replace(/[:：]/g, "")
-    .replace(/[^\p{L}\p{N}\s-]/gu, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-// IMMER alle drei Zeitfenster (Business-Ansicht zeigt den Plan immer vollständig)
-function buildTimelineMulti(){
-  return [
-    { t: "Heute", txt: "1 klare Beobachtung formulieren (ohne Urteil). 1 Mini-Schritt festlegen (≤10 Minuten)." },
-    { t: "7 Tage", txt: "1 Gespräch/Intervention durchführen. Reaktion protokollieren: besser/schlechter/gleich." },
-    { t: "30 Tage", txt: "Stabilisierungsroutine definieren: Was bleibt, was endet, was wird delegiert?" },
-  ];
-}
-
-function guessActionBulletsFromText(_text){
-  return [
-    "Benennen: Was genau wird im System vermieden oder verdrängt?",
-    "Grenze: Wo brauchst du eine klare Linie (ohne Eskalation)?",
-    "Ressource: Welche Unterstützung ist realistisch aktivierbar?",
-    "Struktur: Was lässt sich in 7 Tagen messbar vereinfachen?",
-    "Dialog: Welches Gespräch ist fällig – mit welchem Ziel?"
-  ];
-}
-
-function buildCoachQuestions(weakest){
-  const w = weakest && weakest.length ? weakest : ["(Schwerpunkt)"];
-  const v1 = w[0] || "(Variable)";
-  const v2 = w[1] || null;
-
-  const qs = [
-    `Wenn ${v1} „kippt“: Woran merkt man es als Erstes – im Verhalten, im Körper, im Denken?`,
-    `Welche Wahrheit wird vermieden, weil sie kurzfristig Konflikt erzeugen könnte – langfristig aber Stabilität bringt?`,
-    `Welche Grenze wäre fair – und welche Konsequenz ist realistisch, wenn sie nicht respektiert wird?`,
-    `Was ist die kleinste Intervention, die man in 24h wirklich umsetzen kann (ohne neue Abhängigkeiten)?`,
-  ];
-  if (v2) qs.push(`Was ist die Wechselwirkung zwischen ${v1} und ${v2}? (z.B. „wenn X sinkt, steigt Y“).`);
-  return qs;
-}
-
-// Heuristischer Parser → Cards
-function parseDeepDiveToCards(rawText, meta){
-  const text = String(rawText ?? "").trim();
-  const weakest = meta?.weakest?.join(", ") || "";
-  const pillMain = weakest ? `Fokus: ${weakest}` : "Analyse";
-
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-
-  const sections = [];
-  let current = { title: "Text", lines: [] };
-
-  const pushCurrent = () => {
-    const has = current.lines.length && current.lines.join(" ").trim().length;
-    if (has) sections.push(current);
-  };
-
-  for (const l of lines){
-    const mdHeading = l.match(/^(#{1,6})\s*(.+)$/);
-    const colonHeading = l.match(/^([A-Za-zÄÖÜäöüß0-9 \-()]{4,60})\s*[:：]\s*(.*)$/);
-
-    if (mdHeading){
-      pushCurrent();
-      current = { title: stripMd(mdHeading[2]), lines: [] };
-      continue;
-    }
-
-    if (colonHeading){
-      const t = stripMd(colonHeading[1]);
-      const rest = stripMd(colonHeading[2] || "");
-      const key = normKey(t);
-      const looksLikeSection =
-        key.includes("executive summary") ||
-        key.includes("systembild") ||
-        key.includes("kernhypothesen") ||
-        key.includes("hebel") ||
-        key.includes("intervention") ||
-        key.includes("plan") ||
-        key.includes("zeitfenster") ||
-        key.includes("coach");
-      if (looksLikeSection){
-        pushCurrent();
-        current = { title: t, lines: [] };
-        if (rest) current.lines.push(rest);
-        continue;
-      }
-    }
-
-    current.lines.push(l);
-  }
-  pushCurrent();
-
-  const pick = (kwArr) => {
-    for (const s of sections){
-      const key = normKey(s.title);
-      if (kwArr.some(kw => key.includes(kw))) return s;
-    }
-    return null;
-  };
-
-  const secExec = pick(["executive summary", "zusammenfassung", "kurzfassung"]) || sections[0] || null;
-  const secSystem = pick(["systembild"]) || null;
-  const secHyp = pick(["kernhypothesen", "hypothesen"]) || null;
-  const secHebel = pick(["hebel", "intervention", "interventionen", "hebelwirkung"]) || null;
-  const secPlan = pick(["plan", "zeitfenster"]) || null;
-  const secCoach = pick(["coach guide", "coach-guide", "coach", "session", "leitfaden"]) || null;
-
-  const extractBullets = (arrLines) => {
-    const bullets = [];
-    for (const l of (arrLines || [])){
-      if (/^[-•*]\s+/.test(l)) bullets.push(stripMd(l.replace(/^[-•*]\s+/, "")));
-    }
-    return bullets;
-  };
-
-  const planFromText = (planLines) => {
-    const src = (planLines || []).join("\n");
-    const out = [];
-    const grab = (label, nextLabels) => {
-      const r = new RegExp(`(?:^|\\n)\\s*${label}\\b[\\s:：-]*`, "i");
-      const m = src.search(r);
-      if (m < 0) return null;
-      const after = src.slice(m).replace(r, "");
-      let stop = after.length;
-      for (const nl of nextLabels){
-        const rm = after.search(new RegExp(`(?:^|\\n)\\s*${nl}\\b`, "i"));
-        if (rm >= 0) stop = Math.min(stop, rm);
-      }
-      const chunk = after.slice(0, stop).trim();
-      const ls = chunk.split(/\r?\n/).map(x=>stripMd(x.trim())).filter(Boolean);
-      return ls.slice(0, 4).join(" ") || null;
-    };
-
-    const h = grab("Heute", ["7\\s*Tage", "30\\s*Tage"]);
-    const d7 = grab("7\\s*Tage", ["30\\s*Tage"]);
-    const d30 = grab("30\\s*Tage", ["Coach", "Coach-Guide", "Guide", "Fragen"]);
-
-    if (h) out.push({ t: "Heute", txt: h });
-    if (d7) out.push({ t: "7 Tage", txt: d7 });
-    if (d30) out.push({ t: "30 Tage", txt: d30 });
-
-    return out.length ? out : buildTimelineMulti();
-  };
-
-  const cards = [];
-
-  if (secExec){
-    const body = stripMd(secExec.lines.slice(0, 3).join(" ")).trim();
-    cards.push({ title: "Executive Summary", pill: pillMain, body: body || "—" });
-  }
-
-  if (secSystem){
-    const body = stripMd(secSystem.lines.slice(0, 6).join(" ")).trim();
-    cards.push({ title: "Systembild", pill: "Diagnostik", body: body || stripMd(secSystem.lines.join(" ")).trim() || "—" });
-  } else {
-    const fallback = secExec ? stripMd(secExec.lines.slice(2, 6).join(" ")).trim() : "";
-    if (fallback) cards.push({ title: "Systembild", pill: "Diagnostik", body: fallback });
-  }
-
-  if (secHyp){
-    const bul = extractBullets(secHyp.lines);
-    const bodyLines = secHyp.lines.map(stripMd);
-    const list = bul.length ? bul : bodyLines.slice(0, 5).filter(Boolean);
-    cards.push({ title: "Kernhypothesen", pill: "Wenn–Dann", bullets: list.slice(0, 6) });
-  }
-
-  if (secHebel){
-    const bul = extractBullets(secHebel.lines);
-    let list = bul;
-    if (!list.length){
-      const joined = secHebel.lines.join(" ");
-      const parts = joined.split(/\s(?=\d+\.)/g).map(stripMd).filter(Boolean);
-      list = parts.length ? parts : guessActionBulletsFromText(text);
-    }
-    cards.push({ title: "Hebel & Interventionen", pill: "Handlung", bullets: list.slice(0, 10) });
-  } else {
-    cards.push({ title: "Hebel & Interventionen", pill: "Handlung", bullets: guessActionBulletsFromText(text) });
-  }
-
-  const planTimeline = secPlan ? planFromText(secPlan.lines) : buildTimelineMulti();
-  cards.push({ title: "Plan nach Zeitfenster", pill: "Zeit", timeline: planTimeline });
-
-  if (secCoach){
-    const bul = extractBullets(secCoach.lines);
-    const bodyLines = secCoach.lines.map(stripMd).filter(Boolean);
-    const list = bul.length ? bul : bodyLines.slice(0, 10);
-    cards.push({ title: "Coach Guide", pill: "Session", bullets: list.length ? list : buildCoachQuestions(meta?.weakest || []) });
-  } else {
-    cards.push({ title: "Coach Guide", pill: "Session", bullets: buildCoachQuestions(meta?.weakest || []) });
-  }
-
-  return cards;
 }
 
 function buildCardsHTML(cards){
@@ -754,10 +539,17 @@ function buildCardsHTML(cards){
   return html.join("");
 }
 
-// Business: Premium
+function buildFallbackCards(text, weakest){
+  const focus = weakest?.length ? `Fokus: ${weakest.join(", ")}` : "Analyse";
+  return [
+    { title:"Executive Summary", pill:focus, body: stripMd(text).slice(0, 450) + (stripMd(text).length>450?" …":"") }
+  ];
+}
+
 function renderDeepDivePremium(data, meta){
   const host = el("deepDiveOut");
   if (!host) return;
+
   host.style.display = "block";
 
   if (data && Array.isArray(data.cards) && data.cards.length){
@@ -767,110 +559,31 @@ function renderDeepDivePremium(data, meta){
 
   const raw = (data && (data.text || data.output || data.result)) ? String(data.text || data.output || data.result) : "";
   const text = raw.trim();
+
   if (!text){
-    host.innerHTML = `<div class="ddCards">
-      <div class="ddCard">
-        <div class="ddTitle"><h4>Hinweis</h4><span class="ddPill">keine Ausgabe</span></div>
-        <div class="ddText">Der Worker hat keine Textausgabe geliefert.</div>
-      </div>
-    </div>`;
+    host.innerHTML = buildCardsHTML([{ title:"Hinweis", pill:"keine Ausgabe", body:"Der Worker hat keine Textausgabe geliefert." }]);
     return;
   }
 
-  const cards = parseDeepDiveToCards(text, meta);
-  host.innerHTML = buildCardsHTML(cards);
+  // Wenn Worker (noch) Plaintext liefert → 1 Card reicht als safe default
+  host.innerHTML = buildCardsHTML(buildFallbackCards(text, meta?.weakest || []));
 }
 
-// Privat: kompakt
-function renderDeepDivePrivate(data, meta){
-  const host = el("deepDiveOut");
-  if (!host) return;
-
-  const raw = (data && (data.text || data.output || data.result)) ? String(data.text || data.output || data.result) : "";
-  const text = raw.trim();
-
-  const weakest = meta?.weakest?.join(", ") || "";
-  const short = text
-    .split(/\n+/)
-    .map(stripMd)
-    .filter(Boolean)
-    .slice(0, 6)
-    .join(" ")
-    .slice(0, 680);
-
-  host.style.display = "block";
-  host.innerHTML = `
-    <div class="ddCards">
-      <div class="ddCard">
-        <div class="ddTitle">
-          <h4>Kompakte Indikation</h4>
-          <span class="ddPill">Privat</span>
-        </div>
-        <div class="ddText">${escapeHTML(short || "—")}</div>
-        <div class="ddSmall">Fokus: ${escapeHTML(weakest || "—")}</div>
-      </div>
-    </div>
-  `;
-}
-
-// --- Business Unlock helpers ---
+// --- Mode Switch UI Logic ---
 function setMode(mode){
-  DD_MODE = (mode === "business") ? "business" : "private";
+  DEEPDIVE_MODE = mode;
 
-  const unlock = el("businessUnlock");
-  if (unlock) unlock.style.display = (DD_MODE === "business") ? "block" : "none";
+  const btnPriv = el("modePrivate");
+  const btnBiz  = el("modeBusiness");
+  const tokenRow = el("tokenRow");
 
-  // Button states
-  document.querySelectorAll(".ddModeBtn").forEach(b=>{
-    b.classList.toggle("active", (b.dataset.mode || "") === DD_MODE);
-  });
+  if (btnPriv) btnPriv.dataset.active = String(mode === MODE_PRIVATE);
+  if (btnBiz)  btnBiz.dataset.active  = String(mode === MODE_BUSINESS);
 
-  // Status aktualisieren
-  updateBizStatus();
+  if (tokenRow) tokenRow.style.display = (mode === MODE_BUSINESS) ? "flex" : "none";
 }
 
-function loadToken(){
-  const t = localStorage.getItem(LS_TOKEN_KEY);
-  BIZ_TOKEN = (t && String(t).trim()) ? String(t).trim() : null;
-}
-
-function saveToken(t){
-  const token = String(t || "").trim();
-  if (!token) return false;
-  localStorage.setItem(LS_TOKEN_KEY, token);
-  BIZ_TOKEN = token;
-  return true;
-}
-
-function updateBizStatus(){
-  const s = el("bizStatus");
-  if (!s) return;
-  if (DD_MODE !== "business"){
-    s.textContent = "";
-    return;
-  }
-  if (BIZ_TOKEN){
-    s.innerHTML = `Status: <strong>freigeschaltet</strong> · Code aktiv`;
-  } else {
-    s.textContent = "Status: gesperrt · Code erforderlich (für Business-Demo)";
-  }
-}
-
-function tryAutoCodeFromURL(){
-  try{
-    const u = new URL(window.location.href);
-    const code = u.searchParams.get("code");
-    if (code && String(code).trim()){
-      saveToken(code);
-      const inp = el("bizCode");
-      if (inp) inp.value = String(code).trim();
-      // Optional: direkt Business aktivieren, wenn Code in URL
-      setMode("business");
-    }
-  } catch {}
-}
-
-// --- Deep Dive (call) ---
+// --- Deep Dive (Worker) ---
 async function runDeepDive() {
   const deepDiveBtn = el("deepDiveBtn");
   const deepDiveOut = el("deepDiveOut");
@@ -883,33 +596,23 @@ async function runDeepDive() {
     return;
   }
 
-  // Business gated
-  if (DD_MODE === "business" && !BIZ_TOKEN){
+  const weakest = weakestVars(LAST_SCORES, 2);
+
+  const token = (el("tokenInput")?.value || "").trim();
+
+  // Business verlangt Token (damit das später sauber monetarisierbar ist)
+  if (DEEPDIVE_MODE === MODE_BUSINESS && !token){
     deepDiveOut.style.display = "block";
-    deepDiveOut.innerHTML = `<div class="ddCards">
-      <div class="ddCard">
-        <div class="ddTitle"><h4>Business</h4><span class="ddPill">gesperrt</span></div>
-        <div class="ddText">Business ist nur mit Code verfügbar (z.B. für Coach-Demo).</div>
-        <div class="ddSmall">Tipp: Code eingeben → “Freischalten” → erneut starten.</div>
-      </div>
-    </div>`;
+    deepDiveOut.textContent = "Business Deep Dive benötigt einen Token.";
     return;
   }
 
-  const weakest = weakestVars(LAST_SCORES, 2);
-
-  // Payload vorbereitet (Worker kann später token/serverseitig validieren)
   const payload = {
     language: "de",
+    mode: DEEPDIVE_MODE,     // "private" | "business"
+    token: token || null,    // nur relevant bei business
     scores: LAST_SCORES,
-    weakest,
-    mode: DD_MODE,
-    token: (DD_MODE === "business") ? BIZ_TOKEN : null,
-    client: {
-      app: "mdg-indikation",
-      ui: "vanilla",
-      version: "v30"
-    }
+    weakest
   };
 
   try {
@@ -928,22 +631,15 @@ async function runDeepDive() {
       throw new Error(data?.error || `Worker HTTP ${resp.status}`);
     }
 
-    // Mode Switch Rendering
-    if (DD_MODE === "business") {
-      renderDeepDivePremium(data, { weakest });
-    } else {
-      renderDeepDivePrivate(data, { weakest });
-    }
+    renderDeepDivePremium(data, { weakest });
 
   } catch (e) {
     deepDiveOut.style.display = "block";
-    deepDiveOut.innerHTML = `<div class="ddCards">
-      <div class="ddCard">
-        <div class="ddTitle"><h4>Fehler</h4><span class="ddPill">Request</span></div>
-        <div class="ddText">${escapeHTML(String(e.message || e))}</div>
-        <div class="ddSmall">Hinweis: Wenn das wiederholt auftritt, ist es fast immer CORS / CSP oder ein Worker-Fehler.</div>
-      </div>
-    </div>`;
+    deepDiveOut.innerHTML = buildCardsHTML([{
+      title:"Fehler",
+      pill:"Request",
+      body: String(e.message || e)
+    }]);
   } finally {
     deepDiveBtn.disabled = false;
     deepDiveBtn.textContent = "Stabilisierende Indikation erzeugen";
@@ -992,40 +688,17 @@ function onReset() {
   LAST_SCORES = null;
 }
 
-// --- DOM init ---
 document.addEventListener("DOMContentLoaded", () => {
   buildQuestions();
 
-  // Restore token + optional URL code
-  loadToken();
-  tryAutoCodeFromURL();
-
-  // Default mode
-  setMode("private");
-
-  // Buttons
   el("btnEval")?.addEventListener("click", onEvaluate);
   el("btnReset")?.addEventListener("click", onReset);
   el("deepDiveBtn")?.addEventListener("click", runDeepDive);
 
-  // Mode switch
-  document.querySelectorAll(".ddModeBtn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      setMode(btn.dataset.mode || "private");
-    });
-  });
+  // Mode Switch Buttons (müssen in index.html existieren)
+  el("modePrivate")?.addEventListener("click", () => setMode(MODE_PRIVATE));
+  el("modeBusiness")?.addEventListener("click", () => setMode(MODE_BUSINESS));
 
-  // Unlock
-  el("bizUnlockBtn")?.addEventListener("click", () => {
-    const inp = el("bizCode");
-    const code = String(inp?.value || "").trim();
-    if (!code){
-      updateBizStatus();
-      return;
-    }
-    saveToken(code);
-    updateBizStatus();
-  });
-
-  updateBizStatus();
+  // Default
+  setMode(MODE_PRIVATE);
 });
