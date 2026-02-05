@@ -1,10 +1,13 @@
-// v13 — Deutsch-only. Stabil.
-// Fix: vollständige Evaluate-Pipeline wieder drin (collect/score/render fehlten).
-// Radar (Canvas) polished + arrow/label gap.
-// Deep Dive: Premium Cards "holy shit" mit robustem Parser.
-// Zeitfenster-Auswahl im UI wird NICHT mehr verwendet (Deep Dive zeigt immer Heute/7/30).
+// v30 — Deutsch-only. Stabil.
+// Quick Scan + Radar (Canvas) polished + arrow/label gap.
+// Deep Dive: Privat vs Business + Business-Lock (Code/Voucher) + Payload vorbereitet.
 
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
+
+// Deep Dive Mode + Unlock
+let DD_MODE = "private"; // private | business
+let BIZ_TOKEN = null;    // string | null
+const LS_TOKEN_KEY = "mdg_biz_token_v1";
 
 // Variablen (Deutsch)
 const VARS = [
@@ -83,7 +86,6 @@ function hideErrorBox() {
   box.classList.add("hidden");
 }
 
-// Nur anzeigen, wenn es wirklich unser script.js betrifft (keine Addons)
 window.addEventListener("error", (e) => {
   try {
     const file = (e && e.filename) ? String(e.filename) : "";
@@ -107,7 +109,7 @@ function buildQuestions() {
     const top = document.createElement("div");
     top.className = "qTop";
 
-    // Links: nur Fortschritt (kein doppeltes "Freiheit")
+    // Links: nur Fortschritt
     const left = document.createElement("div");
     left.className = "qIdx";
     left.textContent = `${idx+1}/${QUESTIONS.length}`;
@@ -152,7 +154,7 @@ function buildQuestions() {
   });
 }
 
-// --- Collect & score (FEHLTE in v12, ist jetzt wieder drin) ---
+// --- Collect & score ---
 function collectAnswersByVar() {
   const byVar = {};
   VARS.forEach(v => byVar[v] = []);
@@ -197,7 +199,7 @@ function timeWindowFor(value) {
   return "stabil · nur Feintuning nötig";
 }
 
-// --- Render helpers (FEHLTE in v12, ist jetzt wieder drin) ---
+// --- Render helpers ---
 function renderBars(scores) {
   const host = el("bars");
   if (!host) return;
@@ -439,7 +441,7 @@ function renderRadar(scores, weak) {
       const bw = tw + m*2;
       const bh = 30;
 
-      // Feinjustierung: Abstand + seitlicher Versatz
+      // Abstand + seitlicher Versatz
       const gap = 30;
       const side = 20;
 
@@ -505,6 +507,7 @@ function escapeHTML(str){
     .replaceAll("'", "&#039;");
 }
 
+// Entfernt einfache Markdown-Marker, ohne Struktur zu zerstören
 function stripMd(s){
   return String(s ?? "")
     .replace(/\*\*/g, "")
@@ -514,16 +517,50 @@ function stripMd(s){
     .trim();
 }
 
-// bewusst "einfach": keine \p{L} (Browser-Kompatibilität)
 function normKey(s){
   return stripMd(s)
     .toLowerCase()
     .replace(/[:：]/g, "")
-    .replace(/[^a-z0-9äöüß \-()]/gi, "")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
     .replace(/\s+/g, " ")
     .trim();
 }
 
+// IMMER alle drei Zeitfenster (Business-Ansicht zeigt den Plan immer vollständig)
+function buildTimelineMulti(){
+  return [
+    { t: "Heute", txt: "1 klare Beobachtung formulieren (ohne Urteil). 1 Mini-Schritt festlegen (≤10 Minuten)." },
+    { t: "7 Tage", txt: "1 Gespräch/Intervention durchführen. Reaktion protokollieren: besser/schlechter/gleich." },
+    { t: "30 Tage", txt: "Stabilisierungsroutine definieren: Was bleibt, was endet, was wird delegiert?" },
+  ];
+}
+
+function guessActionBulletsFromText(_text){
+  return [
+    "Benennen: Was genau wird im System vermieden oder verdrängt?",
+    "Grenze: Wo brauchst du eine klare Linie (ohne Eskalation)?",
+    "Ressource: Welche Unterstützung ist realistisch aktivierbar?",
+    "Struktur: Was lässt sich in 7 Tagen messbar vereinfachen?",
+    "Dialog: Welches Gespräch ist fällig – mit welchem Ziel?"
+  ];
+}
+
+function buildCoachQuestions(weakest){
+  const w = weakest && weakest.length ? weakest : ["(Schwerpunkt)"];
+  const v1 = w[0] || "(Variable)";
+  const v2 = w[1] || null;
+
+  const qs = [
+    `Wenn ${v1} „kippt“: Woran merkt man es als Erstes – im Verhalten, im Körper, im Denken?`,
+    `Welche Wahrheit wird vermieden, weil sie kurzfristig Konflikt erzeugen könnte – langfristig aber Stabilität bringt?`,
+    `Welche Grenze wäre fair – und welche Konsequenz ist realistisch, wenn sie nicht respektiert wird?`,
+    `Was ist die kleinste Intervention, die man in 24h wirklich umsetzen kann (ohne neue Abhängigkeiten)?`,
+  ];
+  if (v2) qs.push(`Was ist die Wechselwirkung zwischen ${v1} und ${v2}? (z.B. „wenn X sinkt, steigt Y“).`);
+  return qs;
+}
+
+// Heuristischer Parser → Cards
 function parseDeepDiveToCards(rawText, meta){
   const text = String(rawText ?? "").trim();
   const weakest = meta?.weakest?.join(", ") || "";
@@ -553,21 +590,15 @@ function parseDeepDiveToCards(rawText, meta){
       const t = stripMd(colonHeading[1]);
       const rest = stripMd(colonHeading[2] || "");
       const key = normKey(t);
-
       const looksLikeSection =
         key.includes("executive summary") ||
-        key.includes("zusammenfassung") ||
-        key.includes("kurzfassung") ||
         key.includes("systembild") ||
         key.includes("kernhypothesen") ||
-        key.includes("hypothesen") ||
         key.includes("hebel") ||
         key.includes("intervention") ||
         key.includes("plan") ||
         key.includes("zeitfenster") ||
-        key.includes("coach") ||
-        key.includes("leitfaden");
-
+        key.includes("coach");
       if (looksLikeSection){
         pushCurrent();
         current = { title: t, lines: [] };
@@ -588,11 +619,10 @@ function parseDeepDiveToCards(rawText, meta){
     return null;
   };
 
-  const secExec =
-    pick(["executive summary", "zusammenfassung", "kurzfassung"]) || sections[0] || null;
+  const secExec = pick(["executive summary", "zusammenfassung", "kurzfassung"]) || sections[0] || null;
   const secSystem = pick(["systembild"]) || null;
   const secHyp = pick(["kernhypothesen", "hypothesen"]) || null;
-  const secHebel = pick(["hebel", "intervention", "interventionen"]) || null;
+  const secHebel = pick(["hebel", "intervention", "interventionen", "hebelwirkung"]) || null;
   const secPlan = pick(["plan", "zeitfenster"]) || null;
   const secCoach = pick(["coach guide", "coach-guide", "coach", "session", "leitfaden"]) || null;
 
@@ -607,12 +637,10 @@ function parseDeepDiveToCards(rawText, meta){
   const planFromText = (planLines) => {
     const src = (planLines || []).join("\n");
     const out = [];
-
     const grab = (label, nextLabels) => {
       const r = new RegExp(`(?:^|\\n)\\s*${label}\\b[\\s:：-]*`, "i");
       const m = src.search(r);
       if (m < 0) return null;
-
       const after = src.slice(m).replace(r, "");
       let stop = after.length;
       for (const nl of nextLabels){
@@ -621,13 +649,12 @@ function parseDeepDiveToCards(rawText, meta){
       }
       const chunk = after.slice(0, stop).trim();
       const ls = chunk.split(/\r?\n/).map(x=>stripMd(x.trim())).filter(Boolean);
-      const short = ls.slice(0, 4).join(" ");
-      return short || null;
+      return ls.slice(0, 4).join(" ") || null;
     };
 
     const h = grab("Heute", ["7\\s*Tage", "30\\s*Tage"]);
     const d7 = grab("7\\s*Tage", ["30\\s*Tage"]);
-    const d30 = grab("30\\s*Tage", ["Coach", "Guide", "Fragen"]);
+    const d30 = grab("30\\s*Tage", ["Coach", "Coach-Guide", "Guide", "Fragen"]);
 
     if (h) out.push({ t: "Heute", txt: h });
     if (d7) out.push({ t: "7 Tage", txt: d7 });
@@ -645,16 +672,16 @@ function parseDeepDiveToCards(rawText, meta){
 
   if (secSystem){
     const body = stripMd(secSystem.lines.slice(0, 6).join(" ")).trim();
-    cards.push({ title: "Systembild", pill: "Diagnostik", body: body || "—" });
-  } else if (secExec) {
-    const fallback = stripMd(secExec.lines.slice(2, 6).join(" ")).trim();
+    cards.push({ title: "Systembild", pill: "Diagnostik", body: body || stripMd(secSystem.lines.join(" ")).trim() || "—" });
+  } else {
+    const fallback = secExec ? stripMd(secExec.lines.slice(2, 6).join(" ")).trim() : "";
     if (fallback) cards.push({ title: "Systembild", pill: "Diagnostik", body: fallback });
   }
 
   if (secHyp){
     const bul = extractBullets(secHyp.lines);
-    const bodyLines = secHyp.lines.map(stripMd).filter(Boolean);
-    const list = bul.length ? bul : bodyLines.slice(0, 5);
+    const bodyLines = secHyp.lines.map(stripMd);
+    const list = bul.length ? bul : bodyLines.slice(0, 5).filter(Boolean);
     cards.push({ title: "Kernhypothesen", pill: "Wenn–Dann", bullets: list.slice(0, 6) });
   }
 
@@ -684,34 +711,6 @@ function parseDeepDiveToCards(rawText, meta){
   }
 
   return cards;
-}
-
-function renderDeepDivePremium(data, meta){
-  const host = el("deepDiveOut");
-  if (!host) return;
-
-  host.style.display = "block";
-
-  if (data && Array.isArray(data.cards) && data.cards.length){
-    host.innerHTML = buildCardsHTML(data.cards);
-    return;
-  }
-
-  const raw = (data && (data.text || data.output || data.result)) ? String(data.text || data.output || data.result) : "";
-  const text = raw.trim();
-
-  if (!text){
-    host.innerHTML = `<div class="ddCards">
-      <div class="ddCard">
-        <div class="ddTitle"><h4>Hinweis</h4><span class="ddPill">keine Ausgabe</span></div>
-        <div class="ddText">Der Worker hat keine Textausgabe geliefert.</div>
-      </div>
-    </div>`;
-    return;
-  }
-
-  const cards = parseDeepDiveToCards(text, meta);
-  host.innerHTML = buildCardsHTML(cards);
 }
 
 function buildCardsHTML(cards){
@@ -755,39 +754,123 @@ function buildCardsHTML(cards){
   return html.join("");
 }
 
-function guessActionBulletsFromText(_text){
-  return [
-    "Benennen: Was genau wird im System vermieden oder verdrängt?",
-    "Grenze: Wo brauchst du eine klare Linie (ohne Eskalation)?",
-    "Ressource: Welche Unterstützung ist realistisch aktivierbar?",
-    "Struktur: Was lässt sich in 7 Tagen messbar vereinfachen?",
-    "Dialog: Welches Gespräch ist fällig – mit welchem Ziel?"
-  ];
+// Business: Premium
+function renderDeepDivePremium(data, meta){
+  const host = el("deepDiveOut");
+  if (!host) return;
+  host.style.display = "block";
+
+  if (data && Array.isArray(data.cards) && data.cards.length){
+    host.innerHTML = buildCardsHTML(data.cards);
+    return;
+  }
+
+  const raw = (data && (data.text || data.output || data.result)) ? String(data.text || data.output || data.result) : "";
+  const text = raw.trim();
+  if (!text){
+    host.innerHTML = `<div class="ddCards">
+      <div class="ddCard">
+        <div class="ddTitle"><h4>Hinweis</h4><span class="ddPill">keine Ausgabe</span></div>
+        <div class="ddText">Der Worker hat keine Textausgabe geliefert.</div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const cards = parseDeepDiveToCards(text, meta);
+  host.innerHTML = buildCardsHTML(cards);
 }
 
-function buildTimelineMulti(){
-  return [
-    { t: "Heute", txt: "1 klare Beobachtung formulieren (ohne Urteil). 1 Mini-Schritt festlegen (≤10 Minuten)." },
-    { t: "7 Tage", txt: "1 Gespräch/Intervention durchführen. Reaktion protokollieren: besser/schlechter/gleich." },
-    { t: "30 Tage", txt: "Stabilisierungsroutine definieren: Was bleibt, was endet, was wird delegiert?" },
-  ];
+// Privat: kompakt
+function renderDeepDivePrivate(data, meta){
+  const host = el("deepDiveOut");
+  if (!host) return;
+
+  const raw = (data && (data.text || data.output || data.result)) ? String(data.text || data.output || data.result) : "";
+  const text = raw.trim();
+
+  const weakest = meta?.weakest?.join(", ") || "";
+  const short = text
+    .split(/\n+/)
+    .map(stripMd)
+    .filter(Boolean)
+    .slice(0, 6)
+    .join(" ")
+    .slice(0, 680);
+
+  host.style.display = "block";
+  host.innerHTML = `
+    <div class="ddCards">
+      <div class="ddCard">
+        <div class="ddTitle">
+          <h4>Kompakte Indikation</h4>
+          <span class="ddPill">Privat</span>
+        </div>
+        <div class="ddText">${escapeHTML(short || "—")}</div>
+        <div class="ddSmall">Fokus: ${escapeHTML(weakest || "—")}</div>
+      </div>
+    </div>
+  `;
 }
 
-function buildCoachQuestions(weakest){
-  const w = weakest && weakest.length ? weakest : ["(Schwerpunkt)"];
-  const v1 = w[0] || "(Variable)";
-  const v2 = w[1] || null;
+// --- Business Unlock helpers ---
+function setMode(mode){
+  DD_MODE = (mode === "business") ? "business" : "private";
 
-  const qs = [
-    `Wenn ${v1} „kippt“: Woran merkt man es als Erstes – im Verhalten, im Körper, im Denken?`,
-    `Welche Wahrheit wird vermieden, weil sie kurzfristig Konflikt erzeugen könnte – langfristig aber Stabilität bringt?`,
-    `Welche Grenze wäre fair – und welche Konsequenz ist realistisch, wenn sie nicht respektiert wird?`,
-    `Was ist die kleinste Intervention, die man in 24h wirklich umsetzen kann (ohne neue Abhängigkeiten)?`,
-  ];
-  if (v2) qs.push(`Was ist die Wechselwirkung zwischen ${v1} und ${v2}? (z.B. „wenn X sinkt, steigt Y“).`);
-  return qs;
+  const unlock = el("businessUnlock");
+  if (unlock) unlock.style.display = (DD_MODE === "business") ? "block" : "none";
+
+  // Button states
+  document.querySelectorAll(".ddModeBtn").forEach(b=>{
+    b.classList.toggle("active", (b.dataset.mode || "") === DD_MODE);
+  });
+
+  // Status aktualisieren
+  updateBizStatus();
 }
 
+function loadToken(){
+  const t = localStorage.getItem(LS_TOKEN_KEY);
+  BIZ_TOKEN = (t && String(t).trim()) ? String(t).trim() : null;
+}
+
+function saveToken(t){
+  const token = String(t || "").trim();
+  if (!token) return false;
+  localStorage.setItem(LS_TOKEN_KEY, token);
+  BIZ_TOKEN = token;
+  return true;
+}
+
+function updateBizStatus(){
+  const s = el("bizStatus");
+  if (!s) return;
+  if (DD_MODE !== "business"){
+    s.textContent = "";
+    return;
+  }
+  if (BIZ_TOKEN){
+    s.innerHTML = `Status: <strong>freigeschaltet</strong> · Code aktiv`;
+  } else {
+    s.textContent = "Status: gesperrt · Code erforderlich (für Business-Demo)";
+  }
+}
+
+function tryAutoCodeFromURL(){
+  try{
+    const u = new URL(window.location.href);
+    const code = u.searchParams.get("code");
+    if (code && String(code).trim()){
+      saveToken(code);
+      const inp = el("bizCode");
+      if (inp) inp.value = String(code).trim();
+      // Optional: direkt Business aktivieren, wenn Code in URL
+      setMode("business");
+    }
+  } catch {}
+}
+
+// --- Deep Dive (call) ---
 async function runDeepDive() {
   const deepDiveBtn = el("deepDiveBtn");
   const deepDiveOut = el("deepDiveOut");
@@ -800,12 +883,33 @@ async function runDeepDive() {
     return;
   }
 
+  // Business gated
+  if (DD_MODE === "business" && !BIZ_TOKEN){
+    deepDiveOut.style.display = "block";
+    deepDiveOut.innerHTML = `<div class="ddCards">
+      <div class="ddCard">
+        <div class="ddTitle"><h4>Business</h4><span class="ddPill">gesperrt</span></div>
+        <div class="ddText">Business ist nur mit Code verfügbar (z.B. für Coach-Demo).</div>
+        <div class="ddSmall">Tipp: Code eingeben → “Freischalten” → erneut starten.</div>
+      </div>
+    </div>`;
+    return;
+  }
+
   const weakest = weakestVars(LAST_SCORES, 2);
 
+  // Payload vorbereitet (Worker kann später token/serverseitig validieren)
   const payload = {
     language: "de",
     scores: LAST_SCORES,
-    weakest
+    weakest,
+    mode: DD_MODE,
+    token: (DD_MODE === "business") ? BIZ_TOKEN : null,
+    client: {
+      app: "mdg-indikation",
+      ui: "vanilla",
+      version: "v30"
+    }
   };
 
   try {
@@ -824,7 +928,12 @@ async function runDeepDive() {
       throw new Error(data?.error || `Worker HTTP ${resp.status}`);
     }
 
-    renderDeepDivePremium(data, { weakest });
+    // Mode Switch Rendering
+    if (DD_MODE === "business") {
+      renderDeepDivePremium(data, { weakest });
+    } else {
+      renderDeepDivePrivate(data, { weakest });
+    }
 
   } catch (e) {
     deepDiveOut.style.display = "block";
@@ -883,9 +992,40 @@ function onReset() {
   LAST_SCORES = null;
 }
 
+// --- DOM init ---
 document.addEventListener("DOMContentLoaded", () => {
   buildQuestions();
+
+  // Restore token + optional URL code
+  loadToken();
+  tryAutoCodeFromURL();
+
+  // Default mode
+  setMode("private");
+
+  // Buttons
   el("btnEval")?.addEventListener("click", onEvaluate);
   el("btnReset")?.addEventListener("click", onReset);
   el("deepDiveBtn")?.addEventListener("click", runDeepDive);
+
+  // Mode switch
+  document.querySelectorAll(".ddModeBtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      setMode(btn.dataset.mode || "private");
+    });
+  });
+
+  // Unlock
+  el("bizUnlockBtn")?.addEventListener("click", () => {
+    const inp = el("bizCode");
+    const code = String(inp?.value || "").trim();
+    if (!code){
+      updateBizStatus();
+      return;
+    }
+    saveToken(code);
+    updateBizStatus();
+  });
+
+  updateBizStatus();
 });
