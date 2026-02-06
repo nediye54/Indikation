@@ -122,7 +122,7 @@ body{
   padding:10px 14px;
   border-radius:12px;
   cursor:pointer;
-  transition: transform .08s ease, background .15s ease;
+  transition: transform .08s ease, background .15s ease, opacity .15s ease;
 }
 .btn:hover{background: rgba(255,255,255,.06)}
 .btn:active{transform: translateY(1px)}
@@ -130,6 +130,11 @@ body{
   border-color: rgba(158,240,216,.35);
   background: rgba(158,240,216,.10);
 }
+.btn:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+.btn:disabled:hover{ background: rgba(255,255,255,.04); }
 
 .grid2{
   display:grid;
@@ -368,6 +373,12 @@ body{
   font-size:12px;
   color: rgba(255,255,255,.55);
   margin-top:4px;
+}
+
+/* DeepDive main button */
+.ddBtn{
+  width:100%;
+  margin-top:6px;
 }
 
 /* =========================
