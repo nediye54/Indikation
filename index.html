@@ -2,117 +2,112 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Indikation – nach der Moral des Gleichgewichts</title>
-
-  <!-- Cache busting -->
-  <link rel="stylesheet" href="style.css?v=41" />
-  <script src="script.js?v=41" defer></script>
+  <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
   <main class="wrap">
+
     <header class="hero">
       <h1>Indikation</h1>
       <p class="sub">nach der Moral des Gleichgewichts</p>
-      <p class="path">Quick Scan (24) → Deep Dive → stabilisierende Indikation</p>
     </header>
 
-    <section id="errorBox" class="errorBox hidden" role="alert" aria-live="polite">
-      <strong>Hinweis:</strong> Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).
-    </section>
-
     <section class="card">
-      <div class="cardHead">
-        <h2>Quick Scan</h2>
-        <p class="muted">
-          Beantworte jede Frage mit einer von drei Optionen. Danach erhältst du: Radar, Balken, schwächste Variable, Zeitfenster.
-        </p>
-      </div>
+      <h2>Quick Scan</h2>
+      <p class="muted">
+        Denke an das zu messende soziale System und beantworte jede Frage mit einer von drei Antwortoptionen.
+      </p>
 
-      <div id="questions" class="questions"></div>
-
-      <div class="actions">
+      <div class="btnRow">
         <button id="btnEval" class="btn primary" type="button">Auswerten</button>
         <button id="btnReset" class="btn" type="button">Zurücksetzen</button>
       </div>
+
+      <div id="errorBox" class="errorBox hidden"></div>
+
+      <div class="footnote">v2 · Vanilla · Dark UI · 3 Antwortstufen</div>
+    </section>
+
+    <section class="card">
+      <h2>Fragen</h2>
+      <div id="questions" class="questions"></div>
     </section>
 
     <section id="results" class="card hidden">
-      <div class="cardHead">
-        <h2>Ergebnis</h2>
-        <p class="muted">Radar, Balken, schwächste Variable, Zeitfenster.</p>
+      <h2>Ergebnis</h2>
+
+      <div class="grid2">
+        <div class="panel">
+          <h3>Radar</h3>
+          <div id="plot3d" class="plot"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Scores</h3>
+          <div id="bars" class="bars"></div>
+        </div>
       </div>
 
       <div class="grid2">
         <div class="panel">
-          <h3 class="panelTitle">Radar</h3>
-          <div id="plot3d" class="plot3d" aria-label="Radar-Koordinatensystem"></div>
-          <div class="plotHint">Radar-Profil: niedrig = innen, hoch = außen · Pfeil = schwächste Variable</div>
+          <h3>Schwächste Variable</h3>
+          <div id="weakest"></div>
         </div>
 
         <div class="panel">
-          <h3 class="panelTitle">Bars</h3>
-          <div id="bars" class="bars"></div>
-
-          <div class="divider"></div>
-
-          <h3 class="panelTitle">Schwächste Variable</h3>
-          <div id="weakest" class="weakest"></div>
-
-          <div class="divider"></div>
-
-          <h3 class="panelTitle">Zeitfenster</h3>
-          <div id="timewin" class="timewin"></div>
+          <h3>Zeitfenster</h3>
+          <div id="timewin"></div>
         </div>
       </div>
 
-      <div class="divider"></div>
+      <div class="panel">
+        <h3>Quick-Übersicht (3 schwächste)</h3>
+        <div id="deepDive"></div>
+      </div>
 
-      <div class="deepDive">
-        <div class="deepDiveHead">
-          <h3 class="panelTitle">Deep Dive</h3>
-          <p class="muted">
+      <section class="panel">
+        <div class="ddHead">
+          <h3>Deep Dive</h3>
+          <div class="ddMini muted">
             Privat ist niedrigschwellig & kompakt. Business ist ausführlicher und kann tokenbasiert freigeschaltet werden.
-          </p>
-        </div>
-
-        <!-- MODE SWITCH -->
-        <div class="modeRow">
-          <div class="modeLabel muted">Modus</div>
-          <div class="seg" role="tablist" aria-label="Deep Dive Modus">
-            <button id="modePrivate" class="segBtn active" type="button" role="tab" aria-selected="true">Privat</button>
-            <button id="modeBusiness" class="segBtn" type="button" role="tab" aria-selected="false">Business</button>
           </div>
-          <div class="modeHint muted" id="modeHint">Privat: frei · Business: Token erforderlich</div>
         </div>
 
-        <!-- TOKEN (nur Business) -->
+        <div class="modeRow">
+          <div class="modeLabel">Modus</div>
+          <div class="modeSwitch" role="tablist" aria-label="Deep Dive Modus">
+            <button id="modePrivate" class="modeBtn isActive" type="button" aria-selected="true">Privat</button>
+            <button id="modeBusiness" class="modeBtn" type="button" aria-selected="false">Business</button>
+          </div>
+        </div>
+
         <div id="tokenRow" class="tokenRow hidden">
-          <label class="muted" for="tokenInput">Token</label>
-          <input id="tokenInput" class="tokenInput" type="text" placeholder="z.B. 9f2a1b3c4d5e6f7a" autocomplete="off" />
-          <button id="tokenApply" class="btn" type="button">Anwenden</button>
-          <div class="tokenSmall muted">Token = Ticket für Business Deep Dive.</div>
+          <label class="tokenLabel" for="tokenInput">Business Token</label>
+          <div class="tokenInputWrap">
+            <input id="tokenInput" class="tokenInput" type="text" autocomplete="off"
+                   placeholder="z.B. MDG-XXXX-XXXX" />
+            <button id="tokenClear" class="tokenClear" type="button" title="Token löschen">×</button>
+          </div>
+          <div id="tokenHint" class="tokenHint">Token wird nur für Business benötigt.</div>
         </div>
 
-        <button id="deepDiveBtn" class="btn" type="button">Stabilisierende Indikation erzeugen</button>
+        <button id="deepDiveBtn" class="btnWide" type="button">
+          Stabilisierende Indikation erzeugen
+        </button>
 
-        <!-- Output -->
-        <div id="deepDiveOut" class="box ddOut" style="display:none;"></div>
-
-        <div class="divider"></div>
-
-        <!-- Quick Übersicht (statt “Deep Dive max. 3 Variablen”) -->
-        <div class="deepDiveMini">
-          <h4 class="miniTitle">Quick-Übersicht (3 schwächste)</h4>
-          <div id="deepDive" class="deepDiveBody"></div>
-        </div>
-      </div>
+        <div id="deepDiveStatus" class="deepDiveStatus hidden"></div>
+        <div id="deepDiveOut" class="deepDiveOut" style="display:none;"></div>
+      </section>
     </section>
 
-    <footer class="foot muted">
-      v2 · Vanilla · Dark UI · 3 Antwortstufen
+    <footer class="footer muted">
+      <span>© Indikation</span>
     </footer>
   </main>
+
+  <script src="./script.js"></script>
 </body>
 </html>
