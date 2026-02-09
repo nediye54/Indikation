@@ -17,10 +17,12 @@
 html,body{height:100%}
 body{
   margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-  background: radial-gradient(1200px 900px at 30% 20%, rgba(158,240,216,.08), transparent 55%),
-              radial-gradient(1000px 700px at 80% 30%, rgba(246,204,114,.07), transparent 60%),
-              var(--bg);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+    "Apple Color Emoji","Segoe UI Emoji";
+  background:
+    radial-gradient(1200px 900px at 30% 20%, rgba(158,240,216,.08), transparent 55%),
+    radial-gradient(1000px 700px at 80% 30%, rgba(246,204,114,.07), transparent 60%),
+    var(--bg);
   color:var(--text);
 }
 
@@ -50,9 +52,11 @@ body{
   margin-bottom:12px;
 }
 .cardHead h2{ margin:0; font-size:22px; }
+
 .muted{color:var(--muted)}
 .hidden{display:none !important}
 
+/* Error */
 .errorBox{
   border:1px solid rgba(255,107,107,.35);
   background: rgba(255,107,107,.08);
@@ -61,6 +65,7 @@ body{
   border-radius:14px;
 }
 
+/* Questions */
 .questions{
   display:flex;
   flex-direction:column;
@@ -71,7 +76,7 @@ body{
 .q{
   border:1px solid var(--stroke2);
   border-radius:14px;
-  padding:12px 12px;
+  padding:12px;
   background: rgba(0,0,0,.16);
 }
 
@@ -82,7 +87,9 @@ body{
   align-items:center;
   margin-bottom:8px;
 }
+
 .qIdx{ color: rgba(255,255,255,.62); font-size:13px; }
+
 .qVar{
   font-size:13px;
   color: rgba(255,255,255,.70);
@@ -108,6 +115,7 @@ body{
 }
 .opt input{ accent-color: var(--accent) }
 
+/* Buttons */
 .actions{
   display:flex;
   gap:10px;
@@ -136,6 +144,7 @@ body{
 }
 .btn:disabled:hover{ background: rgba(255,255,255,.04); }
 
+/* Layout */
 .grid2{
   display:grid;
   grid-template-columns: 1.25fr .85fr;
@@ -169,6 +178,7 @@ body{
   margin:12px 0;
 }
 
+/* Bars */
 .bars{ display:flex; flex-direction:column; gap:10px; }
 .barRow{
   display:grid;
@@ -211,6 +221,7 @@ body{
   flex-wrap:wrap;
 }
 
+/* Radar canvas host */
 .plot3d{
   height: 360px;
   border-radius:14px;
@@ -235,6 +246,7 @@ body{
   border-radius:999px;
 }
 
+/* Deep Dive */
 .deepDive{
   border:1px solid var(--stroke2);
   border-radius:16px;
@@ -248,14 +260,6 @@ body{
   margin-bottom:10px;
 }
 
-.row{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  margin:8px 0 10px;
-  flex-wrap:wrap;
-}
-
 .box{
   margin-top:10px;
   border:1px solid var(--stroke2);
@@ -264,35 +268,7 @@ body{
   padding:12px;
 }
 
-.deepDiveMini .miniTitle{
-  margin:0 0 8px;
-  font-size:12px;
-  text-transform:uppercase;
-  letter-spacing:.5px;
-  color: rgba(255,255,255,.70);
-}
-.deepDiveBody{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.ddItem{
-  padding:10px 10px;
-  border-radius:14px;
-  border:1px solid var(--stroke2);
-  background: rgba(255,255,255,.02);
-}
-
-.foot{
-  margin-top:14px;
-  font-size:12px;
-  opacity:.7;
-}
-
-/* =========================
-   Mode Switch + Token UI
-========================= */
-
+/* Mode switch */
 .modeRow{
   display:flex;
   align-items:center;
@@ -341,6 +317,7 @@ body{
   color: rgba(255,255,255,.55);
 }
 
+/* Token row (Business) */
 .tokenRow{
   display:flex;
   align-items:center;
@@ -352,7 +329,6 @@ body{
   background: rgba(0,0,0,.12);
   border-radius:14px;
 }
-
 .tokenInput{
   flex: 1 1 280px;
   min-width: 240px;
@@ -367,7 +343,6 @@ body{
   border-color: rgba(246,204,114,.35);
   box-shadow: 0 0 0 3px rgba(246,204,114,.08);
 }
-
 .tokenSmall{
   width:100%;
   font-size:12px;
@@ -375,16 +350,31 @@ body{
   margin-top:4px;
 }
 
+/* Buy link styled like button (used in HTML) */
+.buyBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  text-decoration:none;
+  border:1px solid rgba(246,204,114,.35);
+  background: rgba(246,204,114,.10);
+  color: rgba(255,255,255,.92);
+  padding:10px 14px;
+  border-radius:12px;
+  cursor:pointer;
+  transition: transform .08s ease, background .15s ease, opacity .15s ease;
+}
+.buyBtn:hover{ background: rgba(246,204,114,.14); }
+.buyBtn:active{ transform: translateY(1px); }
+
 /* DeepDive main button */
 .ddBtn{
   width:100%;
   margin-top:6px;
 }
 
-/* =========================
-   Premium Deep Dive Cards
-========================= */
-
+/* Premium Cards */
 .ddOut{ white-space: normal; }
 
 .ddCards{
@@ -491,4 +481,31 @@ body{
   margin-top:10px;
   font-size:12px;
   color: rgba(255,255,255,.60);
+}
+
+/* Mini list */
+.deepDiveMini .miniTitle{
+  margin:0 0 8px;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  color: rgba(255,255,255,.70);
+}
+.deepDiveBody{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.ddItem{
+  padding:10px;
+  border-radius:14px;
+  border:1px solid var(--stroke2);
+  background: rgba(255,255,255,.02);
+}
+
+/* Footer */
+.foot{
+  margin-top:14px;
+  font-size:12px;
+  opacity:.7;
 }
