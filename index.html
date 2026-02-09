@@ -6,8 +6,8 @@
   <title>Indikation – nach der Moral des Gleichgewichts</title>
 
   <!-- Cache busting -->
-  <link rel="stylesheet" href="style.css?v=43" />
-  <script src="script.js?v=43" defer></script>
+  <link rel="stylesheet" href="style.css?v=44" />
+  <script src="script.js?v=44" defer></script>
 </head>
 
 <body>
@@ -77,22 +77,6 @@
           </p>
         </div>
 
-</div>
-<!-- TOKEN (Business) -->
-<div id="tokenRowBusiness" class="tokenRow hidden">
-  <label class="muted" for="tokenInputBusiness">Business-Token</label>
-  <input id="tokenInputBusiness" type="text" placeholder="MDG-XXXX-XXXX-XXXX" autocomplete="off" />
-
-  <a
-    href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/5077cf20-74fd-4d8e-b875-451c057ad61c"
-    target="_blank"
-    rel="noopener noreferrer"
-    class="buy-btn"
-  >
-    Business Token kaufen (99,99€)
-  </a>
-</div>
-        
         <!-- MODE SWITCH -->
         <div class="modeRow">
           <div class="modeLabel muted">Modus</div>
@@ -105,10 +89,20 @@
 
         <!-- TOKEN (nur Business) -->
         <div id="tokenRow" class="tokenRow hidden">
-          <label class="muted" for="tokenInput">Token</label>
-          <input id="tokenInput" class="tokenInput" type="text" placeholder="z.B. 9f2a1b3c4d5e6f7a" autocomplete="off" />
+          <label class="muted" for="tokenInput">Business-Token</label>
+          <input id="tokenInput" class="tokenInput" type="text" placeholder="MDG-XXXX-XXXX-XXXX" autocomplete="off" />
           <button id="tokenApply" class="btn" type="button">Anwenden</button>
-          <div class="tokenSmall muted">Token = Ticket für Business Deep Dive.</div>
+          <div class="tokenSmall muted">1 Token = 1 Business Deep Dive.</div>
+
+          <a
+            href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/5077cf20-74fd-4d8e-b875-451c057ad61c?media=0&logo=0&enabled=1290055"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn primary"
+            style="width:100%; display:flex; justify-content:center; margin-top:8px;"
+          >
+            Business Token kaufen (99,99€)
+          </a>
         </div>
 
         <button id="deepDiveBtn" class="btn ddBtn" type="button">Stabilisierende Indikation erzeugen</button>
@@ -118,7 +112,7 @@
 
         <div class="divider"></div>
 
-        <!-- Quick Übersicht (statt “Deep Dive max. 3 Variablen”) -->
+        <!-- Quick Übersicht -->
         <div class="deepDiveMini">
           <h4 class="miniTitle">Quick-Übersicht (3 schwächste)</h4>
           <div id="deepDive" class="deepDiveBody"></div>
