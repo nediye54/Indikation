@@ -1,18 +1,13 @@
-// v60 — IDG/ADG Platform
-// - Default: IDG
-// - After Quick Scan: Profile + choose Layer (IDG/ADG) + Mode (Private/Business)
-// - Pro output ALWAYS via Worker (token required for the selected product)
-// - Token types are HARD separated (prefix validation client-side + enforced server-side later)
-// - PDF export via print-to-PDF (includes Radar snapshot + bars + output cards)
+// v62 — IDG/ADG Platform (+ Step2 Charts + PDF Report)
 
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
-// ======= CHECKOUT LINKS (replace with your real Lemon Squeezy links) =======
+// ======= CHECKOUT LINKS (Lemon Squeezy) =======
 const CHECKOUT = {
-  idg_private:  "https://mdg-indikation.lemonsqueezy.com/checkout/buy/c501c852-fa81-4410-99c9-aa3080667d5e",
+  adg_business: "https://mdg-indikation.lemonsqueezy.com/checkout/buy/fc7aaf51-ea60-4747-a315-fb12c5a48de2",
   idg_business: "https://mdg-indikation.lemonsqueezy.com/checkout/buy/dc64687b-2237-44de-8d71-38eb547b0f41",
   adg_private:  "https://mdg-indikation.lemonsqueezy.com/checkout/buy/ecedd96b-a2a7-4370-badc-d2ba08976a05",
-  adg_business: "https://mdg-indikation.lemonsqueezy.com/checkout/buy/fc7aaf51-ea60-4747-a315-fb12c5a48de2",
+  idg_private:  "https://mdg-indikation.lemonsqueezy.com/checkout/buy/c501c852-fa81-4410-99c9-aa3080667d5e",
 };
 
 // ======= TOKEN PREFIXES (hard separation) =======
@@ -81,7 +76,6 @@ const el = (id) => document.getElementById(id);
 const LS_MODE = "mdg_mode";      // private|business
 const LS_LAYER = "mdg_layer";    // idg|adg
 
-// store tokens per product key:
 const LS_TOKEN = {
   idg_private:  "tok_idg_private",
   idg_business: "tok_idg_business",
@@ -95,8 +89,12 @@ let LAST_SCORES = null;
 let LAST_PATTERN = null;
 let LAST_WEAK = null;
 
-// for PDF export
 let LAST_RADAR_DATAURL = null;
+
+// Step2:
+let LAST_COORD_DATAURL = null;   // Ist->Soll plot
+let LAST_TREND_DATAURL = null;   // Trend plot
+let LAST_META = null;            // worker meta (indices/projections/trend/pass)
 
 // ======= Error UI =======
 function showErrorBox(msg) {
@@ -277,7 +275,6 @@ function renderMini(scores, maxN = 3) {
 
 // ======= Radar (Canvas) =======
 let _radarResizeObserver = null;
-let _radarCanvasRef = null;
 
 function roundRect(ctx, x, y, w, h, r){
   const rr = Math.min(r, w/2, h/2);
@@ -300,7 +297,6 @@ function renderRadar(scores, weak) {
   canvas.style.height = "100%";
   canvas.style.display = "block";
   host.appendChild(canvas);
-  _radarCanvasRef = canvas;
 
   const draw = () => {
     const rect = host.getBoundingClientRect();
@@ -374,24 +370,17 @@ function renderRadar(scores, weak) {
     ctx.beginPath();
     pts.forEach((p, i) => (i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y)));
     ctx.closePath();
-    ctx.fillStyle = polyFill;
-    ctx.fill();
-
+    ctx.fillStyle = polyFill; ctx.fill();
     ctx.beginPath();
     pts.forEach((p, i) => (i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y)));
     ctx.closePath();
-    ctx.strokeStyle = polyStroke;
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    ctx.strokeStyle = polyStroke; ctx.lineWidth = 2; ctx.stroke();
 
     pts.forEach((p)=>{
       ctx.beginPath();
       ctx.arc(p.x, p.y, 4.6, 0, Math.PI*2);
-      ctx.fillStyle = dotFill;
-      ctx.fill();
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = dotStroke;
-      ctx.stroke();
+      ctx.fillStyle = dotFill; ctx.fill();
+      ctx.lineWidth = 1; ctx.strokeStyle = dotStroke; ctx.stroke();
     });
 
     ctx.font = "600 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
@@ -476,7 +465,6 @@ function renderRadar(scores, weak) {
       ctx.fillText(label, bx + m, by + bh/2);
     }
 
-    // keep a snapshot for PDF export
     try {
       LAST_RADAR_DATAURL = canvas.toDataURL("image/png");
     } catch {
@@ -610,7 +598,7 @@ function setMode(mode){
   }
   if (hint){
     hint.textContent = (CURRENT_MODE === "business")
-      ? "Business: Organisation/Team · Executive Output"
+      ? "Business: Organisation/Team · Boardfähiger Output"
       : "Privat: persönlich/Beziehung · klare Orientierung";
   }
 
@@ -632,7 +620,6 @@ function hydrateTokenInput(){
 function updateTokenUI(){
   const key = productKey();
 
-  // label text
   const tokenLabel = el("tokenLabel");
   const tokenSmall = el("tokenSmall");
   if (tokenLabel){
@@ -648,7 +635,6 @@ function updateTokenUI(){
     tokenSmall.textContent = `Erforderlich: Token mit Prefix ${requiredPrefix()}`;
   }
 
-  // buy links
   const buyIDGP = el("buyIDGPrivate");
   const buyIDGB = el("buyIDGBusiness");
   const buyADGP = el("buyADGPrivate");
@@ -672,7 +658,6 @@ function updateRunButtonState(){
 
   const tok = getToken();
   const ok = tokenLooksValidForSelection(tok);
-
   btn.disabled = !LAST_SCORES || !ok;
 }
 
@@ -684,14 +669,21 @@ function clearOutput(){
   }
   const pdfBtn = el("pdfBtn");
   if (pdfBtn) pdfBtn.disabled = true;
+
+  // reset step2
+  LAST_META = null;
+  LAST_COORD_DATAURL = null;
+  LAST_TREND_DATAURL = null;
+
+  // remove chart blocks (if present)
+  el("coordPlotWrap")?.remove();
+  el("trendPlotWrap")?.remove();
 }
 
 function applyToken(){
   const input = el("tokenInput");
   const raw = (input?.value || "").trim();
   if (!raw) { updateRunButtonState(); return; }
-
-  // store token only in its bucket (layer+mode)
   setTokenToStorage(raw);
   updateRunButtonState();
 }
@@ -701,10 +693,258 @@ function mapWorkerError(err){
   const e = String(err || "");
   if (e.includes("TOKEN_REQUIRED")) return "Token erforderlich.";
   if (e.includes("TOKEN_INVALID")) return "Token ungültig.";
-  if (e.includes("TOKEN_EXHAUSTED")) return "Token ist aufgebraucht.";
-  if (e.includes("TOKEN_WRONG_TYPE")) return "Falscher Token-Typ für diese Ausgabe.";
+  if (e.includes("TOKEN_EXHAUSTED")) return "Token ist aufgebraucht (1× nutzbar).";
+  if (e.includes("TOKEN_WRONG_TYPE")) return "Falscher Token-Typ für diese Ebene/Kontext.";
   if (e.includes("RATE_LIMIT")) return "Limit erreicht. Bitte später erneut versuchen.";
   return e;
+}
+
+// ======= Step2 Charts (Koordinatensysteme) =======
+function ensureChartWrap(id, title){
+  const results = el("results");
+  if (!results) return null;
+
+  // we attach under the Radar panel for visibility (but doesn't require HTML change)
+  const plotHost = el("plot3d");
+  if (!plotHost) return null;
+
+  const wrap = document.createElement("div");
+  wrap.id = id;
+  wrap.className = "panel";
+  wrap.style.marginTop = "12px";
+
+  const h = document.createElement("h3");
+  h.className = "panelTitle";
+  h.textContent = title;
+
+  const box = document.createElement("div");
+  box.className = "plot3d";
+  box.style.height = "260px";
+  box.style.marginTop = "8px";
+  box.setAttribute("aria-label", title);
+
+  wrap.appendChild(h);
+  wrap.appendChild(box);
+
+  // insert after radar panel container
+  const radarPanel = plotHost.closest(".panel");
+  if (radarPanel && radarPanel.parentElement) {
+    radarPanel.parentElement.insertBefore(wrap, radarPanel.nextSibling);
+  } else {
+    results.appendChild(wrap);
+  }
+
+  return box;
+}
+
+function drawAxes(ctx, W, H, pad, xLabel, yLabel){
+  ctx.save();
+  ctx.clearRect(0,0,W,H);
+
+  // background
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0, "rgba(255,255,255,0.06)");
+  g.addColorStop(1, "rgba(0,0,0,0.00)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+
+  // grid
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.lineWidth = 1;
+  for (let i=0;i<=5;i++){
+    const x = pad + (W-2*pad)*(i/5);
+    const y = pad + (H-2*pad)*(i/5);
+    ctx.beginPath(); ctx.moveTo(x, pad); ctx.lineTo(x, H-pad); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W-pad, y); ctx.stroke();
+  }
+
+  // frame
+  ctx.strokeStyle = "rgba(255,255,255,0.18)";
+  ctx.strokeRect(pad, pad, W-2*pad, H-2*pad);
+
+  // labels
+  ctx.fillStyle = "rgba(255,255,255,0.82)";
+  ctx.font = "600 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+  ctx.textAlign = "left";
+  ctx.fillText(xLabel, pad, H - pad + 18);
+
+  ctx.save();
+  ctx.translate(10, H/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.textAlign = "center";
+  ctx.fillText(yLabel, 0, 0);
+  ctx.restore();
+
+  ctx.restore();
+}
+
+function p2xy(W,H,pad, p){
+  const x = pad + (W-2*pad)*p.x;
+  const y = (H-pad) - (H-2*pad)*p.y;
+  return {x,y};
+}
+
+function renderCoordPlot(meta){
+  const projections = meta?.projections;
+  if (!projections?.ist || !projections?.soll) return;
+
+  const box = ensureChartWrap("coordPlotWrap", "Koordinatensystem: Ist → Soll (Maßnahmen-Vektoren)");
+  if (!box) return;
+
+  box.innerHTML = "";
+  const canvas = document.createElement("canvas");
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  canvas.style.display = "block";
+  box.appendChild(canvas);
+
+  const rect = box.getBoundingClientRect();
+  const cssW = Math.max(320, Math.floor(rect.width));
+  const cssH = Math.max(260, Math.floor(rect.height));
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.floor(cssW * dpr);
+  canvas.height = Math.floor(cssH * dpr);
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  const pad = 34;
+  drawAxes(ctx, cssW, cssH, pad, "Stability (0→1)", "Performance (0→1)");
+
+  const ist = projections.ist;
+  const soll = projections.soll;
+
+  const A = p2xy(cssW, cssH, pad, ist);
+  const B = p2xy(cssW, cssH, pad, soll);
+
+  // line Ist->Soll
+  ctx.strokeStyle = "rgba(246,204,114,0.95)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(A.x, A.y);
+  ctx.lineTo(B.x, B.y);
+  ctx.stroke();
+
+  // points
+  const dot = (P, label) => {
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.strokeStyle = "rgba(0,0,0,0.35)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(P.x, P.y, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = "rgba(255,255,255,0.86)";
+    ctx.font = "700 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.textAlign = "left";
+    ctx.fillText(label, P.x + 10, P.y - 10);
+  };
+  dot(A, `IST (${ist.x.toFixed(2)}, ${ist.y.toFixed(2)})`);
+  dot(B, `SOLL (${soll.x.toFixed(2)}, ${soll.y.toFixed(2)})`);
+
+  // vectors from IST
+  const vecs = Array.isArray(projections.vectors) ? projections.vectors : [];
+  const colors = {
+    LOW: "rgba(158,240,216,0.85)",
+    MED: "rgba(158,240,216,0.55)",
+    HIGH:"rgba(158,240,216,0.35)",
+  };
+
+  vecs.forEach(v => {
+    const end = { x: Math.max(0, Math.min(1, ist.x + Number(v.dx||0))), y: Math.max(0, Math.min(1, ist.y + Number(v.dy||0))) };
+    const E = p2xy(cssW, cssH, pad, end);
+
+    ctx.strokeStyle = colors[v.name] || "rgba(158,240,216,0.55)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(A.x, A.y);
+    ctx.lineTo(E.x, E.y);
+    ctx.stroke();
+
+    // arrow head
+    const ang = Math.atan2(E.y - A.y, E.x - A.x);
+    const head = 9;
+    ctx.fillStyle = colors[v.name] || "rgba(158,240,216,0.55)";
+    ctx.beginPath();
+    ctx.moveTo(E.x, E.y);
+    ctx.lineTo(E.x - Math.cos(ang - 0.6)*head, E.y - Math.sin(ang - 0.6)*head);
+    ctx.lineTo(E.x - Math.cos(ang + 0.6)*head, E.y - Math.sin(ang + 0.6)*head);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(255,255,255,0.78)";
+    ctx.font = "600 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.fillText(`${v.name}`, E.x + 8, E.y + 4);
+  });
+
+  try { LAST_COORD_DATAURL = canvas.toDataURL("image/png"); }
+  catch { LAST_COORD_DATAURL = null; }
+}
+
+function renderTrendPlot(meta){
+  const trend = meta?.trend;
+  if (!trend?.base?.d0 || !trend?.base?.d30 || !trend?.base?.d90) return;
+
+  const box = ensureChartWrap("trendPlotWrap", "Trend: Base / Best / Failure (d0 → d30 → d90)");
+  if (!box) return;
+
+  box.innerHTML = "";
+  const canvas = document.createElement("canvas");
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  canvas.style.display = "block";
+  box.appendChild(canvas);
+
+  const rect = box.getBoundingClientRect();
+  const cssW = Math.max(320, Math.floor(rect.width));
+  const cssH = Math.max(260, Math.floor(rect.height));
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.floor(cssW * dpr);
+  canvas.height = Math.floor(cssH * dpr);
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  const pad = 34;
+  drawAxes(ctx, cssW, cssH, pad, "Stability (0→1)", "Performance (0→1)");
+
+  const series = [
+    { name:"Base", data: trend.base, stroke:"rgba(246,204,114,0.95)" },
+    { name:"Best", data: trend.best, stroke:"rgba(158,240,216,0.70)" },
+    { name:"Failure", data: trend.failure, stroke:"rgba(255,255,255,0.35)" },
+  ];
+
+  series.forEach(s => {
+    const p0 = p2xy(cssW, cssH, pad, s.data.d0);
+    const p30 = p2xy(cssW, cssH, pad, s.data.d30);
+    const p90 = p2xy(cssW, cssH, pad, s.data.d90);
+
+    ctx.strokeStyle = s.stroke;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p30.x, p30.y);
+    ctx.lineTo(p90.x, p90.y);
+    ctx.stroke();
+
+    // markers
+    const mark = (P, lbl) => {
+      ctx.fillStyle = "rgba(255,255,255,0.88)";
+      ctx.beginPath(); ctx.arc(P.x, P.y, 4.8, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.70)";
+      ctx.font = "600 11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+      ctx.fillText(lbl, P.x + 8, P.y + 4);
+    };
+    mark(p0, "d0");
+    mark(p30, "d30");
+    mark(p90, "d90");
+
+    // legend
+    ctx.fillStyle = s.stroke;
+    ctx.font = "700 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.fillText(s.name, pad + 8, pad - 10 + (series.indexOf(s)*14));
+  });
+
+  try { LAST_TREND_DATAURL = canvas.toDataURL("image/png"); }
+  catch { LAST_TREND_DATAURL = null; }
 }
 
 // ======= Deep output request =======
@@ -732,17 +972,13 @@ async function runProOutput(){
   const pattern = LAST_PATTERN || calcPattern(LAST_SCORES);
 
   const payload = {
-    layer: CURRENT_LAYER,      // idg|adg
-    mode: CURRENT_MODE,        // private|business
+    layer: CURRENT_LAYER,   // idg|adg
+    mode: CURRENT_MODE,     // private|business
     token: tok,
     language: "de",
     scores: LAST_SCORES,
     weakest,
     pattern,
-    meta: {
-      product: key,            // idg_private etc. (server must treat this as hint, not truth)
-      tone: (CURRENT_MODE === "business") ? "executive" : "clear",
-    }
   };
 
   try {
@@ -757,20 +993,25 @@ async function runProOutput(){
 
     const data = await resp.json().catch(()=>({}));
 
-    if (!resp.ok || !data.ok) {
-      throw new Error(data?.error || `Worker HTTP ${resp.status}`);
-    }
+    if (!resp.ok || !data.ok) throw new Error(data?.error || `Worker HTTP ${resp.status}`);
 
-    // display
+    // Store meta for PDF & charts
+    LAST_META = data.meta || null;
+
+    // display cards
     out.style.display = "block";
     if (Array.isArray(data.cards) && data.cards.length){
       out.innerHTML = buildCardsHTML(data.cards);
     } else {
-      const raw = String(data.text || data.output || data.result || "").trim();
+      const raw = String(data.text || "").trim();
       out.innerHTML = buildCardsHTML([{ title:"Ausgabe", pill:key.toUpperCase(), body: raw || "(leer)" }]);
     }
 
-    // token is single-use; clear it after successful run to avoid reuse frustration
+    // Step2 charts (Ist->Soll + Trend)
+    if (LAST_META?.projections) renderCoordPlot(LAST_META);
+    if (LAST_META?.trend) renderTrendPlot(LAST_META);
+
+    // token is single-use; clear it after successful run
     localStorage.removeItem(LS_TOKEN[key]);
     hydrateTokenInput();
 
@@ -827,9 +1068,22 @@ function exportPDF(){
   const title = `Indikation & Architektur des Gleichgewichts — ${key.replace("_"," ").toUpperCase()}`;
   const weakTxt = `${LAST_WEAK.key} (${LAST_WEAK.val.toFixed(2)})`;
   const timeTxt = timeWindowFor(LAST_WEAK.val);
+
   const radarImg = LAST_RADAR_DATAURL
     ? `<img src="${LAST_RADAR_DATAURL}" alt="Radar" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`
     : `<div style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;color:#6b7280">Radar konnte nicht eingebettet werden.</div>`;
+
+  const coordImg = LAST_COORD_DATAURL
+    ? `<img src="${LAST_COORD_DATAURL}" alt="Ist-Soll" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`
+    : `<div style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;color:#6b7280">Ist→Soll Plot nicht verfügbar.</div>`;
+
+  const trendImg = LAST_TREND_DATAURL
+    ? `<img src="${LAST_TREND_DATAURL}" alt="Trend" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`
+    : `<div style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;color:#6b7280">Trend Plot nicht verfügbar.</div>`;
+
+  const metaLine = LAST_META
+    ? `Pass: ${escapeHTML(String(LAST_META.pass ?? ""))} · Model: ${escapeHTML(String(LAST_META.model ?? ""))}`
+    : `Pass: —`;
 
   const html = `
 <!doctype html>
@@ -843,13 +1097,13 @@ function exportPDF(){
   h1{ margin:0 0 6px; font-size:22px; }
   .muted{ color:#4b5563; font-size:12px; }
   .grid{ display:grid; grid-template-columns: 1.15fr .85fr; gap:18px; align-items:start; margin-top:14px; }
+  .grid1{ display:grid; grid-template-columns: 1fr; gap:18px; margin-top:14px; }
   .card{ border:1px solid #e5e7eb; border-radius:14px; padding:14px; }
   .pill{ display:inline-block; padding:6px 10px; border:1px solid #e5e7eb; border-radius:999px; background:#f8fafc; font-size:12px; }
   .secTitle{ font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#374151; margin:0 0 8px; }
   .divider{ height:1px; background:#e5e7eb; margin:14px 0; }
   table td{ padding:6px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
   .out{ margin-top:14px; }
-  /* Try to keep cards on pages */
   .ddCard{ break-inside: avoid; page-break-inside: avoid; border:1px solid #e5e7eb; border-radius:14px; padding:12px; margin:12px 0; }
   .ddTitle{ display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:8px; }
   .ddTitle h4{ margin:0; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#111827; }
@@ -860,14 +1114,11 @@ function exportPDF(){
   .ddTimeline{ display:grid; grid-template-columns:110px 1fr; gap:10px; margin-top:10px; }
   .ddTime{ font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#374151; border:1px solid #e5e7eb; background:#f8fafc; border-radius:999px; padding:7px 10px; height:fit-content; width:fit-content; }
   .ddStep{ border:1px solid #eef2f7; border-radius:12px; padding:10px; font-size:13px; line-height:1.45; }
-  @media print{
-    body{ margin:0; }
-    .card{ border-color:#e5e7eb; }
-  }
+  @media print{ body{ margin:0; } }
 </style>
 </head>
 <body>
-  <div class="muted">Export · ${new Date().toLocaleString("de-DE")} · ${escapeHTML(key.toUpperCase())}</div>
+  <div class="muted">Export · ${new Date().toLocaleString("de-DE")} · ${escapeHTML(key.toUpperCase())} · ${metaLine}</div>
   <h1>${escapeHTML(title)}</h1>
   <div class="muted">Schwächste Variable: <span class="pill">${escapeHTML(weakTxt)}</span> · Zeitfenster: <span class="pill">${escapeHTML(timeTxt)}</span></div>
 
@@ -879,6 +1130,17 @@ function exportPDF(){
     <div class="card">
       <div class="secTitle">Scores</div>
       ${barsAsTableHTML(LAST_SCORES)}
+    </div>
+  </div>
+
+  <div class="grid1">
+    <div class="card">
+      <div class="secTitle">Ist → Soll (inkl. Maßnahmen-Vektoren)</div>
+      ${coordImg}
+    </div>
+    <div class="card">
+      <div class="secTitle">Trend (Base / Best / Failure)</div>
+      ${trendImg}
     </div>
   </div>
 
@@ -904,7 +1166,6 @@ function exportPDF(){
   w.document.write(html);
   w.document.close();
 
-  // give browser a moment to render, then open print dialog
   w.focus();
   setTimeout(() => {
     try { w.print(); } catch {}
@@ -968,7 +1229,6 @@ function onReset() {
 document.addEventListener("DOMContentLoaded", () => {
   buildQuestions();
 
-  // defaults
   const savedLayer = localStorage.getItem(LS_LAYER);
   const savedMode = localStorage.getItem(LS_MODE);
 
@@ -979,7 +1239,6 @@ document.addEventListener("DOMContentLoaded", () => {
   hydrateTokenInput();
   updateRunButtonState();
 
-  // buttons
   el("btnEval")?.addEventListener("click", onEvaluate);
   el("btnReset")?.addEventListener("click", onReset);
 
