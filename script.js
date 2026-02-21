@@ -9,10 +9,10 @@ const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
 // ======= CHECKOUT LINKS (replace with your real Lemon Squeezy links) =======
 const CHECKOUT = {
-  idg_private:  "#", // 19,99€
-  idg_business: "#", // 299,99€
-  adg_private:  "#", // 49,99€
-  adg_business: "#", // 1.199,99€
+  idg_private:  "https://mdg-indikation.lemonsqueezy.com/checkout/buy/c501c852-fa81-4410-99c9-aa3080667d5e",
+  idg_business: "https://mdg-indikation.lemonsqueezy.com/checkout/buy/dc64687b-2237-44de-8d71-38eb547b0f41",
+  adg_private:  "https://mdg-indikation.lemonsqueezy.com/checkout/buy/ecedd96b-a2a7-4370-badc-d2ba08976a05",
+  adg_business: "https://mdg-indikation.lemonsqueezy.com/checkout/buy/fc7aaf51-ea60-4747-a315-fb12c5a48de2",
 };
 
 // ======= TOKEN PREFIXES (hard separation) =======
