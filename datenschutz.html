@@ -1,11 +1,12 @@
+<!-- datenschutz.html -->
 <!doctype html>
 <html lang="de">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Datenschutz – Indikation</title>
+  <title>Datenschutz – Indikation & Architektur</title>
 
-  <link rel="stylesheet" href="style.css?v=52" />
+  <link rel="stylesheet" href="style.css?v=60" />
 </head>
 
 <body>
@@ -13,7 +14,7 @@
 
     <header class="hero">
       <h1>Datenschutz</h1>
-      <p class="sub">Indikation – nach der Moral des Gleichgewichts</p>
+      <p class="sub">Indikation & Architektur des Gleichgewichts</p>
       <p class="path">Transparenz · Datenverarbeitung · Rechte</p>
     </header>
 
@@ -27,9 +28,9 @@
       <div class="box">
         <p>
           Diese Website verarbeitet so wenig personenbezogene Daten wie möglich.
-          Wenn du den Quick Scan nutzt, werden deine Antworten im Browser ausgewertet.
-          Für den Business Deep Dive werden Daten nur verarbeitet, soweit das für die
-          Bereitstellung des Dienstes nötig ist.
+          Der Quick Scan wird im Browser ausgewertet.
+          Pro-Ausgaben (IDG/ADG) werden nur erzeugt, wenn du aktiv eine Pro-Ausgabe startest
+          (Token-basiert) – dann werden die dafür notwendigen Werte an den API-Dienst übermittelt.
         </p>
 
         <div class="divider"></div>
@@ -75,40 +76,40 @@
         <p>
           Der Quick Scan wird im Browser ausgewertet. Die von dir ausgewählten Antworten werden
           zur Berechnung von Radar/Balken/Ergebnis genutzt. Eine automatische Übermittlung dieser
-          Antworten an mich erfolgt dabei nicht, sofern du keinen Deep Dive startest.
+          Antworten an mich erfolgt dabei nicht.
         </p>
 
         <div class="divider"></div>
 
         <p>
           <strong>Lokale Speicherung (Browser)</strong><br>
-          Je nach Konfiguration kann der Browser lokale Daten speichern (z. B. Modus-Auswahl,
+          Je nach Konfiguration kann der Browser lokale Daten speichern (z. B. Modus-/Ebene-Auswahl,
           Token-Eingabe). Du kannst diese Daten jederzeit in deinem Browser löschen.
         </p>
       </div>
     </section>
 
-    <!-- Deep Dive -->
+    <!-- Pro-Ausgaben -->
     <section class="card">
       <div class="cardHead">
-        <h2>3) Deep Dive (Verarbeitung zur Leistungserbringung)</h2>
-        <p class="muted">Was passiert, wenn du „Stabilisierende Indikation erzeugen“ nutzt.</p>
+        <h2>3) Pro-Ausgaben (IDG/ADG) – Verarbeitung zur Leistungserbringung</h2>
+        <p class="muted">Was passiert, wenn du eine Pro-Ausgabe erzeugst.</p>
       </div>
 
       <div class="box">
         <p>
-          Wenn du den Deep Dive startest, werden die für die Berechnung notwendigen Werte
-          (z. B. Scores/Schwerpunkte) an den Indikation-API-Dienst übermittelt und dort verarbeitet,
-          um die stabilisierende Indikation zu erzeugen (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO –
+          Wenn du eine Pro-Ausgabe startest, werden die für die Generierung notwendigen Werte
+          (z. B. Scores/Schwerpunkte/Pattern) an den API-Dienst übermittelt und dort verarbeitet,
+          um die Ausgabe zu erzeugen (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO –
           Vertrag/Leistungserbringung).
         </p>
 
         <div class="divider"></div>
 
         <p>
-          <strong>Business Deep Dive (Token)</strong><br>
-          Beim Business Deep Dive wird zusätzlich ein Token verarbeitet, um die Nutzung zu autorisieren.
-          Der Token wird serverseitig als „verbraucht“ markiert.
+          <strong>Token-Verarbeitung</strong><br>
+          Für Pro-Ausgaben wird ein Token verarbeitet, um die Nutzung zu autorisieren.
+          Der Token wird serverseitig als „verbraucht“ markiert (Einmalnutzung).
         </p>
       </div>
     </section>
@@ -128,9 +129,10 @@
         </p>
 
         <p>
-          Nach erfolgreichem Kauf erhältst du eine E-Mail mit deinen Token-Codes. Die Zustellung
-          erfolgt über einen E-Mail-Dienst (z. B. Resend). Hierbei wird deine E-Mail-Adresse zur
-          Zustellung verarbeitet (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO).
+          Nach erfolgreichem Kauf erhältst du eine E-Mail mit deinen Token-Codes.
+          Die Zustellung kann über einen E-Mail-Dienst erfolgen (z. B. Resend).
+          Hierbei wird deine E-Mail-Adresse zur Zustellung verarbeitet
+          (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO).
         </p>
 
         <div class="divider"></div>
