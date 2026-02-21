@@ -1,9 +1,29 @@
-// v42 — Private Deep Dive "holy" fallback + Varianten A/B/C + Pattern Payload
-// Business: token-gated, Button disabled until token present.
-// Robust handling: ignores "..." / ultra-short worker outputs.
+// v60 — IDG/ADG Platform
+// - Default: IDG
+// - After Quick Scan: Profile + choose Layer (IDG/ADG) + Mode (Private/Business)
+// - Pro output ALWAYS via Worker (token required for the selected product)
+// - Token types are HARD separated (prefix validation client-side + enforced server-side later)
+// - PDF export via print-to-PDF (includes Radar snapshot + bars + output cards)
 
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
+// ======= CHECKOUT LINKS (replace with your real Lemon Squeezy links) =======
+const CHECKOUT = {
+  idg_private:  "#", // 19,99€
+  idg_business: "#", // 299,99€
+  adg_private:  "#", // 49,99€
+  adg_business: "#", // 1.199,99€
+};
+
+// ======= TOKEN PREFIXES (hard separation) =======
+const TOKEN_PREFIX = {
+  idg_private:  "IDGP-",
+  idg_business: "IDGB-",
+  adg_private:  "ADGP-",
+  adg_business: "ADGB-",
+};
+
+// ======= Scan model =======
 const VARS = [
   "Freiheit",
   "Gerechtigkeit",
@@ -57,7 +77,28 @@ const SCALE = [
 
 const el = (id) => document.getElementById(id);
 
-// -------- Error UI --------
+// ======= State =======
+const LS_MODE = "mdg_mode";      // private|business
+const LS_LAYER = "mdg_layer";    // idg|adg
+
+// store tokens per product key:
+const LS_TOKEN = {
+  idg_private:  "tok_idg_private",
+  idg_business: "tok_idg_business",
+  adg_private:  "tok_adg_private",
+  adg_business: "tok_adg_business",
+};
+
+let CURRENT_MODE = "private";
+let CURRENT_LAYER = "idg";
+let LAST_SCORES = null;
+let LAST_PATTERN = null;
+let LAST_WEAK = null;
+
+// for PDF export
+let LAST_RADAR_DATAURL = null;
+
+// ======= Error UI =======
 function showErrorBox(msg) {
   const box = el("errorBox");
   if (!box) return;
@@ -79,7 +120,7 @@ window.addEventListener("unhandledrejection", () => {
   showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
 });
 
-// -------- Questions UI --------
+// ======= Questions UI =======
 function buildQuestions() {
   const host = el("questions");
   if (!host) return;
@@ -135,7 +176,7 @@ function buildQuestions() {
   });
 }
 
-// -------- Score helpers --------
+// ======= Score helpers =======
 function collectAnswersByVar() {
   const byVar = {};
   VARS.forEach(v => byVar[v] = []);
@@ -181,10 +222,8 @@ function calcPattern(scores){
   const high_cluster = sorted.filter(([,v])=>v >= 0.7).map(([k])=>k);
   return { low_cluster, high_cluster, spread, min:Number(min.toFixed(2)), max:Number(max.toFixed(2)) };
 }
-function topN(scores, n=2){ return Object.entries(scores).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([k,v])=>({k,v})); }
-function bottomN(scores, n=3){ return Object.entries(scores).sort((a,b)=>a[1]-b[1]).slice(0,n).map(([k,v])=>({k,v})); }
 
-// -------- Render right panel --------
+// ======= Render right panel =======
 function renderBars(scores) {
   const host = el("bars");
   if (!host) return;
@@ -224,8 +263,8 @@ function renderTimewin(weak) {
   if (!host) return;
   host.innerHTML = `<span class="badge">${timeWindowFor(weak.val)}</span>`;
 }
-function renderDeepDiveLocal(scores, maxN = 3) {
-  const host = el("deepDive");
+function renderMini(scores, maxN = 3) {
+  const host = el("deepMini");
   if (!host) return;
   host.innerHTML = "";
   Object.entries(scores).sort((a,b)=>a[1]-b[1]).slice(0,maxN).forEach(([v,val])=>{
@@ -236,8 +275,10 @@ function renderDeepDiveLocal(scores, maxN = 3) {
   });
 }
 
-// -------- Radar (Canvas) --------
+// ======= Radar (Canvas) =======
 let _radarResizeObserver = null;
+let _radarCanvasRef = null;
+
 function roundRect(ctx, x, y, w, h, r){
   const rr = Math.min(r, w/2, h/2);
   ctx.beginPath();
@@ -248,6 +289,7 @@ function roundRect(ctx, x, y, w, h, r){
   ctx.arcTo(x, y, x+w, y, rr);
   ctx.closePath();
 }
+
 function renderRadar(scores, weak) {
   const host = el("plot3d");
   if (!host) return;
@@ -258,6 +300,7 @@ function renderRadar(scores, weak) {
   canvas.style.height = "100%";
   canvas.style.display = "block";
   host.appendChild(canvas);
+  _radarCanvasRef = canvas;
 
   const draw = () => {
     const rect = host.getBoundingClientRect();
@@ -432,6 +475,13 @@ function renderRadar(scores, weak) {
       ctx.textBaseline = "middle";
       ctx.fillText(label, bx + m, by + bh/2);
     }
+
+    // keep a snapshot for PDF export
+    try {
+      LAST_RADAR_DATAURL = canvas.toDataURL("image/png");
+    } catch {
+      LAST_RADAR_DATAURL = null;
+    }
   };
 
   draw();
@@ -440,7 +490,7 @@ function renderRadar(scores, weak) {
   _radarResizeObserver.observe(host);
 }
 
-// -------- Premium cards (always good in private) --------
+// ======= Cards render =======
 function escapeHTML(str){
   return String(str ?? "")
     .replaceAll("&", "&amp;")
@@ -449,6 +499,7 @@ function escapeHTML(str){
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
 function buildCardsHTML(cards){
   const html = [`<div class="ddCards">`];
   for (const c of cards){
@@ -484,88 +535,72 @@ function buildCardsHTML(cards){
   html.push(`</div>`);
   return html.join("");
 }
-function isGarbageText(t){
-  const s = String(t ?? "").trim();
-  if (!s) return true;
-  if (s === "..." || s === "…") return true;
-  if (s.length < 140) return true;
-  if (s.replace(/[.\s]/g,"").length < 70) return true;
-  return false;
-}
-function pickVariantABC(){
-  const key = "mdg_variant";
-  const cur = localStorage.getItem(key) || "A";
-  const next = (cur === "A") ? "B" : (cur === "B" ? "C" : "A");
-  localStorage.setItem(key, next);
-  return next;
-}
-function mkPrivateCards(scores, weakest, pattern, variant){
-  const w1 = weakest[0] || "(Schwerpunkt)";
-  const w2 = weakest[1] || null;
-  const focus = w2 ? `${w1}, ${w2}` : `${w1}`;
 
-  const lows = bottomN(scores, 3);
-  const highs = topN(scores, 2);
-  const spread = pattern?.spread ?? 0;
-
-  const openerA = `Dein System zeigt gerade einen klaren Engpass bei ${focus}. Das ist keine „Laune“, sondern eine Systemregel: Dort, wo ${w1} kippt, entstehen Nebenwirkungen (Stress, Konflikt, Stagnation).`;
-  const openerB = `Zwei Dinge stabilisieren schnell: erstens ${focus} gezielt anheben, zweitens verhindern, dass andere Bereiche das kompensieren müssen. Sonst entsteht Druck → Reaktion → neues Ungleichgewicht.`;
-  const openerC = `Wenn du heute nur eins machst: nimm ${w1} als Haupthebel. Nicht alles gleichzeitig — sondern die eine Stelle stabilisieren, die das System gerade „zieht“.`;
-  const execBody = (variant === "A") ? openerA : (variant === "B" ? openerB : openerC);
-
-  const diag = [
-    `Schwächste Zonen: ${lows.map(x=>`${x.k} (${x.v.toFixed(2)})`).join(", ")}.`,
-    `Starke Zonen: ${highs.map(x=>`${x.k} (${x.v.toFixed(2)})`).join(", ")}.`,
-    spread >= 0.35
-      ? `Hinweis: große Spreizung (${spread}). Außen wirkt es oft „widersprüchlich“: manches läuft, anderes bricht.`
-      : `Hinweis: eher gleichmäßiges Profil (${spread}). Du brauchst gezielte Korrektur statt Komplettumbau.`,
-  ].join(" ");
-
-  const hebel = [
-    `Benennen ohne Urteil: „In Situationen X sinkt ${w1} — dann passiert Y.“ (1 Satz, messbar).`,
-    `Grenze mit Minimal-Folge: Welche klare Linie ist fair — und was ist die kleinste Konsequenz, wenn sie ignoriert wird?`,
-    `Ressource aktivieren: 1 Unterstützung, die real ist (Zeitfenster, Person, Geld, Struktur).`,
-    `Reibung rausnehmen: 1 unnötige Schleife stoppen (Diskussion, Rechtfertigung, Perfektion).`,
-    `Ein Gespräch fällig machen: Ziel = Stabilität, nicht „Recht haben“. Satz: „Ich will X stabilisieren — dafür brauche ich Y.“`,
-  ];
-
-  const plan = [
-    { t:"Heute", txt:`1 Beobachtung notieren: Wann kippt ${w1}? (Auslöser + Verhalten + Effekt). Danach 1 Mini-Schritt ≤10 Minuten.` },
-    { t:"7 Tage", txt:`1 Intervention testen: Grenze / Gespräch / Ressource. Danach messen: besser/schlechter/gleich.` },
-    { t:"30 Tage", txt:`Routine bauen: Was bleibt wöchentlich? Was endet? Was wird delegiert? Ziel: ${w1} nicht mehr „retten müssen“.` },
-  ];
-
-  const coach = [
-    `Woran merkst du als Erstes, dass ${w1} kippt — im Körper, im Denken, im Verhalten?`,
-    `Welche Wahrheit ist fällig, weil sie Stabilität bringt (auch wenn sie kurz Spannung erzeugt)?`,
-    `Welche faire Grenze würde sofort stabilisieren — und warum wird sie bisher nicht gesetzt?`,
-    `Was ist der kleinste Schritt in 24h, der dich unabhängiger macht (nicht „mehr leisten“, sondern stabiler)?`,
-  ];
-  if (w2) coach.push(`Welche Wechselwirkung siehst du zwischen ${w1} und ${w2}? („Wenn X sinkt, steigt Y“).`);
-
-  return [
-    { title:"Executive Summary", pill:`Fokus: ${focus}`, body: execBody },
-    { title:"Systembild", pill:"Diagnostik", body: diag },
-    { title:"Hebel & Interventionen", pill:"Handlung", bullets: hebel },
-    { title:"Plan nach Zeitfenster", pill:"Zeit", timeline: plan },
-    { title:"Coach Guide", pill:"Session", bullets: coach, small:"Wenn du willst: daraus mache ich dir als nächstes eine 5-Minuten-Checkliste." }
-  ];
+function productKey(){
+  if (CURRENT_LAYER === "idg" && CURRENT_MODE === "private") return "idg_private";
+  if (CURRENT_LAYER === "idg" && CURRENT_MODE === "business") return "idg_business";
+  if (CURRENT_LAYER === "adg" && CURRENT_MODE === "private") return "adg_private";
+  return "adg_business";
 }
 
-// -------- Mode + token --------
-const LS_MODE = "mdg_mode";
-const LS_TOKEN = "mdg_token";
-let CURRENT_MODE = "private";
-let LAST_SCORES = null;
+function requiredPrefix(){
+  return TOKEN_PREFIX[productKey()] || "TOKEN-";
+}
+
+function getToken(){
+  const key = productKey();
+  const input = el("tokenInput");
+  const fromInput = (input?.value || "").trim();
+  const stored = localStorage.getItem(LS_TOKEN[key]) || "";
+  return (fromInput || stored).trim();
+}
+
+function setTokenToStorage(raw){
+  const key = productKey();
+  const v = String(raw || "").trim();
+  if (!v) return;
+  localStorage.setItem(LS_TOKEN[key], v);
+}
+
+function tokenLooksValidForSelection(tok){
+  const pfx = requiredPrefix();
+  return tok && tok.toUpperCase().startsWith(pfx);
+}
+
+// ======= UI state updates =======
+function setLayer(layer){
+  CURRENT_LAYER = (layer === "adg") ? "adg" : "idg";
+  localStorage.setItem(LS_LAYER, CURRENT_LAYER);
+
+  const bIDG = el("layerIDG");
+  const bADG = el("layerADG");
+  const hint = el("layerHint");
+
+  if (bIDG && bADG){
+    bIDG.classList.toggle("active", CURRENT_LAYER === "idg");
+    bADG.classList.toggle("active", CURRENT_LAYER === "adg");
+    bIDG.setAttribute("aria-selected", String(CURRENT_LAYER === "idg"));
+    bADG.setAttribute("aria-selected", String(CURRENT_LAYER === "adg"));
+  }
+  if (hint){
+    hint.textContent = (CURRENT_LAYER === "adg")
+      ? "ADG: Strukturumbau (Tragfähigkeit, Entscheidungen, Institutionalisierung)"
+      : "IDG: Stabilisierung (Fokus, Hebel, Interventionen, Zeitfenster)";
+  }
+
+  hydrateTokenInput();
+  updateTokenUI();
+  updateRunButtonState();
+  clearOutput();
+}
 
 function setMode(mode){
   CURRENT_MODE = (mode === "business") ? "business" : "private";
   localStorage.setItem(LS_MODE, CURRENT_MODE);
 
   const bPriv = el("modePrivate");
-  const bBus = el("modeBusiness");
-  const tokenRow = el("tokenRow");
-  const modeHint = el("modeHint");
+  const bBus  = el("modeBusiness");
+  const hint  = el("modeHint");
 
   if (bPriv && bBus){
     bPriv.classList.toggle("active", CURRENT_MODE === "private");
@@ -573,73 +608,146 @@ function setMode(mode){
     bPriv.setAttribute("aria-selected", String(CURRENT_MODE === "private"));
     bBus.setAttribute("aria-selected", String(CURRENT_MODE === "business"));
   }
-  if (tokenRow) tokenRow.classList.toggle("hidden", CURRENT_MODE !== "business");
-  if (modeHint){
-    modeHint.textContent = (CURRENT_MODE === "business") ? "Business: Token erforderlich" : "Privat: frei";
+  if (hint){
+    hint.textContent = (CURRENT_MODE === "business")
+      ? "Business: Organisation/Team · Executive Output"
+      : "Privat: persönlich/Beziehung · klare Orientierung";
   }
-  updateDeepDiveButtonState();
+
+  hydrateTokenInput();
+  updateTokenUI();
+  updateRunButtonState();
+  clearOutput();
 }
-function getToken(){
+
+function hydrateTokenInput(){
   const input = el("tokenInput");
-  return (input?.value || localStorage.getItem(LS_TOKEN) || "").trim();
+  if (!input) return;
+  const key = productKey();
+  const stored = localStorage.getItem(LS_TOKEN[key]) || "";
+  input.value = stored;
+  input.placeholder = `${requiredPrefix()}XXXX-XXXX-XXXX`;
 }
+
+function updateTokenUI(){
+  const key = productKey();
+
+  // label text
+  const tokenLabel = el("tokenLabel");
+  const tokenSmall = el("tokenSmall");
+  if (tokenLabel){
+    const names = {
+      idg_private:  "IDG Privat Token",
+      idg_business: "IDG Business Token",
+      adg_private:  "ADG Privat Token",
+      adg_business: "ADG Business Token",
+    };
+    tokenLabel.textContent = names[key] || "Token";
+  }
+  if (tokenSmall){
+    tokenSmall.textContent = `Erforderlich: Token mit Prefix ${requiredPrefix()}`;
+  }
+
+  // buy links
+  const buyIDGP = el("buyIDGPrivate");
+  const buyIDGB = el("buyIDGBusiness");
+  const buyADGP = el("buyADGPrivate");
+  const buyADGB = el("buyADGBusiness");
+
+  if (buyIDGP) buyIDGP.href = CHECKOUT.idg_private;
+  if (buyIDGB) buyIDGB.href = CHECKOUT.idg_business;
+  if (buyADGP) buyADGP.href = CHECKOUT.adg_private;
+  if (buyADGB) buyADGB.href = CHECKOUT.adg_business;
+
+  const show = (node, on) => { if (node) node.style.display = on ? "inline-flex" : "none"; };
+  show(buyIDGP, key === "idg_private");
+  show(buyIDGB, key === "idg_business");
+  show(buyADGP, key === "adg_private");
+  show(buyADGB, key === "adg_business");
+}
+
+function updateRunButtonState(){
+  const btn = el("runBtn");
+  if (!btn) return;
+
+  const tok = getToken();
+  const ok = tokenLooksValidForSelection(tok);
+
+  btn.disabled = !LAST_SCORES || !ok;
+}
+
+function clearOutput(){
+  const out = el("deepOut");
+  if (out){
+    out.innerHTML = "";
+    out.style.display = "none";
+  }
+  const pdfBtn = el("pdfBtn");
+  if (pdfBtn) pdfBtn.disabled = true;
+}
+
 function applyToken(){
   const input = el("tokenInput");
-  const v = (input?.value || "").trim();
-  if (v) localStorage.setItem(LS_TOKEN, v);
-  updateDeepDiveButtonState();
+  const raw = (input?.value || "").trim();
+  if (!raw) { updateRunButtonState(); return; }
+
+  // store token only in its bucket (layer+mode)
+  setTokenToStorage(raw);
+  updateRunButtonState();
 }
-function updateDeepDiveButtonState(){
-  const btn = el("deepDiveBtn");
-  if (!btn) return;
-  if (CURRENT_MODE !== "business"){ btn.disabled = false; return; }
-  btn.disabled = !getToken();
-}
+
+// ======= Worker errors mapping =======
 function mapWorkerError(err){
   const e = String(err || "");
-  if (e.includes("TOKEN_REQUIRED")) return "Business benötigt einen Token.";
+  if (e.includes("TOKEN_REQUIRED")) return "Token erforderlich.";
   if (e.includes("TOKEN_INVALID")) return "Token ungültig.";
   if (e.includes("TOKEN_EXHAUSTED")) return "Token ist aufgebraucht.";
-  if (e.includes("RATE_LIMIT")) return "Privat-Limit erreicht. Bitte später erneut versuchen.";
+  if (e.includes("TOKEN_WRONG_TYPE")) return "Falscher Token-Typ für diese Ausgabe.";
+  if (e.includes("RATE_LIMIT")) return "Limit erreicht. Bitte später erneut versuchen.";
   return e;
 }
 
-// -------- Deep dive request --------
-async function runDeepDive() {
-  const btn = el("deepDiveBtn");
-  const out = el("deepDiveOut");
+// ======= Deep output request =======
+async function runProOutput(){
+  hideErrorBox();
+
+  const btn = el("runBtn");
+  const out = el("deepOut");
   if (!btn || !out) return;
 
-  if (!LAST_SCORES) {
-    out.style.display = "block";
-    out.textContent = "Bitte zuerst Quick Scan auswerten.";
+  if (!LAST_SCORES){
+    showErrorBox("Bitte zuerst Quick Scan auswerten.");
     return;
   }
 
+  const tok = getToken();
+  if (!tokenLooksValidForSelection(tok)){
+    showErrorBox(`Falscher Token: Erwartet Prefix ${requiredPrefix()}`);
+    updateRunButtonState();
+    return;
+  }
+
+  const key = productKey();
   const weakest = weakestVars(LAST_SCORES, 2);
-  const pattern = calcPattern(LAST_SCORES);
-  const variant = (CURRENT_MODE === "private") ? pickVariantABC() : "A";
-  const fallbackCards = mkPrivateCards(LAST_SCORES, weakest, pattern, variant);
+  const pattern = LAST_PATTERN || calcPattern(LAST_SCORES);
 
   const payload = {
-    mode: CURRENT_MODE,
-    token: (CURRENT_MODE === "business") ? getToken() : undefined,
+    layer: CURRENT_LAYER,      // idg|adg
+    mode: CURRENT_MODE,        // private|business
+    token: tok,
     language: "de",
     scores: LAST_SCORES,
     weakest,
     pattern,
-    meta: { tone: (CURRENT_MODE === "business") ? "pro" : "warm", variant }
+    meta: {
+      product: key,            // idg_private etc. (server must treat this as hint, not truth)
+      tone: (CURRENT_MODE === "business") ? "executive" : "clear",
+    }
   };
-
-  if (CURRENT_MODE === "business" && !payload.token){
-    out.style.display = "block";
-    out.innerHTML = buildCardsHTML([{ title:"Fehler", pill:"Token", body:"Business benötigt einen Token.", small:"Token einfügen → Anwenden → erneut starten." }]);
-    return;
-  }
 
   try {
     btn.disabled = true;
-    btn.textContent = "…denke nach";
+    btn.textContent = "…generiere";
 
     const resp = await fetch(`${WORKER_BASE}/deepdive`, {
       method: "POST",
@@ -649,48 +757,161 @@ async function runDeepDive() {
 
     const data = await resp.json().catch(()=>({}));
 
-    // Business: echte Fehler anzeigen. Privat: notfalls holy fallback
     if (!resp.ok || !data.ok) {
-      if (CURRENT_MODE === "private"){
-        out.style.display = "block";
-        out.innerHTML = buildCardsHTML(fallbackCards);
-        return;
-      }
       throw new Error(data?.error || `Worker HTTP ${resp.status}`);
     }
 
-    // Privat: wenn Worker-Text zu dünn -> holy fallback
-    const raw = String(data.text || data.output || data.result || "");
-    if (CURRENT_MODE === "private" && isGarbageText(raw)){
-      out.style.display = "block";
-      out.innerHTML = buildCardsHTML(fallbackCards);
-      return;
-    }
-
-    // Wenn Worker Cards liefert: rendern, sonst Text als Card
+    // display
     out.style.display = "block";
     if (Array.isArray(data.cards) && data.cards.length){
       out.innerHTML = buildCardsHTML(data.cards);
     } else {
-      out.innerHTML = buildCardsHTML([{ title:"Auswertung", pill:`Fokus: ${weakest.join(", ")}`, body: raw.trim() }]);
+      const raw = String(data.text || data.output || data.result || "").trim();
+      out.innerHTML = buildCardsHTML([{ title:"Ausgabe", pill:key.toUpperCase(), body: raw || "(leer)" }]);
     }
 
-    if (CURRENT_MODE === "business") applyToken();
+    // token is single-use; clear it after successful run to avoid reuse frustration
+    localStorage.removeItem(LS_TOKEN[key]);
+    hydrateTokenInput();
+
+    // enable PDF
+    const pdfBtn = el("pdfBtn");
+    if (pdfBtn) pdfBtn.disabled = false;
 
   } catch (e) {
     out.style.display = "block";
-    if (CURRENT_MODE === "private"){
-      out.innerHTML = buildCardsHTML(fallbackCards);
-    } else {
-      out.innerHTML = buildCardsHTML([{ title:"Fehler", pill:"Request", body: mapWorkerError(String(e.message || e)), small:"Wenn das wiederholt ist: Token/Worker/CORS prüfen." }]);
-    }
+    out.innerHTML = buildCardsHTML([
+      { title:"Fehler", pill:"Request", body: mapWorkerError(String(e.message || e)), small:"Bitte Token/Typ prüfen und erneut versuchen." }
+    ]);
+    const pdfBtn = el("pdfBtn");
+    if (pdfBtn) pdfBtn.disabled = true;
   } finally {
-    btn.textContent = "Stabilisierende Indikation erzeugen";
-    btn.disabled = (CURRENT_MODE === "business" && !getToken());
+    btn.textContent = "Pro-Ausgabe erzeugen";
+    updateRunButtonState();
   }
 }
 
-// -------- Evaluate / Reset --------
+// ======= PDF Export (print-to-PDF) =======
+function barsAsTableHTML(scores){
+  const rows = VARS.map(v => {
+    const val = Number(scores?.[v] ?? 0);
+    return `<tr><td>${escapeHTML(v)}</td><td style="text-align:right">${val.toFixed(2)}</td></tr>`;
+  }).join("");
+  return `
+    <table style="width:100%;border-collapse:collapse;margin-top:10px">
+      <thead>
+        <tr>
+          <th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:8px 0">Variable</th>
+          <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:8px 0">Score</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function exportPDF(){
+  hideErrorBox();
+
+  const out = el("deepOut");
+  if (!out || out.style.display === "none"){
+    showErrorBox("Bitte zuerst eine Pro-Ausgabe erzeugen.");
+    return;
+  }
+  if (!LAST_SCORES || !LAST_WEAK){
+    showErrorBox("Profil fehlt. Bitte Quick Scan auswerten.");
+    return;
+  }
+
+  const key = productKey();
+  const title = `Indikation & Architektur des Gleichgewichts — ${key.replace("_"," ").toUpperCase()}`;
+  const weakTxt = `${LAST_WEAK.key} (${LAST_WEAK.val.toFixed(2)})`;
+  const timeTxt = timeWindowFor(LAST_WEAK.val);
+  const radarImg = LAST_RADAR_DATAURL
+    ? `<img src="${LAST_RADAR_DATAURL}" alt="Radar" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`
+    : `<div style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;color:#6b7280">Radar konnte nicht eingebettet werden.</div>`;
+
+  const html = `
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>${escapeHTML(title)}</title>
+<style>
+  body{ font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#0b0f17; margin:24px; }
+  h1{ margin:0 0 6px; font-size:22px; }
+  .muted{ color:#4b5563; font-size:12px; }
+  .grid{ display:grid; grid-template-columns: 1.15fr .85fr; gap:18px; align-items:start; margin-top:14px; }
+  .card{ border:1px solid #e5e7eb; border-radius:14px; padding:14px; }
+  .pill{ display:inline-block; padding:6px 10px; border:1px solid #e5e7eb; border-radius:999px; background:#f8fafc; font-size:12px; }
+  .secTitle{ font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#374151; margin:0 0 8px; }
+  .divider{ height:1px; background:#e5e7eb; margin:14px 0; }
+  table td{ padding:6px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
+  .out{ margin-top:14px; }
+  /* Try to keep cards on pages */
+  .ddCard{ break-inside: avoid; page-break-inside: avoid; border:1px solid #e5e7eb; border-radius:14px; padding:12px; margin:12px 0; }
+  .ddTitle{ display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:8px; }
+  .ddTitle h4{ margin:0; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#111827; }
+  .ddPill{ display:inline-block; padding:6px 10px; border:1px solid #e5e7eb; border-radius:999px; background:#f8fafc; font-size:12px; color:#111827; }
+  .ddText{ font-size:13px; line-height:1.5; color:#111827; }
+  .ddList{ list-style:none; padding:0; margin:10px 0 0; }
+  .ddList li{ border:1px solid #eef2f7; border-radius:12px; padding:10px; margin:8px 0; font-size:13px; }
+  .ddTimeline{ display:grid; grid-template-columns:110px 1fr; gap:10px; margin-top:10px; }
+  .ddTime{ font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#374151; border:1px solid #e5e7eb; background:#f8fafc; border-radius:999px; padding:7px 10px; height:fit-content; width:fit-content; }
+  .ddStep{ border:1px solid #eef2f7; border-radius:12px; padding:10px; font-size:13px; line-height:1.45; }
+  @media print{
+    body{ margin:0; }
+    .card{ border-color:#e5e7eb; }
+  }
+</style>
+</head>
+<body>
+  <div class="muted">Export · ${new Date().toLocaleString("de-DE")} · ${escapeHTML(key.toUpperCase())}</div>
+  <h1>${escapeHTML(title)}</h1>
+  <div class="muted">Schwächste Variable: <span class="pill">${escapeHTML(weakTxt)}</span> · Zeitfenster: <span class="pill">${escapeHTML(timeTxt)}</span></div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="secTitle">Radar</div>
+      ${radarImg}
+    </div>
+    <div class="card">
+      <div class="secTitle">Scores</div>
+      ${barsAsTableHTML(LAST_SCORES)}
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="out">
+    <div class="secTitle">Pro-Ausgabe</div>
+    ${out.innerHTML}
+  </div>
+
+  <div class="divider"></div>
+  <div class="muted">Hinweis: Strukturierte Orientierung und Entscheidungsunterstützung. Keine medizinische, therapeutische, rechtliche oder finanzielle Beratung.</div>
+</body>
+</html>
+  `.trim();
+
+  const w = window.open("", "_blank");
+  if (!w){
+    showErrorBox("Pop-up blockiert. Bitte Pop-ups erlauben oder erneut versuchen.");
+    return;
+  }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+
+  // give browser a moment to render, then open print dialog
+  w.focus();
+  setTimeout(() => {
+    try { w.print(); } catch {}
+  }, 350);
+}
+
+// ======= Evaluate / Reset =======
 async function onEvaluate() {
   hideErrorBox();
 
@@ -704,18 +925,22 @@ async function onEvaluate() {
   LAST_SCORES = scores;
 
   const weak = weakestVar(scores);
+  LAST_WEAK = weak;
+
+  const pattern = calcPattern(scores);
+  LAST_PATTERN = pattern;
+
   el("results")?.classList.remove("hidden");
 
   renderRadar(scores, weak);
   renderBars(scores);
   renderWeakest(weak);
   renderTimewin(weak);
-  renderDeepDiveLocal(scores, 3);
+  renderMini(scores, 3);
 
-  const out = el("deepDiveOut");
-  if (out){ out.innerHTML = ""; out.style.display = "none"; }
-
-  updateDeepDiveButtonState();
+  clearOutput();
+  updateTokenUI();
+  updateRunButtonState();
 }
 
 function onReset() {
@@ -727,35 +952,47 @@ function onReset() {
   el("bars") && (el("bars").innerHTML = "");
   el("weakest") && (el("weakest").innerHTML = "");
   el("timewin") && (el("timewin").innerHTML = "");
-  el("deepDive") && (el("deepDive").innerHTML = "");
+  el("deepMini") && (el("deepMini").innerHTML = "");
 
-  const out = el("deepDiveOut");
-  if (out){ out.innerHTML = ""; out.style.display = "none"; }
+  clearOutput();
 
   LAST_SCORES = null;
-  updateDeepDiveButtonState();
+  LAST_PATTERN = null;
+  LAST_WEAK = null;
+  LAST_RADAR_DATAURL = null;
+
+  updateRunButtonState();
 }
 
-// -------- Boot --------
+// ======= Boot =======
 document.addEventListener("DOMContentLoaded", () => {
   buildQuestions();
 
+  // defaults
+  const savedLayer = localStorage.getItem(LS_LAYER);
   const savedMode = localStorage.getItem(LS_MODE);
-  setMode(savedMode === "business" ? "business" : "private");
 
-  const savedToken = localStorage.getItem(LS_TOKEN);
-  if (savedToken && el("tokenInput")) el("tokenInput").value = savedToken;
+  setLayer(savedLayer === "adg" ? "adg" : "idg");                 // default IDG
+  setMode(savedMode === "business" ? "business" : "private");     // default private
 
+  updateTokenUI();
+  hydrateTokenInput();
+  updateRunButtonState();
+
+  // buttons
   el("btnEval")?.addEventListener("click", onEvaluate);
   el("btnReset")?.addEventListener("click", onReset);
-  el("deepDiveBtn")?.addEventListener("click", runDeepDive);
+
+  el("layerIDG")?.addEventListener("click", () => setLayer("idg"));
+  el("layerADG")?.addEventListener("click", () => setLayer("adg"));
 
   el("modePrivate")?.addEventListener("click", () => setMode("private"));
   el("modeBusiness")?.addEventListener("click", () => setMode("business"));
 
   el("tokenApply")?.addEventListener("click", () => applyToken());
   el("tokenInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") applyToken(); });
-  el("tokenInput")?.addEventListener("input", () => updateDeepDiveButtonState());
+  el("tokenInput")?.addEventListener("input", () => updateRunButtonState());
 
-  updateDeepDiveButtonState();
+  el("runBtn")?.addEventListener("click", runProOutput);
+  el("pdfBtn")?.addEventListener("click", exportPDF);
 });
