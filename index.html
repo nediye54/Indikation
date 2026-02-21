@@ -3,30 +3,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Indikation – nach der Moral des Gleichgewichts</title>
+  <title>Indikation & Architektur des Gleichgewichts</title>
 
   <!-- Cache busting -->
-  <link rel="stylesheet" href="style.css?v=52" />
-  <script src="script.js?v=51" defer></script>
+  <link rel="stylesheet" href="style.css?v=60" />
+  <script src="script.js?v=60" defer></script>
 </head>
 
 <body>
   <main class="wrap">
     <header class="hero">
-      <h1>Indikation</h1>
-      <p class="sub">nach der Moral des Gleichgewichts</p>
-      <p class="path">Quickscan und DeepDive für soziale oder geschäftliche Nutzung</p>
+      <h1>Indikation & Architektur</h1>
+      <p class="sub">des Gleichgewichts</p>
+      <p class="path">Quickscan → Profil → Auswahl (IDG/ADG) → Pro-Output → PDF</p>
     </header>
 
     <section id="errorBox" class="errorBox hidden" role="alert" aria-live="polite">
       <strong>Hinweis:</strong> Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).
     </section>
 
+    <!-- QUICK SCAN -->
     <section class="card">
       <div class="cardHead">
         <h2>Quick Scan</h2>
         <p class="muted">
-          Denke an das zu messende soziale System und beantworte die Fragen. Danach erhältst du sofort dein Ergebnis.
+          Denke an das zu messende System und beantworte die Fragen. Danach erhältst du sofort dein Profil.
         </p>
       </div>
 
@@ -38,10 +39,11 @@
       </div>
     </section>
 
+    <!-- RESULTS -->
     <section id="results" class="card hidden">
       <div class="cardHead">
-        <h2>Ergebnis</h2>
-        <p class="muted">Radar- Balkendigramm, schwächste Variable und Zeitfenster der Intervention</p>
+        <h2>Profil</h2>
+        <p class="muted">Radar · Balken · schwächste Variable · Zeitfenster</p>
       </div>
 
       <div class="grid2">
@@ -69,59 +71,98 @@
 
       <div class="divider"></div>
 
+      <!-- LAYER + MODE + OUTPUT -->
       <div class="deepDive">
         <div class="deepDiveHead">
-          <h3 class="panelTitle">Deep Dive</h3>
+          <h3 class="panelTitle">Ausgabe</h3>
           <p class="muted">
-            Die bereitgestellten Analysen dienen der strukturellen Orientierung und Entscheidungsfindung. Sie stellen keine medizinische , therapeutische, rechtliche oder finanzielle Beratung dar. Entscheidungen und Maßnahmen liegen in deiner eigenen Verantwortung.
+            Wähle Ebene und Kontext. IDG = Stabilisierung. ADG = Strukturumbau.
+            Keine medizinische, therapeutische, rechtliche oder finanzielle Beratung.
           </p>
+        </div>
+
+        <!-- LAYER SWITCH -->
+        <div class="modeRow">
+          <div class="modeLabel muted">Ebene</div>
+          <div class="seg" role="tablist" aria-label="Ebene wählen">
+            <button id="layerIDG" class="segBtn active" type="button" role="tab" aria-selected="true">IDG · Indikation</button>
+            <button id="layerADG" class="segBtn" type="button" role="tab" aria-selected="false">ADG · Architektur</button>
+          </div>
+          <div class="modeHint muted" id="layerHint">IDG: Stabilisierung innerhalb der Struktur</div>
         </div>
 
         <!-- MODE SWITCH -->
         <div class="modeRow">
-          <div class="modeLabel muted">Modus</div>
-          <div class="seg" role="tablist" aria-label="Deep Dive Modus">
+          <div class="modeLabel muted">Kontext</div>
+          <div class="seg" role="tablist" aria-label="Kontext wählen">
             <button id="modePrivate" class="segBtn active" type="button" role="tab" aria-selected="true">Privat</button>
             <button id="modeBusiness" class="segBtn" type="button" role="tab" aria-selected="false">Business</button>
           </div>
-          <div class="modeHint muted" id="modeHint">Privat: "Klare nächste Schritte für meine Situation" · Business: "Konkreten Maßnahmeplan für mein System erzeugen"</div>
+          <div class="modeHint muted" id="modeHint">Privat: persönlich/Beziehung · Business: Organisation/Team</div>
         </div>
 
-        <!-- TOKEN (nur Business) -->
-        <div id="tokenRow" class="tokenRow hidden">
-          <label class="muted" for="tokenInput">Business-Token</label>
-          <input id="tokenInput" class="tokenInput" type="text" placeholder="MDG-XXXX-XXXX-XXXX" autocomplete="off" />
+        <!-- TOKEN ROW (dynamic for selected layer+mode) -->
+        <div id="tokenRow" class="tokenRow">
+          <label class="muted" for="tokenInput" id="tokenLabel">Token</label>
+          <input id="tokenInput" class="tokenInput" type="text" placeholder="TOKEN-XXXX-XXXX-XXXX" autocomplete="off" />
           <button id="tokenApply" class="btn" type="button">Anwenden</button>
-          <div class="tokenSmall muted">Für Führung, Teams und Strukturentscheidungen.</div>
+          <div class="tokenSmall muted" id="tokenSmall">Token erforderlich für Pro-Ausgabe.</div>
 
+          <!-- Buy buttons (IDs used by JS to show/hide correct one) -->
           <a
-            href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/260e69c4-400c-45a9-9be8-aa31d3b25de0"
+            id="buyIDGPrivate"
+            href="#"
             target="_blank"
             rel="noopener noreferrer"
-            class="btn primary"
-            style="width:100%; display:flex; justify-content:center; margin-top:8px;"
-          >
-            Business Token kaufen (249,99€)
-          </a>
+            class="btn primary buyWide"
+          >IDG Privat kaufen (19,99€)</a>
+
+          <a
+            id="buyIDGBusiness"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn primary buyWide"
+          >IDG Business kaufen (299,99€)</a>
+
+          <a
+            id="buyADGPrivate"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn primary buyWide"
+          >ADG Privat kaufen (49,99€)</a>
+
+          <a
+            id="buyADGBusiness"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn primary buyWide"
+          >ADG Business kaufen (1.199,99€)</a>
         </div>
 
-        <button id="deepDiveBtn" class="btn ddBtn" type="button">Stabilisierende Indikation erzeugen</button>
+        <!-- ACTIONS -->
+        <div class="actions">
+          <button id="runBtn" class="btn primary" type="button">Pro-Ausgabe erzeugen</button>
+          <button id="pdfBtn" class="btn" type="button" disabled>PDF exportieren</button>
+        </div>
 
         <!-- Output -->
-        <div id="deepDiveOut" class="box ddOut" style="display:none;"></div>
+        <div id="deepOut" class="box ddOut" style="display:none;"></div>
 
         <div class="divider"></div>
 
         <!-- Quick Übersicht -->
         <div class="deepDiveMini">
           <h4 class="miniTitle">Quick-Übersicht (3 schwächste)</h4>
-          <div id="deepDive" class="deepDiveBody"></div>
+          <div id="deepMini" class="deepDiveBody"></div>
         </div>
       </div>
     </section>
 
     <footer class="foot muted">
-      v41 · 
+      v60 ·
       <a href="impressum.html">Impressum</a> ·
       <a href="datenschutz.html">Datenschutz</a> ·
       <a href="kontakt.html">Kontakt</a>
