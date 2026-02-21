@@ -11,6 +11,12 @@
   --danger:#ff6b6b;
   --shadow: 0 18px 40px rgba(0,0,0,.45);
   --radius:18px;
+
+  /* PDF/print helpers */
+  --print-bg:#ffffff;
+  --print-text:#0b0f17;
+  --print-muted:#4b5563;
+  --print-stroke:#e5e7eb;
 }
 
 *{box-sizing:border-box}
@@ -131,6 +137,10 @@ body{
   border-radius:12px;
   cursor:pointer;
   transition: transform .08s ease, background .15s ease, opacity .15s ease;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
 .btn:hover{background: rgba(255,255,255,.06)}
 .btn:active{transform: translateY(1px)}
@@ -143,6 +153,13 @@ body{
   cursor:not-allowed;
 }
 .btn:disabled:hover{ background: rgba(255,255,255,.04); }
+
+/* Wide buy buttons (new) */
+.buyWide{
+  width:100%;
+  margin-top:8px;
+  justify-content:center;
+}
 
 /* Layout */
 .grid2{
@@ -246,7 +263,7 @@ body{
   border-radius:999px;
 }
 
-/* Deep Dive */
+/* Output box */
 .deepDive{
   border:1px solid var(--stroke2);
   border-radius:16px;
@@ -268,7 +285,7 @@ body{
   padding:12px;
 }
 
-/* Mode switch */
+/* Mode / Layer switch rows */
 .modeRow{
   display:flex;
   align-items:center;
@@ -317,10 +334,10 @@ body{
   color: rgba(255,255,255,.55);
 }
 
-/* Token row (Business) */
+/* Token row */
 .tokenRow{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   gap:10px;
   flex-wrap:wrap;
   margin:8px 0 10px;
@@ -328,6 +345,9 @@ body{
   border:1px solid var(--stroke2);
   background: rgba(0,0,0,.12);
   border-radius:14px;
+}
+.tokenRow label{
+  padding-top:10px;
 }
 .tokenInput{
   flex: 1 1 280px;
@@ -350,31 +370,7 @@ body{
   margin-top:4px;
 }
 
-/* Buy link styled like button (used in HTML) */
-.buyBtn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  text-decoration:none;
-  border:1px solid rgba(246,204,114,.35);
-  background: rgba(246,204,114,.10);
-  color: rgba(255,255,255,.92);
-  padding:10px 14px;
-  border-radius:12px;
-  cursor:pointer;
-  transition: transform .08s ease, background .15s ease, opacity .15s ease;
-}
-.buyBtn:hover{ background: rgba(246,204,114,.14); }
-.buyBtn:active{ transform: translateY(1px); }
-
-/* DeepDive main button */
-.ddBtn{
-  width:100%;
-  margin-top:6px;
-}
-
-/* Premium Cards */
+/* Premium output cards */
 .ddOut{ white-space: normal; }
 
 .ddCards{
@@ -508,4 +504,43 @@ body{
   margin-top:14px;
   font-size:12px;
   opacity:.7;
+}
+
+/* ===========================
+   PRINT / PDF STYLES
+   =========================== */
+@media print{
+  body{
+    background: var(--print-bg) !important;
+    color: var(--print-text) !important;
+  }
+  .wrap{
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  .card, .panel, .deepDive, .box{
+    box-shadow:none !important;
+    background: #fff !important;
+    border-color: var(--print-stroke) !important;
+    color: var(--print-text) !important;
+  }
+  .muted, .panelTitle, .modeLabel, .modeHint, .plotHint, .tokenSmall, .foot{
+    color: var(--print-muted) !important;
+  }
+  .btn, .seg, .segBtn, .actions, #tokenRow{
+    display:none !important; /* hide controls in print */
+  }
+  .plot3d{
+    border-color: var(--print-stroke) !important;
+    background: #fff !important;
+  }
+  .ddCard, .ddList li, .ddStep{
+    border-color: var(--print-stroke) !important;
+    background:#fff !important;
+  }
+  .ddPill, .badge, .ddTime{
+    border-color: var(--print-stroke) !important;
+    background:#f8fafc !important;
+    color: var(--print-text) !important;
+  }
 }
