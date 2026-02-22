@@ -512,7 +512,18 @@
               <h2 class="h3" data-i18n="R.title">Ergebnis</h2>
               <span class="pill pill--muted" id="score_ALL">Total: –</span>
             </div>
-
+            
+            <div class="card" style="margin-top:1rem;">
+              <h3 class="h3">Speichern & Teilen</h3>
+              <p class="micro">Speichert anonym in der Datenbank und erzeugt einen Share-Link.</p>
+              <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
+                <button class="btn btn--primary" type="button" id="dx_save_server">Server speichern</button>
+                <button class="btn btn--ghost" type="button" id="dx_copy_link" disabled>Link kopieren</button>
+                <a class="btn btn--ghost" id="dx_open_link" href="#" target="_blank" rel="noopener" aria-disabled="true">Öffnen</a>
+              </div>
+              <p class="micro" id="dx_save_status">Status: –</p>
+              <p class="micro" id="dx_share_link" style="word-break:break-all;"></p>
+            </div>
             <div class="result-grid">
               <div class="result-box">
                 <div class="badge" data-i18n="R.primaryType">Primärinstabilität (dominant)</div>
