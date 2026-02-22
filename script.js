@@ -880,14 +880,40 @@ function buildCardsHTML(cards){
 }
 
 // ======= Product selection =======
+function uiSelectedLayer(){
+  // prefer real state, but fall back to DOM if handlers broke
+  const a = document.getElementById("layerADG");
+  const i = document.getElementById("layerIDG");
+  if (a && a.classList.contains("active")) return "adg";
+  if (i && i.classList.contains("active")) return "idg";
+  return CURRENT_LAYER || "idg";
+}
+
+function uiSelectedMode(){
+  const b = document.getElementById("modeBusiness");
+  const p = document.getElementById("modePrivate");
+  if (b && b.classList.contains("active")) return "business";
+  if (p && p.classList.contains("active")) return "private";
+  return CURRENT_MODE || "private";
+}
+
 function productKey(){
-  if (CURRENT_LAYER === "idg" && CURRENT_MODE === "private") return "idg_private";
-  if (CURRENT_LAYER === "idg" && CURRENT_MODE === "business") return "idg_business";
-  if (CURRENT_LAYER === "adg" && CURRENT_MODE === "private") return "adg_private";
+  const layer = uiSelectedLayer();
+  const mode  = uiSelectedMode();
+  if (layer === "idg" && mode === "private") return "idg_private";
+  if (layer === "idg" && mode === "business") return "idg_business";
+  if (layer === "adg" && mode === "private") return "adg_private";
   return "adg_business";
 }
+
 function requiredPrefix(){
   return TOKEN_PREFIX[productKey()] || "TOKEN-";
+}
+
+function tokenLooksValidForSelection(tok){
+  const pfx = requiredPrefix();
+  const t = String(tok || "").trim().toUpperCase();
+  return t.startsWith(String(pfx).toUpperCase());
 }
 function getToken(){
   const key = productKey();
@@ -901,10 +927,6 @@ function setTokenToStorage(raw){
   const v = String(raw || "").trim();
   if (!v) return;
   localStorage.setItem(LS_TOKEN[key], v);
-}
-function tokenLooksValidForSelection(tok){
-  const pfx = requiredPrefix();
-  return tok && tok.toUpperCase().startsWith(pfx);
 }
 
 // ======= UI state =======
