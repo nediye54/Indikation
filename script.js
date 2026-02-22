@@ -1,1452 +1,628 @@
-// v70 — IDG/ADG Platform (stable canvases + token/UI + PDF export)
-// Fixes:
-// - IDs aligned to HTML/CSS: plot3d, trendPlot, istSollPlot, deepOut, tokenRow, buy* buttons
-// - No stray code blocks outside functions
-// - UI is single source of truth for layer/mode/productKey()
-// - Canvas charts render reliably (ResizeObserver + fallback) and snapshot to PNG for PDF
-// - deepOut works with both style.display + .hidden
-// - Buy buttons standardized "Token kaufen (...)"
-
-"use strict";
-
-const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
-
-// ======= CHECKOUT LINKS (Lemon Squeezy) =======
-const CHECKOUT = {
-  idg_private:  "https://mdg-indikation.lemonsqueezy.com/checkout/buy/c501c852-fa81-4410-99c9-aa3080667d5e",
-  idg_business: "https://mdg-indikation.lemonsqueezy.com/checkout/buy/dc64687b-2237-44de-8d71-38eb547b0f41",
-  adg_private:  "https://mdg-indikation.lemonsqueezy.com/checkout/buy/ecedd96b-a2a7-4370-badc-d2ba08976a05",
-  adg_business: "https://mdg-indikation.lemonsqueezy.com/checkout/buy/fc7aaf51-ea60-4747-a315-fb12c5a48de2",
-};
-
-// ======= TOKEN PREFIXES =======
-const TOKEN_PREFIX = {
-  idg_private:  "IDGP-",
-  idg_business: "IDGB-",
-  adg_private:  "ADGP-",
-  adg_business: "ADGB-",
-};
-
-// ======= Scan model =======
-const VARS = [
-  "Freiheit",
-  "Gerechtigkeit",
-  "Wahrheit",
-  "Harmonie",
-  "Effizienz",
-  "Handlungsspielraum",
-  "Mittel",
-  "Balance",
-];
-
-const QUESTIONS = [
-  { v:"Freiheit", q:"Wie frei kannst du in deinem Alltag Entscheidungen treffen, ohne Angst vor Konsequenzen?" },
-  { v:"Freiheit", q:"Wie oft fühlst du dich in Rollen oder Erwartungen gefangen, die du nicht gewählt hast?" },
-  { v:"Freiheit", q:"Kannst du Grenzen setzen, ohne danach Schuldgefühle oder Druck zu spüren?" },
-
-  { v:"Gerechtigkeit", q:"Werden in deinem Umfeld Belastungen und Vorteile grundsätzlich fair verteilt?" },
-  { v:"Gerechtigkeit", q:"Gibt es Regeln, die für manche gelten und für andere nicht?" },
-  { v:"Gerechtigkeit", q:"Fühlst du dich in Entscheidungen, die dich betreffen, ausreichend berücksichtigt?" },
-
-  { v:"Wahrheit", q:"Werden Probleme offen benannt, auch wenn es unangenehm ist?" },
-  { v:"Wahrheit", q:"Kannst du Kritik ansprechen, ohne dass sofort Abwehr oder Schuldzuweisung entsteht?" },
-  { v:"Wahrheit", q:"Gibt es Themen, die „nicht gesagt werden dürfen“, obwohl alle sie spüren?" },
-
-  { v:"Harmonie", q:"Gibt es in deinem Alltag Phasen von Ruhe, in denen du innerlich „runterkommst“?" },
-  { v:"Harmonie", q:"Werden Konflikte so gelöst, dass danach wieder Nähe/Respekt möglich ist?" },
-  { v:"Harmonie", q:"Fühlst du dich mit anderen grundsätzlich verbunden statt dauerhaft im Wettkampf?" },
-
-  { v:"Effizienz", q:"Führt dein Aufwand meistens zu klaren Ergebnissen?" },
-  { v:"Effizienz", q:"Gibt es unnötige Schleifen, Wiederholungen oder chaotische Zuständigkeiten?" },
-  { v:"Effizienz", q:"Kannst du dich gut fokussieren, ohne ständig von „Feuerwehr-Themen“ abgelenkt zu werden?" },
-
-  { v:"Handlungsspielraum", q:"Hast du realistische Optionen, Dinge zu verändern, wenn etwas nicht passt?" },
-  { v:"Handlungsspielraum", q:"Kannst du „Nein“ sagen, ohne echte Nachteile befürchten zu müssen?" },
-  { v:"Handlungsspielraum", q:"Gibt es Ressourcen/Unterstützung, die du aktiv nutzen kannst?" },
-
-  { v:"Mittel", q:"Reichen deine verfügbaren Mittel (Zeit, Geld, Energie) für das, was erwartet wird?" },
-  { v:"Mittel", q:"Gibt es Engpässe, die regelmäßig Stress oder Konflikte auslösen?" },
-  { v:"Mittel", q:"Sind Mittel so verteilt, dass das System nicht „ausblutet“ (z.B. dauerhaftes Überziehen)?" },
-
-  { v:"Balance", q:"Ist die Balance zwischen Geben und Nehmen in deinem Umfeld stimmig?" },
-  { v:"Balance", q:"Gibt es Extrem-Ausschläge (zu viel Kontrolle / zu viel Chaos)?" },
-  { v:"Balance", q:"Fühlst du dich insgesamt „im Gleichgewicht“, auch wenn nicht alles perfekt ist?" }
-];
-
-const SCALE = [
-  { label:"unklar / schwach", value:0.2 },
-  { label:"teils / gemischt", value:0.5 },
-  { label:"klar / stark", value:0.8 },
-];
-
-const el = (id) => document.getElementById(id);
-
-// ======= LocalStorage keys =======
-const LS_MODE  = "mdg_mode";   // private|business
-const LS_LAYER = "mdg_layer";  // idg|adg
-
-const LS_TOKEN = {
-  idg_private:  "tok_idg_private",
-  idg_business: "tok_idg_business",
-  adg_private:  "tok_adg_private",
-  adg_business: "tok_adg_business",
-};
-
-// ======= State (results + snapshots) =======
-let LAST_SCORES  = null;
-let LAST_PATTERN = null;
-let LAST_WEAK    = null;
-
-let LAST_RADAR_DATAURL   = null;
-let LAST_TREND_DATAURL   = null;
-let LAST_ISTSOLL_DATAURL = null;
-
-// Keep observers so we can disconnect cleanly
-let _radarRO = null;
-let _trendRO = null;
-let _istRO   = null;
-
-// ======= Error UI =======
-function showErrorBox(msg) {
-  const box = el("errorBox");
-  if (!box) return;
-  box.classList.remove("hidden");
-  box.textContent = msg || "Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden.";
-}
-function hideErrorBox() {
-  const box = el("errorBox");
-  if (!box) return;
-  box.classList.add("hidden");
-  box.textContent = "";
-}
-
-window.addEventListener("error", (e) => {
-  try {
-    const file = (e && e.filename) ? String(e.filename) : "";
-    if (!file || file.includes("script.js")) {
-      showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
-    }
-  } catch {}
-});
-window.addEventListener("unhandledrejection", () => {
-  showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
-});
-
-// ======= Questions UI =======
-function buildQuestions() {
-  const host = el("questions");
-  if (!host) return;
-  host.innerHTML = "";
-
-  QUESTIONS.forEach((item, idx) => {
-    const qWrap = document.createElement("div");
-    qWrap.className = "q";
-
-    const top = document.createElement("div");
-    top.className = "qTop";
-
-    const left = document.createElement("div");
-    left.className = "qIdx";
-    left.textContent = `${idx+1}/${QUESTIONS.length}`;
-
-    const right = document.createElement("div");
-    right.className = "qVar";
-    right.textContent = item.v;
-
-    top.appendChild(left);
-    top.appendChild(right);
-
-    const p = document.createElement("p");
-    p.className = "qText";
-    p.textContent = item.q;
-
-    const opts = document.createElement("div");
-    opts.className = "opts";
-
-    SCALE.forEach((o) => {
-      const label = document.createElement("label");
-      label.className = "opt";
-
-      const input = document.createElement("input");
-      input.type = "radio";
-      input.name = `q_${idx}`;
-      input.value = String(o.value);
-      input.setAttribute("data-var", item.v);
-
-      const span = document.createElement("span");
-      span.textContent = o.label;
-
-      label.appendChild(input);
-      label.appendChild(span);
-      opts.appendChild(label);
-    });
-
-    qWrap.appendChild(top);
-    qWrap.appendChild(p);
-    qWrap.appendChild(opts);
-    host.appendChild(qWrap);
-  });
-}
-
-// ======= Score helpers =======
-function collectAnswersByVar() {
-  const byVar = {};
-  VARS.forEach(v => (byVar[v] = []));
-
-  const missing = [];
-  for (let i = 0; i < QUESTIONS.length; i++) {
-    const chosen = document.querySelector(`input[name="q_${i}"]:checked`);
-    if (!chosen) { missing.push(i + 1); continue; }
-    const v = chosen.getAttribute("data-var");
-    byVar[v].push(Number(chosen.value));
-  }
-  return { ok: missing.length === 0, byVar, missing };
-}
-
-function avg(arr) {
-  return (!arr || !arr.length) ? 0 : arr.reduce((a,b)=>a+b,0) / arr.length;
-}
-
-function scoreAll(byVar) {
-  const scores = {};
-  VARS.forEach(v => (scores[v] = avg(byVar[v])));
-  return scores;
-}
-
-function weakestVar(scores) {
-  let w = null;
-  for (const v of VARS) {
-    const val = Number(scores?.[v] ?? 0);
-    if (w === null || val < w.val) w = { key: v, val };
-  }
-  return w;
-}
-
-function weakestVars(scores, n = 2) {
-  return Object.entries(scores || {})
-    .sort((a,b)=>Number(a[1])-Number(b[1]))
-    .slice(0, n)
-    .map(([k])=>k);
-}
-
-function timeWindowFor(value) {
-  const v = Number(value || 0);
-  if (v <= 0.3) return "jetzt (akut) · 24–72h Fokus";
-  if (v <= 0.55) return "bald · 1–2 Wochen Fokus";
-  return "stabil · nur Feintuning nötig";
-}
-
-function clamp01(x) {
-  return Math.max(0, Math.min(1, Number(x) || 0));
-}
-
-function calcPattern(scores){
-  const vals = Object.values(scores || {}).map(Number);
-  const min = Math.min(...vals);
-  const max = Math.max(...vals);
-  const spread = Number((max - min).toFixed(2));
-  const sorted = Object.entries(scores || {}).sort((a,b)=>Number(a[1])-Number(b[1]));
-  const low_cluster = sorted.filter(([,v])=>Number(v) <= 0.4).map(([k])=>k);
-  const high_cluster = sorted.filter(([,v])=>Number(v) >= 0.7).map(([k])=>k);
-  return { low_cluster, high_cluster, spread, min:Number(min.toFixed(2)), max:Number(max.toFixed(2)) };
-}
-
-// ======= Right panel render =======
-function renderBars(scores) {
-  const host = el("bars");
-  if (!host) return;
-  host.innerHTML = "";
-  for (const v of VARS) {
-    const val = Number(scores?.[v] ?? 0);
-    const row = document.createElement("div");
-    row.className = "barRow";
-
-    const name = document.createElement("div");
-    name.className = "barName";
-    name.textContent = v;
-
-    const track = document.createElement("div");
-    track.className = "barTrack";
-
-    const fill = document.createElement("div");
-    fill.className = "barFill";
-    fill.style.width = `${Math.round(val * 100)}%`;
-    track.appendChild(fill);
-
-    const num = document.createElement("div");
-    num.className = "barVal";
-    num.textContent = val.toFixed(2);
-
-    row.appendChild(name);
-    row.appendChild(track);
-    row.appendChild(num);
-    host.appendChild(row);
-  }
-}
-
-function renderWeakest(weak) {
-  const host = el("weakest");
-  if (!host || !weak) return;
-  host.innerHTML = `<span class="badge">${escapeHTML(weak.key)}</span> <span class="muted">Score:</span> <strong>${Number(weak.val).toFixed(2)}</strong>`;
-}
-
-function renderTimewin(weak) {
-  const host = el("timewin");
-  if (!host || !weak) return;
-  host.innerHTML = `<span class="badge">${escapeHTML(timeWindowFor(weak.val))}</span>`;
-}
-
-function renderMini(scores, maxN = 3) {
-  const host = el("deepMini");
-  if (!host) return;
-  host.innerHTML = "";
-  Object.entries(scores || {})
-    .sort((a,b)=>Number(a[1])-Number(b[1]))
-    .slice(0, maxN)
-    .forEach(([v,val])=>{
-      const div = document.createElement("div");
-      div.className = "ddItem";
-      div.innerHTML = `<span class="badge">${escapeHTML(v)}</span> <span class="muted">Score:</span> <strong>${Number(val).toFixed(2)}</strong>`;
-      host.appendChild(div);
-    });
-}
-
-// ======= Canvas helpers =======
-function roundRect(ctx, x, y, w, h, r){
-  const rr = Math.min(r, w/2, h/2);
-  ctx.beginPath();
-  ctx.moveTo(x+rr, y);
-  ctx.arcTo(x+w, y, x+w, y+h, rr);
-  ctx.arcTo(x+w, y+h, x, y+h, rr);
-  ctx.arcTo(x, y+h, x, y, rr);
-  ctx.arcTo(x, y, x+w, y, rr);
-  ctx.closePath();
-}
-
-function textBadge(ctx, x, y, text, opt = {}){
-  const padX = opt.padX ?? 10;
-  const padY = opt.padY ?? 7;
-  const r = opt.r ?? 10;
-  const bg = opt.bg ?? "rgba(15,21,34,0.86)";
-  const stroke = opt.stroke ?? "rgba(255,255,255,0.18)";
-  const color = opt.color ?? "rgba(255,255,255,0.92)";
-  const font = opt.font ?? "700 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-
-  ctx.save();
-  ctx.font = font;
-  const tw = ctx.measureText(String(text)).width;
-  const w = tw + padX*2;
-  const h = 26 + padY - 7;
-  const bx = Math.round(x);
-  const by = Math.round(y);
-
-  ctx.shadowColor = "rgba(0,0,0,0.45)";
-  ctx.shadowBlur = 12;
-
-  ctx.fillStyle = bg;
-  ctx.strokeStyle = stroke;
-  ctx.lineWidth = 1.2;
-  roundRect(ctx, bx, by, w, h, r);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = color;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillText(String(text), bx + padX, by + h/2);
-  ctx.restore();
-
-  return { w, h };
-}
-
-function getCanvasIn(host){
-  host.innerHTML = "";
-  const canvas = document.createElement("canvas");
-  canvas.style.width = "100%";
-  canvas.style.height = "100%";
-  canvas.style.display = "block";
-  host.appendChild(canvas);
-  return canvas;
-}
-
-function snapshotCanvas(canvas){
-  try { return canvas.toDataURL("image/png"); } catch { return null; }
-}
-
-function safeObserveResize(host, draw, prevObserver){
-  try { prevObserver?.disconnect?.(); } catch {}
-  if (typeof ResizeObserver === "undefined") {
-    // fallback: redraw on window resize
-    const handler = () => draw();
-    window.addEventListener("resize", handler, { passive:true });
-    return { disconnect(){ window.removeEventListener("resize", handler); } };
-  }
-  const ro = new ResizeObserver(() => draw());
-  ro.observe(host);
-  return ro;
-}
-
-// ======= Radar =======
-function renderRadar(scores, weak) {
-  const host = el("plot3d");
-  if (!host) return;
-
-  const canvas = getCanvasIn(host);
-
-  const draw = () => {
-    if (host.getBoundingClientRect().height < 180) host.style.height = host.style.height || "360px";
-
-    const rect = host.getBoundingClientRect();
-    const cssW = Math.max(260, Math.floor(rect.width));
-    const cssH = Math.max(260, Math.floor(rect.height));
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-
-    canvas.width  = Math.floor(cssW * dpr);
-    canvas.height = Math.floor(cssH * dpr);
-
-    const ctx = canvas.getContext("2d");
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0,0,cssW,cssH);
-
-    const cx = cssW * 0.50;
-    const cy = cssH * 0.52;
-    const R  = Math.min(cssW, cssH) * 0.34;
-    const labelR = R * 1.18;
-    const levels = 5;
-    const angleFor = (i) => (-Math.PI/2) + (Math.PI * 2 * i / VARS.length);
-
-    const gridStroke  = "rgba(255,255,255,0.18)";
-    const gridStroke2 = "rgba(255,255,255,0.10)";
-    const axisStroke  = "rgba(255,255,255,0.10)";
-    const polyStroke  = "rgba(158,240,216,0.85)";
-    const polyFill    = "rgba(158,240,216,0.16)";
-    const dotFill     = "rgba(255,255,255,0.78)";
-    const dotStroke   = "rgba(0,0,0,0.35)";
-    const arrowStroke = "rgba(246,204,114,0.95)";
-    const arrowGlow   = "rgba(246,204,114,0.22)";
-
-    const g = ctx.createRadialGradient(cx, cy, R*0.2, cx, cy, R*1.45);
-    g.addColorStop(0, "rgba(158,240,216,0.09)");
-    g.addColorStop(0.6, "rgba(0,0,0,0.00)");
-    g.addColorStop(1, "rgba(0,0,0,0.20)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0,0,cssW,cssH);
-
-    // grid rings
-    for (let lv=1; lv<=levels; lv++){
-      const rr = (R * lv/levels);
-      ctx.beginPath();
-      for (let i=0;i<VARS.length;i++){
-        const a = angleFor(i);
-        const x = cx + Math.cos(a)*rr;
-        const y = cy + Math.sin(a)*rr;
-        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-      }
-      ctx.closePath();
-      ctx.strokeStyle = (lv === levels) ? gridStroke : gridStroke2;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
-
-    // axes
-    for (let i=0;i<VARS.length;i++){
-      const a = angleFor(i);
-      ctx.beginPath();
-      ctx.moveTo(cx,cy);
-      ctx.lineTo(cx + Math.cos(a)*R, cy + Math.sin(a)*R);
-      ctx.strokeStyle = axisStroke;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
-
-    // points
-    const pts = VARS.map((v,i)=>{
-      const val = clamp01(scores?.[v] ?? 0);
-      const a = angleFor(i);
-      const rr = R * (0.18 + 0.82*val);
-      return { v, val, a, x: cx + Math.cos(a)*rr, y: cy + Math.sin(a)*rr };
-    });
-
-    // polygon fill
-    ctx.beginPath();
-    pts.forEach((p, i) => (i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y)));
-    ctx.closePath();
-    ctx.fillStyle = polyFill;
-    ctx.fill();
-
-    // polygon stroke
-    ctx.beginPath();
-    pts.forEach((p, i) => (i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y)));
-    ctx.closePath();
-    ctx.strokeStyle = polyStroke;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // dots
-    pts.forEach((p)=>{
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 4.6, 0, Math.PI*2);
-      ctx.fillStyle = dotFill;
-      ctx.fill();
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = dotStroke;
-      ctx.stroke();
-    });
-
-    // labels
-    ctx.font = "600 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-    ctx.fillStyle = "rgba(255,255,255,0.86)";
-    pts.forEach((p)=>{
-      const lx = cx + Math.cos(p.a)*labelR;
-      const ly = cy + Math.sin(p.a)*labelR;
-      const c = Math.cos(p.a);
-      ctx.textAlign = (c > 0.25) ? "left" : (c < -0.25 ? "right" : "center");
-      ctx.textBaseline = "middle";
-      ctx.save();
-      ctx.shadowColor = "rgba(0,0,0,0.55)";
-      ctx.shadowBlur = 6;
-      ctx.fillText(p.v, lx, ly);
-      ctx.restore();
-    });
-
-    // arrow to weakest
-    if (weak?.key) {
-      const wIdx = VARS.indexOf(weak.key);
-      if (wIdx >= 0){
-        const a = angleFor(wIdx);
-        const endR = R * 1.12;
-        const tipX = cx + Math.cos(a) * endR;
-        const tipY = cy + Math.sin(a) * endR;
-
-        ctx.beginPath();
-        ctx.moveTo(cx,cy);
-        ctx.lineTo(tipX, tipY);
-        ctx.strokeStyle = arrowGlow;
-        ctx.lineWidth = 10;
-        ctx.lineCap = "round";
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(cx,cy);
-        ctx.lineTo(tipX, tipY);
-        ctx.strokeStyle = arrowStroke;
-        ctx.lineWidth = 3;
-        ctx.lineCap = "round";
-        ctx.stroke();
-
-        const head = 10;
-        const leftA = a + Math.PI*0.86;
-        const rightA= a - Math.PI*0.86;
-        ctx.beginPath();
-        ctx.moveTo(tipX, tipY);
-        ctx.lineTo(tipX + Math.cos(leftA)*head,  tipY + Math.sin(leftA)*head);
-        ctx.lineTo(tipX + Math.cos(rightA)*head, tipY + Math.sin(rightA)*head);
-        ctx.closePath();
-        ctx.fillStyle = arrowStroke;
-        ctx.fill();
-
-        const label = `Schwach: ${weak.key} · ${Number(weak.val).toFixed(2)}`;
-        ctx.font = "700 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-        const m = 10;
-        const tw = ctx.measureText(label).width;
-        const bw = tw + m*2;
-        const bh = 30;
-
-        let bx = tipX + 18;
-        let by = tipY - 18 - bh;
-        bx = Math.max(10, Math.min(cssW - bw - 10, bx));
-        by = Math.max(10, Math.min(cssH - bh - 10, by));
-
-        ctx.save();
-        ctx.shadowColor = "rgba(0,0,0,0.45)";
-        ctx.shadowBlur = 12;
-        ctx.fillStyle = "rgba(15,21,34,0.86)";
-        ctx.strokeStyle = "rgba(246,204,114,0.65)";
-        ctx.lineWidth = 1.5;
-        roundRect(ctx, bx, by, bw, bh, 10);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-
-        ctx.fillStyle = "rgba(255,255,255,0.92)";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText(label, bx + m, by + bh/2);
-      }
-    }
-
-    LAST_RADAR_DATAURL = snapshotCanvas(canvas);
-  };
-
-  draw();
-  _radarRO = safeObserveResize(host, draw, _radarRO);
-}
-
-// ======= Indices for XY charts =======
-function stabilityIndex(scores){
-  const s = avg([scores?.Gerechtigkeit, scores?.Wahrheit, scores?.Balance, scores?.Harmonie].map(clamp01));
-  return clamp01(s);
-}
-function performanceIndex(scores){
-  const p = avg([scores?.Effizienz, scores?.Handlungsspielraum, scores?.Mittel, scores?.Freiheit].map(clamp01));
-  return clamp01(p);
-}
-
-// ======= Generic XY grid chart =======
-function renderXYGrid(hostId, build, onSnapshot, observerRefSetter){
-  const host = el(hostId);
-  if (!host) return null;
-
-  const canvas = getCanvasIn(host);
-
-  const draw = () => {
-    if (host.getBoundingClientRect().height < 120) host.style.height = host.style.height || "260px";
-
-    const rect = host.getBoundingClientRect();
-    const cssW = Math.max(260, Math.floor(rect.width));
-    const cssH = Math.max(220, Math.floor(rect.height));
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-
-    canvas.width  = Math.floor(cssW * dpr);
-    canvas.height = Math.floor(cssH * dpr);
-
-    const ctx = canvas.getContext("2d");
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0,0,cssW,cssH);
-
-    // chart area
-    const padL = 44, padR = 14, padT = 18, padB = 30;
-    const x0 = padL, y0 = padT;
-    const w = cssW - padL - padR;
-    const h = cssH - padT - padB;
-
-    // background glow
-    const g = ctx.createRadialGradient(cssW*0.6, cssH*0.25, 10, cssW*0.6, cssH*0.25, cssW*0.9);
-    g.addColorStop(0, "rgba(158,240,216,0.08)");
-    g.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0,0,cssW,cssH);
-
-    // grid
-    ctx.strokeStyle = "rgba(255,255,255,0.12)";
-    ctx.lineWidth = 1;
-    const steps = 5;
-    for (let i=0;i<=steps;i++){
-      const xx = x0 + (w * i/steps);
-      ctx.beginPath(); ctx.moveTo(xx, y0); ctx.lineTo(xx, y0+h); ctx.stroke();
-      const yy = y0 + (h * i/steps);
-      ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x0+w, yy); ctx.stroke();
-    }
-
-    const toX = (x) => x0 + clamp01(x)*w;
-    const toY = (y) => y0 + (1-clamp01(y))*h;
-
-    // axes labels
-    ctx.save();
-    ctx.fillStyle = "rgba(255,255,255,0.75)";
-    ctx.font = "600 11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-    ctx.textAlign = "left"; ctx.textBaseline = "top";
-    ctx.fillText("Stability (0→1)", x0, y0+h+10);
-    ctx.translate(12, y0+h);
-    ctx.rotate(-Math.PI/2);
-    ctx.fillText("Performance (0→1)", 0, 0);
-    ctx.restore();
-
-    build({ ctx, cssW, cssH, x0, y0, w, h, toX, toY });
-
-    if (typeof onSnapshot === "function") onSnapshot(canvas);
-  };
-
-  draw();
-  if (typeof observerRefSetter === "function") observerRefSetter(safeObserveResize(host, draw, null));
-  return { draw };
-}
-
-// ======= Trend chart =======
-function renderTrend(scores){
-  const base = { x: stabilityIndex(scores), y: performanceIndex(scores) };
-
-  const weak2 = weakestVars(scores, 2);
-  const weakness = clamp01(1 - avg(weak2.map(k => scores?.[k] ?? 0)));
-
-  const best30 = { x: clamp01(base.x + 0.10 + 0.10*weakness), y: clamp01(base.y + 0.08 + 0.10*weakness) };
-  const best90 = { x: clamp01(best30.x + 0.07), y: clamp01(best30.y + 0.09) };
-
-  const fail30 = { x: clamp01(base.x - (0.05 + 0.07*weakness)), y: clamp01(base.y - (0.03 + 0.05*weakness)) };
-  const fail90 = { x: clamp01(fail30.x - 0.05), y: clamp01(fail30.y - 0.05) };
-
-  const base30 = { x: clamp01(base.x + 0.04), y: clamp01(base.y + 0.03) };
-  const base90 = { x: clamp01(base30.x + 0.04), y: clamp01(base30.y + 0.04) };
-
-  const points = {
-    Base:   [ {t:"D0",...base}, {t:"D30",...base30}, {t:"D90",...base90} ],
-    Best:   [ {t:"D0",...base}, {t:"D30",...best30}, {t:"D90",...best90} ],
-    Failure:[ {t:"D0",...base}, {t:"D30",...fail30}, {t:"D90",...fail90} ],
-  };
-
-  try { _trendRO?.disconnect?.(); } catch {}
-  _trendRO = null;
-
-  renderXYGrid(
-    "trendPlot",
-    ({ ctx, toX, toY }) => {
-      const colors = {
-        Base: "rgba(255,255,255,0.70)",
-        Best: "rgba(158,240,216,0.90)",
-        Failure: "rgba(246,204,114,0.95)",
-      };
-
-      // legend
-      ctx.save();
-      ctx.font = "700 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-      ctx.textAlign = "left"; ctx.textBaseline = "top";
-      const lx = 16, ly = 8;
-      ["Base","Best","Failure"].forEach((k, i)=>{
-        ctx.fillStyle = colors[k];
-        ctx.fillText(k, lx, ly + i*16);
-      });
-      ctx.restore();
-
-      // series
-      for (const name of Object.keys(points)){
-        const arr = points[name];
-        const col = colors[name];
-
-        // line
-        ctx.beginPath();
-        arr.forEach((p, i)=>{
-          const x = toX(p.x), y = toY(p.y);
-          if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-        });
-        ctx.strokeStyle = col;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // points + labels
-        arr.forEach((p)=>{
-          const x = toX(p.x), y = toY(p.y);
-
-          ctx.beginPath();
-          ctx.arc(x,y,4.2,0,Math.PI*2);
-          ctx.fillStyle = "rgba(255,255,255,0.85)";
-          ctx.fill();
-          ctx.lineWidth = 1;
-          ctx.strokeStyle = "rgba(0,0,0,0.35)";
-          ctx.stroke();
-
-          const shift = (name === "Base") ? {dx: 8, dy: -18}
-                      : (name === "Best" ? {dx: 8, dy: -2}
-                      : {dx: -34, dy: 4});
-
-          textBadge(ctx, x + shift.dx, y + shift.dy, p.t, {
-            padX: 8, padY: 6, r: 10,
-            bg: "rgba(15,21,34,0.78)",
-            stroke: "rgba(255,255,255,0.14)",
-            font: "800 11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial"
-          });
-        });
-      }
-    },
-    (canvas)=> { LAST_TREND_DATAURL = snapshotCanvas(canvas); },
-    (ro)=> { _trendRO = ro; }
-  );
-
-  return { points };
-}
-
-// ======= Ist → Soll chart =======
-function renderIstSoll(scores){
-  const ist = { x: stabilityIndex(scores), y: performanceIndex(scores) };
-
-  const low  = { x: clamp01(ist.x + 0.06), y: clamp01(ist.y + 0.04) };
-  const med  = { x: clamp01(ist.x + 0.12), y: clamp01(ist.y + 0.08) };
-  const high = { x: clamp01(ist.x + 0.18), y: clamp01(ist.y + 0.14) };
-
-  const pts = [
-    { name:"IST",  p: ist,  key:"ist"  },
-    { name:"LOW",  p: low,  key:"low"  },
-    { name:"MED",  p: med,  key:"med"  },
-    { name:"HIGH", p: high, key:"high" },
-  ];
-
-  function placeLabels(points, toX, toY){
-    const placed = [];
-    return points.map((d)=>{
-      const x = toX(d.p.x), y = toY(d.p.y);
-
-      let dx = 10, dy = -18;
-      if (d.key === "ist"){ dx = -28; dy = 10; }
-      if (d.key === "high"){ dx = 10; dy = -28; }
-
-      let bx = x + dx, by = y + dy;
-
-      for (let tries=0; tries<10; tries++){
-        let collide = false;
-        for (const b of placed){
-          const w = 150, h = 26;
-          const inter = !(bx+w < b.x || bx > b.x+b.w || by+h < b.y || by > b.y+b.h);
-          if (inter){ collide = true; break; }
-        }
-        if (!collide) break;
-        by += 18;
-        bx += (tries%2===0) ? 10 : -10;
-      }
-      placed.push({x:bx,y:by,w:150,h:26});
-      return { x, y, bx, by };
-    });
-  }
-
-  try { _istRO?.disconnect?.(); } catch {}
-  _istRO = null;
-
-  renderXYGrid(
-    "istSollPlot",
-    ({ ctx, toX, toY }) => {
-      const colVec = "rgba(158,240,216,0.90)";
-      const colGlow= "rgba(158,240,216,0.18)";
-      const colIst = "rgba(246,204,114,0.95)";
-
-      const path = [ist, low, med, high].map(p => ({x:toX(p.x), y:toY(p.y)}));
-
-      // glow
-      ctx.beginPath();
-      ctx.moveTo(path[0].x, path[0].y);
-      for (let i=1;i<path.length;i++) ctx.lineTo(path[i].x, path[i].y);
-      ctx.strokeStyle = colGlow;
-      ctx.lineWidth = 10;
-      ctx.lineCap = "round";
-      ctx.stroke();
-
-      // main
-      ctx.beginPath();
-      ctx.moveTo(path[0].x, path[0].y);
-      for (let i=1;i<path.length;i++) ctx.lineTo(path[i].x, path[i].y);
-      ctx.strokeStyle = colVec;
-      ctx.lineWidth = 2.8;
-      ctx.lineCap = "round";
-      ctx.stroke();
-
-      // arrow head
-      const a = Math.atan2(path[3].y - path[2].y, path[3].x - path[2].x);
-      const head = 10;
-      ctx.beginPath();
-      ctx.moveTo(path[3].x, path[3].y);
-      ctx.lineTo(path[3].x + Math.cos(a + Math.PI*0.85)*head, path[3].y + Math.sin(a + Math.PI*0.85)*head);
-      ctx.lineTo(path[3].x + Math.cos(a - Math.PI*0.85)*head, path[3].y + Math.sin(a - Math.PI*0.85)*head);
-      ctx.closePath();
-      ctx.fillStyle = colVec;
-      ctx.fill();
-
-      // points
-      pts.forEach((d)=>{
-        const x = toX(d.p.x), y = toY(d.p.y);
-        ctx.beginPath();
-        ctx.arc(x,y,4.6,0,Math.PI*2);
-        ctx.fillStyle = "rgba(255,255,255,0.84)";
-        ctx.fill();
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = "rgba(0,0,0,0.35)";
-        ctx.stroke();
-
-        if (d.key==="ist"){
-          ctx.beginPath();
-          ctx.arc(x,y,7.6,0,Math.PI*2);
-          ctx.strokeStyle = colIst;
-          ctx.lineWidth = 2.2;
-          ctx.stroke();
-        }
-      });
-
-      // labels
-      const placed = placeLabels(pts, toX, toY);
-      placed.forEach((pos, i)=>{
-        const d = pts[i];
-        const label = `${d.name} (${d.p.x.toFixed(2)}, ${d.p.y.toFixed(2)})`;
-        const bg = (d.key==="ist") ? "rgba(246,204,114,0.18)" : "rgba(15,21,34,0.82)";
-        const stroke = (d.key==="ist") ? "rgba(246,204,114,0.70)" : "rgba(255,255,255,0.14)";
-        textBadge(ctx, pos.bx, pos.by, label, {
-          bg,
-          stroke,
-          padX: 10,
-          font: "800 11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial"
-        });
-
-        ctx.beginPath();
-        ctx.moveTo(pos.x, pos.y);
-        ctx.lineTo(pos.bx + 10, pos.by + 12);
-        ctx.strokeStyle = "rgba(255,255,255,0.18)";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      });
-    },
-    (canvas)=> { LAST_ISTSOLL_DATAURL = snapshotCanvas(canvas); },
-    (ro)=> { _istRO = ro; }
-  );
-
-  return { ist, low, med, high };
-}
-
-// ======= Cards render =======
-function escapeHTML(str){
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function buildCardsHTML(cards){
-  const html = [`<div class="ddCards">`];
-  for (const c of (cards || [])){
-    const title = escapeHTML(c.title || "Abschnitt");
-    const pill = escapeHTML(c.pill || "");
-    const body = c.body ? `<div class="ddText">${escapeHTML(c.body)}</div>` : "";
-
-    const bullets = Array.isArray(c.bullets) && c.bullets.length
-      ? `<ul class="ddList">${c.bullets.map(b=>`
-          <li><span class="ddBullet"></span><div>${escapeHTML(b)}</div></li>
-        `).join("")}</ul>`
-      : "";
-
-    const timeline = Array.isArray(c.timeline) && c.timeline.length
-      ? `<div class="ddTimeline">${
-          c.timeline.map(step => `
-            <div class="ddTime">${escapeHTML(step.t)}</div>
-            <div class="ddStep">${escapeHTML(step.txt)}</div>
-          `).join("")
-        }</div>`
-      : "";
-
-    html.push(`
-      <div class="ddCard">
-        <div class="ddTitle">
-          <h4>${title}</h4>
-          ${pill ? `<span class="ddPill">${pill}</span>` : ``}
-        </div>
-        ${body}
-        ${bullets}
-        ${timeline}
-        ${c.small ? `<div class="ddSmall">${escapeHTML(c.small)}</div>` : ``}
-      </div>
-    `);
-  }
-  html.push(`</div>`);
-  return html.join("");
-}
-
-// ======= Product selection (UI is single source of truth) =======
-function uiSelectedLayer(){
-  const a = el("layerADG");
-  const i = el("layerIDG");
-  if (a?.classList.contains("active")) return "adg";
-  if (i?.classList.contains("active")) return "idg";
-  return localStorage.getItem(LS_LAYER) || "idg";
-}
-
-function uiSelectedMode(){
-  const b = el("modeBusiness");
-  const p = el("modePrivate");
-  if (b?.classList.contains("active")) return "business";
-  if (p?.classList.contains("active")) return "private";
-  return localStorage.getItem(LS_MODE) || "private";
-}
-
-function productKey(){
-  const layer = uiSelectedLayer();
-  const mode  = uiSelectedMode();
-  if (layer === "idg" && mode === "private")  return "idg_private";
-  if (layer === "idg" && mode === "business") return "idg_business";
-  if (layer === "adg" && mode === "private")  return "adg_private";
-  return "adg_business";
-}
-
-function requiredPrefix(){
-  return TOKEN_PREFIX[productKey()] || "TOKEN-";
-}
-
-function tokenLooksValidForSelection(tok){
-  const pfx = requiredPrefix();
-  const t = String(tok || "").trim().toUpperCase();
-  return t.startsWith(String(pfx).toUpperCase());
-}
-
-function getToken(){
-  const key = productKey();
-  const input = el("tokenInput");
-  const fromInput = (input?.value || "").trim();
-  if (fromInput) return fromInput;
-  return (localStorage.getItem(LS_TOKEN[key]) || "").trim();
-}
-
-function setTokenToStorage(raw){
-  const key = productKey();
-  const v = String(raw || "").trim();
-  if (!v) return;
-  localStorage.setItem(LS_TOKEN[key], v);
-}
-
-function hydrateTokenInput(){
-  const input = el("tokenInput");
-  if (!input) return;
-  const key = productKey();
-  const stored = localStorage.getItem(LS_TOKEN[key]) || "";
-  input.value = stored;
-  input.placeholder = `${requiredPrefix()}XXXX-XXXX-XXXX`;
-}
-
-function updateTokenUI(){
-  const key = productKey();
-
-  const tokenLabel = el("tokenLabel"); // optional (depends on HTML)
-  const tokenSmall = el("tokenSmall");
-
-  if (tokenLabel){
-    const names = {
-      idg_private:  "IDG Privat Token",
-      idg_business: "IDG Business Token",
-      adg_private:  "ADG Privat Token",
-      adg_business: "ADG Business Token",
+// app.js
+(() => {
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  // ---------- Mobile menu ----------
+  const burger = $(".burger");
+  const drawer = $(".drawer");
+
+  if (burger && drawer) {
+    const toggleDrawer = () => {
+      const expanded = burger.getAttribute("aria-expanded") === "true";
+      burger.setAttribute("aria-expanded", String(!expanded));
+      drawer.hidden = expanded; // if it was expanded, hide it
     };
-    tokenLabel.textContent = names[key] || "Token";
-  }
-  if (tokenSmall){
-    tokenSmall.textContent = `Erforderlich: Token mit Prefix ${requiredPrefix()}`;
-  }
 
-  // buy links
-  const buyIDGP = el("buyIDGPrivate");
-  const buyIDGB = el("buyIDGBusiness");
-  const buyADGP = el("buyADGPrivate");
-  const buyADGB = el("buyADGBusiness");
-
-  if (buyIDGP) buyIDGP.href = CHECKOUT.idg_private;
-  if (buyIDGB) buyIDGB.href = CHECKOUT.idg_business;
-  if (buyADGP) buyADGP.href = CHECKOUT.adg_private;
-  if (buyADGB) buyADGB.href = CHECKOUT.adg_business;
-
-  // text standard
-  if (buyIDGP) buyIDGP.textContent = "Token kaufen (19,99€)";
-  if (buyIDGB) buyIDGB.textContent = "Token kaufen (299,99€)";
-  if (buyADGP) buyADGP.textContent = "Token kaufen (49,99€)";
-  if (buyADGB) buyADGB.textContent = "Token kaufen (1.199,99€)";
-
-  // show only current product button
-  const show = (node, on) => { if (node) node.style.display = on ? "inline-flex" : "none"; };
-  show(buyIDGP, key === "idg_private");
-  show(buyIDGB, key === "idg_business");
-  show(buyADGP, key === "adg_private");
-  show(buyADGB, key === "adg_business");
-}
-
-function updateRunButtonState(){
-  const btn = el("runBtn");
-  if (!btn) return;
-  const tok = getToken();
-  const ok = tokenLooksValidForSelection(tok);
-  btn.disabled = !LAST_SCORES || !ok;
-}
-
-function applyToken(){
-  const input = el("tokenInput");
-  const raw = (input?.value || "").trim();
-  if (!raw) { updateRunButtonState(); return; }
-  setTokenToStorage(raw);
-  hydrateTokenInput();
-  updateRunButtonState();
-}
-
-// ======= UI setters =======
-function setLayer(layer){
-  const next = (layer === "adg") ? "adg" : "idg";
-  localStorage.setItem(LS_LAYER, next);
-
-  const bIDG = el("layerIDG");
-  const bADG = el("layerADG");
-  const hint = el("layerHint");
-
-  if (bIDG && bADG){
-    bIDG.classList.toggle("active", next === "idg");
-    bADG.classList.toggle("active", next === "adg");
-    bIDG.setAttribute("aria-selected", String(next === "idg"));
-    bADG.setAttribute("aria-selected", String(next === "adg"));
-  }
-  if (hint){
-    hint.textContent = (next === "adg")
-      ? "ADG: Strukturumbau (Tragfähigkeit, Entscheidungen, Institutionalisierung)"
-      : "IDG: Stabilisierung (Fokus, Hebel, Interventionen, Zeitfenster)";
+    burger.addEventListener("click", toggleDrawer);
+    $$(".drawer a").forEach(a => a.addEventListener("click", () => {
+      burger.setAttribute("aria-expanded", "false");
+      drawer.hidden = true;
+    }));
   }
 
-  hydrateTokenInput();
-  updateTokenUI();
-  updateRunButtonState();
-  clearOutput();
-}
+  // ---------- Segmented toggles (context/depth) ----------
+  const state = {
+    lang: "de",
+    context: "private",
+    depth: "quick",
+  };
 
-function setMode(mode){
-  const next = (mode === "business") ? "business" : "private";
-  localStorage.setItem(LS_MODE, next);
-
-  const bPriv = el("modePrivate");
-  const bBus  = el("modeBusiness");
-  const hint  = el("modeHint");
-
-  if (bPriv && bBus){
-    bPriv.classList.toggle("active", next === "private");
-    bBus.classList.toggle("active", next === "business");
-    bPriv.setAttribute("aria-selected", String(next === "private"));
-    bBus.setAttribute("aria-selected", String(next === "business"));
-  }
-  if (hint){
-    hint.textContent = (next === "business")
-      ? "Business: Organisation/Team · Boardfähiger Output"
-      : "Privat: persönlich/Beziehung · klare Orientierung";
+  function setSegment(group, value) {
+    state[group] = value;
+    const buttons = $$(`[data-toggle="${group}"]`);
+    buttons.forEach(btn => {
+      const isActive = btn.dataset.value === value;
+      btn.classList.toggle("is-active", isActive);
+      btn.setAttribute("aria-selected", String(isActive));
+    });
   }
 
-  hydrateTokenInput();
-  updateTokenUI();
-  updateRunButtonState();
-  clearOutput();
-}
+  $$("[data-toggle]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const group = btn.dataset.toggle;
+      const value = btn.dataset.value;
+      setSegment(group, value);
+    });
+  });
 
-function clearOutput(){
-  const out = el("deepOut");
-  if (out){
-    out.innerHTML = "";
-    out.style.display = "none";
-    out.classList.add("hidden");
+  // ---------- Tabs ----------
+  $$(".tabs").forEach(tabs => {
+    const tabButtons = $$("[data-tab]", tabs);
+    const panels = $$("[data-panel]", tabs);
+
+    const activate = (name) => {
+      tabButtons.forEach(b => {
+        const on = b.dataset.tab === name;
+        b.classList.toggle("is-active", on);
+        b.setAttribute("aria-selected", String(on));
+      });
+      panels.forEach(p => p.classList.toggle("is-active", p.dataset.panel === name));
+    };
+
+    tabButtons.forEach(btn => btn.addEventListener("click", () => activate(btn.dataset.tab)));
+  });
+
+  // ---------- Modals ----------
+  function openModal(id) {
+    const el = $(`#modal-${id}`);
+    if (!el) return;
+    if (typeof el.showModal === "function") el.showModal();
+    else el.removeAttribute("hidden");
   }
-  const pdfBtn = el("pdfBtn");
-  if (pdfBtn) pdfBtn.disabled = true;
-}
-
-// ======= Worker errors mapping =======
-function mapWorkerError(err){
-  const e = String(err || "");
-  if (e.includes("TOKEN_REQUIRED")) return "Token erforderlich.";
-  if (e.includes("TOKEN_INVALID")) return "Token ungültig.";
-  if (e.includes("TOKEN_EXHAUSTED")) return "Token ist aufgebraucht.";
-  if (e.includes("TOKEN_WRONG_TYPE")) return "Falscher Token-Typ für diese Ausgabe.";
-  if (e.includes("RATE_LIMIT")) return "Limit erreicht. Bitte später erneut versuchen.";
-  return e;
-}
-
-// ======= Deep output request =======
-async function runProOutput(){
-  hideErrorBox();
-
-  const btn = el("runBtn");
-  const out = el("deepOut");
-  if (!btn || !out) return;
-
-  if (!LAST_SCORES){
-    showErrorBox("Bitte zuerst Quick Scan auswerten.");
-    return;
+  function closeModal(modalEl) {
+    if (!modalEl) return;
+    if (typeof modalEl.close === "function") modalEl.close();
+    else modalEl.setAttribute("hidden", "hidden");
   }
 
-  const tok = getToken();
-  if (!tokenLooksValidForSelection(tok)){
-    showErrorBox(`Falscher Token: Erwartet Prefix ${requiredPrefix()}`);
-    updateRunButtonState();
-    return;
-  }
+  $$("[data-open-modal]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openModal(btn.dataset.openModal);
+    });
+  });
 
-  const layer = uiSelectedLayer();
-  const mode  = uiSelectedMode();
-  const key   = productKey();
+  $$("dialog.modal").forEach(dlg => {
+    dlg.addEventListener("click", (e) => {
+      // click outside content closes
+      const rect = dlg.getBoundingClientRect();
+      const inDialog =
+        e.clientX >= rect.left && e.clientX <= rect.right &&
+        e.clientY >= rect.top && e.clientY <= rect.bottom;
+      if (!inDialog) closeModal(dlg);
+    });
 
-  const weakest = weakestVars(LAST_SCORES, 2);
-  const pattern = LAST_PATTERN || calcPattern(LAST_SCORES);
+    $$("[data-close-modal]", dlg).forEach(btn =>
+      btn.addEventListener("click", () => closeModal(dlg))
+    );
 
-  const payload = {
-    layer,
-    mode,
-    token: tok,
-    language: "de",
-    scores: LAST_SCORES,
-    weakest,
-    pattern,
-    meta: {
-      product: key,
-      tone: (mode === "business") ? "board" : "clear"
+    dlg.addEventListener("cancel", () => closeModal(dlg));
+  });
+
+  // ---------- i18n ----------
+  const dict = {
+    de: {
+      "nav.model": "Modell",
+      "nav.diagnosis": "Diagnose",
+      "nav.results": "Ergebnisse",
+      "nav.actions": "Maßnahmen",
+      "nav.export": "Export",
+      "cta.start": "Diagnose starten",
+      "cta.startNow": "Jetzt starten",
+      "cta.how": "Wie funktioniert das?",
+      "cta.preview": "Outputs ansehen",
+      "cta.backTop": "Zurück nach oben",
+      "cta.pdf": "Beispiel-PDF ansehen",
+      "cta.close": "Schließen",
+
+      "hero.h1": "Primärinstabilität erkennen. Stabilisieren oder umbauen.",
+      "hero.lead": "MDG v2 identifiziert den ersten strukturellen Kipppunkt unter realer oder zukünftiger Last – und zeigt klar: IDG (Stabilisierung) oder ADG (Architektur-Umbau).",
+      "hero.micro": "Keine Psychologie. Keine Stimmung. Struktur. Verstärkung. Entscheidung.",
+
+      "toggle.context": "Kontext",
+      "toggle.private": "Privat",
+      "toggle.business": "Business",
+      "toggle.depth": "Tiefe",
+      "toggle.quick": "Schnell (3–5 Min)",
+      "toggle.precise": "Präzise (10–15 Min)",
+
+      "demo.label": "Beispiel-Ergebnis",
+      "demo.type": "Dominanter Typ: Entscheidungsmonopol",
+      "demo.growth": "Wachstumssensitivität",
+      "demo.growthValue": "Nichtlinear",
+      "demo.reco": "Empfehlung",
+      "demo.recoValue": "ADG erforderlich",
+      "demo.next": "3 Moves jetzt",
+      "demo.m1": "Entscheidungs-Freeze für irreversibles (48h)",
+      "demo.m2": "Decision Triage: nur Top-3 Hebel entscheiden",
+      "demo.m3": "Delegations-Notfall: B/C-Entscheidungen freigeben",
+      "demo.link": "Zu Maßnahmen →",
+
+      "flow.h2": "Strukturelle Diagnose in 7 Schritten",
+      "flow.sub": "Schnell im Einstieg. Präzise in der Tiefe. Klar im Ergebnis.",
+      "flow.s1": "Kontext definieren",
+      "flow.s2": "Quick-Scan",
+      "flow.s3": "5 Diagnose-Module",
+      "flow.s4": "Belastungssimulation",
+      "flow.s5": "Primärinstabilität bestimmen",
+      "flow.s6": "IDG oder ADG ableiten",
+      "flow.s7": "Export & Verlauf",
+      "flow.tagline": "Keine Psychologie. Keine Stimmung. Struktur. Verstärkung. Entscheidung.",
+
+      "modules.h2": "Tiefendiagnose in 5 Modulen",
+      "modules.sub": "Module sind getrennt, aber integriert: Dichte, Verteilung, Verstärkung, Kopplung, Institutionalisierung.",
+      "modules.example": "Beispiel ansehen →",
+      "modules.m1.t": "Entscheidungsarchitektur",
+      "modules.m1.d": "Dichte · Irreversibilität · Delegation · Redundanz",
+      "modules.m2.t": "Lastverteilung",
+      "modules.m2.d": "Asymmetrie · Engpass · Single Point of Failure",
+      "modules.m3.t": "Wachstumsverstärkungstest",
+      "modules.m3.d": "+20% Last · +50% Komplexität · Ausfall Schlüsselrolle",
+      "modules.m4.t": "Macht–Verantwortung",
+      "modules.m4.d": "Entscheidung · Risiko · Information · Konsequenz",
+      "modules.m5.t": "Energie & Fehlerintegration",
+      "modules.m5.d": "Belastung · Regeneration · Feedback · Lernsystem",
+
+      "types.h2": "Ergebnis ist kein Wert – Ergebnis ist ein Typ.",
+      "types.sub": "MDG zeigt dominant + sekundär + Wachstumssensitivität + Handlungspfad.",
+      "types.t1": "Entscheidungsmonopol",
+      "types.t2": "Lastasymmetrie",
+      "types.t3": "Wachstum ohne Struktur",
+      "types.t4": "Macht–Verantwortungs-Mismatch",
+      "types.t5": "Energieentkopplung",
+      "types.t6": "Fehlerintegrationsdefizit",
+      "types.t7": "Nicht-Institutionalisierung",
+
+      "preview.tab1": "Primärinstabilität",
+      "preview.tab2": "Strukturkarte",
+      "preview.dom": "Dominanter Typ",
+      "preview.domValue": "Entscheidungsmonopol",
+      "preview.why": "Warum: hohe Zentralisierung, hohe Irreversibilität, fehlende Stellvertretung.",
+      "preview.sequence": "Sequenz: Entscheidungsstau → Fehlerquote → Energieabfall",
+      "preview.growth": "Wachstumstest",
+      "preview.growthValue": "Bruch bei +20% Last. Empfehlung: ADG.",
+      "preview.moves": "3 Moves jetzt",
+      "preview.pm1": "Entscheidungs-Freeze (48h)",
+      "preview.pm2": "Triage: Top-3 Hebel",
+      "preview.pm3": "Delegation B/C freigeben",
+
+      "map.radar": "Radar (Demo)",
+      "map.note": "Demo-Ansicht: Radar + Modulbalken + Mismatch Top-3.",
+      "map.d": "Entscheidungsarchitektur",
+      "map.l": "Lastverteilung",
+      "map.g": "Wachstumsverstärkung",
+      "map.m": "Macht–Verantwortung",
+      "map.e": "Energie/Fehler",
+      "map.spof": "Single Point of Failure: möglich",
+      "map.mis": "Mismatch Top-3: Info / Risiko / Entscheidung",
+
+      "actions.h2": "Zwei Wege. Eine Entscheidung.",
+      "actions.sub": "IDG stabilisiert. ADG baut um. Beides folgt aus derselben Diagnose.",
+      "actions.idg.t": "IDG – Stabilisierung",
+      "actions.idg.d": "Kurzfristige Entlastung. Schutzmechanismen. Frühindikatoren kontrollieren.",
+      "actions.idg.b1": "3 Moves jetzt",
+      "actions.idg.b2": "3 Moves diese Woche",
+      "actions.idg.b3": "Stop-Liste",
+      "actions.idg.b4": "Messpunkte",
+      "actions.adg.t": "ADG – Architektur",
+      "actions.adg.d": "Struktureller Umbau. Rollen klären. Last verteilen. Institutionalisieren.",
+      "actions.adg.b1": "Architekturentscheidungen",
+      "actions.adg.b2": "3-Phasen-Roadmap",
+      "actions.adg.b3": "Institutionalisierung",
+      "actions.adg.b4": "Wachstumskriterien",
+
+      "export.h2": "Export & Verlauf",
+      "export.sub": "Ergebnis speichern, vergleichen, als PDF exportieren – optional in Pro.",
+      "export.c1.t": "PDF-Export",
+      "export.c1.d": "Ergebnis + Maßnahmen in einem klaren Report.",
+      "export.c2.t": "Verlauf",
+      "export.c2.d": "Diagnosen vergleichen und Trend erkennen.",
+      "export.c3.t": "Sharing",
+      "export.c3.d": "Optional: Link teilen (Demo / anonymisiert).",
+
+      "legal.h3": "Was es ist – und was nicht",
+      "legal.p1": "MDG ist ein strukturelles Analysemodell.",
+      "legal.p2": "Es ersetzt keine medizinische, therapeutische, rechtliche oder finanzielle Beratung. Die Ergebnisse dienen der Entscheidungsunterstützung.",
+      "legal.p3": "Datenschutz und Haftungshinweise findest du im Footer.",
+
+      "footer.tag": "Strukturdiagnose für Stabilisierung und Umbau.",
+
+      "modal.explainer.t": "Wie MDG v2 funktioniert",
+      "modal.explainer.p1": "Primärinstabilität ist der erste strukturelle Bruch unter Verstärkung – nicht der niedrigste Wert im Radar.",
+      "modal.explainer.l1": "Quick-Scan: Eingangssignal, kein Urteil.",
+      "modal.explainer.l2": "5 Module: Entscheidungen, Last, Wachstum, Kopplung, Institutionalisierung.",
+      "modal.explainer.l3": "Simulation: Wo bricht es zuerst bei +Last / +Komplexität / Ausfall?",
+      "modal.explainer.l4": "Ergebnis: Typ (dominant + sekundär) + Wachstumssensitivität.",
+      "modal.explainer.l5": "Pfad: IDG (Stabilisierung) oder ADG (Umbau).",
+
+      "modal.pdf.t": "Beispiel-PDF (Demo)",
+      "modal.pdf.p": "Hier würdest du ein Demo-PDF verlinken oder ein Bild der ersten Seite zeigen.",
+
+      "modal.m1.t": "Modul: Entscheidungsarchitektur",
+      "modal.m1.p": "Misst Dichte, Irreversibilität, Delegation und Redundanz. Ergebnis: Entscheidungsstress und Engpasshinweise.",
+      "modal.m2.t": "Modul: Lastverteilung",
+      "modal.m2.p": "Erkennt Asymmetrien, Single Points of Failure und Engpassfrequenzen – unabhängig von Stimmung.",
+      "modal.m3.t": "Modul: Wachstumsverstärkungstest",
+      "modal.m3.p": "Simuliert Verstärkung: +20% Last, +50% Komplexität, Ausfall Schlüsselrolle. Identifiziert den ersten Bruch.",
+      "modal.m4.t": "Modul: Macht–Verantwortung",
+      "modal.m4.p": "Misst Kopplung zwischen Entscheidung, Risiko, Information und Konsequenz. Ergebnis: Mismatch-Heatmap.",
+      "modal.m5.t": "Modul: Energie & Fehlerintegration",
+      "modal.m5.p": "Erkennt Energieentkopplung sowie fehlende Lern- und Feedbackzyklen. Ergebnis: Frühindikatoren + Strukturtrigger."
+    },
+
+    tr: {
+      "nav.model": "Model",
+      "nav.diagnosis": "Analiz",
+      "nav.results": "Sonuçlar",
+      "nav.actions": "Aksiyonlar",
+      "nav.export": "Rapor",
+      "cta.start": "Analizi Başlat",
+      "cta.startNow": "Şimdi başlat",
+      "cta.how": "Nasıl çalışır?",
+      "cta.preview": "Çıktıları gör",
+      "cta.backTop": "Yukarı dön",
+      "cta.pdf": "Örnek PDF",
+      "cta.close": "Kapat",
+
+      "hero.h1": "Birincil istikrarsızlığı belirleyin. Dengeleyin veya yeniden yapılandırın.",
+      "hero.lead": "MDG v2, mevcut veya gelecekteki yük altında ilk yapısal kırılma noktasını tespit eder ve net bir yol sunar: IDG (Stabilizasyon) veya ADG (Yapısal Yeniden Tasarım).",
+      "hero.micro": "Psikoloji değil. Algı değil. Yapı. Güçlenme. Karar.",
+
+      "toggle.context": "Bağlam",
+      "toggle.private": "Bireysel",
+      "toggle.business": "İş",
+      "toggle.depth": "Derinlik",
+      "toggle.quick": "Hızlı (3–5 dk)",
+      "toggle.precise": "Derin (10–15 dk)",
+
+      "demo.label": "Örnek Sonuç",
+      "demo.type": "Baskın Tip: Karar tekelleşmesi",
+      "demo.growth": "Büyüme hassasiyeti",
+      "demo.growthValue": "Doğrusal olmayan",
+      "demo.reco": "Öneri",
+      "demo.recoValue": "ADG gerekli",
+      "demo.next": "Şimdi 3 hamle",
+      "demo.m1": "Geri döndürülemez kararları 48 saat dondur",
+      "demo.m2": "Triage: sadece en kritik 3 kaldıraç",
+      "demo.m3": "Acil delegasyon: B/C kararlarını serbest bırak",
+      "demo.link": "Aksiyonlara →",
+
+      "flow.h2": "7 Adımda Yapısal Analiz",
+      "flow.sub": "Hızlı giriş. Derin teşhis. Net sonuç.",
+      "flow.s1": "Bağlamı tanımla",
+      "flow.s2": "Hızlı tarama",
+      "flow.s3": "5 analiz modülü",
+      "flow.s4": "Yük simülasyonu",
+      "flow.s5": "Birincil istikrarsızlığı belirle",
+      "flow.s6": "IDG veya ADG önerisi",
+      "flow.s7": "Rapor & geçmiş",
+      "flow.tagline": "Psikoloji değil. Algı değil. Yapı. Güçlenme. Karar.",
+
+      "modules.h2": "5 Modülde Derin Analiz",
+      "modules.sub": "Modüller ayrı ama entegre: yoğunluk, dağılım, güçlenme, eşleşme, kurumsallaşma.",
+      "modules.example": "Örnek →",
+      "modules.m1.t": "Karar Mimarisi",
+      "modules.m1.d": "Yoğunluk · Geri döndürülemezlik · Delegasyon · Yedeklilik",
+      "modules.m2.t": "Yük Dağılımı",
+      "modules.m2.d": "Asimetri · Darboğaz · Tek hata noktası",
+      "modules.m3.t": "Büyüme Güçlenme Testi",
+      "modules.m3.d": "+%20 yük · +%50 karmaşıklık · Kritik rol kaybı",
+      "modules.m4.t": "Güç–Sorumluluk",
+      "modules.m4.d": "Karar · Risk · Bilgi · Sonuç",
+      "modules.m5.t": "Enerji & Hata Entegrasyonu",
+      "modules.m5.d": "Yük · Yenilenme · Geri bildirim · Öğrenme sistemi",
+
+      "types.h2": "Sonuç bir puan değil – bir tiptir.",
+      "types.sub": "MDG: baskın + ikincil + büyüme hassasiyeti + eylem yolu.",
+      "types.t1": "Karar tekelleşmesi",
+      "types.t2": "Yük asimetrisi",
+      "types.t3": "Yapısız büyüme",
+      "types.t4": "Güç–sorumluluk uyumsuzluğu",
+      "types.t5": "Enerji kopuşu",
+      "types.t6": "Hata entegrasyon eksikliği",
+      "types.t7": "Kurumsallaşmamış yapı",
+
+      "preview.tab1": "Birincil istikrarsızlık",
+      "preview.tab2": "Yapı haritası",
+      "preview.dom": "Baskın tip",
+      "preview.domValue": "Karar tekelleşmesi",
+      "preview.why": "Neden: yüksek merkezileşme, yüksek maliyetli kararlar, yedek rol yok.",
+      "preview.sequence": "Sıra: karar tıkanması → hata artışı → enerji düşüşü",
+      "preview.growth": "Büyüme testi",
+      "preview.growthValue": "+%20 yükte kırılma. Öneri: ADG.",
+      "preview.moves": "Şimdi 3 hamle",
+      "preview.pm1": "48 saat karar dondurma",
+      "preview.pm2": "Triage: en kritik 3",
+      "preview.pm3": "B/C delegasyon",
+
+      "map.radar": "Radar (Demo)",
+      "map.note": "Demo: radar + modül çubukları + en büyük 3 uyumsuzluk.",
+      "map.d": "Karar mimarisi",
+      "map.l": "Yük dağılımı",
+      "map.g": "Büyüme güçlenmesi",
+      "map.m": "Güç–sorumluluk",
+      "map.e": "Enerji/Hata",
+      "map.spof": "Tek hata noktası: olası",
+      "map.mis": "En büyük 3 uyumsuzluk: bilgi / risk / karar",
+
+      "actions.h2": "İki yol. Tek karar.",
+      "actions.sub": "IDG dengeler. ADG yeniden kurar. İkisi de aynı teşhisten çıkar.",
+      "actions.idg.t": "IDG – Stabilizasyon",
+      "actions.idg.d": "Kısa vadeli rahatlama. Koruma mekanizmaları. Erken göstergeleri kontrol.",
+      "actions.idg.b1": "Şimdi 3 hamle",
+      "actions.idg.b2": "Bu hafta 3 hamle",
+      "actions.idg.b3": "Durdur listesi",
+      "actions.idg.b4": "Ölçüm noktaları",
+      "actions.adg.t": "ADG – Mimari",
+      "actions.adg.d": "Yapısal dönüşüm. Rolleri netleştir. Yükü dağıt. Kurumsallaştır.",
+      "actions.adg.b1": "Mimari kararlar",
+      "actions.adg.b2": "3 faz yol haritası",
+      "actions.adg.b3": "Kurumsallaşma",
+      "actions.adg.b4": "Büyüme kriterleri",
+
+      "export.h2": "Rapor & geçmiş",
+      "export.sub": "Sonuçları kaydet, karşılaştır, PDF olarak indir – Pro opsiyonel.",
+      "export.c1.t": "PDF rapor",
+      "export.c1.d": "Sonuç + aksiyonlar tek raporda.",
+      "export.c2.t": "Geçmiş",
+      "export.c2.d": "Analizleri karşılaştır ve trend gör.",
+      "export.c3.t": "Paylaşım",
+      "export.c3.d": "Opsiyonel: link paylaş (demo / anonim).",
+
+      "legal.h3": "Ne – ve ne değil",
+      "legal.p1": "MDG yapısal bir analiz modelidir.",
+      "legal.p2": "Tıbbi, terapötik, hukuki veya finansal danışmanlığın yerini tutmaz. Sonuçlar karar desteği sağlar.",
+      "legal.p3": "Gizlilik ve sorumluluk notları footer’da.",
+
+      "footer.tag": "Dengeleme ve yeniden yapılandırma için yapısal teşhis.",
+
+      "modal.explainer.t": "MDG v2 nasıl çalışır",
+      "modal.explainer.p1": "Birincil istikrarsızlık, güçlenme altında ilk yapısal kırılmadır – radardaki en düşük değer değildir.",
+      "modal.explainer.l1": "Hızlı tarama: giriş sinyali, hüküm değil.",
+      "modal.explainer.l2": "5 modül: karar, yük, büyüme, eşleşme, kurumsallaşma.",
+      "modal.explainer.l3": "Simülasyon: +yük / +karmaşıklık / rol kaybında ilk kırılma nerede?",
+      "modal.explainer.l4": "Sonuç: tip (baskın + ikincil) + büyüme hassasiyeti.",
+      "modal.explainer.l5": "Yol: IDG (stabilizasyon) veya ADG (yeniden tasarım).",
+
+      "modal.pdf.t": "Örnek PDF (Demo)",
+      "modal.pdf.p": "Buraya demo PDF linki veya ilk sayfa görseli ekleyebilirsin.",
+
+      "modal.m1.t": "Modül: Karar Mimarisi",
+      "modal.m1.p": "Yoğunluk, geri döndürülemezlik, delegasyon ve yedekliliği ölçer. Çıktı: karar stresi ve darboğaz.",
+      "modal.m2.t": "Modül: Yük Dağılımı",
+      "modal.m2.p": "Asimetriyi, tek hata noktalarını ve darboğaz sıklığını yakalar.",
+      "modal.m3.t": "Modül: Büyüme Güçlenme Testi",
+      "modal.m3.p": "+%20 yük, +%50 karmaşıklık ve kritik rol kaybında ilk kırılmayı tespit eder.",
+      "modal.m4.t": "Modül: Güç–Sorumluluk",
+      "modal.m4.p": "Karar, risk, bilgi ve sonuç arasındaki uyumu ölçer. Çıktı: uyumsuzluk haritası.",
+      "modal.m5.t": "Modül: Enerji & Hata Entegrasyonu",
+      "modal.m5.p": "Enerji kopuşunu ve öğrenme/geri bildirim döngülerinin eksikliğini yakalar."
+    },
+
+    en: {
+      "nav.model": "Model",
+      "nav.diagnosis": "Diagnosis",
+      "nav.results": "Results",
+      "nav.actions": "Actions",
+      "nav.export": "Export",
+      "cta.start": "Start Diagnosis",
+      "cta.startNow": "Start now",
+      "cta.how": "How does it work?",
+      "cta.preview": "View outputs",
+      "cta.backTop": "Back to top",
+      "cta.pdf": "View sample PDF",
+      "cta.close": "Close",
+
+      "hero.h1": "Identify the primary instability. Stabilize or redesign.",
+      "hero.lead": "MDG v2 detects the first structural breaking point under current or future load—and clearly indicates: IDG (Stabilization) or ADG (Architectural Redesign).",
+      "hero.micro": "Not psychology. Not mood. Structure. Amplification. Decision.",
+
+      "toggle.context": "Context",
+      "toggle.private": "Private",
+      "toggle.business": "Business",
+      "toggle.depth": "Depth",
+      "toggle.quick": "Quick (3–5 min)",
+      "toggle.precise": "Precise (10–15 min)",
+
+      "demo.label": "Sample result",
+      "demo.type": "Dominant type: Decision monopoly",
+      "demo.growth": "Growth sensitivity",
+      "demo.growthValue": "Nonlinear",
+      "demo.reco": "Recommendation",
+      "demo.recoValue": "ADG required",
+      "demo.next": "3 moves now",
+      "demo.m1": "Decision freeze for irreversible items (48h)",
+      "demo.m2": "Decision triage: decide only top-3 levers",
+      "demo.m3": "Delegation emergency: enable B/C decisions",
+      "demo.link": "Go to actions →",
+
+      "flow.h2": "Structural diagnosis in 7 steps",
+      "flow.sub": "Fast entry. Deep precision. Clear outcome.",
+      "flow.s1": "Define context",
+      "flow.s2": "Quick scan",
+      "flow.s3": "5 diagnostic modules",
+      "flow.s4": "Load simulation",
+      "flow.s5": "Identify primary instability",
+      "flow.s6": "Derive IDG or ADG",
+      "flow.s7": "Export & history",
+      "flow.tagline": "Not psychology. Not mood. Structure. Amplification. Decision.",
+
+      "modules.h2": "Deep diagnosis across 5 modules",
+      "modules.sub": "Modules are separate yet integrated: density, distribution, amplification, coupling, institutionalization.",
+      "modules.example": "View example →",
+      "modules.m1.t": "Decision Architecture",
+      "modules.m1.d": "Density · Irreversibility · Delegation · Redundancy",
+      "modules.m2.t": "Load Distribution",
+      "modules.m2.d": "Asymmetry · Bottlenecks · Single point of failure",
+      "modules.m3.t": "Growth Amplification Test",
+      "modules.m3.d": "+20% load · +50% complexity · Loss of key role",
+      "modules.m4.t": "Power–Responsibility",
+      "modules.m4.d": "Decision · Risk · Information · Consequence",
+      "modules.m5.t": "Energy & Error Integration",
+      "modules.m5.d": "Load · Regeneration · Feedback · Learning system",
+
+      "types.h2": "The result is not a score—it is a type.",
+      "types.sub": "MDG shows dominant + secondary + growth sensitivity + action path.",
+      "types.t1": "Decision monopoly",
+      "types.t2": "Load asymmetry",
+      "types.t3": "Growth without structure",
+      "types.t4": "Power–responsibility mismatch",
+      "types.t5": "Energy decoupling",
+      "types.t6": "Error integration deficit",
+      "types.t7": "Non-institutionalized structure",
+
+      "preview.tab1": "Primary instability",
+      "preview.tab2": "Structure map",
+      "preview.dom": "Dominant type",
+      "preview.domValue": "Decision monopoly",
+      "preview.why": "Why: high centralization, high irreversibility, missing redundancy.",
+      "preview.sequence": "Sequence: decision backlog → error rate → energy drop",
+      "preview.growth": "Growth test",
+      "preview.growthValue": "Breaks at +20% load. Recommendation: ADG.",
+      "preview.moves": "3 moves now",
+      "preview.pm1": "Decision freeze (48h)",
+      "preview.pm2": "Triage: top-3 levers",
+      "preview.pm3": "Enable B/C delegation",
+
+      "map.radar": "Radar (Demo)",
+      "map.note": "Demo view: radar + module bars + top-3 mismatches.",
+      "map.d": "Decision architecture",
+      "map.l": "Load distribution",
+      "map.g": "Growth amplification",
+      "map.m": "Power–responsibility",
+      "map.e": "Energy/Error",
+      "map.spof": "Single point of failure: possible",
+      "map.mis": "Top-3 mismatches: info / risk / decision",
+
+      "actions.h2": "Two paths. One decision.",
+      "actions.sub": "IDG stabilizes. ADG redesigns. Both follow from the same diagnosis.",
+      "actions.idg.t": "IDG – Stabilization",
+      "actions.idg.d": "Short-term relief. Protective mechanisms. Control early indicators.",
+      "actions.idg.b1": "3 moves now",
+      "actions.idg.b2": "3 moves this week",
+      "actions.idg.b3": "Stop list",
+      "actions.idg.b4": "Measurement points",
+      "actions.adg.t": "ADG – Architecture",
+      "actions.adg.d": "Structural redesign. Clarify roles. Redistribute load. Institutionalize.",
+      "actions.adg.b1": "Architecture decisions",
+      "actions.adg.b2": "3-phase roadmap",
+      "actions.adg.b3": "Institutionalization",
+      "actions.adg.b4": "Growth criteria",
+
+      "export.h2": "Export & history",
+      "export.sub": "Save results, compare, export as PDF—optional in Pro.",
+      "export.c1.t": "PDF export",
+      "export.c1.d": "Result + actions in a clear report.",
+      "export.c2.t": "History",
+      "export.c2.d": "Compare diagnoses and detect trend.",
+      "export.c3.t": "Sharing",
+      "export.c3.d": "Optional: share link (demo / anonymized).",
+
+      "legal.h3": "What it is—and what it is not",
+      "legal.p1": "MDG is a structural analysis model.",
+      "legal.p2": "It does not replace medical, therapeutic, legal, or financial advice. Results provide decision support.",
+      "legal.p3": "Privacy and liability notes are in the footer.",
+
+      "footer.tag": "Structural diagnosis for stabilization and redesign.",
+
+      "modal.explainer.t": "How MDG v2 works",
+      "modal.explainer.p1": "Primary instability is the first structural break under amplification—not the lowest radar value.",
+      "modal.explainer.l1": "Quick scan: an entry signal, not a verdict.",
+      "modal.explainer.l2": "5 modules: decisions, load, growth, coupling, institutionalization.",
+      "modal.explainer.l3": "Simulation: where does it break first under +load / +complexity / role loss?",
+      "modal.explainer.l4": "Result: type (dominant + secondary) + growth sensitivity.",
+      "modal.explainer.l5": "Path: IDG (stabilization) or ADG (redesign).",
+
+      "modal.pdf.t": "Sample PDF (Demo)",
+      "modal.pdf.p": "Link a demo PDF here or show an image of the first page.",
+
+      "modal.m1.t": "Module: Decision Architecture",
+      "modal.m1.p": "Measures density, irreversibility, delegation, and redundancy. Output: decision stress and bottleneck cues.",
+      "modal.m2.t": "Module: Load Distribution",
+      "modal.m2.p": "Detects asymmetry, single points of failure, and bottleneck frequency—independent of mood.",
+      "modal.m3.t": "Module: Growth Amplification Test",
+      "modal.m3.p": "Simulates amplification: +20% load, +50% complexity, loss of key role. Identifies the first break.",
+      "modal.m4.t": "Module: Power–Responsibility",
+      "modal.m4.p": "Measures coupling between decision, risk, information, and consequence. Output: mismatch heatmap.",
+      "modal.m5.t": "Module: Energy & Error Integration",
+      "modal.m5.p": "Detects energy decoupling and missing learning/feedback cycles. Output: early indicators + structural triggers."
     }
   };
 
-  try {
-    btn.disabled = true;
-    btn.textContent = "…generiere";
+  function applyLang(lang) {
+    if (!dict[lang]) return;
+    state.lang = lang;
 
-    const resp = await fetch(`${WORKER_BASE}/deepdive`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+    document.documentElement.lang = lang === "tr" ? "tr" : (lang === "en" ? "en" : "de");
+
+    // Update aria-pressed on language buttons
+    $$("[data-lang]").forEach(btn => {
+      btn.setAttribute("aria-pressed", String(btn.dataset.lang === lang));
     });
 
-    const data = await resp.json().catch(()=>({}));
+    // Apply translations
+    $$("[data-i18n]").forEach(el => {
+      const key = el.dataset.i18n;
+      const value = dict[lang][key];
+      if (!value) return;
 
-    if (!resp.ok || !data.ok) {
-      throw new Error(data?.error || `Worker HTTP ${resp.status}`);
-    }
-
-    out.classList.remove("hidden");
-    out.style.display = "block";
-
-    if (Array.isArray(data.cards) && data.cards.length){
-      out.innerHTML = buildCardsHTML(data.cards);
-    } else {
-      const raw = String(data.text || data.output || data.result || "").trim();
-      out.innerHTML = buildCardsHTML([{ title:"Ausgabe", pill:key.toUpperCase(), body: raw || "(leer)" }]);
-    }
-
-    // single-use: clear token after success (per bucket)
-    localStorage.removeItem(LS_TOKEN[key]);
-    hydrateTokenInput();
-
-    const pdfBtn = el("pdfBtn");
-    if (pdfBtn) pdfBtn.disabled = false;
-
-  } catch (e) {
-    out.classList.remove("hidden");
-    out.style.display = "block";
-    out.innerHTML = buildCardsHTML([
-      { title:"Fehler", pill:"Request", body: mapWorkerError(String(e.message || e)), small:"Bitte Token/Typ prüfen und erneut versuchen." }
-    ]);
-    const pdfBtn = el("pdfBtn");
-    if (pdfBtn) pdfBtn.disabled = true;
-
-  } finally {
-    btn.textContent = "Pro-Ausgabe erzeugen";
-    updateRunButtonState();
-  }
-}
-
-// ======= PDF Export =======
-function barsAsTableHTML(scores){
-  const rows = VARS.map(v => {
-    const val = Number(scores?.[v] ?? 0);
-    return `<tr><td>${escapeHTML(v)}</td><td style="text-align:right">${val.toFixed(2)}</td></tr>`;
-  }).join("");
-  return `
-    <table style="width:100%;border-collapse:collapse;margin-top:10px">
-      <thead>
-        <tr>
-          <th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:8px 0">Variable</th>
-          <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:8px 0">Score</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-}
-
-function exportPDF(){
-  hideErrorBox();
-
-  const out = el("deepOut");
-  if (!out || out.style.display === "none"){
-    showErrorBox("Bitte zuerst eine Pro-Ausgabe erzeugen.");
-    return;
-  }
-  if (!LAST_SCORES || !LAST_WEAK){
-    showErrorBox("Profil fehlt. Bitte Quick Scan auswerten.");
-    return;
-  }
-  if (!LAST_RADAR_DATAURL || !LAST_TREND_DATAURL || !LAST_ISTSOLL_DATAURL){
-    showErrorBox("Diagramm-Snapshots fehlen. Bitte kurz warten, dann erneut PDF exportieren (oder Hard Refresh).");
-    return;
+      // If element contains no child elements (safe), replace textContent.
+      // Otherwise keep markup and only replace text where it's plain content.
+      if (el.children.length === 0) el.textContent = value;
+      else {
+        // For rich nodes (e.g., hero.lead has <strong>), we preserve HTML by rebuilding only for that known key.
+        if (key === "hero.lead") {
+          // Keep strong tags in the sentence in all languages by hardcoding here.
+          const htmlMap = {
+            de: `MDG v2 identifiziert den ersten strukturellen Kipppunkt unter realer oder zukünftiger Last – und zeigt klar: <strong>IDG (Stabilisierung)</strong> oder <strong>ADG (Architektur-Umbau)</strong>.`,
+            tr: `MDG v2, mevcut veya gelecekteki yük altında ilk yapısal kırılma noktasını tespit eder ve net bir yol sunar: <strong>IDG (Stabilizasyon)</strong> veya <strong>ADG (Yapısal Yeniden Tasarım)</strong>.`,
+            en: `MDG v2 detects the first structural breaking point under current or future load—and clearly indicates: <strong>IDG (Stabilization)</strong> or <strong>ADG (Architectural Redesign)</strong>.`
+          };
+          el.innerHTML = htmlMap[lang] || value;
+        } else {
+          // Fallback: only update first text node
+          const tn = Array.from(el.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+          if (tn) tn.textContent = value;
+        }
+      }
+    });
   }
 
-  const key = productKey();
-  const title = `Indikation & Architektur des Gleichgewichts — ${key.replace("_"," ").toUpperCase()}`;
-  const weakTxt = `${LAST_WEAK.key} (${Number(LAST_WEAK.val).toFixed(2)})`;
-  const timeTxt = timeWindowFor(LAST_WEAK.val);
+  // Language buttons
+  $$("[data-lang]").forEach(btn => {
+    btn.addEventListener("click", () => applyLang(btn.dataset.lang));
+  });
 
-  const radarImg = `<img src="${LAST_RADAR_DATAURL}" alt="Radar" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`;
-  const trendImg = `<img src="${LAST_TREND_DATAURL}" alt="Trend" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`;
-  const istSollImg = `<img src="${LAST_ISTSOLL_DATAURL}" alt="Ist-Soll" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`;
+  // Default language: keep DE, but respect browser preference if you want
+  applyLang("de");
 
-  const html = `
-<!doctype html>
-<html lang="de">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>${escapeHTML(title)}</title>
-<style>
-  body{ font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#0b0f17; margin:24px; }
-  h1{ margin:0 0 6px; font-size:22px; }
-  .muted{ color:#4b5563; font-size:12px; }
-  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:18px; align-items:start; margin-top:14px; }
-  .card{ border:1px solid #e5e7eb; border-radius:14px; padding:14px; }
-  .pill{ display:inline-block; padding:6px 10px; border:1px solid #e5e7eb; border-radius:999px; background:#f8fafc; font-size:12px; }
-  .secTitle{ font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#374151; margin:0 0 8px; }
-  .divider{ height:1px; background:#e5e7eb; margin:14px 0; }
-  table td{ padding:6px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
-  .out{ margin-top:14px; }
-  .ddCard{ break-inside: avoid; page-break-inside: avoid; border:1px solid #e5e7eb; border-radius:14px; padding:12px; margin:12px 0; }
-  .ddTitle{ display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:8px; }
-  .ddTitle h4{ margin:0; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#111827; }
-  .ddPill{ display:inline-block; padding:6px 10px; border:1px solid #e5e7eb; border-radius:999px; background:#f8fafc; font-size:12px; color:#111827; }
-  .ddText{ font-size:13px; line-height:1.5; color:#111827; }
-  .ddList{ list-style:none; padding:0; margin:10px 0 0; }
-  .ddList li{ border:1px solid #eef2f7; border-radius:12px; padding:10px; margin:8px 0; font-size:13px; }
-  .ddTimeline{ display:grid; grid-template-columns:110px 1fr; gap:10px; margin-top:10px; }
-  .ddTime{ font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#374151; border:1px solid #e5e7eb; background:#f8fafc; border-radius:999px; padding:7px 10px; height:fit-content; width:fit-content; }
-  .ddStep{ border:1px solid #eef2f7; border-radius:12px; padding:10px; font-size:13px; line-height:1.45; }
-  @media print{ body{ margin:0; } }
-</style>
-</head>
-<body>
-  <div class="muted">Export · ${new Date().toLocaleString("de-DE")} · ${escapeHTML(key.toUpperCase())}</div>
-  <h1>${escapeHTML(title)}</h1>
-  <div class="muted">Schwächste Variable: <span class="pill">${escapeHTML(weakTxt)}</span> · Zeitfenster: <span class="pill">${escapeHTML(timeTxt)}</span></div>
+  // ---------- Optional: persist language ----------
+  // Uncomment if you want persistence
+  // const saved = localStorage.getItem("mdg_lang");
+  // if (saved) applyLang(saved);
+  // function applyLang(lang){ ...; localStorage.setItem("mdg_lang", lang); }
 
-  <div class="grid">
-    <div class="card">
-      <div class="secTitle">Radar</div>
-      ${radarImg}
-    </div>
-    <div class="card">
-      <div class="secTitle">Scores</div>
-      ${barsAsTableHTML(LAST_SCORES)}
-    </div>
-  </div>
-
-  <div class="grid" style="margin-top:18px">
-    <div class="card">
-      <div class="secTitle">Trend · Base / Best / Failure (D0 → D30 → D90)</div>
-      ${trendImg}
-    </div>
-    <div class="card">
-      <div class="secTitle">Ist → Soll · Maßnahmen-Vektoren (LOW / MED / HIGH)</div>
-      ${istSollImg}
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="out">
-    <div class="secTitle">Pro-Ausgabe</div>
-    ${out.innerHTML}
-  </div>
-
-  <div class="divider"></div>
-  <div class="muted">Hinweis: Strukturierte Orientierung und Entscheidungsunterstützung. Keine medizinische, therapeutische, rechtliche oder finanzielle Beratung.</div>
-</body>
-</html>
-  `.trim();
-
-  const w = window.open("", "_blank");
-  if (!w){
-    showErrorBox("Pop-up blockiert. Bitte Pop-ups erlauben oder erneut versuchen.");
-    return;
+  // ---------- Optional: reflect toggles to CTA href (for later app) ----------
+  // You can later route these values into your diagnosis app path.
+  function updateStartLinks() {
+    // Example: /diagnose?context=private&depth=quick
+    const qs = new URLSearchParams({ context: state.context, depth: state.depth }).toString();
+    $$('a[href="#diagnose"][data-i18n="cta.start"], a[href="#diagnose"][data-i18n="cta.startNow"]').forEach(a => {
+      // keep anchor for now; when ready, replace with:
+      // a.href = `/diagnose?${qs}`;
+      a.dataset.qs = qs;
+    });
   }
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
+  updateStartLinks();
 
-  w.focus();
-  setTimeout(() => {
-    try { w.print(); } catch {}
-  }, 350);
-}
-
-// ======= Evaluate / Reset =======
-function onEvaluate() {
-  hideErrorBox();
-
-  const collected = collectAnswersByVar();
-  if (!collected.ok) {
-    showErrorBox(`Bitte beantworte alle Fragen. Fehlend: ${collected.missing.slice(0,5).join(", ")}${collected.missing.length>5?"…":""}`);
-    return;
-  }
-
-  const scores = scoreAll(collected.byVar);
-  LAST_SCORES = scores;
-
-  const weak = weakestVar(scores);
-  LAST_WEAK = weak;
-
-  const pattern = calcPattern(scores);
-  LAST_PATTERN = pattern;
-
-  el("results")?.classList.remove("hidden");
-
-  renderRadar(scores, weak);
-  renderTrend(scores);
-  renderIstSoll(scores);
-
-  renderBars(scores);
-  renderWeakest(weak);
-  renderTimewin(weak);
-  renderMini(scores, 3);
-
-  clearOutput();
-  updateTokenUI();
-  hydrateTokenInput();
-  updateRunButtonState();
-}
-
-function onReset() {
-  hideErrorBox();
-  document.querySelectorAll('input[type="radio"]').forEach(i => (i.checked = false));
-
-  el("results")?.classList.add("hidden");
-
-  el("plot3d") && (el("plot3d").innerHTML = "");
-  el("trendPlot") && (el("trendPlot").innerHTML = "");
-  el("istSollPlot") && (el("istSollPlot").innerHTML = "");
-  el("bars") && (el("bars").innerHTML = "");
-  el("weakest") && (el("weakest").innerHTML = "");
-  el("timewin") && (el("timewin").innerHTML = "");
-  el("deepMini") && (el("deepMini").innerHTML = "");
-
-  clearOutput();
-
-  LAST_SCORES = null;
-  LAST_PATTERN = null;
-  LAST_WEAK = null;
-
-  LAST_RADAR_DATAURL = null;
-  LAST_TREND_DATAURL = null;
-  LAST_ISTSOLL_DATAURL = null;
-
-  try { _radarRO?.disconnect?.(); } catch {}
-  try { _trendRO?.disconnect?.(); } catch {}
-  try { _istRO?.disconnect?.(); } catch {}
-  _radarRO = _trendRO = _istRO = null;
-
-  updateRunButtonState();
-}
-
-// ======= Boot =======
-document.addEventListener("DOMContentLoaded", () => {
-  buildQuestions();
-
-  const savedLayer = localStorage.getItem(LS_LAYER);
-  const savedMode  = localStorage.getItem(LS_MODE);
-
-  setLayer(savedLayer === "adg" ? "adg" : "idg");
-  setMode(savedMode === "business" ? "business" : "private");
-
-  updateTokenUI();
-  hydrateTokenInput();
-  updateRunButtonState();
-
-  el("btnEval")?.addEventListener("click", onEvaluate);
-  el("btnReset")?.addEventListener("click", onReset);
-
-  el("layerIDG")?.addEventListener("click", () => setLayer("idg"));
-  el("layerADG")?.addEventListener("click", () => setLayer("adg"));
-
-  el("modePrivate")?.addEventListener("click", () => setMode("private"));
-  el("modeBusiness")?.addEventListener("click", () => setMode("business"));
-
-  el("tokenApply")?.addEventListener("click", applyToken);
-  el("tokenInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") applyToken(); });
-  el("tokenInput")?.addEventListener("input", updateRunButtonState);
-
-  el("runBtn")?.addEventListener("click", runProOutput);
-  el("pdfBtn")?.addEventListener("click", exportPDF);
-});
+  // When segments change, update
+  const observeSegments = () => {
+    $$("[data-toggle]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        updateStartLinks();
+      });
+    });
+  };
+  observeSegments();
+})();
