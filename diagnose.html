@@ -1090,6 +1090,66 @@
         }};
       }
 
+      // ---- Server save (anonymous) ----
+      async function saveToServer() {
+        const payload = window.__MDG_LAST__;
+        if (!payload) { alert("Bitte zuerst Ergebnis berechnen."); return; }
+
+        setStatus("Speichere …");
+        disableShare(true);
+
+        try {
+          const res = await fetch("https://mdg-indikation-api.selim-87-cfe.workers.dev/api/diagnoses", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+           });
+
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data?.error || "Save failed");
+
+          const shareUrl = data.url || (`https://mdg-indikation.de/diagnose.html?id=${encodeURIComponent(data.id)}`);
+
+          setShareLink(shareUrl);
+          setStatus("Gespeichert.");
+          disableShare(false);
+        } catch (e) {
+          setStatus("Fehler: " + (e?.message || String(e)));
+          disableShare(true);
+        }
+      }
+
+      function setStatus(t){
+        const el = document.getElementById("dx_save_status");
+        if (el) el.textContent = "Status: " + t;
+      }
+
+      function setShareLink(url){
+        const p = document.getElementById("dx_share_link");
+        const open = document.getElementById("dx_open_link");
+        const copy = document.getElementById("dx_copy_link");
+
+        if (p) p.textContent = url;
+        if (open) { open.href = url; open.setAttribute("aria-disabled", "false"); }
+        if (copy) copy.disabled = false;
+
+        window.__MDG_SHARE_URL__ = url;
+      }
+
+      function disableShare(disabled){
+        const copy = document.getElementById("dx_copy_link");
+        const open = document.getElementById("dx_open_link");
+        if (copy) copy.disabled = disabled;
+        if (open) open.setAttribute("aria-disabled", disabled ? "true" : "false");
+      }
+
+      document.getElementById("dx_save_server")?.addEventListener("click", saveToServer);
+      document.getElementById("dx_copy_link")?.addEventListener("click", async () => {
+        const url = window.__MDG_SHARE_URL__;
+        if (!url) return;
+        try { await navigator.clipboard.writeText(url); setStatus("Link kopiert."); } catch { setStatus("Link anzeigen & manuell kopieren."); }
+      });
+
       // --- Nav chips ---
       $$("[data-dx-nav]").forEach(btn => {
         btn.addEventListener("click", () => {
