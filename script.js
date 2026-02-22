@@ -1,12 +1,12 @@
-// v61 — IDG/ADG Platform (stabilized charts + pro PDF)
-// - Fix: IST->SOLL labels collision-safe
-// - Fix: Trend chart readable + exported as PNG into PDF
-// - PDF: embeds Radar + Trend + IST->SOLL as images (high contrast)
+// v61 — IDG/ADG Platform (SVG charts + Board PDF ready)
+// - Default: IDG + Private
+// - Pro output via Worker (token required, prefix enforced client-side; server enforces too)
+// - Charts: Radar Canvas (existing vibe) + Trend SVG + Ist→Soll SVG
+// - PDF export: inline SVG (crisp)
 
-// ================== CONFIG ==================
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
-// ======= CHECKOUT LINKS (YOUR Lemon Squeezy links) =======
+// ======= CHECKOUT LINKS =======
 const CHECKOUT = {
   idg_private:  "https://mdg-indikation.lemonsqueezy.com/checkout/buy/c501c852-fa81-4410-99c9-aa3080667d5e",
   idg_business: "https://mdg-indikation.lemonsqueezy.com/checkout/buy/dc64687b-2237-44de-8d71-38eb547b0f41",
@@ -22,7 +22,7 @@ const TOKEN_PREFIX = {
   adg_business: "ADGB-",
 };
 
-// ================== SCAN MODEL ==================
+// ======= Scan model =======
 const VARS = [
   "Freiheit",
   "Gerechtigkeit",
@@ -76,7 +76,7 @@ const SCALE = [
 
 const el = (id) => document.getElementById(id);
 
-// ================== STATE ==================
+// ======= State =======
 const LS_MODE = "mdg_mode";      // private|business
 const LS_LAYER = "mdg_layer";    // idg|adg
 
@@ -89,16 +89,17 @@ const LS_TOKEN = {
 
 let CURRENT_MODE = "private";
 let CURRENT_LAYER = "idg";
+
 let LAST_SCORES = null;
 let LAST_PATTERN = null;
 let LAST_WEAK = null;
 
-// export images
+// for PDF export assets
 let LAST_RADAR_DATAURL = null;
-let LAST_TREND_DATAURL = null;
-let LAST_ISTSOLL_DATAURL = null;
+let LAST_TREND_SVG = null;
+let LAST_ISTSOLL_SVG = null;
 
-// ================== ERROR UI ==================
+// ======= Error UI =======
 function showErrorBox(msg) {
   const box = el("errorBox");
   if (!box) return;
@@ -110,17 +111,14 @@ function hideErrorBox() {
   if (!box) return;
   box.classList.add("hidden");
 }
-window.addEventListener("error", (e) => {
-  try {
-    const file = (e && e.filename) ? String(e.filename) : "";
-    if (file.includes("script.js")) showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
-  } catch {}
+window.addEventListener("error", () => {
+  showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
 });
 window.addEventListener("unhandledrejection", () => {
   showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
 });
 
-// ================== QUESTIONS UI ==================
+// ======= Questions UI =======
 function buildQuestions() {
   const host = el("questions");
   if (!host) return;
@@ -176,7 +174,7 @@ function buildQuestions() {
   });
 }
 
-// ================== SCORE HELPERS ==================
+// ======= Score helpers =======
 function collectAnswersByVar() {
   const byVar = {};
   VARS.forEach(v => byVar[v] = []);
@@ -191,8 +189,6 @@ function collectAnswersByVar() {
   return { ok: missing.length === 0, byVar, missing };
 }
 function avg(arr) { return (!arr || !arr.length) ? 0 : arr.reduce((a,b)=>a+b,0) / arr.length; }
-function clamp01(x){ return Math.max(0, Math.min(1, Number(x || 0))); }
-
 function scoreAll(byVar) {
   const scores = {};
   VARS.forEach(v => scores[v] = avg(byVar[v]));
@@ -225,7 +221,7 @@ function calcPattern(scores){
   return { low_cluster, high_cluster, spread, min:Number(min.toFixed(2)), max:Number(max.toFixed(2)) };
 }
 
-// ================== RIGHT PANEL RENDER ==================
+// ======= Render right panel =======
 function renderBars(scores) {
   const host = el("bars");
   if (!host) return;
@@ -277,8 +273,9 @@ function renderMini(scores, maxN = 3) {
   });
 }
 
-// ================== RADAR (Canvas) ==================
+// ======= Radar Canvas (same as before, moved to #plotRadar) =======
 let _radarResizeObserver = null;
+let _radarCanvasRef = null;
 
 function roundRect(ctx, x, y, w, h, r){
   const rr = Math.min(r, w/2, h/2);
@@ -292,7 +289,7 @@ function roundRect(ctx, x, y, w, h, r){
 }
 
 function renderRadar(scores, weak) {
-  const host = el("plot3d");
+  const host = el("plotRadar");
   if (!host) return;
   host.innerHTML = "";
 
@@ -301,6 +298,7 @@ function renderRadar(scores, weak) {
   canvas.style.height = "100%";
   canvas.style.display = "block";
   host.appendChild(canvas);
+  _radarCanvasRef = canvas;
 
   const draw = () => {
     const rect = host.getBoundingClientRect();
@@ -476,7 +474,11 @@ function renderRadar(scores, weak) {
       ctx.fillText(label, bx + m, by + bh/2);
     }
 
-    try { LAST_RADAR_DATAURL = canvas.toDataURL("image/png"); } catch { LAST_RADAR_DATAURL = null; }
+    try {
+      LAST_RADAR_DATAURL = canvas.toDataURL("image/png");
+    } catch {
+      LAST_RADAR_DATAURL = null;
+    }
   };
 
   draw();
@@ -485,377 +487,7 @@ function renderRadar(scores, weak) {
   _radarResizeObserver.observe(host);
 }
 
-// ================== 2D CHARTS (Trend + IST->SOLL) ==================
-
-// Choose indices for the 2D coordinate system.
-// Stability: governance/trust/consistency
-// Performance: execution/energy/throughput
-function computeIndices(scores){
-  const s = scores || {};
-  const stability = avg([s.Gerechtigkeit, s.Wahrheit, s.Balance, s.Harmonie].map(clamp01));
-  const performance = avg([s.Effizienz, s.Handlungsspielraum, s.Mittel, s.Freiheit].map(clamp01));
-  return {
-    stability: Number(stability.toFixed(2)),
-    performance: Number(performance.toFixed(2)),
-  };
-}
-
-function makeCanvasIn(host){
-  if (!host) return null;
-  host.innerHTML = "";
-  const c = document.createElement("canvas");
-  c.style.width = "100%";
-  c.style.height = "100%";
-  c.style.display = "block";
-  host.appendChild(c);
-  return c;
-}
-
-function rectsOverlap(a,b){
-  return !(a.x+a.w < b.x || b.x+b.w < a.x || a.y+a.h < b.y || b.y+b.h < a.y);
-}
-
-function placeLabel(ctx, text, x, y, opts){
-  const placed = opts.placed || [];
-  const font = opts.font || "700 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-  const pad = opts.pad ?? 6;
-  const maxTries = opts.maxTries ?? 14;
-  const offsets = opts.offsets || [
-    {dx: 10, dy: -14},
-    {dx: 10, dy:  14},
-    {dx: -10,dy: -14},
-    {dx: -10,dy:  14},
-    {dx: 0,  dy: -18},
-    {dx: 0,  dy:  18},
-  ];
-
-  ctx.save();
-  ctx.font = font;
-  const tw = ctx.measureText(text).width;
-  const th = 14;
-
-  for (let i=0; i<Math.min(maxTries, offsets.length); i++){
-    const o = offsets[i];
-    const bx = x + o.dx;
-    const by = y + o.dy;
-    const r = { x: bx - pad, y: by - th/2 - pad, w: tw + pad*2, h: th + pad*2 };
-
-    const ok = placed.every(p => !rectsOverlap(p, r));
-    if (ok){
-      placed.push(r);
-      ctx.restore();
-      return { bx, by, r, placed };
-    }
-  }
-
-  // fallback: accept last
-  const o = offsets[offsets.length-1] || {dx:10,dy:-14};
-  const bx = x + o.dx, by = y + o.dy;
-  const r = { x: bx - pad, y: by - th/2 - pad, w: tw + pad*2, h: th + pad*2 };
-  placed.push(r);
-  ctx.restore();
-  return { bx, by, r, placed };
-}
-
-function draw2DBase(ctx, W, H, theme){
-  const dark = theme === "dark";
-  const bg = dark ? "rgba(15,21,34,0.75)" : "#ffffff";
-  const grid = dark ? "rgba(255,255,255,0.10)" : "rgba(17,24,39,0.10)";
-  const axis = dark ? "rgba(255,255,255,0.18)" : "rgba(17,24,39,0.18)";
-  const txt = dark ? "rgba(255,255,255,0.88)" : "rgba(17,24,39,0.88)";
-  const muted = dark ? "rgba(255,255,255,0.60)" : "rgba(17,24,39,0.55)";
-
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle = bg;
-  ctx.fillRect(0,0,W,H);
-
-  const pad = 36;
-  const left = pad, right = W - pad, top = pad, bottom = H - pad;
-
-  // grid 5x5
-  for (let i=0;i<=5;i++){
-    const x = left + (right-left)*(i/5);
-    const y = top + (bottom-top)*(i/5);
-    ctx.strokeStyle = grid;
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
-  }
-
-  // axis labels
-  ctx.fillStyle = muted;
-  ctx.font = "700 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "bottom";
-  ctx.fillText("Stability (0→1)", left, bottom + 22);
-
-  ctx.save();
-  ctx.translate(12, (top+bottom)/2);
-  ctx.rotate(-Math.PI/2);
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.fillText("Performance (0→1)", 0, 0);
-  ctx.restore();
-
-  return { left, right, top, bottom, txt, muted, axis, grid };
-}
-
-function xyToCanvas(x, y, box){
-  const px = box.left + (box.right - box.left) * clamp01(x);
-  const py = box.bottom - (box.bottom - box.top) * clamp01(y);
-  return { px, py };
-}
-
-function drawPoint(ctx, x, y, box, theme, r=4.5){
-  const dark = theme === "dark";
-  const fill = dark ? "rgba(255,255,255,0.86)" : "rgba(17,24,39,0.86)";
-  const stroke = dark ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.90)";
-  const {px,py} = xyToCanvas(x,y,box);
-  ctx.beginPath();
-  ctx.arc(px, py, r, 0, Math.PI*2);
-  ctx.fillStyle = fill;
-  ctx.fill();
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = stroke;
-  ctx.stroke();
-  return {px,py};
-}
-
-function drawLine(ctx, x1,y1, x2,y2, box, theme, width=2){
-  const dark = theme === "dark";
-  const col = dark ? "rgba(158,240,216,0.85)" : "rgba(16,185,129,0.70)";
-  const a = xyToCanvas(x1,y1,box);
-  const b = xyToCanvas(x2,y2,box);
-  ctx.beginPath();
-  ctx.moveTo(a.px,a.py);
-  ctx.lineTo(b.px,b.py);
-  ctx.strokeStyle = col;
-  ctx.lineWidth = width;
-  ctx.lineCap = "round";
-  ctx.stroke();
-  return {a,b};
-}
-
-function renderIstSollChart(scores, theme, exportOnly=false){
-  const host = el("istSollPlot");
-  if (!host && !exportOnly) return null;
-
-  // Canvas sizing
-  const rect = host ? host.getBoundingClientRect() : { width: 720, height: 360 };
-  const cssW = Math.max(320, Math.floor(rect.width || 720));
-  const cssH = Math.max(220, Math.floor(rect.height || 360));
-  const dpr = exportOnly ? 2 : Math.min(2, window.devicePixelRatio || 1);
-
-  const canvas = exportOnly ? document.createElement("canvas") : makeCanvasIn(host);
-  if (!canvas) return null;
-
-  canvas.width  = Math.floor(cssW * dpr);
-  canvas.height = Math.floor(cssH * dpr);
-
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-
-  const box = draw2DBase(ctx, cssW, cssH, theme);
-  const idx = computeIndices(scores);
-  const ist = { x: idx.stability, y: idx.performance };
-
-  // Targets (tunable, but stable and readable)
-  const low  = { x: clamp01(ist.x + 0.06), y: clamp01(ist.y + 0.04) };
-  const med  = { x: clamp01(ist.x + 0.12), y: clamp01(ist.y + 0.08) };
-  const high = { x: clamp01(ist.x + 0.20), y: clamp01(ist.y + 0.14) };
-  const soll = high;
-
-  // vectors
-  drawLine(ctx, ist.x, ist.y, low.x,  low.y,  box, theme, 2);
-  drawLine(ctx, ist.x, ist.y, med.x,  med.y,  box, theme, 2);
-  drawLine(ctx, ist.x, ist.y, high.x, high.y, box, theme, 3);
-
-  // points
-  const pIST  = drawPoint(ctx, ist.x,  ist.y,  box, theme, 5);
-  const pLOW  = drawPoint(ctx, low.x,  low.y,  box, theme, 4.5);
-  const pMED  = drawPoint(ctx, med.x,  med.y,  box, theme, 4.5);
-  const pHIGH = drawPoint(ctx, high.x, high.y, box, theme, 5);
-  // label placement (collision-safe)
-  const placed = [];
-  const dark = theme === "dark";
-  const labelFill = dark ? "rgba(255,255,255,0.92)" : "rgba(17,24,39,0.92)";
-  const labelBG   = dark ? "rgba(12,16,26,0.82)" : "rgba(255,255,255,0.92)";
-  const labelStroke = dark ? "rgba(255,255,255,0.14)" : "rgba(17,24,39,0.12)";
-
-  function drawTag(text, px, py){
-    ctx.save();
-    ctx.font = "800 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-    const res = placeLabel(ctx, text, px, py, {
-      placed,
-      pad: 6,
-      offsets: [
-        {dx: 12, dy: -18},
-        {dx: 12, dy:  18},
-        {dx: -12,dy: -18},
-        {dx: -12,dy:  18},
-        {dx: 0,  dy: -22},
-        {dx: 0,  dy:  22},
-        {dx: 18, dy:  0},
-        {dx: -18,dy:  0},
-      ],
-      maxTries: 8
-    });
-
-    const m = 7;
-    const tw = ctx.measureText(text).width;
-    const bw = tw + m*2;
-    const bh = 24;
-
-    ctx.shadowColor = dark ? "rgba(0,0,0,0.45)" : "rgba(0,0,0,0.10)";
-    ctx.shadowBlur  = dark ? 12 : 6;
-    ctx.fillStyle = labelBG;
-    ctx.strokeStyle = labelStroke;
-    ctx.lineWidth = 1;
-
-    roundRect(ctx, res.bx - m, res.by - bh/2, bw, bh, 10);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = labelFill;
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, res.bx, res.by);
-    ctx.restore();
-  }
-
-  drawTag(`IST (${ist.x.toFixed(2)}, ${ist.y.toFixed(2)})`, pIST.px, pIST.py);
-  drawTag(`LOW (${low.x.toFixed(2)}, ${low.y.toFixed(2)})`, pLOW.px, pLOW.py);
-  drawTag(`MED (${med.x.toFixed(2)}, ${med.y.toFixed(2)})`, pMED.px, pMED.py);
-  drawTag(`HIGH (${high.x.toFixed(2)}, ${high.y.toFixed(2)})`, pHIGH.px, pHIGH.py);
-  drawTag(`SOLL (${soll.x.toFixed(2)}, ${soll.y.toFixed(2)})`, pHIGH.px, pHIGH.py);
-
-  // title
-  ctx.save();
-  ctx.fillStyle = box.txt;
-  ctx.font = "900 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "top";
-  ctx.fillText("KOORDINATENSYSTEM: IST → SOLL (MASSNAHMEN-VEKTOREN)", box.left, 10);
-  ctx.restore();
-
-  // snapshot for PDF
-  if (exportOnly){
-    try { return canvas.toDataURL("image/png"); } catch { return null; }
-  } else {
-    try { LAST_ISTSOLL_DATAURL = canvas.toDataURL("image/png"); } catch { LAST_ISTSOLL_DATAURL = null; }
-    return null;
-  }
-}
-
-function renderTrendChart(scores, theme, exportOnly=false){
-  const host = el("trendPlot");
-  if (!host && !exportOnly) return null;
-
-  const rect = host ? host.getBoundingClientRect() : { width: 720, height: 300 };
-  const cssW = Math.max(320, Math.floor(rect.width || 720));
-  const cssH = Math.max(220, Math.floor(rect.height || 300));
-  const dpr = exportOnly ? 2 : Math.min(2, window.devicePixelRatio || 1);
-
-  const canvas = exportOnly ? document.createElement("canvas") : makeCanvasIn(host);
-  if (!canvas) return null;
-
-  canvas.width  = Math.floor(cssW * dpr);
-  canvas.height = Math.floor(cssH * dpr);
-
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-
-  const box = draw2DBase(ctx, cssW, cssH, theme);
-  const idx = computeIndices(scores);
-
-  // D0 = base
-  const D0 = { x: idx.stability, y: idx.performance };
-
-  // base/best/failure paths (deterministic, readable)
-  const base30 = { x: clamp01(D0.x + 0.06), y: clamp01(D0.y + 0.04) };
-  const base90 = { x: clamp01(D0.x + 0.12), y: clamp01(D0.y + 0.08) };
-
-  const best30 = { x: clamp01(D0.x + 0.10), y: clamp01(D0.y + 0.08) };
-  const best90 = { x: clamp01(D0.x + 0.20), y: clamp01(D0.y + 0.14) };
-
-  const fail30 = { x: clamp01(D0.x - 0.05), y: clamp01(D0.y - 0.03) };
-  const fail90 = { x: clamp01(D0.x - 0.08), y: clamp01(D0.y - 0.05) };
-
-  function path(points, alpha){
-    const dark = theme === "dark";
-    const col = dark ? `rgba(246,204,114,${alpha})` : `rgba(245,158,11,${alpha})`;
-    ctx.beginPath();
-    points.forEach((p,i)=>{
-      const t = xyToCanvas(p.x,p.y,box);
-      if (i===0) ctx.moveTo(t.px,t.py); else ctx.lineTo(t.px,t.py);
-    });
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = "round";
-    ctx.stroke();
-
-    points.forEach((p)=>{
-      drawPoint(ctx, p.x, p.y, box, theme, 4.6);
-    });
-  }
-
-  path([D0, base30, base90], 0.85);
-  path([D0, best30, best90], 0.60);
-  path([D0, fail30, fail90], 0.45);
-
-  // labels (collision-safe)
-  const placed = [];
-  const dark = theme === "dark";
-  const labelFill = dark ? "rgba(255,255,255,0.92)" : "rgba(17,24,39,0.92)";
-  ctx.save();
-  ctx.font = "800 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-  ctx.fillStyle = labelFill;
-
-  function tag(text, p){
-    const t = xyToCanvas(p.x,p.y,box);
-    const res = placeLabel(ctx, text, t.px, t.py, { placed, pad: 4, maxTries: 8 });
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, res.bx, res.by);
-  }
-
-  tag("D0", D0);
-  tag("D30", base30);
-  tag("D90", base90);
-  ctx.restore();
-
-  // title + legend
-  ctx.save();
-  ctx.fillStyle = box.txt;
-  ctx.font = "900 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "top";
-  ctx.fillText("TREND: BASE / BEST / FAILURE (D0 → D30 → D90)", box.left, 10);
-
-  ctx.font = "700 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
-  ctx.fillStyle = box.muted;
-  ctx.fillText("Base", box.left, 28);
-  ctx.fillText("Best", box.left, 44);
-  ctx.fillText("Failure", box.left, 60);
-  ctx.restore();
-
-  if (exportOnly){
-    try { return canvas.toDataURL("image/png"); } catch { return null; }
-  } else {
-    try { LAST_TREND_DATAURL = canvas.toDataURL("image/png"); } catch { LAST_TREND_DATAURL = null; }
-    return null;
-  }
-}
-
-function renderAll2DCharts(){
-  if (!LAST_SCORES) return;
-  // screen charts in dark style
-  renderTrendChart(LAST_SCORES, "dark", false);
-  renderIstSollChart(LAST_SCORES, "dark", false);
-}
-
-// ================== CARDS RENDER ==================
+// ======= SVG helpers =======
 function escapeHTML(str){
   return String(str ?? "")
     .replaceAll("&", "&amp;")
@@ -864,7 +496,200 @@ function escapeHTML(str){
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+function clamp01(x){ return Math.max(0, Math.min(1, Number(x)||0)); }
+function svgEl(tag, attrs={}, children=""){
+  const a = Object.entries(attrs).map(([k,v]) => `${k}="${String(v)}"`).join(" ");
+  return `<${tag}${a ? " "+a : ""}>${children}</${tag}>`;
+}
+function line(x1,y1,x2,y2,attrs={}){
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(" ")} />`;
+}
+function circle(x,y,r,attrs={}){
+  return `<circle cx="${x}" cy="${y}" r="${r}" ${Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(" ")} />`;
+}
+function text(x,y,txt,attrs={}){
+  return `<text x="${x}" y="${y}" ${Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(" ")}>${escapeHTML(txt)}</text>`;
+}
 
+// ======= Trend SVG (Base/Best/Failure, D0->D30->D90) =======
+function buildTrendSeries(scores){
+  // Simple deterministic projection: stability = avg(low vars), performance = avg(high vars)
+  // (Worker output can later supply real projections; this is a stable visual.)
+  const vals = Object.values(scores).map(clamp01);
+  const mean = vals.reduce((a,b)=>a+b,0)/Math.max(1,vals.length);
+  const spread = Math.max(...vals) - Math.min(...vals);
+
+  const s0 = clamp01(mean - spread*0.10);
+  const p0 = clamp01(mean - spread*0.05);
+
+  const base = [
+    {t:"D0",  s:s0,                 p:p0},
+    {t:"D30", s:clamp01(s0+0.08),   p:clamp01(p0+0.06)},
+    {t:"D90", s:clamp01(s0+0.14),   p:clamp01(p0+0.12)},
+  ];
+  const best = base.map((pt,i)=>({
+    ...pt,
+    s: clamp01(pt.s + (i===0?0:0.06)),
+    p: clamp01(pt.p + (i===0?0:0.10)),
+  }));
+  const fail = base.map((pt,i)=>({
+    ...pt,
+    s: clamp01(pt.s - (i===0?0:0.08)),
+    p: clamp01(pt.p - (i===0?0:0.10)),
+  }));
+  return { base, best, fail };
+}
+
+function renderTrendSVG(scores){
+  const host = el("plotTrend");
+  if (!host) return;
+  const rect = host.getBoundingClientRect();
+  const W = Math.max(520, Math.floor(rect.width));
+  const H = Math.max(300, Math.floor(rect.height));
+
+  const pad = {l:58, r:18, t:18, b:44};
+  const iw = W - pad.l - pad.r;
+  const ih = H - pad.t - pad.b;
+
+  const x = (v)=> pad.l + iw*clamp01(v);              // Stability
+  const y = (v)=> pad.t + ih*(1-clamp01(v));          // Performance
+
+  const { base, best, fail } = buildTrendSeries(scores);
+
+  const bg = svgEl("rect", {x:0,y:0,width:W,height:H, rx:16, fill:"rgba(255,255,255,0.02)", stroke:"rgba(255,255,255,0.08)"});
+  const grid = [];
+  for (let i=0;i<=5;i++){
+    const gx = pad.l + iw*(i/5);
+    const gy = pad.t + ih*(i/5);
+    grid.push(line(gx, pad.t, gx, pad.t+ih, {stroke:"rgba(255,255,255,0.10)", "stroke-width":"1"}));
+    grid.push(line(pad.l, gy, pad.l+iw, gy, {stroke:"rgba(255,255,255,0.10)", "stroke-width":"1"}));
+  }
+  const axisLabels = [
+    text(pad.l, H-16, "Stability (0→1)", {fill:"rgba(255,255,255,0.70)", "font-size":"12", "font-weight":"600"}),
+    text(12, pad.t+12, "Performance (0→1)", {fill:"rgba(255,255,255,0.70)", "font-size":"12", "font-weight":"600", transform:`rotate(-90 12 ${pad.t+12})`}),
+  ];
+
+  function pathFor(arr){
+    return arr.map((pt,i)=> `${i===0?"M":"L"} ${x(pt.s).toFixed(1)} ${y(pt.p).toFixed(1)}`).join(" ");
+  }
+  function dotsFor(arr, label){
+    return arr.map((pt)=> {
+      const cx = x(pt.s), cy = y(pt.p);
+      return circle(cx,cy,4.2,{fill:"rgba(255,255,255,0.90)", stroke:"rgba(0,0,0,0.40)", "stroke-width":"1"})
+        + text(cx+8, cy-8, pt.t, {fill:"rgba(255,255,255,0.78)", "font-size":"12", "font-weight":"700"});
+    }).join("");
+  }
+
+  const legend = `
+    ${text(pad.l+6, pad.t+14, "Base",    {fill:"rgba(246,204,114,0.95)","font-size":"12","font-weight":"700"})}
+    ${text(pad.l+6, pad.t+30, "Best",    {fill:"rgba(158,240,216,0.90)","font-size":"12","font-weight":"700"})}
+    ${text(pad.l+6, pad.t+46, "Failure", {fill:"rgba(255,160,160,0.88)","font-size":"12","font-weight":"700"})}
+  `;
+
+  const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+  ${bg}
+  ${grid.join("")}
+  ${axisLabels.join("")}
+  ${legend}
+
+  <path d="${pathFor(base)}" fill="none" stroke="rgba(246,204,114,0.95)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="${pathFor(best)}" fill="none" stroke="rgba(158,240,216,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="${pathFor(fail)}" fill="none" stroke="rgba(255,160,160,0.80)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  ${dotsFor(base)}
+</svg>`.trim();
+
+  host.innerHTML = svg;
+  LAST_TREND_SVG = svg;
+}
+
+// ======= IST→SOLL SVG (LOW/MED/HIGH) =======
+function buildIstSoll(scores){
+  const vals = Object.values(scores).map(clamp01);
+  const mean = vals.reduce((a,b)=>a+b,0)/Math.max(1,vals.length);
+  const min = Math.min(...vals);
+  const spread = Math.max(...vals) - min;
+
+  // IST: stability ~ mean, performance ~ mean - weakness penalty
+  const ist = { s: clamp01(mean), p: clamp01(mean - spread*0.18) };
+
+  // Targets depend on weakest severity
+  const low  = { s: clamp01(ist.s + 0.10), p: clamp01(ist.p + 0.08) };
+  const med  = { s: clamp01(ist.s + 0.16), p: clamp01(ist.p + 0.14) };
+  const high = { s: clamp01(ist.s + 0.22), p: clamp01(ist.p + 0.22) };
+
+  return { ist, low, med, high };
+}
+
+function renderIstSollSVG(scores){
+  const host = el("plotIstSoll");
+  if (!host) return;
+
+  const rect = host.getBoundingClientRect();
+  const W = Math.max(520, Math.floor(rect.width));
+  const H = Math.max(300, Math.floor(rect.height));
+
+  const pad = {l:58, r:18, t:18, b:44};
+  const iw = W - pad.l - pad.r;
+  const ih = H - pad.t - pad.b;
+
+  const x = (v)=> pad.l + iw*clamp01(v);     // Stability
+  const y = (v)=> pad.t + ih*(1-clamp01(v)); // Performance
+
+  const { ist, low, med, high } = buildIstSoll(scores);
+
+  const bg = svgEl("rect", {x:0,y:0,width:W,height:H, rx:16, fill:"rgba(255,255,255,0.02)", stroke:"rgba(255,255,255,0.08)"});
+  const grid = [];
+  for (let i=0;i<=5;i++){
+    const gx = pad.l + iw*(i/5);
+    const gy = pad.t + ih*(i/5);
+    grid.push(line(gx, pad.t, gx, pad.t+ih, {stroke:"rgba(255,255,255,0.10)", "stroke-width":"1"}));
+    grid.push(line(pad.l, gy, pad.l+iw, gy, {stroke:"rgba(255,255,255,0.10)", "stroke-width":"1"}));
+  }
+
+  const axisLabels = [
+    text(pad.l, H-16, "Stability (0→1)", {fill:"rgba(255,255,255,0.70)", "font-size":"12", "font-weight":"600"}),
+    text(12, pad.t+12, "Performance (0→1)", {fill:"rgba(255,255,255,0.70)", "font-size":"12", "font-weight":"600", transform:`rotate(-90 12 ${pad.t+12})`}),
+  ];
+
+  function vec(to, stroke){
+    return `
+      <path d="M ${x(ist.s)} ${y(ist.p)} L ${x(to.s)} ${y(to.p)}"
+        fill="none" stroke="${stroke}" stroke-width="3" stroke-linecap="round"/>
+      ${circle(x(to.s), y(to.p), 4.6, {fill:"rgba(255,255,255,0.92)", stroke:"rgba(0,0,0,0.40)", "stroke-width":"1"})}
+    `;
+  }
+
+  // label placement: offset so it never sits on top of each other
+  function labelAt(pt, name, dx, dy){
+    return text(x(pt.s)+dx, y(pt.p)+dy, `${name} (${pt.s.toFixed(2)}, ${pt.p.toFixed(2)})`,
+      {fill:"rgba(255,255,255,0.88)","font-size":"12","font-weight":"800"});
+  }
+
+  const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+  ${bg}
+  ${grid.join("")}
+  ${axisLabels.join("")}
+
+  ${circle(x(ist.s), y(ist.p), 5.2, {fill:"rgba(246,204,114,0.95)", stroke:"rgba(0,0,0,0.35)", "stroke-width":"1"})}
+  ${text(x(ist.s)+10, y(ist.p)+14, `IST (${ist.s.toFixed(2)}, ${ist.p.toFixed(2)})`, {fill:"rgba(246,204,114,0.95)","font-size":"12","font-weight":"900"})}
+
+  ${vec(low,  "rgba(158,240,216,0.60)")}
+  ${vec(med,  "rgba(158,240,216,0.78)")}
+  ${vec(high, "rgba(158,240,216,0.92)")}
+
+  ${labelAt(low,  "LOW",  10,  12)}
+  ${labelAt(med,  "MED",  10,  -8)}
+  ${labelAt(high, "HIGH", 10,  12)}
+</svg>`.trim();
+
+  host.innerHTML = svg;
+  LAST_ISTSOLL_SVG = svg;
+}
+
+// ======= Cards render =======
 function buildCardsHTML(cards){
   const html = [`<div class="ddCards">`];
   for (const c of cards){
@@ -901,16 +726,14 @@ function buildCardsHTML(cards){
   return html.join("");
 }
 
-// ================== PRODUCT KEY + TOKEN ==================
+// ======= Product selection =======
 function productKey(){
   if (CURRENT_LAYER === "idg" && CURRENT_MODE === "private") return "idg_private";
   if (CURRENT_LAYER === "idg" && CURRENT_MODE === "business") return "idg_business";
   if (CURRENT_LAYER === "adg" && CURRENT_MODE === "private") return "adg_private";
   return "adg_business";
 }
-function requiredPrefix(){
-  return TOKEN_PREFIX[productKey()] || "TOKEN-";
-}
+function requiredPrefix(){ return TOKEN_PREFIX[productKey()] || "TOKEN-"; }
 function getToken(){
   const key = productKey();
   const input = el("tokenInput");
@@ -929,7 +752,7 @@ function tokenLooksValidForSelection(tok){
   return tok && tok.toUpperCase().startsWith(pfx);
 }
 
-// ================== UI STATE UPDATES ==================
+// ======= UI state =======
 function setLayer(layer){
   CURRENT_LAYER = (layer === "adg") ? "adg" : "idg";
   localStorage.setItem(LS_LAYER, CURRENT_LAYER);
@@ -955,7 +778,6 @@ function setLayer(layer){
   updateRunButtonState();
   clearOutput();
 }
-
 function setMode(mode){
   CURRENT_MODE = (mode === "business") ? "business" : "private";
   localStorage.setItem(LS_MODE, CURRENT_MODE);
@@ -972,7 +794,7 @@ function setMode(mode){
   }
   if (hint){
     hint.textContent = (CURRENT_MODE === "business")
-      ? "Business: Organisation/Team · Executive Output"
+      ? "Business: Organisation/Team · Boardfähiger Output"
       : "Privat: persönlich/Beziehung · klare Orientierung";
   }
 
@@ -981,7 +803,6 @@ function setMode(mode){
   updateRunButtonState();
   clearOutput();
 }
-
 function hydrateTokenInput(){
   const input = el("tokenInput");
   if (!input) return;
@@ -990,7 +811,6 @@ function hydrateTokenInput(){
   input.value = stored;
   input.placeholder = `${requiredPrefix()}XXXX-XXXX-XXXX`;
 }
-
 function updateTokenUI(){
   const key = productKey();
 
@@ -1025,7 +845,6 @@ function updateTokenUI(){
   show(buyADGP, key === "adg_private");
   show(buyADGB, key === "adg_business");
 }
-
 function updateRunButtonState(){
   const btn = el("runBtn");
   if (!btn) return;
@@ -1033,7 +852,6 @@ function updateRunButtonState(){
   const ok = tokenLooksValidForSelection(tok);
   btn.disabled = !LAST_SCORES || !ok;
 }
-
 function clearOutput(){
   const out = el("deepOut");
   if (out){
@@ -1043,7 +861,6 @@ function clearOutput(){
   const pdfBtn = el("pdfBtn");
   if (pdfBtn) pdfBtn.disabled = true;
 }
-
 function applyToken(){
   const input = el("tokenInput");
   const raw = (input?.value || "").trim();
@@ -1052,18 +869,17 @@ function applyToken(){
   updateRunButtonState();
 }
 
-// ================== WORKER ERRORS ==================
+// ======= Worker errors mapping =======
 function mapWorkerError(err){
   const e = String(err || "");
   if (e.includes("TOKEN_REQUIRED")) return "Token erforderlich.";
   if (e.includes("TOKEN_INVALID")) return "Token ungültig.";
-  if (e.includes("TOKEN_EXHAUSTED")) return "Token ist aufgebraucht.";
-  if (e.includes("TOKEN_WRONG_TYPE")) return "Falscher Token-Typ für diese Ausgabe.";
-  if (e.includes("RATE_LIMIT")) return "Limit erreicht. Bitte später erneut versuchen.";
+  if (e.includes("TOKEN_EXHAUSTED")) return "Token ist aufgebraucht (1x nutzbar).";
+  if (e.includes("TOKEN_WRONG_TYPE")) return "Falscher Token-Typ (Prefix passt nicht zum Produkt).";
   return e;
 }
 
-// ================== PRO OUTPUT REQUEST ==================
+// ======= Deep output request =======
 async function runProOutput(){
   hideErrorBox();
 
@@ -1095,10 +911,7 @@ async function runProOutput(){
     scores: LAST_SCORES,
     weakest,
     pattern,
-    meta: {
-      product: key,
-      tone: (CURRENT_MODE === "business") ? "board" : "clear",
-    }
+    meta: { product: key, tone: (CURRENT_MODE === "business") ? "board" : "clear" }
   };
 
   try {
@@ -1121,11 +934,11 @@ async function runProOutput(){
     if (Array.isArray(data.cards) && data.cards.length){
       out.innerHTML = buildCardsHTML(data.cards);
     } else {
-      const raw = String(data.text || data.output || data.result || "").trim();
+      const raw = String(data.text || "").trim();
       out.innerHTML = buildCardsHTML([{ title:"Ausgabe", pill:key.toUpperCase(), body: raw || "(leer)" }]);
     }
 
-    // single-use token; clear after success
+    // single-use: remove stored token after success
     localStorage.removeItem(LS_TOKEN[key]);
     hydrateTokenInput();
 
@@ -1135,7 +948,7 @@ async function runProOutput(){
   } catch (e) {
     out.style.display = "block";
     out.innerHTML = buildCardsHTML([
-      { title:"Fehler", pill:"Request", body: mapWorkerError(String(e.message || e)), small:"Bitte Token/Typ prüfen und erneut versuchen." }
+      { title:"Fehler", pill:"Request", body: mapWorkerError(String(e.message || e)), small:"Token/Typ prüfen und erneut versuchen." }
     ]);
     const pdfBtn = el("pdfBtn");
     if (pdfBtn) pdfBtn.disabled = true;
@@ -1145,25 +958,7 @@ async function runProOutput(){
   }
 }
 
-// ================== PDF EXPORT ==================
-function barsAsTableHTML(scores){
-  const rows = VARS.map(v => {
-    const val = Number(scores?.[v] ?? 0);
-    return `<tr><td>${escapeHTML(v)}</td><td style="text-align:right">${val.toFixed(2)}</td></tr>`;
-  }).join("");
-  return `
-    <table style="width:100%;border-collapse:collapse;margin-top:10px">
-      <thead>
-        <tr>
-          <th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:8px 0">Variable</th>
-          <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:8px 0">Score</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-}
-
+// ======= PDF Export (inline SVG for crispness) =======
 function exportPDF(){
   hideErrorBox();
 
@@ -1177,10 +972,6 @@ function exportPDF(){
     return;
   }
 
-  // render export images in PRINT theme (high contrast)
-  const trendPng = renderTrendChart(LAST_SCORES, "print", true);
-  const istSollPng = renderIstSollChart(LAST_SCORES, "print", true);
-
   const key = productKey();
   const title = `Indikation & Architektur des Gleichgewichts — ${key.replace("_"," ").toUpperCase()}`;
   const weakTxt = `${LAST_WEAK.key} (${LAST_WEAK.val.toFixed(2)})`;
@@ -1190,13 +981,18 @@ function exportPDF(){
     ? `<img src="${LAST_RADAR_DATAURL}" alt="Radar" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`
     : `<div style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;color:#6b7280">Radar konnte nicht eingebettet werden.</div>`;
 
-  const trendImg = trendPng
-    ? `<img src="${trendPng}" alt="Trend" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`
-    : `<div style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;color:#6b7280">Trend konnte nicht eingebettet werden.</div>`;
+  const trendSvg = LAST_TREND_SVG
+    ? `<div style="border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">${LAST_TREND_SVG}</div>`
+    : `<div style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;color:#6b7280">Trend fehlt.</div>`;
 
-  const istSollImg = istSollPng
-    ? `<img src="${istSollPng}" alt="IST->SOLL" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`
-    : `<div style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;color:#6b7280">IST→SOLL konnte nicht eingebettet werden.</div>`;
+  const istSollSvg = LAST_ISTSOLL_SVG
+    ? `<div style="border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">${LAST_ISTSOLL_SVG}</div>`
+    : `<div style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;color:#6b7280">Ist→Soll fehlt.</div>`;
+
+  const rows = VARS.map(v => {
+    const val = Number(LAST_SCORES?.[v] ?? 0);
+    return `<tr><td>${escapeHTML(v)}</td><td style="text-align:right">${val.toFixed(2)}</td></tr>`;
+  }).join("");
 
   const html = `
 <!doctype html>
@@ -1209,15 +1005,13 @@ function exportPDF(){
   body{ font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#0b0f17; margin:24px; }
   h1{ margin:0 0 6px; font-size:22px; }
   .muted{ color:#4b5563; font-size:12px; }
-  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; align-items:start; margin-top:14px; }
-  .grid3{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; align-items:start; margin-top:14px; }
+  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:start; margin-top:14px; }
   .card{ border:1px solid #e5e7eb; border-radius:14px; padding:14px; }
   .pill{ display:inline-block; padding:6px 10px; border:1px solid #e5e7eb; border-radius:999px; background:#f8fafc; font-size:12px; }
   .secTitle{ font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#374151; margin:0 0 8px; }
   .divider{ height:1px; background:#e5e7eb; margin:14px 0; }
   table td{ padding:6px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
   .out{ margin-top:14px; }
-
   .ddCard{ break-inside: avoid; page-break-inside: avoid; border:1px solid #e5e7eb; border-radius:14px; padding:12px; margin:12px 0; }
   .ddTitle{ display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:8px; }
   .ddTitle h4{ margin:0; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#111827; }
@@ -1228,10 +1022,8 @@ function exportPDF(){
   .ddTimeline{ display:grid; grid-template-columns:110px 1fr; gap:10px; margin-top:10px; }
   .ddTime{ font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#374151; border:1px solid #e5e7eb; background:#f8fafc; border-radius:999px; padding:7px 10px; height:fit-content; width:fit-content; }
   .ddStep{ border:1px solid #eef2f7; border-radius:12px; padding:10px; font-size:13px; line-height:1.45; }
-
-  @media print{
-    body{ margin:0; }
-  }
+  svg{ width:100%; height:320px; display:block; }
+  @media print{ body{ margin:0; } }
 </style>
 </head>
 <body>
@@ -1246,18 +1038,28 @@ function exportPDF(){
     </div>
     <div class="card">
       <div class="secTitle">Scores</div>
-      ${barsAsTableHTML(LAST_SCORES)}
+      <table style="width:100%;border-collapse:collapse;margin-top:10px">
+        <thead>
+          <tr>
+            <th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:8px 0">Variable</th>
+            <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:8px 0">Score</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
     </div>
   </div>
 
-  <div class="grid3">
+  <div class="divider"></div>
+
+  <div class="grid">
     <div class="card">
       <div class="secTitle">Trend</div>
-      ${trendImg}
+      ${trendSvg}
     </div>
     <div class="card">
       <div class="secTitle">Ist → Soll</div>
-      ${istSollImg}
+      ${istSollSvg}
     </div>
   </div>
 
@@ -1282,14 +1084,11 @@ function exportPDF(){
   w.document.open();
   w.document.write(html);
   w.document.close();
-
   w.focus();
-  setTimeout(() => {
-    try { w.print(); } catch {}
-  }, 350);
+  setTimeout(() => { try { w.print(); } catch {} }, 350);
 }
 
-// ================== EVALUATE / RESET ==================
+// ======= Evaluate / Reset =======
 async function onEvaluate() {
   hideErrorBox();
 
@@ -1311,13 +1110,13 @@ async function onEvaluate() {
   el("results")?.classList.remove("hidden");
 
   renderRadar(scores, weak);
+  renderTrendSVG(scores);
+  renderIstSollSVG(scores);
+
   renderBars(scores);
   renderWeakest(weak);
   renderTimewin(weak);
   renderMini(scores, 3);
-
-  // NEW: render charts (trend + ist/soll)
-  renderAll2DCharts();
 
   clearOutput();
   updateTokenUI();
@@ -1329,30 +1128,25 @@ function onReset() {
   document.querySelectorAll('input[type="radio"]').forEach(i => i.checked = false);
 
   el("results")?.classList.add("hidden");
-  el("plot3d") && (el("plot3d").innerHTML = "");
-  el("bars") && (el("bars").innerHTML = "");
-  el("weakest") && (el("weakest").innerHTML = "");
-  el("timewin") && (el("timewin").innerHTML = "");
-  el("deepMini") && (el("deepMini").innerHTML = "");
 
-  // NEW: clear 2d plots if present
-  el("trendPlot") && (el("trendPlot").innerHTML = "");
-  el("istSollPlot") && (el("istSollPlot").innerHTML = "");
+  ["plotRadar","plotTrend","plotIstSoll","bars","weakest","timewin","deepMini"].forEach(id=>{
+    const node = el(id);
+    if (node) node.innerHTML = "";
+  });
 
   clearOutput();
 
   LAST_SCORES = null;
   LAST_PATTERN = null;
   LAST_WEAK = null;
-
   LAST_RADAR_DATAURL = null;
-  LAST_TREND_DATAURL = null;
-  LAST_ISTSOLL_DATAURL = null;
+  LAST_TREND_SVG = null;
+  LAST_ISTSOLL_SVG = null;
 
   updateRunButtonState();
 }
 
-// ================== BOOT ==================
+// ======= Boot =======
 document.addEventListener("DOMContentLoaded", () => {
   buildQuestions();
 
