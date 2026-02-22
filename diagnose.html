@@ -1099,7 +1099,7 @@
         disableShare(true);
 
         try {
-          const res = await fetch("https://mdg-indikation-api.selim-87-cfe.workers.dev/api/diagnoses", {
+          const res = await fetch("https://api.mdg-indikation-api.de/api/diagnoses", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -1305,7 +1305,7 @@
 
   setStatus("Lade Diagnose …");
   try {
-    const res = await fetch(`https://mdg-indikation-api.selim-87-cfe.workers.dev/api/diagnoses/${encodeURIComponent(id)}`);
+    const res = await fetch(`https://api.mdg-indikation.de/api/diagnoses/${encodeURIComponent(id)}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data?.error || "Load failed");
 
