@@ -1297,6 +1297,32 @@
 
       // Default: DE
       applyLang("de");
+      // ---- Load by ?id= ----
+(async () => {
+  const params = new URLSearchParams(location.search);
+  const id = params.get("id");
+  if (!id) return;
+
+  setStatus("Lade Diagnose …");
+  try {
+    const res = await fetch(`https://mdg-indikation-api.selim-87-cfe.workers.dev/api/diagnoses/${encodeURIComponent(id)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Load failed");
+
+    const payload = data.payload;
+    // payload = {scores, classif, meta{...}} wie gespeichert
+    if (payload?.scores && payload?.classif) {
+      window.__MDG_LAST__ = payload;
+      render(payload.scores, payload.classif);
+      setShareLink(`https://mdg-indikation.de/diagnose.html?id=${encodeURIComponent(id)}`);
+      setStatus("Geladen.");
+    } else {
+      setStatus("Geladen, aber Format unerwartet.");
+    }
+  } catch (e) {
+    setStatus("Fehler: " + (e?.message || String(e)));
+  }
+})();
     })();
   </script>
 </body>
