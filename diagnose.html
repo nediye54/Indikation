@@ -1091,6 +1091,7 @@
       }
 
       // ---- Server save (anonymous) ----
+      const API_BASE = "https://api.mdg-indikation.de";
       async function saveToServer() {
         const payload = window.__MDG_LAST__;
         if (!payload) { alert("Bitte zuerst Ergebnis berechnen."); return; }
@@ -1099,7 +1100,7 @@
         disableShare(true);
 
         try {
-          const res = await fetch("https://api.mdg-indikation-api.de/api/diagnoses", {
+          const res = await fetch(`${API_BASE}/api/diagnoses`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -1305,7 +1306,7 @@
 
   setStatus("Lade Diagnose …");
   try {
-    const res = await fetch(`https://api.mdg-indikation.de/api/diagnoses/${encodeURIComponent(id)}`);
+    const res = await fetch(`${API_BASE}/api/diagnoses/${encodeURIComponent(id)}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data?.error || "Load failed");
 
