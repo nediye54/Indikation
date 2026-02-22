@@ -580,3 +580,30 @@ body{
     min-height: 360px;
   }
 }
+/* ===== v61+ Plot container hard-fix (prevents 0-height canvases) ===== */
+.plot3d{
+  position: relative;
+  width: 100%;
+  height: 360px;      /* wichtig: feste Höhe */
+  min-height: 320px;  /* fallback */
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+/* Canvas inside plot container */
+.plot3d canvas{
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* Wenn Panels/Grid responsiv kollabieren: */
+.panel{
+  min-height: 420px; /* sorgt dafür, dass Plot + Hint Platz haben */
+}
+
+/* Mobile/kleine Screens */
+@media (max-width: 860px){
+  .plot3d{ height: 320px; min-height: 300px; }
+  .panel{ min-height: 380px; }
+}
