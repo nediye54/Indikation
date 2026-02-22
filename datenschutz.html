@@ -4,222 +4,163 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Datenschutz – Indikation & Architektur</title>
-
-  <link rel="stylesheet" href="style.css?v=70" />
+  <title>Datenschutz – MDG v2</title>
+  <meta name="description" content="Datenschutzerklärung von MDG v2" />
+  <link rel="stylesheet" href="./styles.css" />
 </head>
-
 <body>
-  <main class="wrap">
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
 
-    <header class="hero">
-      <h1>Datenschutz</h1>
-      <p class="sub">Indikation & Architektur des Gleichgewichts</p>
-      <p class="path">Transparenz · Datenverarbeitung · Rechte</p>
-    </header>
+  <header class="header" id="top">
+    <div class="container header__inner">
+      <a class="brand" href="./index.html" aria-label="Zur Startseite">
+        <span class="brand__mark" aria-hidden="true">MDG</span>
+        <span class="brand__text">v2</span>
+      </a>
 
-    <!-- Überblick -->
-    <section class="card">
-      <div class="cardHead">
-        <h2>Überblick</h2>
-        <p class="muted">Kurz und verständlich, ohne Juristen-Nebel.</p>
+      <nav class="nav" aria-label="Hauptnavigation">
+        <a class="nav__link" href="./index.html#modell">Modell</a>
+        <a class="nav__link" href="./index.html#diagnose">Diagnose</a>
+        <a class="nav__link" href="./index.html#ergebnisse">Ergebnisse</a>
+        <a class="nav__link" href="./index.html#massnahmen">Maßnahmen</a>
+        <a class="nav__link" href="./index.html#export">Export</a>
+      </nav>
+
+      <div class="header__actions">
+        <a class="btn btn--primary" href="./index.html#start">Diagnose starten</a>
       </div>
 
-      <div class="box">
-        <p>
-          Diese Website verarbeitet so wenig personenbezogene Daten wie möglich.
-          Der Quick Scan wird im Browser ausgewertet.
-          Pro-Ausgaben (IDG/ADG) werden nur erzeugt, wenn du aktiv eine Pro-Ausgabe startest
-          (Token-basiert) – dann werden die dafür notwendigen Werte an den API-Dienst übermittelt.
-        </p>
+      <button class="burger" type="button" aria-label="Menü öffnen" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
 
-        <div class="divider"></div>
-
-        <p>
-          <strong>Verantwortlicher</strong><br>
-          Selim M. Ayrilmaz<br>
-          Moosacher Straße 18, 80809 München, Deutschland<br>
-          E-Mail: <a href="mailto:info@mdg-indikation.de">info@mdg-indikation.de</a>
-        </p>
+    <div class="drawer" hidden>
+      <div class="drawer__content">
+        <a class="drawer__link" href="./index.html#modell">Modell</a>
+        <a class="drawer__link" href="./index.html#diagnose">Diagnose</a>
+        <a class="drawer__link" href="./index.html#ergebnisse">Ergebnisse</a>
+        <a class="drawer__link" href="./index.html#massnahmen">Maßnahmen</a>
+        <a class="drawer__link" href="./index.html#export">Export</a>
+        <div class="drawer__sep"></div>
+        <a class="btn btn--primary btn--full" href="./index.html#start">Diagnose starten</a>
       </div>
-    </section>
+    </div>
+  </header>
 
-    <!-- Datenverarbeitung beim Besuch -->
-    <section class="card">
-      <div class="cardHead">
-        <h2>1) Zugriffsdaten (Server-Logs)</h2>
-        <p class="muted">Was technisch beim Aufruf unvermeidbar ist.</p>
-      </div>
+  <main id="main">
+    <section class="section">
+      <div class="container">
+        <div class="section__head">
+          <h1 class="h2">Datenschutzerklärung</h1>
+          <p class="sub">Informationen nach DSGVO</p>
+        </div>
 
-      <div class="box">
-        <p>
-          Beim Aufruf der Website werden durch den Hosting-/CDN-Anbieter technisch bedingt
-          Zugriffsdaten verarbeitet (z. B. IP-Adresse, Datum/Uhrzeit, aufgerufene Seite,
-          Browser/OS). Diese Verarbeitung ist erforderlich, um die Website sicher und stabil
-          bereitzustellen (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO).
-        </p>
-        <p class="muted">
-          Hinweis: Die genaue Speicherdauer kann je nach Infrastruktur variieren und orientiert
-          sich an Sicherheits- und Stabilitätsanforderungen.
-        </p>
-      </div>
-    </section>
+        <div class="card">
+          <h2 class="h3">1. Verantwortlicher</h2>
+          <p class="p">
+            <strong>[Name / Unternehmen]</strong><br />
+            [Straße Hausnummer]<br />
+            [PLZ Ort]<br />
+            E-Mail: <a href="mailto:[email]">[email]</a><br />
+            Telefon: [Telefonnummer]
+          </p>
 
-    <!-- Quick Scan -->
-    <section class="card">
-      <div class="cardHead">
-        <h2>2) Quick Scan (lokale Verarbeitung)</h2>
-        <p class="muted">Deine Antworten bleiben im Normalfall auf deinem Gerät.</p>
-      </div>
+          <h2 class="h3">2. Allgemeine Hinweise</h2>
+          <p class="p">
+            Diese Datenschutzerklärung informiert dich über Art, Umfang und Zweck der Verarbeitung personenbezogener Daten auf dieser Website.
+            Personenbezogene Daten sind alle Daten, mit denen du persönlich identifiziert werden kannst.
+          </p>
 
-      <div class="box">
-        <p>
-          Der Quick Scan wird im Browser ausgewertet. Die von dir ausgewählten Antworten werden
-          zur Berechnung von Radar/Balken/Ergebnis genutzt. Eine automatische Übermittlung dieser
-          Antworten an mich erfolgt dabei nicht.
-        </p>
+          <h2 class="h3">3. Hosting</h2>
+          <p class="p">
+            Diese Website wird gehostet bei: <strong>[Hosting-Anbieter]</strong>.<br />
+            Der Hosting-Anbieter verarbeitet Zugriffsdaten (Server-Logfiles), um den Betrieb der Website zu ermöglichen.
+            Bitte ergänze hier – falls verfügbar – die Information zu Auftragsverarbeitung (AVV) mit dem Hoster.
+          </p>
 
-        <div class="divider"></div>
+          <h2 class="h3">4. Server-Logfiles</h2>
+          <p class="p">
+            Beim Besuch der Website können automatisch Informationen erfasst werden (z. B. Browsertyp, Betriebssystem, Referrer-URL, IP-Adresse, Uhrzeit).
+            Die Verarbeitung erfolgt zur Sicherstellung des technischen Betriebs und zur Abwehr von Angriffen.
+            Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse).
+          </p>
 
-        <p>
-          <strong>Lokale Speicherung (Browser)</strong><br>
-          Je nach Konfiguration kann der Browser lokale Daten speichern (z. B. Modus-/Ebene-Auswahl,
-          Token-Eingabe). Du kannst diese Daten jederzeit in deinem Browser löschen.
-        </p>
-      </div>
-    </section>
+          <h2 class="h3">5. Kontaktaufnahme</h2>
+          <p class="p">
+            Wenn du uns per Kontaktformular oder E-Mail kontaktierst, werden deine Angaben zur Bearbeitung der Anfrage verarbeitet.
+            Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertrag/Anbahnung) oder Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse).
+            Die Daten werden gelöscht, sobald die Anfrage erledigt ist und keine gesetzlichen Aufbewahrungspflichten entgegenstehen.
+          </p>
 
-    <!-- Pro-Ausgaben -->
-    <section class="card">
-      <div class="cardHead">
-        <h2>3) Pro-Ausgaben (IDG/ADG) – Verarbeitung zur Leistungserbringung</h2>
-        <p class="muted">Was passiert, wenn du eine Pro-Ausgabe erzeugst.</p>
-      </div>
+          <h2 class="h3">6. Cookies & lokale Speicherung</h2>
+          <p class="p">
+            Diese Website kann technisch notwendige Daten im Browser speichern (z. B. Spracheinstellung).
+            Wenn du zusätzliche Cookies oder Tracking einsetzt, musst du hier einen Cookie-Banner und die Details ergänzen (Zweck, Anbieter, Rechtsgrundlage, Speicherdauer).
+          </p>
 
-      <div class="box">
-        <p>
-          Wenn du eine Pro-Ausgabe startest, werden die für die Generierung notwendigen Werte
-          (z. B. Scores/Schwerpunkte/Pattern) an den API-Dienst übermittelt und dort verarbeitet,
-          um die Ausgabe zu erzeugen (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO –
-          Vertrag/Leistungserbringung).
-        </p>
+          <h2 class="h3">7. Service Worker / Offline-Funktion</h2>
+          <p class="p">
+            Diese Website kann einen Service Worker nutzen, um Inhalte offline verfügbar zu machen und Ladezeiten zu verbessern.
+            Dabei werden statische Dateien (z. B. HTML/CSS/JS) im Browser-Cache gespeichert.
+            Es erfolgt keine Profilbildung, sofern keine zusätzlichen Tracking-Tools eingesetzt werden.
+          </p>
 
-        <div class="divider"></div>
+          <h2 class="h3">8. Empfänger & Drittlandtransfer</h2>
+          <p class="p">
+            Eine Weitergabe an Dritte erfolgt nur, wenn dies zur Bereitstellung der Website oder zur Bearbeitung deiner Anfrage erforderlich ist
+            oder wenn du eingewilligt hast. Wenn Dienste außerhalb der EU/EEA eingesetzt werden, musst du hier die Rechtsgrundlage (z. B. SCC) ergänzen.
+          </p>
 
-        <p>
-          <strong>Token-Verarbeitung</strong><br>
-          Für Pro-Ausgaben wird ein Token verarbeitet, um die Nutzung zu autorisieren.
-          Der Token wird serverseitig als „verbraucht“ markiert (Einmalnutzung).
-        </p>
-      </div>
-    </section>
+          <h2 class="h3">9. Speicherdauer</h2>
+          <p class="p">
+            Personenbezogene Daten werden nur so lange gespeichert, wie es zur Erfüllung der Zwecke erforderlich ist oder gesetzliche Pflichten bestehen.
+          </p>
 
-    <!-- Kauf / Payment -->
-    <section class="card">
-      <div class="cardHead">
-        <h2>4) Kauf von Tokens (Checkout & E-Mail)</h2>
-        <p class="muted">Zahlung, Bestellabwicklung, Zustellung deiner Tokens.</p>
-      </div>
+          <h2 class="h3">10. Deine Rechte</h2>
+          <p class="p">
+            Du hast das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung (Art. 18),
+            Datenübertragbarkeit (Art. 20) sowie Widerspruch (Art. 21). Außerdem hast du das Recht auf Beschwerde bei einer Aufsichtsbehörde.
+          </p>
 
-      <div class="box">
-        <p>
-          Wenn du Tokens kaufst, erfolgt die Zahlungsabwicklung über einen externen Checkout-Anbieter
-          (z. B. Lemon Squeezy) inkl. deren Zahlungsdienstleistern. Dabei werden für die Abwicklung
-          notwendige Daten verarbeitet (z. B. E-Mail-Adresse, Zahlungs-/Rechnungsdaten).
-        </p>
+          <h2 class="h3">11. Sicherheit</h2>
+          <p class="p">
+            Wir treffen angemessene technische und organisatorische Maßnahmen, um deine Daten zu schützen.
+            Eine vollständige Sicherheit im Internet kann jedoch nicht garantiert werden.
+          </p>
 
-        <p>
-          Nach erfolgreichem Kauf erhältst du eine E-Mail mit deinen Token-Codes.
-          Die Zustellung kann über einen E-Mail-Dienst erfolgen (z. B. Resend).
-          Hierbei wird deine E-Mail-Adresse zur Zustellung verarbeitet
-          (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO).
-        </p>
-
-        <div class="divider"></div>
-
-        <p class="muted">
-          Tipp: Falls die E-Mail im Spam landet, bitte Spam-Ordner prüfen und den Absender als „kein Spam“
-          markieren. Das verbessert die Zustellbarkeit.
-        </p>
+          <p class="micro">
+            Hinweis: Bitte ersetze die Platzhalter (z. B. [Hosting-Anbieter]) und ergänze eingesetzte Tools (Analytics, Newsletter, Zahlungsanbieter usw.).
+          </p>
+        </div>
       </div>
     </section>
-
-    <!-- Cookies / Tracking -->
-    <section class="card">
-      <div class="cardHead">
-        <h2>5) Cookies & Tracking</h2>
-        <p class="muted">Was wir nicht tun (und warum das gut ist).</p>
-      </div>
-
-      <div class="box">
-        <p>
-          Es werden keine Marketing-Tracker oder personalisierte Werbeprofile eingesetzt.
-          Technisch notwendige Cookies (z. B. Sicherheits-/Session-Mechanismen von Infrastruktur/Checkout)
-          können durch eingesetzte Anbieter gesetzt werden.
-        </p>
-      </div>
-    </section>
-
-    <!-- Rechte -->
-    <section class="card">
-      <div class="cardHead">
-        <h2>6) Deine Rechte</h2>
-        <p class="muted">DSGVO: Auskunft, Löschung, Berichtigung usw.</p>
-      </div>
-
-      <div class="box">
-        <ul class="ddList">
-          <li><span class="ddBullet"></span><div>Auskunft über verarbeitete Daten (Art. 15 DSGVO)</div></li>
-          <li><span class="ddBullet"></span><div>Berichtigung unrichtiger Daten (Art. 16 DSGVO)</div></li>
-          <li><span class="ddBullet"></span><div>Löschung / „Recht auf Vergessenwerden“ (Art. 17 DSGVO)</div></li>
-          <li><span class="ddBullet"></span><div>Einschränkung der Verarbeitung (Art. 18 DSGVO)</div></li>
-          <li><span class="ddBullet"></span><div>Datenübertragbarkeit (Art. 20 DSGVO)</div></li>
-          <li><span class="ddBullet"></span><div>Widerspruch gegen Verarbeitung (Art. 21 DSGVO)</div></li>
-        </ul>
-
-        <div class="divider"></div>
-
-        <p>
-          Du kannst dich außerdem bei einer Datenschutz-Aufsichtsbehörde beschweren.
-          Wenn du Fragen hast oder etwas löschen lassen möchtest, schreib an:
-          <a href="mailto:info@mdg-indikation.de">info@mdg-indikation.de</a>
-        </p>
-      </div>
-    </section>
-
-    <!-- Sicherheit -->
-    <section class="card">
-      <div class="cardHead">
-        <h2>7) Sicherheit</h2>
-        <p class="muted">Was wir tun, um Daten zu schützen.</p>
-      </div>
-
-      <div class="box">
-        <p>
-          Die Übertragung erfolgt verschlüsselt (HTTPS). Zusätzlich werden technische Schutzmaßnahmen
-          genutzt, um Missbrauch zu verhindern (z. B. Limits/Abuse-Schutz auf Infrastruktur-Ebene).
-        </p>
-      </div>
-    </section>
-
-    <!-- Stand -->
-    <section class="card">
-      <div class="cardHead">
-        <h2>Stand</h2>
-        <p class="muted">Letzte Aktualisierung.</p>
-      </div>
-
-      <div class="box">
-        <p>Stand: Februar 2026</p>
-      </div>
-    </section>
-
-    <footer class="foot muted">
-      <a href="index.html">Start</a> ·
-      <a href="impressum.html">Impressum</a> ·
-      <a href="kontakt.html">Kontakt</a>
-    </footer>
-
   </main>
+
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <div class="brand brand--footer">
+          <span class="brand__mark" aria-hidden="true">MDG</span>
+          <span class="brand__text">v2</span>
+        </div>
+        <p class="micro">Strukturdiagnose für Stabilisierung und Umbau.</p>
+      </div>
+      <div class="footer__links">
+        <a href="./index.html#modell">Modell</a>
+        <a href="./index.html#diagnose">Diagnose</a>
+        <a href="./index.html#ergebnisse">Ergebnisse</a>
+        <a href="./index.html#massnahmen">Maßnahmen</a>
+        <a href="./index.html#export">Export</a>
+      </div>
+      <div class="footer__legal">
+        <a href="./impressum.html" rel="nofollow">Impressum</a>
+        <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+        <a href="./kontakt.html" rel="nofollow">Kontakt</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./app.js" defer></script>
 </body>
 </html>
