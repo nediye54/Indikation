@@ -1,36 +1,57 @@
+/* =========================================================
+   MDG — style.css (clean rebuild)
+   - no duplicate blocks
+   - stable chart containers (plot3d + plotXY)
+   - panels do NOT force huge min-heights globally
+   - print/PDF friendly
+   ========================================================= */
+
 :root{
   --bg:#0b0f17;
   --card:#0f1522;
   --panel:#0e1421;
+
   --stroke:rgba(255,255,255,.10);
   --stroke2:rgba(255,255,255,.06);
+
   --text:rgba(255,255,255,.92);
   --muted:rgba(255,255,255,.62);
+
   --accent:#9ef0d8;
   --accent2:#f6cc72;
   --danger:#ff6b6b;
+
   --shadow: 0 18px 40px rgba(0,0,0,.45);
   --radius:18px;
 
-  /* PDF/print helpers */
+  /* Chart sizes (single source of truth) */
+  --radar-h: 360px;
+  --xy-h: 260px;
+
+  /* Print */
   --print-bg:#ffffff;
   --print-text:#0b0f17;
   --print-muted:#4b5563;
   --print-stroke:#e5e7eb;
 }
 
-*{box-sizing:border-box}
-html,body{height:100%}
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+
 body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
     "Apple Color Emoji","Segoe UI Emoji";
+  color:var(--text);
   background:
     radial-gradient(1200px 900px at 30% 20%, rgba(158,240,216,.08), transparent 55%),
     radial-gradient(1000px 700px at 80% 30%, rgba(246,204,114,.07), transparent 60%),
     var(--bg);
-  color:var(--text);
 }
+
+/* =========================================================
+   PAGE WRAP / HERO
+   ========================================================= */
 
 .wrap{
   width:min(1120px, 92vw);
@@ -41,6 +62,10 @@ body{
 .hero h1{ margin:0; font-size:38px; letter-spacing:.2px; }
 .hero .sub{ margin:6px 0 6px; color:var(--muted); }
 .hero .path{ margin:0; color:rgba(255,255,255,.52); font-size:14px; }
+
+/* =========================================================
+   CARDS / COMMON
+   ========================================================= */
 
 .card{
   background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
@@ -59,19 +84,22 @@ body{
 }
 .cardHead h2{ margin:0; font-size:22px; }
 
-.muted{color:var(--muted)}
-.hidden{display:none !important}
+.muted{ color:var(--muted); }
+.hidden{ display:none !important; }
 
 /* Error */
 .errorBox{
   border:1px solid rgba(255,107,107,.35);
   background: rgba(255,107,107,.08);
-  color: rgba(255,255,255,.9);
+  color: rgba(255,255,255,.92);
   padding:12px 14px;
   border-radius:14px;
 }
 
-/* Questions */
+/* =========================================================
+   QUESTIONS
+   ========================================================= */
+
 .questions{
   display:flex;
   flex-direction:column;
@@ -119,9 +147,12 @@ body{
   cursor:pointer;
   user-select:none;
 }
-.opt input{ accent-color: var(--accent) }
+.opt input{ accent-color: var(--accent); }
 
-/* Buttons */
+/* =========================================================
+   BUTTONS / ACTIONS
+   ========================================================= */
+
 .actions{
   display:flex;
   gap:10px;
@@ -142,8 +173,8 @@ body{
   align-items:center;
   justify-content:center;
 }
-.btn:hover{background: rgba(255,255,255,.06)}
-.btn:active{transform: translateY(1px)}
+.btn:hover{ background: rgba(255,255,255,.06); }
+.btn:active{ transform: translateY(1px); }
 .btn.primary{
   border-color: rgba(158,240,216,.35);
   background: rgba(158,240,216,.10);
@@ -154,24 +185,27 @@ body{
 }
 .btn:disabled:hover{ background: rgba(255,255,255,.04); }
 
-/* Wide buy buttons (new) */
 .buyWide{
   width:100%;
   margin-top:8px;
   justify-content:center;
 }
 
-/* Layout */
+/* =========================================================
+   LAYOUT GRID (RESULTS AREA)
+   ========================================================= */
+
 .grid2{
   display:grid;
   grid-template-columns: 1.25fr .85fr;
   gap:14px;
-  align-items:stretch;
+  align-items:start;
 }
 @media (max-width: 920px){
-  .grid2{grid-template-columns:1fr}
+  .grid2{ grid-template-columns:1fr; }
 }
 
+/* Panel: NO global min-height (was killing your layout) */
 .panel{
   border:1px solid var(--stroke2);
   background: rgba(0,0,0,.14);
@@ -195,15 +229,21 @@ body{
   margin:12px 0;
 }
 
-/* Bars */
+/* =========================================================
+   BARS
+   ========================================================= */
+
 .bars{ display:flex; flex-direction:column; gap:10px; }
+
 .barRow{
   display:grid;
   grid-template-columns: 1fr 2.1fr 56px;
   gap:10px;
   align-items:center;
 }
-.barName{color: rgba(255,255,255,.85); font-size:14px}
+
+.barName{ color: rgba(255,255,255,.85); font-size:14px; }
+
 .barTrack{
   height:10px;
   border-radius:999px;
@@ -211,11 +251,13 @@ body{
   background: rgba(255,255,255,.03);
   overflow:hidden;
 }
+
 .barFill{
   height:100%;
   border-radius:999px;
   background: linear-gradient(90deg, rgba(158,240,216,.85), rgba(246,204,114,.85));
 }
+
 .barVal{
   text-align:right;
   font-variant-numeric: tabular-nums;
@@ -238,9 +280,15 @@ body{
   flex-wrap:wrap;
 }
 
-/* Radar canvas host */
+/* =========================================================
+   CHART CONTAINERS (CANVAS)
+   ========================================================= */
+
+/* Radar host (plot3d) */
 .plot3d{
-  height: 360px;
+  width:100%;
+  height: var(--radar-h);
+  min-height: 320px;
   border-radius:14px;
   border:1px solid var(--stroke2);
   background:
@@ -250,6 +298,29 @@ body{
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
   overflow:hidden;
   position:relative;
+}
+
+/* Trend/IstSoll host (plotXY) */
+.plotXY{
+  width:100%;
+  height: var(--xy-h);
+  min-height: 220px;
+  border-radius:14px;
+  border:1px solid var(--stroke2);
+  background:
+    radial-gradient(520px 320px at 40% 40%, rgba(158,240,216,.08), transparent 60%),
+    rgba(0,0,0,.18);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+  overflow:hidden;
+  position:relative;
+}
+
+/* Canvas should always fill */
+.plot3d canvas,
+.plotXY canvas{
+  width:100% !important;
+  height:100% !important;
+  display:block;
 }
 
 .plotHint{
@@ -263,7 +334,18 @@ body{
   border-radius:999px;
 }
 
-/* Output box */
+/* Responsive chart sizing */
+@media (max-width: 860px){
+  :root{
+    --radar-h: 320px;
+    --xy-h: 240px;
+  }
+}
+
+/* =========================================================
+   PRO OUTPUT BOX
+   ========================================================= */
+
 .deepDive{
   border:1px solid var(--stroke2);
   border-radius:16px;
@@ -285,7 +367,10 @@ body{
   padding:12px;
 }
 
-/* Mode / Layer switch rows */
+/* =========================================================
+   MODE / LAYER SWITCH + TOKEN
+   ========================================================= */
+
 .modeRow{
   display:flex;
   align-items:center;
@@ -346,9 +431,9 @@ body{
   background: rgba(0,0,0,.12);
   border-radius:14px;
 }
-.tokenRow label{
-  padding-top:10px;
-}
+
+.tokenRow label{ padding-top:10px; }
+
 .tokenInput{
   flex: 1 1 280px;
   min-width: 240px;
@@ -370,7 +455,10 @@ body{
   margin-top:4px;
 }
 
-/* Premium output cards */
+/* =========================================================
+   PREMIUM OUTPUT CARDS
+   ========================================================= */
+
 .ddOut{ white-space: normal; }
 
 .ddCards{
@@ -435,6 +523,7 @@ body{
   border:1px solid var(--stroke2);
   background: rgba(255,255,255,.02);
 }
+
 .ddBullet{
   width:10px; height:10px;
   border-radius:50%;
@@ -452,6 +541,7 @@ body{
 @media (max-width: 560px){
   .ddTimeline{ grid-template-columns: 1fr; }
 }
+
 .ddTime{
   font-size:12px;
   letter-spacing:.6px;
@@ -464,6 +554,7 @@ body{
   height: fit-content;
   width: fit-content;
 }
+
 .ddStep{
   padding:10px;
   border-radius:14px;
@@ -506,9 +597,10 @@ body{
   opacity:.7;
 }
 
-/* ===========================
-   PRINT / PDF STYLES
-   =========================== */
+/* =========================================================
+   PRINT / PDF
+   ========================================================= */
+
 @media print{
   body{
     background: var(--print-bg) !important;
@@ -518,133 +610,35 @@ body{
     width: 100% !important;
     margin: 0 !important;
   }
+
   .card, .panel, .deepDive, .box{
     box-shadow:none !important;
     background: #fff !important;
     border-color: var(--print-stroke) !important;
     color: var(--print-text) !important;
   }
+
   .muted, .panelTitle, .modeLabel, .modeHint, .plotHint, .tokenSmall, .foot{
     color: var(--print-muted) !important;
   }
+
   .btn, .seg, .segBtn, .actions, #tokenRow{
-    display:none !important; /* hide controls in print */
+    display:none !important;
   }
-  .plot3d{
+
+  .plot3d, .plotXY{
     border-color: var(--print-stroke) !important;
     background: #fff !important;
   }
+
   .ddCard, .ddList li, .ddStep{
     border-color: var(--print-stroke) !important;
     background:#fff !important;
   }
+
   .ddPill, .badge, .ddTime{
     border-color: var(--print-stroke) !important;
     background:#f8fafc !important;
     color: var(--print-text) !important;
   }
-}
-/* =========================
-   v61 – SVG charts containers
-   ========================= */
-.plot2d{
-  width: 100%;
-  min-height: 300px;
-  border-radius: 16px;
-  overflow: hidden;
-  position: relative;
-}
-@media (max-width: 520px){
-  .plot2d{ min-height: 240px; }
-}
-
-/* SVG always fill container */
-.plot2d svg{
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-/* Make chart labels crisp */
-.plot2d text{
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  paint-order: stroke fill;
-  stroke: rgba(0,0,0,0.55);
-  stroke-width: 2px;
-  stroke-linejoin: round;
-}
-
-/* Print: enlarge charts & prevent overlap */
-@media print{
-  .plot2d{
-    min-height: 360px;
-  }
-}
-/* ===== v61+ Plot container hard-fix (prevents 0-height canvases) ===== */
-.plot3d{
-  position: relative;
-  width: 100%;
-  height: 360px;      /* wichtig: feste Höhe */
-  min-height: 320px;  /* fallback */
-  border-radius: 18px;
-  overflow: hidden;
-}
-
-/* Canvas inside plot container */
-.plot3d canvas{
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-}
-
-/* Wenn Panels/Grid responsiv kollabieren: */
-.panel{
-  min-height: 420px; /* sorgt dafür, dass Plot + Hint Platz haben */
-}
-
-/* Mobile/kleine Screens */
-@media (max-width: 860px){
-  .plot3d{ height: 320px; min-height: 300px; }
-  .panel{ min-height: 380px; }
-}
-/* ===== v62 Charts: fixed heights + PDF-safe canvases ===== */
-
-.plot3d{
-  position: relative;
-  width: 100%;
-  height: 360px;
-  min-height: 320px;
-  border-radius: 18px;
-  overflow: hidden;
-}
-.plot3d canvas{
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-}
-
-/* NEW: trend + ist/soll containers */
-.plotXY{
-  position: relative;
-  width: 100%;
-  height: 260px;
-  min-height: 240px;
-  border-radius: 18px;
-  overflow: hidden;
-}
-.plotXY canvas{
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-}
-
-/* keeps panels from collapsing */
-.panel{
-  min-height: 420px;
-}
-
-@media (max-width: 860px){
-  .plot3d{ height: 320px; min-height: 300px; }
-  .plotXY{ height: 240px; min-height: 220px; }
-  .panel{ min-height: 380px; }
 }
