@@ -1,57 +1,158 @@
-<!-- kontakt.html (wirklich nur Kontakt) -->
+<!-- kontakt.html -->
 <!doctype html>
 <html lang="de">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kontakt – Indikation & Architektur</title>
-
-  <link rel="stylesheet" href="style.css?v=70" />
+  <title>Kontakt – MDG v2</title>
+  <meta name="description" content="Kontakt zu MDG v2" />
+  <link rel="stylesheet" href="./styles.css" />
 </head>
-
 <body>
-  <main class="wrap">
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
 
-    <header class="hero">
-      <h1>Kontakt</h1>
-      <p class="sub">Indikation & Architektur des Gleichgewichts</p>
-      <p class="path">Rückfragen · Support · Zusammenarbeit</p>
-    </header>
+  <header class="header" id="top">
+    <div class="container header__inner">
+      <a class="brand" href="./index.html" aria-label="Zur Startseite">
+        <span class="brand__mark" aria-hidden="true">MDG</span>
+        <span class="brand__text">v2</span>
+      </a>
 
-    <section class="card">
-      <div class="cardHead">
-        <h2>Kontakt</h2>
-        <p class="muted">Schreib mir – ich antworte in der Regel innerhalb von 24–48 Stunden.</p>
+      <nav class="nav" aria-label="Hauptnavigation">
+        <a class="nav__link" href="./index.html#modell">Modell</a>
+        <a class="nav__link" href="./index.html#diagnose">Diagnose</a>
+        <a class="nav__link" href="./index.html#ergebnisse">Ergebnisse</a>
+        <a class="nav__link" href="./index.html#massnahmen">Maßnahmen</a>
+        <a class="nav__link" href="./index.html#export">Export</a>
+      </nav>
+
+      <div class="header__actions">
+        <a class="btn btn--primary" href="./index.html#start">Diagnose starten</a>
       </div>
 
-      <div class="box">
-        <p>
-          <strong>E-Mail</strong><br>
-          <a href="mailto:info@mdg-indikation.de">info@mdg-indikation.de</a>
-        </p>
+      <button class="burger" type="button" aria-label="Menü öffnen" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
 
-        <div class="divider"></div>
+    <div class="drawer" hidden>
+      <div class="drawer__content">
+        <a class="drawer__link" href="./index.html#modell">Modell</a>
+        <a class="drawer__link" href="./index.html#diagnose">Diagnose</a>
+        <a class="drawer__link" href="./index.html#ergebnisse">Ergebnisse</a>
+        <a class="drawer__link" href="./index.html#massnahmen">Maßnahmen</a>
+        <a class="drawer__link" href="./index.html#export">Export</a>
+        <div class="drawer__sep"></div>
+        <a class="btn btn--primary btn--full" href="./index.html#start">Diagnose starten</a>
+      </div>
+    </div>
+  </header>
 
-        <p>
-          <strong>Für schnellere Zuordnung</strong><br>
-          Bitte im Betreff angeben: <span class="badge">IDG</span> oder <span class="badge">ADG</span> sowie <span class="badge">Privat</span> oder <span class="badge">Business</span>.
-        </p>
+  <main id="main">
+    <section class="section">
+      <div class="container">
+        <div class="section__head">
+          <h1 class="h2">Kontakt</h1>
+          <p class="sub">Schreibe uns. Wir antworten strukturiert.</p>
+        </div>
 
-        <div class="divider"></div>
+        <div class="grid grid--cards">
+          <div class="card">
+            <h2 class="h3">Direkt</h2>
+            <p class="p">
+              E-Mail: <a href="mailto:[email]">[email]</a><br />
+              Telefon: [Telefonnummer]
+            </p>
+            <p class="micro">Für Anfragen: Bitte Kontext (Privat/Business) und Ziel (IDG/ADG) nennen.</p>
+          </div>
 
-        <p>
-          <strong>Bei Token-/Kaufproblemen</strong><br>
-          Bitte mitsenden: Bestellnummer, Zeitpunkt des Kaufs, verwendeter Token-Typ (IDGP/IDGB/ADGP/ADGB).
-        </p>
+          <div class="card">
+            <h2 class="h3">Kontaktformular</h2>
+
+            <!-- NOTE: This is frontend-only; connect to your backend/email service later -->
+            <form class="form" action="#" method="post">
+              <label class="form__label" for="name">Name</label>
+              <input class="form__input" id="name" name="name" type="text" placeholder="Dein Name" autocomplete="name" />
+
+              <label class="form__label" for="email">E-Mail</label>
+              <input class="form__input" id="email" name="email" type="email" placeholder="name@domain.com" autocomplete="email" required />
+
+              <label class="form__label" for="topic">Thema</label>
+              <select class="form__input" id="topic" name="topic">
+                <option value="general">Allgemein</option>
+                <option value="idg">IDG (Stabilisierung)</option>
+                <option value="adg">ADG (Architektur)</option>
+                <option value="pro">Pro / Export</option>
+              </select>
+
+              <label class="form__label" for="message">Nachricht</label>
+              <textarea class="form__input" id="message" name="message" rows="6" placeholder="Kurz: System, Problem, Ziel." required></textarea>
+
+              <label class="form__check">
+                <input type="checkbox" required />
+                <span>Ich habe die <a href="./datenschutz.html">Datenschutzerklärung</a> gelesen.</span>
+              </label>
+
+              <button class="btn btn--primary" type="submit">Senden</button>
+              <p class="micro">Hinweis: Dieses Formular ist aktuell ohne Backend. Verbinde es später mit einem Mail-/Form-Service.</p>
+            </form>
+          </div>
+        </div>
       </div>
     </section>
-
-    <footer class="foot muted">
-      <a href="index.html">Start</a> ·
-      <a href="impressum.html">Impressum</a> ·
-      <a href="datenschutz.html">Datenschutz</a>
-    </footer>
-
   </main>
+
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <div class="brand brand--footer">
+          <span class="brand__mark" aria-hidden="true">MDG</span>
+          <span class="brand__text">v2</span>
+        </div>
+        <p class="micro">Strukturdiagnose für Stabilisierung und Umbau.</p>
+      </div>
+      <div class="footer__links">
+        <a href="./index.html#modell">Modell</a>
+        <a href="./index.html#diagnose">Diagnose</a>
+        <a href="./index.html#ergebnisse">Ergebnisse</a>
+        <a href="./index.html#massnahmen">Maßnahmen</a>
+        <a href="./index.html#export">Export</a>
+      </div>
+      <div class="footer__legal">
+        <a href="./impressum.html" rel="nofollow">Impressum</a>
+        <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+        <a href="./kontakt.html" rel="nofollow">Kontakt</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./app.js" defer></script>
+
+  <!-- Minimal extra CSS for form using existing design tokens -->
+  <style>
+    .form{ display:grid; gap:.55rem; }
+    .form__label{ font-weight:800; color: var(--muted); margin-top:.35rem; }
+    .form__input{
+      width:100%;
+      padding:.8rem .9rem;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      outline:none;
+    }
+    .form__input:focus{
+      border-color: rgba(110,231,183,.35);
+      box-shadow: 0 0 0 3px rgba(110,231,183,.10);
+    }
+    .form__check{
+      display:flex; gap:.6rem; align-items:flex-start;
+      color: var(--muted);
+      font-size:.95rem;
+      margin:.3rem 0 .6rem;
+    }
+    .form__check a{ color: var(--accent); }
+    textarea.form__input{ resize: vertical; }
+  </style>
 </body>
 </html>
