@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Indikation & Architektur des Gleichgewichts</title>
 
-  <!-- Cache busting -->
-  <link rel="stylesheet" href="style.css?v=65" />
-  <script src="script.js?v=65" defer></script>
+  <link rel="stylesheet" href="style.css?v=66" />
+  <script src="script.js?v=66" defer></script>
 </head>
 
 <body>
@@ -43,14 +42,32 @@
     <section id="results" class="card hidden">
       <div class="cardHead">
         <h2>Profil</h2>
-        <p class="muted">Radar · Balken · schwächste Variable · Zeitfenster</p>
+        <p class="muted">Radar · Trend · Ist→Soll · Balken · schwächste Variable · Zeitfenster</p>
       </div>
 
+      <!-- TOP GRID (Radar + Trend) -->
       <div class="grid2">
         <div class="panel">
           <h3 class="panelTitle">Radar</h3>
-          <div id="plot3d" class="plot3d" aria-label="Radar-Koordinatensystem"></div>
-          <div class="plotHint">Radar-Profil: niedrig = innen, hoch = außen · Pfeil = schwächste Variable</div>
+          <div id="plotRadar" class="plot3d" aria-label="Radar-Koordinatensystem"></div>
+          <div class="plotHint">niedrig = innen, hoch = außen · Pfeil = schwächste Variable</div>
+        </div>
+
+        <div class="panel">
+          <h3 class="panelTitle">Trend: Base / Best / Failure (D0 → D30 → D90)</h3>
+          <div id="plotTrend" class="plot2d" aria-label="Trend-Koordinatensystem"></div>
+          <div class="plotHint">Achsen: Stability (0→1) · Performance (0→1)</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- BOTTOM GRID (Ist→Soll + Bars) -->
+      <div class="grid2">
+        <div class="panel">
+          <h3 class="panelTitle">Koordinatensystem: Ist → Soll (Maßnahmen-Vektoren)</h3>
+          <div id="plotIstSoll" class="plot2d" aria-label="Ist-Soll Koordinatensystem"></div>
+          <div class="plotHint">Soll enthält 3 Pfade: LOW / MED / HIGH</div>
         </div>
 
         <div class="panel">
@@ -101,67 +118,28 @@
           <div class="modeHint muted" id="modeHint">Privat: persönlich/Beziehung · Business: Organisation/Team</div>
         </div>
 
-        <!-- TOKEN ROW (dynamic for selected layer+mode) -->
+        <!-- TOKEN ROW -->
         <div id="tokenRow" class="tokenRow">
           <label class="muted" for="tokenInput" id="tokenLabel">Token</label>
-          <input id="tokenInput" class="tokenInput" type="text" placeholder="TOKEN-XXXX-XXXX-XXXX" autocomplete="off" />
+          <input id="tokenInput" class="tokenInput" type="text" placeholder="IDGP-XXXX-XXXX-XXXX" autocomplete="off" />
           <button id="tokenApply" class="btn" type="button">Anwenden</button>
           <div class="tokenSmall muted" id="tokenSmall">Token erforderlich für Pro-Ausgabe.</div>
 
-          <a
-  id="buyIDGPrivate"
-  href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/c501c852-fa81-4410-99c9-aa3080667d5e"
-  target="_blank"
-  rel="noopener noreferrer"
-  class="btn primary buyWide"
->
-  IDG Privat kaufen (19,99€)
-</a>
-
-<a
-  id="buyIDGBusiness"
-  href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/dc64687b-2237-44de-8d71-38eb547b0f41"
-  target="_blank"
-  rel="noopener noreferrer"
-  class="btn primary buyWide"
->
-  IDG Business kaufen (299,99€)
-</a>
-
-<a
-  id="buyADGPrivate"
-  href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/ecedd96b-a2a7-4370-badc-d2ba08976a05"
-  target="_blank"
-  rel="noopener noreferrer"
-  class="btn primary buyWide"
->
-  ADG Privat kaufen (49,99€)
-</a>
-
-<a
-  id="buyADGBusiness"
-  href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/fc7aaf51-ea60-4747-a315-fb12c5a48de2"
-  target="_blank"
-  rel="noopener noreferrer"
-  class="btn primary buyWide"
->
-  ADG Business kaufen (1.199,99€)
-</a>
-
+          <a id="buyIDGPrivate"  href="#" target="_blank" rel="noopener noreferrer" class="btn primary buyWide">IDG Privat kaufen (19,99€)</a>
+          <a id="buyIDGBusiness" href="#" target="_blank" rel="noopener noreferrer" class="btn primary buyWide">IDG Business kaufen (299,99€)</a>
+          <a id="buyADGPrivate"  href="#" target="_blank" rel="noopener noreferrer" class="btn primary buyWide">ADG Privat kaufen (49,99€)</a>
+          <a id="buyADGBusiness" href="#" target="_blank" rel="noopener noreferrer" class="btn primary buyWide">ADG Business kaufen (1.199,99€)</a>
         </div>
 
-        <!-- ACTIONS -->
         <div class="actions">
           <button id="runBtn" class="btn primary" type="button">Pro-Ausgabe erzeugen</button>
           <button id="pdfBtn" class="btn" type="button" disabled>PDF exportieren</button>
         </div>
 
-        <!-- Output -->
         <div id="deepOut" class="box ddOut" style="display:none;"></div>
 
         <div class="divider"></div>
 
-        <!-- Quick Übersicht -->
         <div class="deepDiveMini">
           <h4 class="miniTitle">Quick-Übersicht (3 schwächste)</h4>
           <div id="deepMini" class="deepDiveBody"></div>
@@ -170,10 +148,7 @@
     </section>
 
     <footer class="foot muted">
-      v60 ·
-      <a href="impressum.html">Impressum</a> ·
-      <a href="datenschutz.html">Datenschutz</a> ·
-      <a href="kontakt.html">Kontakt</a>
+      v61 · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="kontakt.html">Kontakt</a>
     </footer>
   </main>
 </body>
