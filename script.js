@@ -348,6 +348,9 @@ function renderRadar(scores, weak) {
   const canvas = getCanvasIn(host);
 
   const draw = () => {
+    if (host.getBoundingClientRect().height < 180) {
+  host.style.height = host.style.height || "360px";
+}
     const rect = host.getBoundingClientRect();
     const cssW = Math.max(260, Math.floor(rect.width));
     const cssH = Math.max(260, Math.floor(rect.height));
@@ -550,6 +553,10 @@ function renderXYGrid(hostId, build, onSnapshot){
   const canvas = getCanvasIn(host);
 
   const draw = () => {
+   // hard fallback if CSS is missing or container collapsed
+  if (host.getBoundingClientRect().height < 120) {
+  host.style.height = host.style.height || "260px";
+  }
     const rect = host.getBoundingClientRect();
     const cssW = Math.max(260, Math.floor(rect.width));
     const cssH = Math.max(220, Math.floor(rect.height));
@@ -1316,8 +1323,10 @@ function onEvaluate() {
   // Ensure plot containers exist (create if missing in HTML)
   // Trend + Ist/Soll are optional; if your index.html does not have them yet, we create below dynamically.
   ensureXYContainers();
+  requestAnimationFrame(() => {
   renderTrend(scores);
   renderIstSoll(scores);
+});
 
   clearOutput();
   updateTokenUI();
