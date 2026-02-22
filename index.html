@@ -5,21 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Indikation & Architektur des Gleichgewichts</title>
 
-  <link rel="stylesheet" href="style.css?v=69" />
-  <script src="script.js?v=69" defer></script>
+  <link rel="stylesheet" href="style.css?v=70" />
+  <script src="script.js?v=70" defer></script>
 </head>
 
 <body>
   <main class="wrap">
+
+    <!-- HERO -->
     <header class="hero">
       <h1>Indikation & Architektur</h1>
       <p class="sub">des Gleichgewichts</p>
       <p class="path">Quickscan → Profil → Auswahl (IDG/ADG) → Pro-Output → PDF</p>
     </header>
 
-    <section id="errorBox" class="errorBox hidden" role="alert" aria-live="polite">
-      <strong>Hinweis:</strong> Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).
-    </section>
+    <!-- ERROR BOX -->
+    <section id="errorBox" class="errorBox hidden" role="alert" aria-live="polite"></section>
 
     <!-- QUICK SCAN -->
     <section class="card">
@@ -40,37 +41,58 @@
 
     <!-- RESULTS -->
     <section id="results" class="card hidden">
+
       <div class="cardHead">
         <h2>Profil</h2>
-        <p class="muted">Radar · Trend · Ist→Soll · Balken · schwächste Variable · Zeitfenster</p>
+        <p class="muted">
+          Radar · Trend · Ist→Soll · Balken · schwächste Variable · Zeitfenster
+        </p>
       </div>
 
-      <!-- TOP GRID (Radar + Trend) -->
+      <!-- TOP GRID -->
       <div class="grid2">
+
+        <!-- RADAR -->
         <div class="panel">
           <h3 class="panelTitle">Radar</h3>
-          <div id="plotRadar" class="plot3d" aria-label="Radar-Koordinatensystem"></div>
-          <div class="plotHint">niedrig = innen, hoch = außen · Pfeil = schwächste Variable</div>
+          <div id="plot3d" class="plot3d" aria-label="Radar-Koordinatensystem"></div>
+          <div class="plotHint">
+            niedrig = innen, hoch = außen · Pfeil = schwächste Variable
+          </div>
         </div>
 
+        <!-- TREND -->
         <div class="panel">
-          <h3 class="panelTitle">Trend: Base / Best / Failure (D0 → D30 → D90)</h3>
-          <div id="plotTrend" class="plot2d" aria-label="Trend-Koordinatensystem"></div>
-          <div class="plotHint">Achsen: Stability (0→1) · Performance (0→1)</div>
+          <h3 class="panelTitle">
+            Trend · Base / Best / Failure (D0 → D30 → D90)
+          </h3>
+          <div id="trendPlot" class="plotXY" aria-label="Trend-Koordinatensystem"></div>
+          <div class="plotHint">
+            Achsen: Stability (0→1) · Performance (0→1)
+          </div>
         </div>
+
       </div>
 
       <div class="divider"></div>
 
-      <!-- BOTTOM GRID (Ist→Soll + Bars) -->
+      <!-- BOTTOM GRID -->
       <div class="grid2">
+
+        <!-- IST → SOLL -->
         <div class="panel">
-          <h3 class="panelTitle">Koordinatensystem: Ist → Soll (Maßnahmen-Vektoren)</h3>
-          <div id="plotIstSoll" class="plot2d" aria-label="Ist-Soll Koordinatensystem"></div>
-          <div class="plotHint">Soll enthält 3 Pfade: LOW / MED / HIGH</div>
+          <h3 class="panelTitle">
+            Koordinatensystem: Ist → Soll (Maßnahmen-Vektoren)
+          </h3>
+          <div id="istSollPlot" class="plotXY" aria-label="Ist-Soll-Koordinatensystem"></div>
+          <div class="plotHint">
+            Soll enthält 3 Pfade: LOW / MED / HIGH
+          </div>
         </div>
 
+        <!-- BARS + META -->
         <div class="panel">
+
           <h3 class="panelTitle">Bars</h3>
           <div id="bars" class="bars"></div>
 
@@ -83,73 +105,117 @@
 
           <h3 class="panelTitle">Zeitfenster</h3>
           <div id="timewin" class="timewin"></div>
+
         </div>
+
       </div>
 
       <div class="divider"></div>
 
-      <!-- LAYER + MODE + OUTPUT -->
+      <!-- DEEP OUTPUT -->
       <div class="deepDive">
+
         <div class="deepDiveHead">
           <h3 class="panelTitle">Ausgabe</h3>
           <p class="muted">
-            Wähle Ebene und Kontext. IDG = Stabilisierung. ADG = Strukturumbau.
+            Wähle Ebene und Kontext.  
+            IDG = Stabilisierung · ADG = Strukturumbau.  
             Keine medizinische, therapeutische, rechtliche oder finanzielle Beratung.
           </p>
         </div>
 
-        <!-- LAYER SWITCH -->
+        <!-- LAYER -->
         <div class="modeRow">
           <div class="modeLabel muted">Ebene</div>
-          <div class="seg" role="tablist" aria-label="Ebene wählen">
-            <button id="layerIDG" class="segBtn active" type="button" role="tab" aria-selected="true">IDG · Indikation</button>
-            <button id="layerADG" class="segBtn" type="button" role="tab" aria-selected="false">ADG · Architektur</button>
+          <div class="seg">
+            <button id="layerIDG" class="segBtn active" type="button">
+              IDG · Indikation
+            </button>
+            <button id="layerADG" class="segBtn" type="button">
+              ADG · Architektur
+            </button>
           </div>
-          <div class="modeHint muted" id="layerHint">IDG: Stabilisierung innerhalb der Struktur</div>
+          <div id="layerHint" class="modeHint muted">
+            IDG: Stabilisierung innerhalb der Struktur
+          </div>
         </div>
 
-        <!-- MODE SWITCH -->
+        <!-- MODE -->
         <div class="modeRow">
           <div class="modeLabel muted">Kontext</div>
-          <div class="seg" role="tablist" aria-label="Kontext wählen">
-            <button id="modePrivate" class="segBtn active" type="button" role="tab" aria-selected="true">Privat</button>
-            <button id="modeBusiness" class="segBtn" type="button" role="tab" aria-selected="false">Business</button>
+          <div class="seg">
+            <button id="modePrivate" class="segBtn active" type="button">
+              Privat
+            </button>
+            <button id="modeBusiness" class="segBtn" type="button">
+              Business
+            </button>
           </div>
-          <div class="modeHint muted" id="modeHint">Privat: persönlich/Beziehung · Business: Organisation/Team</div>
+          <div id="modeHint" class="modeHint muted">
+            Privat: persönlich/Beziehung · Business: Organisation/Team
+          </div>
         </div>
 
-        <!-- TOKEN ROW -->
+        <!-- TOKEN -->
         <div id="tokenRow" class="tokenRow">
-          <label class="muted" for="tokenInput" id="tokenLabel">Token</label>
-          <input id="tokenInput" class="tokenInput" type="text" placeholder="IDGP-XXXX-XXXX-XXXX" autocomplete="off" />
-          <button id="tokenApply" class="btn" type="button">Anwenden</button>
-          <div class="tokenSmall muted" id="tokenSmall">Token erforderlich für Pro-Ausgabe.</div>
+          <label class="muted" for="tokenInput">Token</label>
 
-          <a id="buyIDGPrivate"  href="#" target="_blank" rel="noopener noreferrer" class="btn primary buyWide">IDG Privat kaufen (19,99€)</a>
-          <a id="buyIDGBusiness" href="#" target="_blank" rel="noopener noreferrer" class="btn primary buyWide">IDG Business kaufen (299,99€)</a>
-          <a id="buyADGPrivate"  href="#" target="_blank" rel="noopener noreferrer" class="btn primary buyWide">ADG Privat kaufen (49,99€)</a>
-          <a id="buyADGBusiness" href="#" target="_blank" rel="noopener noreferrer" class="btn primary buyWide">ADG Business kaufen (1.199,99€)</a>
+          <input
+            id="tokenInput"
+            class="tokenInput"
+            type="text"
+            placeholder="IDGP-XXXX-XXXX-XXXX"
+            autocomplete="off"
+          />
+
+          <button id="tokenApply" class="btn" type="button">
+            Anwenden
+          </button>
+
+          <div id="tokenSmall" class="tokenSmall muted">
+            Token erforderlich für Pro-Ausgabe.
+          </div>
+
+          <!-- BUY BUTTONS -->
+          <a id="buyIDGPrivate"  href="#" target="_blank" class="btn primary buyWide">IDG Privat kaufen (19,99€)</a>
+          <a id="buyIDGBusiness" href="#" target="_blank" class="btn primary buyWide">IDG Business kaufen (299,99€)</a>
+          <a id="buyADGPrivate"  href="#" target="_blank" class="btn primary buyWide">ADG Privat kaufen (49,99€)</a>
+          <a id="buyADGBusiness" href="#" target="_blank" class="btn primary buyWide">ADG Business kaufen (1.199,99€)</a>
         </div>
 
+        <!-- ACTIONS -->
         <div class="actions">
-          <button id="runBtn" class="btn primary" type="button">Pro-Ausgabe erzeugen</button>
-          <button id="pdfBtn" class="btn" type="button" disabled>PDF exportieren</button>
+          <button id="runBtn" class="btn primary" type="button">
+            Pro-Ausgabe erzeugen
+          </button>
+          <button id="pdfBtn" class="btn" type="button" disabled>
+            PDF exportieren
+          </button>
         </div>
 
-        <div id="deepOut" class="box ddOut" style="display:none;"></div>
+        <!-- OUTPUT -->
+        <div id="deepOut" class="box ddOut hidden"></div>
 
         <div class="divider"></div>
 
+        <!-- MINI -->
         <div class="deepDiveMini">
           <h4 class="miniTitle">Quick-Übersicht (3 schwächste)</h4>
           <div id="deepMini" class="deepDiveBody"></div>
         </div>
+
       </div>
+
     </section>
 
+    <!-- FOOTER -->
     <footer class="foot muted">
-      v61 · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a> · <a href="kontakt.html">Kontakt</a>
+      v70 ·
+      <a href="impressum.html">Impressum</a> ·
+      <a href="datenschutz.html">Datenschutz</a> ·
+      <a href="kontakt.html">Kontakt</a>
     </footer>
+
   </main>
 </body>
 </html>
