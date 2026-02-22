@@ -1,0 +1,1232 @@
+<!-- diagnose.html -->
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Diagnose – MDG v2</title>
+  <meta name="description" content="MDG v2 Diagnose – strukturelle Primärinstabilität bestimmen, IDG/ADG ableiten, Maßnahmen generieren." />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+  <header class="header" id="top">
+    <div class="container header__inner">
+      <a class="brand" href="./index.html" aria-label="Zur Startseite">
+        <span class="brand__mark" aria-hidden="true">MDG</span>
+        <span class="brand__text">v2</span>
+      </a>
+
+      <nav class="nav" aria-label="Hauptnavigation">
+        <a class="nav__link" href="./index.html#modell" data-i18n="nav.model">Modell</a>
+        <a class="nav__link" href="./index.html#diagnose" data-i18n="nav.diagnosis">Diagnose</a>
+        <a class="nav__link" href="./index.html#ergebnisse" data-i18n="nav.results">Ergebnisse</a>
+        <a class="nav__link" href="./index.html#massnahmen" data-i18n="nav.actions">Maßnahmen</a>
+        <a class="nav__link" href="./index.html#export" data-i18n="nav.export">Export</a>
+      </nav>
+
+      <div class="header__actions">
+        <div class="lang" role="group" aria-label="Sprache">
+          <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
+          <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
+          <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <a class="btn btn--ghost" href="./index.html#start" data-i18n="cta.backHome">Zur Homepage</a>
+      </div>
+
+      <button class="burger" type="button" aria-label="Menü öffnen" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <div class="drawer" hidden>
+      <div class="drawer__content">
+        <a class="drawer__link" href="./index.html#modell" data-i18n="nav.model">Modell</a>
+        <a class="drawer__link" href="./index.html#diagnose" data-i18n="nav.diagnosis">Diagnose</a>
+        <a class="drawer__link" href="./index.html#ergebnisse" data-i18n="nav.results">Ergebnisse</a>
+        <a class="drawer__link" href="./index.html#massnahmen" data-i18n="nav.actions">Maßnahmen</a>
+        <a class="drawer__link" href="./index.html#export" data-i18n="nav.export">Export</a>
+        <div class="drawer__sep"></div>
+        <a class="btn btn--ghost btn--full" href="./index.html#start" data-i18n="cta.backHome">Zur Homepage</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section">
+      <div class="container">
+        <div class="section__head">
+          <h1 class="h2" data-i18n="dx.h1">Diagnose</h1>
+          <p class="sub" data-i18n="dx.sub">
+            5 Module, 7 Typen, IDG/ADG-Pfad. Antworten werden lokal gespeichert (Browser).
+          </p>
+        </div>
+
+        <!-- Top controls -->
+        <div class="dx-top">
+          <div class="card">
+            <h2 class="h3" data-i18n="dx.setup">Setup</h2>
+
+            <div class="dx-grid">
+              <div>
+                <label class="dx-label" for="dx_context" data-i18n="dx.context">Kontext</label>
+                <select class="dx-input" id="dx_context">
+                  <option value="private" data-i18n="toggle.private">Privat</option>
+                  <option value="business" data-i18n="toggle.business">Business</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="dx-label" for="dx_depth" data-i18n="dx.depth">Tiefe</label>
+                <select class="dx-input" id="dx_depth">
+                  <option value="quick" data-i18n="toggle.quick">Schnell (3–5 Min)</option>
+                  <option value="precise" data-i18n="toggle.precise">Präzise (10–15 Min)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="dx-label" for="dx_name" data-i18n="dx.name">Bezeichnung (optional)</label>
+                <input class="dx-input" id="dx_name" type="text" placeholder="z.B. Team Alpha / Selim / Projekt X" />
+              </div>
+
+              <div class="dx-actions">
+                <button class="btn btn--primary" type="button" id="dx_calc" data-i18n="dx.calc">Ergebnis berechnen</button>
+                <button class="btn btn--ghost" type="button" id="dx_reset" data-i18n="dx.reset">Zurücksetzen</button>
+              </div>
+            </div>
+
+            <p class="micro" data-i18n="dx.note">
+              Hinweis: Dieses Diagnose-Prototype arbeitet clientseitig. Später kann Speicherung/Export über API erfolgen.
+            </p>
+          </div>
+
+          <div class="card">
+            <h2 class="h3" data-i18n="dx.progress">Fortschritt</h2>
+            <div class="dx-progress">
+              <div class="dx-progress__bar"><i id="dx_progress_bar" style="width:0%"></i></div>
+              <div class="dx-progress__meta">
+                <span id="dx_progress_text" class="micro">0%</span>
+                <span class="micro" data-i18n="dx.saved">Auto-Save aktiv</span>
+              </div>
+            </div>
+
+            <div class="dx-quick">
+              <div class="pill pill--muted" id="dx_flag_spof">SPOF: –</div>
+              <div class="pill pill--muted" id="dx_flag_growth">Growth: –</div>
+              <div class="pill pill--muted" id="dx_flag_path">Pfad: –</div>
+            </div>
+
+            <p class="micro" data-i18n="dx.quickhint">
+              Diese Flags werden nach „Ergebnis berechnen“ gesetzt.
+            </p>
+          </div>
+        </div>
+
+        <!-- Module navigation -->
+        <div class="dx-nav">
+          <button class="chip" type="button" data-dx-nav="D">D · Entscheidungsarchitektur</button>
+          <button class="chip" type="button" data-dx-nav="L">L · Lastverteilung</button>
+          <button class="chip" type="button" data-dx-nav="G">G · Wachstumsverstärkung</button>
+          <button class="chip" type="button" data-dx-nav="M">M · Macht–Verantwortung</button>
+          <button class="chip" type="button" data-dx-nav="E">E/F · Energie & Fehler</button>
+          <button class="chip chip--ghost" type="button" data-dx-nav="RESULT" data-i18n="dx.toResult">→ Ergebnis</button>
+        </div>
+
+        <!-- MODULE D -->
+        <section class="dx-module" id="mod-D" data-mod="D">
+          <div class="card">
+            <div class="dx-head">
+              <h2 class="h3" data-i18n="D.title">D · Entscheidungsarchitektur</h2>
+              <span class="pill pill--muted" id="score_D">D: –</span>
+            </div>
+            <p class="p" data-i18n="D.desc">Misst Dichte, Irreversibilität, Zentralisierung, Delegationsklarheit, Dokumentation, Redundanz.</p>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="D.q1">1) Operative Entscheidungen pro Woche</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="D1" value="0"> 0–5</label>
+                <label><input type="radio" name="D1" value="30"> 6–20</label>
+                <label><input type="radio" name="D1" value="70"> 21–50</label>
+                <label><input type="radio" name="D1" value="100"> 50+</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="D.q2">2) Strategische Entscheidungen pro Monat</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="D2" value="0"> 0–1</label>
+                <label><input type="radio" name="D2" value="30"> 2–5</label>
+                <label><input type="radio" name="D2" value="70"> 6–10</label>
+                <label><input type="radio" name="D2" value="100"> 10+</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" for="D3" data-i18n="D.q3">3) Irreversibilitätsgrad (0–5)</label>
+              <input class="dx-range" id="D3" name="D3" type="range" min="0" max="5" step="1" value="0" />
+              <div class="dx-range__meta"><span>0</span><span id="D3v">0</span><span>5</span></div>
+              <p class="micro" data-i18n="D.q3hint">0 = leicht korrigierbar · 5 = teuer/langfristig bindend</p>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="D.q4">4) Anteil Entscheidungen über eine Person</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="D4" value="0"> &lt;20%</label>
+                <label><input type="radio" name="D4" value="40"> 20–40%</label>
+                <label><input type="radio" name="D4" value="75"> 40–70%</label>
+                <label><input type="radio" name="D4" value="100"> &gt;70%</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="D.q5">5) Entscheidungsklassen klar (operativ/strategisch/kritisch)</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="D5" value="0" data-i18n="ans.yesFull">Ja vollständig</label>
+                <label><input type="radio" name="D5" value="50" data-i18n="ans.partial">Teilweise</label>
+                <label><input type="radio" name="D5" value="100" data-i18n="ans.no">Nein</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="D.q6">6) Dokumentierte Entscheidungswege</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="D6" value="0" data-i18n="ans.yesStructured">Ja strukturiert</label>
+                <label><input type="radio" name="D6" value="50" data-i18n="ans.partial">Teilweise</label>
+                <label><input type="radio" name="D6" value="100" data-i18n="ans.no">Nein</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="D.q7">7) Stellvertretung für kritische Entscheidungen</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="D7" value="0" data-i18n="ans.yesFull">Vollständig</label>
+                <label><input type="radio" name="D7" value="50" data-i18n="ans.partial">Teilweise</label>
+                <label><input type="radio" name="D7" value="100" data-i18n="ans.none">Keine</label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODULE L -->
+        <section class="dx-module" id="mod-L" data-mod="L">
+          <div class="card">
+            <div class="dx-head">
+              <h2 class="h3" data-i18n="L.title">L · Lastverteilung</h2>
+              <span class="pill pill--muted" id="score_L">L: –</span>
+            </div>
+            <p class="p" data-i18n="L.desc">Erkennt Personalisierung, Asymmetrie, Engpass, Ersetzbarkeit.</p>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="L.q1">1) Anzahl zentraler Rollen</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="L1" value="100"> 1</label>
+                <label><input type="radio" name="L1" value="70"> 2–3</label>
+                <label><input type="radio" name="L1" value="30"> 4–6</label>
+                <label><input type="radio" name="L1" value="0"> 7+</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" for="L2" data-i18n="L.q2">2) Operative Last konzentriert (0–5)</label>
+              <input class="dx-range" id="L2" name="L2" type="range" min="0" max="5" step="1" value="0" />
+              <div class="dx-range__meta"><span>0</span><span id="L2v">0</span><span>5</span></div>
+              <p class="micro" data-i18n="L.q2hint">0 = gleichmäßig · 5 = fast alles bei einer Rolle</p>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" for="L3" data-i18n="L.q3">3) Strategische Verantwortung konzentriert (0–5)</label>
+              <input class="dx-range" id="L3" name="L3" type="range" min="0" max="5" step="1" value="0" />
+              <div class="dx-range__meta"><span>0</span><span id="L3v">0</span><span>5</span></div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="L.q4">4) Ersetzbarkeit stärkste Rolle</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="L4" value="0" data-i18n="ans.replaceable">Voll ersetzbar</label>
+                <label><input type="radio" name="L4" value="40" data-i18n="ans.withEffort">Mit Aufwand</label>
+                <label><input type="radio" name="L4" value="75" data-i18n="ans.hardly">Kaum</label>
+                <label><input type="radio" name="L4" value="100" data-i18n="ans.not">Gar nicht</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="L.q5">5) Prozessübergaben dokumentiert</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="L5" value="0" data-i18n="ans.yesStructured">Ja strukturiert</label>
+                <label><input type="radio" name="L5" value="50" data-i18n="ans.partial">Teilweise</label>
+                <label><input type="radio" name="L5" value="100" data-i18n="ans.no">Nein</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="L.q6">6) Engpässe bei einer Person</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="L6" value="0" data-i18n="ans.never">Nie</label>
+                <label><input type="radio" name="L6" value="30" data-i18n="ans.rare">Selten</label>
+                <label><input type="radio" name="L6" value="70" data-i18n="ans.often">Häufig</label>
+                <label><input type="radio" name="L6" value="100" data-i18n="ans.permanent">Permanent</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="L.q7">7) Rollen mit &gt;2× Durchschnittslast</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="L7" value="100" data-i18n="ans.yes">Ja</label>
+                <label><input type="radio" name="L7" value="0" data-i18n="ans.no">Nein</label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODULE G -->
+        <section class="dx-module" id="mod-G" data-mod="G">
+          <div class="card">
+            <div class="dx-head">
+              <h2 class="h3" data-i18n="G.title">G · Wachstumsverstärkungstest</h2>
+              <span class="pill pill--muted" id="score_G">G: –</span>
+            </div>
+            <p class="p" data-i18n="G.desc">Simuliert Verstärkung: +20% Last, +50% Komplexität, Ausfall Schlüsselrolle.</p>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="G.qA">Szenario A: +20% Last</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="G1" value="0" data-i18n="ans.stable">Stabil</label>
+                <label><input type="radio" name="G1" value="30" data-i18n="ans.tension">Leichte Spannung</label>
+                <label><input type="radio" name="G1" value="70" data-i18n="ans.qualityDrop">Qualitätsverlust</label>
+                <label><input type="radio" name="G1" value="100" data-i18n="ans.break">Bruch</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="G.qB">Szenario B: +50% Komplexität</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="G2" value="0" data-i18n="ans.stable">Stabil</label>
+                <label><input type="radio" name="G2" value="30" data-i18n="ans.tension">Leichte Spannung</label>
+                <label><input type="radio" name="G2" value="70" data-i18n="ans.qualityDrop">Qualitätsverlust</label>
+                <label><input type="radio" name="G2" value="100" data-i18n="ans.break">Bruch</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="G.qC">Szenario C: Ausfall Schlüsselrolle (4 Wochen)</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="G3" value="0" data-i18n="ans.stable">Stabil</label>
+                <label><input type="radio" name="G3" value="30" data-i18n="ans.tension">Leichte Spannung</label>
+                <label><input type="radio" name="G3" value="70" data-i18n="ans.qualityDrop">Qualitätsverlust</label>
+                <label><input type="radio" name="G3" value="100" data-i18n="ans.break">Bruch</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="G.q4">4) Wie schnell entstehen neue Abhängigkeiten bei Wachstum?</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="G4" value="0" data-i18n="ans.never">Nie</label>
+                <label><input type="radio" name="G4" value="30" data-i18n="ans.slow">Langsam</label>
+                <label><input type="radio" name="G4" value="70" data-i18n="ans.fast">Schnell</label>
+                <label><input type="radio" name="G4" value="100" data-i18n="ans.veryFast">Sehr schnell</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="G.q5">5) Wächst Koordinationsaufwand schneller als Output?</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="G5" value="0" data-i18n="ans.never">Nie</label>
+                <label><input type="radio" name="G5" value="50" data-i18n="ans.sometimes">Manchmal</label>
+                <label><input type="radio" name="G5" value="80" data-i18n="ans.often">Oft</label>
+                <label><input type="radio" name="G5" value="100" data-i18n="ans.always">Immer</label>
+              </div>
+            </div>
+
+            <p class="micro" data-i18n="G.levels">
+              Growth Sensitivity: &lt;30 stabil · 30–60 empfindlich · 60–80 nichtlinear · &gt;80 exponentiell
+            </p>
+          </div>
+        </section>
+
+        <!-- MODULE M -->
+        <section class="dx-module" id="mod-M" data-mod="M">
+          <div class="card">
+            <div class="dx-head">
+              <h2 class="h3" data-i18n="M.title">M · Macht–Verantwortung</h2>
+              <span class="pill pill--muted" id="score_M">M: –</span>
+            </div>
+            <p class="p" data-i18n="M.desc">Misst Mismatch zwischen Entscheidung, Risiko, Information, Konsequenz. (Vereinfachtes UI)</p>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="M.role">Rolle (wähle eine Hauptrolle im System)</label>
+              <select class="dx-input" id="M_role">
+                <option value="roleA" data-i18n="M.roleA">Rolle A (führend)</option>
+                <option value="roleB" data-i18n="M.roleB">Rolle B (operativ)</option>
+                <option value="roleC" data-i18n="M.roleC">Rolle C (support)</option>
+              </select>
+              <p class="micro" data-i18n="M.roleHint">Für Prototype: 1 Rolle reicht. Später: 3–5 Rollen + Heatmap.</p>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" for="M1" data-i18n="M.q1">Entscheidungsbefugnis (0–5)</label>
+              <input class="dx-range" id="M1" name="M1" type="range" min="0" max="5" step="1" value="0" />
+              <div class="dx-range__meta"><span>0</span><span id="M1v">0</span><span>5</span></div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" for="M2" data-i18n="M.q2">Konsequenztragfähigkeit (0–5)</label>
+              <input class="dx-range" id="M2" name="M2" type="range" min="0" max="5" step="1" value="0" />
+              <div class="dx-range__meta"><span>0</span><span id="M2v">0</span><span>5</span></div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" for="M3" data-i18n="M.q3">Risikotragung (0–5)</label>
+              <input class="dx-range" id="M3" name="M3" type="range" min="0" max="5" step="1" value="0" />
+              <div class="dx-range__meta"><span>0</span><span id="M3v">0</span><span>5</span></div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" for="M4" data-i18n="M.q4">Informationszugang (0–5)</label>
+              <input class="dx-range" id="M4" name="M4" type="range" min="0" max="5" step="1" value="0" />
+              <div class="dx-range__meta"><span>0</span><span id="M4v">0</span><span>5</span></div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" for="M5" data-i18n="M.q5">Messbarkeit/Accountability (0–5)</label>
+              <input class="dx-range" id="M5" name="M5" type="range" min="0" max="5" step="1" value="0" />
+              <div class="dx-range__meta"><span>0</span><span id="M5v">0</span><span>5</span></div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="M.q6">Entscheidungen ohne klare Verantwortlichkeit</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="M6" value="0" data-i18n="ans.never">Nie</label>
+                <label><input type="radio" name="M6" value="30" data-i18n="ans.rare">Selten</label>
+                <label><input type="radio" name="M6" value="70" data-i18n="ans.often">Häufig</label>
+                <label><input type="radio" name="M6" value="100" data-i18n="ans.regular">Regelmäßig</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="M.q7">Verantwortliche ohne Entscheidungsbefugnis</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="M7" value="0" data-i18n="ans.never">Nie</label>
+                <label><input type="radio" name="M7" value="30" data-i18n="ans.rare">Selten</label>
+                <label><input type="radio" name="M7" value="70" data-i18n="ans.often">Häufig</label>
+                <label><input type="radio" name="M7" value="100" data-i18n="ans.regular">Regelmäßig</label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODULE E/F -->
+        <section class="dx-module" id="mod-E" data-mod="E">
+          <div class="card">
+            <div class="dx-head">
+              <h2 class="h3" data-i18n="E.title">E/F · Energie & Fehlerintegration</h2>
+              <span class="pill pill--muted" id="score_EF">E/F: –</span>
+            </div>
+            <p class="p" data-i18n="E.desc">Energie = Belastung vs Regeneration. Fehler = Review/Root-Cause/Lernen/Transparenz.</p>
+
+            <div class="dx-q">
+              <label class="dx-label" for="E1" data-i18n="E.q1">Belastungsrate (0–5)</label>
+              <input class="dx-range" id="E1" name="E1" type="range" min="0" max="5" step="1" value="0" />
+              <div class="dx-range__meta"><span>0</span><span id="E1v">0</span><span>5</span></div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" for="E2" data-i18n="E.q2">Regenerationsrate (0–5)</label>
+              <input class="dx-range" id="E2" name="E2" type="range" min="0" max="5" step="1" value="0" />
+              <div class="dx-range__meta"><span>0</span><span id="E2v">0</span><span>5</span></div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="E.q3">Schlaf/Erholung ausreichend?</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="E3" value="0" data-i18n="ans.yes">Ja</label>
+                <label><input type="radio" name="E3" value="100" data-i18n="ans.no">Nein</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="E.q4">Konfliktfrequenz steigend?</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="E4" value="100" data-i18n="ans.yes">Ja</label>
+                <label><input type="radio" name="E4" value="0" data-i18n="ans.no">Nein</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="E.q5">Fehlerquote steigend?</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="E5" value="100" data-i18n="ans.yes">Ja</label>
+                <label><input type="radio" name="E5" value="0" data-i18n="ans.no">Nein</label>
+              </div>
+            </div>
+
+            <hr class="dx-hr" />
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="F.q1">Review-Rhythmus vorhanden?</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="F1" value="0" data-i18n="ans.yes">Ja</label>
+                <label><input type="radio" name="F1" value="100" data-i18n="ans.no">Nein</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="F.q2">Root-Cause-Analyse vorhanden?</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="F2" value="0" data-i18n="ans.yes">Ja</label>
+                <label><input type="radio" name="F2" value="100" data-i18n="ans.no">Nein</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="F.q3">Fehler werden offen kommuniziert?</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="F3" value="0" data-i18n="ans.yes">Ja</label>
+                <label><input type="radio" name="F3" value="100" data-i18n="ans.no">Nein</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="F.q4">Sanktionen bei Fehleroffenlegung?</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="F4" value="100" data-i18n="ans.yes">Ja</label>
+                <label><input type="radio" name="F4" value="0" data-i18n="ans.no">Nein</label>
+              </div>
+            </div>
+
+            <div class="dx-q">
+              <label class="dx-label" data-i18n="F.q5">Lessons Learned dokumentiert?</label>
+              <div class="dx-radio">
+                <label><input type="radio" name="F5" value="0" data-i18n="ans.yes">Ja</label>
+                <label><input type="radio" name="F5" value="100" data-i18n="ans.no">Nein</label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RESULT -->
+        <section class="dx-module" id="mod-RESULT" data-mod="RESULT">
+          <div class="card">
+            <div class="dx-head">
+              <h2 class="h3" data-i18n="R.title">Ergebnis</h2>
+              <span class="pill pill--muted" id="score_ALL">Total: –</span>
+            </div>
+
+            <div class="result-grid">
+              <div class="result-box">
+                <div class="badge" data-i18n="R.primaryType">Primärinstabilität (dominant)</div>
+                <div class="result-title" id="R_primary">–</div>
+                <p class="p" id="R_primary_why">–</p>
+              </div>
+
+              <div class="result-box">
+                <div class="badge" data-i18n="R.secondaryType">Sekundär (2.)</div>
+                <div class="result-title" id="R_secondary">–</div>
+                <p class="p" id="R_secondary_why">–</p>
+              </div>
+
+              <div class="result-box">
+                <div class="badge" data-i18n="R.growth">Wachstumssensitivität</div>
+                <div class="result-title" id="R_growth">–</div>
+                <p class="p" id="R_growth_why">–</p>
+              </div>
+
+              <div class="result-box">
+                <div class="badge" data-i18n="R.path">Pfad</div>
+                <div class="result-title" id="R_path">–</div>
+                <p class="p" id="R_path_why">–</p>
+              </div>
+            </div>
+
+            <div class="result-actions">
+              <div class="panel">
+                <h3 class="h3" data-i18n="R.now">3 Moves jetzt</h3>
+                <ol class="ol" id="R_moves_now"></ol>
+              </div>
+              <div class="panel panel--accent">
+                <h3 class="h3" data-i18n="R.week">3 Moves diese Woche</h3>
+                <ol class="ol" id="R_moves_week"></ol>
+              </div>
+            </div>
+
+            <div class="section__cta">
+              <button class="btn btn--primary" type="button" id="dx_export_json" data-i18n="R.export">Export (JSON)</button>
+              <a class="btn btn--ghost" href="./index.html#massnahmen" data-i18n="R.backActions">Zu Maßnahmen</a>
+            </div>
+
+            <pre class="dx-json" id="dx_json" hidden></pre>
+          </div>
+        </section>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <div class="brand brand--footer">
+          <span class="brand__mark" aria-hidden="true">MDG</span>
+          <span class="brand__text">v2</span>
+        </div>
+        <p class="micro" data-i18n="footer.tag">Strukturdiagnose für Stabilisierung und Umbau.</p>
+      </div>
+      <div class="footer__links">
+        <a href="./index.html#modell" data-i18n="nav.model">Modell</a>
+        <a href="./diagnose.html" data-i18n="nav.diagnosis">Diagnose</a>
+        <a href="./index.html#ergebnisse" data-i18n="nav.results">Ergebnisse</a>
+        <a href="./index.html#massnahmen" data-i18n="nav.actions">Maßnahmen</a>
+        <a href="./index.html#export" data-i18n="nav.export">Export</a>
+      </div>
+      <div class="footer__legal">
+        <a href="./impressum.html" rel="nofollow">Impressum</a>
+        <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+        <a href="./kontakt.html" rel="nofollow">Kontakt</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./script.js" defer></script>
+
+  <!-- Page-specific logic -->
+  <script defer>
+    (() => {
+      const $ = (s, r=document) => r.querySelector(s);
+      const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+      // --- Minimal CSS extension for diagnose (keeps your main style.css untouched) ---
+      const style = document.createElement("style");
+      style.textContent = `
+        .dx-top{ display:grid; grid-template-columns: 1.1fr .9fr; gap:1rem; align-items:start; }
+        .dx-grid{ display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:.8rem; margin-top:.6rem; }
+        .dx-actions{ display:flex; gap:.6rem; align-items:flex-end; flex-wrap:wrap; }
+        .dx-label{ display:block; font-weight:800; color: var(--muted); margin:.2rem 0 .35rem; }
+        .dx-input{ width:100%; padding:.8rem .9rem; border-radius:14px; border:1px solid var(--line); background: rgba(255,255,255,.03); color: var(--text); outline:none; }
+        .dx-input:focus{ border-color: rgba(110,231,183,.35); box-shadow: 0 0 0 3px rgba(110,231,183,.10); }
+        .dx-nav{ display:flex; gap:.5rem; flex-wrap:wrap; margin: 1rem 0; }
+        .dx-module{ scroll-margin-top: 90px; margin-top: 1rem; }
+        .dx-head{ display:flex; justify-content:space-between; align-items:center; gap:.7rem; flex-wrap:wrap; }
+        .dx-q{ margin-top: 1rem; padding-top: .9rem; border-top: 1px solid rgba(35,40,58,.7); }
+        .dx-radio{ display:flex; gap:.8rem; flex-wrap:wrap; color: var(--muted); }
+        .dx-radio label{ display:flex; align-items:center; gap:.4rem; padding:.4rem .55rem; border:1px solid rgba(35,40,58,.7); border-radius: 999px; background: rgba(255,255,255,.02); }
+        .dx-range{ width:100%; }
+        .dx-range__meta{ display:flex; justify-content:space-between; color: var(--muted); font-weight:800; margin-top:.2rem; }
+        .dx-hr{ border:0; border-top:1px solid rgba(35,40,58,.7); margin: 1.1rem 0; }
+        .dx-progress{ margin-top:.6rem; }
+        .dx-progress__bar{ height:12px; border-radius:999px; border:1px solid rgba(35,40,58,.9); background: rgba(255,255,255,.03); overflow:hidden; }
+        .dx-progress__bar i{ display:block; height:100%; background: rgba(110,231,183,.22); width:0%; }
+        .dx-progress__meta{ display:flex; justify-content:space-between; gap:1rem; margin-top:.5rem; }
+        .dx-quick{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.8rem; }
+        .result-grid{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:1rem; margin-top:1rem; }
+        .result-box{ border:1px solid rgba(35,40,58,.9); background: rgba(255,255,255,.02); border-radius: var(--radius2); padding:1rem; }
+        .result-title{ font-weight:950; font-size:1.25rem; margin:.6rem 0 .2rem; }
+        .result-actions{ display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:1rem; }
+        .ol{ margin:.6rem 0 0 1.2rem; color: var(--muted); }
+        .dx-json{ margin-top:1rem; padding:1rem; border-radius: var(--radius2); border:1px solid rgba(35,40,58,.9); background: rgba(0,0,0,.25); color: var(--text); overflow:auto; }
+        @media (max-width: 980px){
+          .dx-top{ grid-template-columns: 1fr; }
+          .dx-grid{ grid-template-columns: 1fr; }
+          .result-grid{ grid-template-columns: 1fr; }
+          .result-actions{ grid-template-columns: 1fr; }
+        }
+      `;
+      document.head.appendChild(style);
+
+      // --- Storage key ---
+      const STORAGE_KEY = "mdg_dx_v1";
+
+      // --- Helpers ---
+      const clamp01 = (x) => Math.max(0, Math.min(1, x));
+      const norm5 = (v) => (Number(v) / 5) * 100; // 0..5 -> 0..100
+      const round = (n) => Math.round(n);
+
+      function getRadioVal(name){
+        const el = $(`input[name="${name}"]:checked`);
+        return el ? Number(el.value) : null;
+      }
+      function setRadioVal(name, val){
+        const el = $(`input[name="${name}"][value="${val}"]`);
+        if (el) el.checked = true;
+      }
+      function getRangeVal(id){ return Number($(id).value); }
+      function setRangeVal(id, v){ $(id).value = String(v); }
+      function setText(id, txt){ const el=$(id); if(el) el.textContent = txt; }
+
+      function load(){
+        try{
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if(!raw) return;
+          const data = JSON.parse(raw);
+
+          // setup
+          if (data.context) $("#dx_context").value = data.context;
+          if (data.depth) $("#dx_depth").value = data.depth;
+          if (data.name) $("#dx_name").value = data.name;
+
+          // radios
+          (data.radios || []).forEach(({name, value}) => setRadioVal(name, value));
+
+          // ranges
+          (data.ranges || []).forEach(({id, value}) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value;
+          });
+
+          // role select
+          if (data.M_role) $("#M_role").value = data.M_role;
+
+          // update range labels
+          syncRangeLabels();
+          updateProgress();
+        }catch(_){}
+      }
+
+      function save(){
+        const radios = $$('input[type="radio"]:checked').map(r => ({name:r.name, value:r.value}));
+        const ranges = $$('input[type="range"]').map(r => ({id:r.id, value:r.value}));
+        const payload = {
+          context: $("#dx_context").value,
+          depth: $("#dx_depth").value,
+          name: $("#dx_name").value.trim(),
+          M_role: $("#M_role").value,
+          radios,
+          ranges,
+          ts: Date.now()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        updateProgress();
+      }
+
+      function resetAll(){
+        localStorage.removeItem(STORAGE_KEY);
+        // clear all inputs
+        $$('input[type="radio"]').forEach(r => r.checked = false);
+        $$('input[type="range"]').forEach(r => r.value = "0");
+        $("#dx_context").value = "private";
+        $("#dx_depth").value = "quick";
+        $("#dx_name").value = "";
+        $("#M_role").value = "roleA";
+        syncRangeLabels();
+        updateProgress();
+        // clear flags + results
+        setFlags("-", "-", "-");
+        clearResults();
+      }
+
+      function syncRangeLabels(){
+        const pairs = [
+          ["D3","D3v"],["L2","L2v"],["L3","L3v"],
+          ["M1","M1v"],["M2","M2v"],["M3","M3v"],["M4","M4v"],["M5","M5v"],
+          ["E1","E1v"],["E2","E2v"]
+        ];
+        pairs.forEach(([rid, vid]) => {
+          const r = document.getElementById(rid);
+          const v = document.getElementById(vid);
+          if (r && v) v.textContent = r.value;
+        });
+      }
+
+      function updateProgress(){
+        const totalInputs =
+          $$('input[type="radio"]').reduce((acc, r) => acc.add(r.name), new Set()).size +
+          $$('input[type="range"]').length;
+
+        const answeredRadios = $$('input[type="radio"]:checked').reduce((acc, r) => acc.add(r.name), new Set()).size;
+        const answeredRanges = $$('input[type="range"]').filter(r => Number(r.value) !== 0).length;
+
+        const done = answeredRadios + answeredRanges;
+        const pct = totalInputs ? Math.round((done / totalInputs) * 100) : 0;
+
+        $("#dx_progress_bar").style.width = pct + "%";
+        $("#dx_progress_text").textContent = pct + "%";
+      }
+
+      function setFlags(spof, growth, path){
+        $("#dx_flag_spof").textContent = `SPOF: ${spof}`;
+        $("#dx_flag_growth").textContent = `Growth: ${growth}`;
+        $("#dx_flag_path").textContent = `Pfad: ${path}`;
+      }
+
+      function clearResults(){
+        ["score_D","score_L","score_G","score_M","score_EF","score_ALL"].forEach(id => setText("#"+id, id.includes("score_ALL") ? "Total: –" : (id.split("_")[1] || "") + ": –"));
+        setText("#R_primary","–");
+        setText("#R_secondary","–");
+        setText("#R_growth","–");
+        setText("#R_path","–");
+        setText("#R_primary_why","–");
+        setText("#R_secondary_why","–");
+        setText("#R_growth_why","–");
+        setText("#R_path_why","–");
+        $("#R_moves_now").innerHTML = "";
+        $("#R_moves_week").innerHTML = "";
+        $("#dx_json").hidden = true;
+        $("#dx_json").textContent = "";
+      }
+
+      // --- Scoring ---
+      function scoreD(){
+        const d1 = getRadioVal("D1");
+        const d2 = getRadioVal("D2");
+        const d3 = norm5($("#D3").value);
+        const d4 = getRadioVal("D4");
+        const d5 = getRadioVal("D5");
+        const d6 = getRadioVal("D6");
+        const d7 = getRadioVal("D7");
+
+        // If missing, treat as null and ignore in partial mode
+        const parts = [
+          {v: avg([d1,d2]), w: 0.25},
+          {v: d3, w: 0.20},
+          {v: d4, w: 0.20},
+          {v: d5, w: 0.15},
+          {v: d6, w: 0.10},
+          {v: d7, w: 0.10},
+        ];
+        return weighted(parts);
+      }
+
+      function scoreL(){
+        const l1 = getRadioVal("L1");
+        const l2 = norm5($("#L2").value);
+        const l3 = norm5($("#L3").value);
+        const l4 = getRadioVal("L4");
+        const l5 = getRadioVal("L5");
+        const l6 = getRadioVal("L6");
+        const l7 = getRadioVal("L7");
+
+        // Combine concentration signal: average(l2,l3) but also role count
+        const conc = avg([l2,l3,l1]);
+        const parts = [
+          {v: conc, w: 0.40},
+          {v: l4,  w: 0.30},
+          {v: l6,  w: 0.20},
+          {v: avg([l5,l7]), w: 0.10},
+        ];
+        return weighted(parts);
+      }
+
+      function scoreG(){
+        const g1 = getRadioVal("G1");
+        const g2 = getRadioVal("G2");
+        const g3 = getRadioVal("G3");
+        const g4 = getRadioVal("G4");
+        const g5 = getRadioVal("G5");
+        return avg([g1,g2,g3,g4,g5]);
+      }
+
+      function scoreM(){
+        // mismatch: high difference between decision power and consequence/risk/info/accountability
+        const m1 = norm5($("#M1").value);
+        const m2 = norm5($("#M2").value);
+        const m3 = norm5($("#M3").value);
+        const m4 = norm5($("#M4").value);
+        const m5 = norm5($("#M5").value);
+        const m6 = getRadioVal("M6");
+        const m7 = getRadioVal("M7");
+
+        // Mismatch defined as mean abs diffs vs decision power
+        const diffs = [m2,m3,m4,m5].map(x => Math.abs(m1 - x));
+        const mismatchCore = avg(diffs); // 0..100
+        return weighted([
+          {v: mismatchCore, w: 0.70},
+          {v: avg([m6,m7]), w: 0.30},
+        ]);
+      }
+
+      function scoreEF(){
+        const e1 = norm5($("#E1").value);
+        const e2 = norm5($("#E2").value);
+        const e3 = getRadioVal("E3");
+        const e4 = getRadioVal("E4");
+        const e5 = getRadioVal("E5");
+
+        const f1 = getRadioVal("F1");
+        const f2 = getRadioVal("F2");
+        const f3 = getRadioVal("F3");
+        const f4 = getRadioVal("F4");
+        const f5 = getRadioVal("F5");
+
+        // Energy: overload = (e1 - e2) normalized + flags
+        const energyDelta = clamp01((e1 - e2 + 50) / 100); // map [-50..+50] => [0..1]
+        const energy = round(energyDelta * 100);
+        const energyIndicators = avg([e3,e4,e5]); // 0..100 (higher = worse)
+        const E = weighted([{v: energy, w:0.60},{v: energyIndicators, w:0.40}]);
+
+        // Error integration: higher = worse (missing)
+        const F = avg([f1,f2,f3,f4,f5]);
+
+        // combine
+        return weighted([{v:E,w:0.55},{v:F,w:0.45}]);
+      }
+
+      function avg(arr){
+        const xs = (arr || []).filter(v => typeof v === "number" && !Number.isNaN(v));
+        if (!xs.length) return null;
+        return xs.reduce((a,b)=>a+b,0)/xs.length;
+      }
+      function weighted(parts){
+        const usable = parts.filter(p => typeof p.v === "number" && !Number.isNaN(p.v));
+        const sw = usable.reduce((a,p)=>a+p.w,0);
+        if (!usable.length || sw === 0) return null;
+        return usable.reduce((a,p)=>a + (p.v * p.w), 0) / sw;
+      }
+
+      // --- Typing / classification ---
+      function classify(scores){
+        // scores: {D,L,G,M,EF}
+        const entries = [
+          {key:"D", v:scores.D},
+          {key:"L", v:scores.L},
+          {key:"G", v:scores.G},
+          {key:"M", v:scores.M},
+          {key:"EF", v:scores.EF},
+        ].filter(e => typeof e.v === "number" && !Number.isNaN(e.v));
+
+        entries.sort((a,b)=> b.v - a.v);
+        const primary = entries[0] || {key:"–", v:null};
+        const secondary = entries[1] || {key:"–", v:null};
+
+        const growthLevel = growthLabel(scores.G);
+
+        // path logic (simple but consistent):
+        // - If Growth non-linear/exponential OR D>=70 OR L>=70 -> ADG
+        // - Else if EF>=70 -> IDG first (stabilize) then reassess
+        // - Else hybrid (IDG+ADG)
+        const ADG_trigger = (scores.G >= 60) || (scores.D >= 70) || (scores.L >= 70) || (scores.M >= 75);
+        const EF_red = scores.EF >= 70;
+
+        let path = "IDG";
+        let pathWhy = "";
+        if (ADG_trigger && EF_red) { path = "IDG → ADG"; pathWhy = "Energie/Fehler stabilisieren, danach Architektur umbauen."; }
+        else if (ADG_trigger) { path = "ADG"; pathWhy = "Struktureller Umbau ist erforderlich (Wachstum/Entscheidung/Last/Mismatch)."; }
+        else if (EF_red) { path = "IDG"; pathWhy = "Erst Stabilisierung (Energie/Fehler), dann Re-Diagnose."; }
+        else { path = "IDG"; pathWhy = "Stabilisierung reicht voraussichtlich aus; Umbau optional nach Bedarf."; }
+
+        // SPOF flag
+        const spof = (scores.L >= 70) || (scores.D >= 70);
+        return {primary, secondary, growthLevel, path, pathWhy, spof};
+      }
+
+      function growthLabel(G){
+        if (typeof G !== "number") return {label:"–", why:""};
+        if (G < 30) return {label:"stabil", why:"Verstärkung bleibt kontrollierbar."};
+        if (G < 60) return {label:"empfindlich", why:"Last/Komplexität erzeugt spürbare Spannung."};
+        if (G < 80) return {label:"nichtlinear", why:"Kleine Zunahmen kippen Qualität oder Geschwindigkeit."};
+        return {label:"exponentiell", why:"Verstärkung dominiert; Bruchrisiko hoch."};
+      }
+
+      function typeLabel(key){
+        const map = {
+          D: {t:"Entscheidungsmonopol", why:"Hohe Zentralisierung/Irreversibilität ohne Redundanz."},
+          L: {t:"Lastasymmetrie", why:"Last liegt überproportional auf wenigen Rollen; Engpassrisiko."},
+          G: {t:"Wachstum ohne Struktur", why:"Verstärkung kippt schneller als Struktur nachzieht."},
+          M: {t:"Macht–Verantwortungs-Mismatch", why:"Entscheidung, Risiko und Information sind entkoppelt."},
+          EF:{t:"Energie/Fehlerintegration", why:"Energie entkoppelt oder Fehler werden nicht systemisch verarbeitet."},
+        };
+        return map[key] || {t:"–", why:""};
+      }
+
+      function buildMoves(classif, scores){
+        // Moves are determined by dominant type + path
+        const primaryKey = classif.primary.key;
+        const secondaryKey = classif.secondary.key;
+
+        const now = [];
+        const week = [];
+
+        // Always: if EF high => stabilize first
+        if (scores.EF >= 70){
+          now.push("Belastung senken: Top-3 Aktivitäten priorisieren, Rest pausieren.");
+          now.push("Fehler-Puffer: keine irreversiblen Entscheidungen für 48h.");
+          now.push("Review-Frequenz erhöhen: täglich 10 Minuten Frühindikatoren.");
+          week.push("Regenerationsrhythmus fixieren (Schlaf/Erholung) + Messpunkt definieren.");
+          week.push("Fehlerlog einführen: 1 Root-Cause pro Tag/Woche, keine Schuldzuweisung.");
+          week.push("Stop-Liste definieren: was ab heute nicht mehr akzeptiert wird.");
+        }
+
+        if (primaryKey === "D"){
+          now.push("Decision Triage: nur Top-3 Hebel werden entschieden, Rest delegieren.");
+          now.push("Entscheidungsklassen definieren: A (kritisch) / B / C.");
+          week.push("Delegationsmatrix bauen: wer darf was ohne Rückfrage entscheiden.");
+          week.push("Stellvertretung für kritische Entscheidungen festlegen.");
+          week.push("Entscheidungslog starten (1 Seite): Entscheidung, Grund, Owner, Review-Datum.");
+        }
+        if (primaryKey === "L"){
+          now.push("Engpass-Map: stärkste Rolle identifizieren + 2 Aufgaben sofort abgeben.");
+          now.push("SPOF-Schutz: Backup-Person für Kernaufgaben definieren.");
+          week.push("Übergaben dokumentieren (Minimum): 3 wichtigste Prozesse als Checkliste.");
+          week.push("Lastverteilung neu: 20% Last von Engpassrolle umschichten.");
+          week.push("Kapazitätsgrenze definieren: was darf nicht mehr angenommen werden.");
+        }
+        if (primaryKey === "G"){
+          now.push("Wachstum drosseln: keine neue Komplexität bis Struktur nachzieht.");
+          now.push("Schnittstellen reduzieren: 1–2 klare Übergabepunkte definieren.");
+          week.push("Koordinationsrhythmus einführen: feste Review-Zyklen (Woche).");
+          week.push("Komplexitätsbudget definieren: welche Features/Projekte sind tabu.");
+          week.push("Skalierungsregel: Wachstum nur bei erfüllten Strukturkriterien.");
+        }
+        if (primaryKey === "M"){
+          now.push("Mismatch sichtbar machen: Entscheidung vs Risiko vs Info vs Konsequenz auflisten.");
+          now.push("Entscheidung und Verantwortung koppeln: Owner + Konsequenz klar zuweisen.");
+          week.push("Rollenrechte dokumentieren: wer entscheidet, wer trägt Risiko, wer informiert.");
+          week.push("Accountability-Messpunkt definieren (1 Kennzahl pro Rolle).");
+          week.push("Delegation + Eskalationspfad festlegen.");
+        }
+        if (primaryKey === "EF"){
+          now.push("Belastung/Regeneration messen (täglich): 0–5 Skala + Trend.");
+          now.push("Fehler ohne Sanktion melden: 1 Kanal/Format festlegen.");
+          week.push("Review-Rhythmus fix: weekly Review + Root-Cause.");
+          week.push("Lessons Learned dokumentieren (kurz): 3 Punkte pro Woche.");
+          week.push("Schutzmechanismus: keine Entscheidungen im Energieminimum.");
+        }
+
+        // Ensure always 3 items each
+        const dedupe = (arr) => Array.from(new Set(arr)).slice(0, 6);
+        const nowFinal = padTo3(dedupe(now));
+        const weekFinal = padTo3(dedupe(week));
+
+        // Secondary influence: add 1 extra if arrays too generic
+        const sec = typeLabel(secondaryKey);
+        if (secondaryKey !== primaryKey && secondaryKey !== "–"){
+          if (nowFinal.length < 4) nowFinal.push(`Sekundär beachten: ${sec.t} → ${sec.why}`);
+        }
+
+        return {now: nowFinal.slice(0,3), week: weekFinal.slice(0,3)};
+      }
+
+      function padTo3(arr){
+        const out = arr.slice();
+        while(out.length < 3) out.push("—");
+        return out;
+      }
+
+      // --- Render results ---
+      function render(scores, classif){
+        // Module scores
+        setText("#score_D", `D: ${round(scores.D)}`);
+        setText("#score_L", `L: ${round(scores.L)}`);
+        setText("#score_G", `G: ${round(scores.G)}`);
+        setText("#score_M", `M: ${round(scores.M)}`);
+        setText("#score_EF", `E/F: ${round(scores.EF)}`);
+
+        const total = avg([scores.D,scores.L,scores.G,scores.M,scores.EF]);
+        setText("#score_ALL", `Total: ${round(total ?? 0)}`);
+
+        // Primary/secondary labels
+        const p = typeLabel(classif.primary.key);
+        const s = typeLabel(classif.secondary.key);
+
+        setText("#R_primary", p.t);
+        setText("#R_primary_why", p.why);
+
+        setText("#R_secondary", s.t);
+        setText("#R_secondary_why", s.why);
+
+        // Growth
+        setText("#R_growth", classif.growthLevel.label);
+        setText("#R_growth_why", classif.growthLevel.why);
+
+        // Path
+        setText("#R_path", classif.path);
+        setText("#R_path_why", classif.pathWhy);
+
+        // Flags
+        setFlags(classif.spof ? "ja" : "nein", classif.growthLevel.label, classif.path);
+
+        // Moves
+        const moves = buildMoves(classif, scores);
+        $("#R_moves_now").innerHTML = moves.now.map(x => `<li>${escapeHtml(x)}</li>`).join("");
+        $("#R_moves_week").innerHTML = moves.week.map(x => `<li>${escapeHtml(x)}</li>`).join("");
+
+        // Scroll to result section
+        $("#mod-RESULT").scrollIntoView({behavior:"smooth", block:"start"});
+      }
+
+      function escapeHtml(s){
+        return String(s)
+          .replaceAll("&","&amp;")
+          .replaceAll("<","&lt;")
+          .replaceAll(">","&gt;")
+          .replaceAll('"',"&quot;")
+          .replaceAll("'","&#039;");
+      }
+
+      // --- Calculate button ---
+      function calculate(){
+        const scores = {
+          D: scoreD(),
+          L: scoreL(),
+          G: scoreG(),
+          M: scoreM(),
+          EF: scoreEF(),
+        };
+
+        // If something is missing, still compute but warn in console
+        const classif = classify(scores);
+        render(scores, classif);
+
+        // keep in storage
+        save();
+
+        // Store last result for export
+        window.__MDG_LAST__ = {scores, classif, meta:{
+          context: $("#dx_context").value,
+          depth: $("#dx_depth").value,
+          name: $("#dx_name").value.trim(),
+          role: $("#M_role").value,
+          ts: new Date().toISOString()
+        }};
+      }
+
+      // --- Nav chips ---
+      $$("[data-dx-nav]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const key = btn.dataset.dxNav;
+          const id = key === "RESULT" ? "#mod-RESULT" : `#mod-${key}`;
+          const el = $(id);
+          if (el) el.scrollIntoView({behavior:"smooth", block:"start"});
+        });
+      });
+
+      // --- Export JSON ---
+      $("#dx_export_json").addEventListener("click", () => {
+        const payload = window.__MDG_LAST__;
+        if (!payload) { alert("Bitte zuerst Ergebnis berechnen."); return; }
+        const pretty = JSON.stringify(payload, null, 2);
+        $("#dx_json").hidden = false;
+        $("#dx_json").textContent = pretty;
+
+        // copy to clipboard (best effort)
+        if (navigator.clipboard?.writeText) navigator.clipboard.writeText(pretty).catch(()=>{});
+      });
+
+      // --- Events: autosave ---
+      $$("input, select, textarea").forEach(el => {
+        el.addEventListener("input", () => { syncRangeLabels(); save(); });
+        el.addEventListener("change", () => { syncRangeLabels(); save(); });
+      });
+
+      $("#dx_calc").addEventListener("click", calculate);
+      $("#dx_reset").addEventListener("click", () => {
+        if (confirm("Wirklich alles zurücksetzen?")) resetAll();
+      });
+
+      // init
+      syncRangeLabels();
+      load();
+      updateProgress();
+
+      // Also update header burger/drawer using existing script.js if present.
+      // (script.js already wires burger/drawer on pages with .burger + .drawer)
+    })();
+  </script>
+
+  <!-- i18n for this page (minimal keys; will not break existing script.js) -->
+  <script defer>
+    (() => {
+      const $ = (s, r=document) => r.querySelector(s);
+      const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+      // We piggyback on your existing language buttons. If script.js already sets lang, fine.
+      const dict = {
+        de: {
+          "cta.backHome":"Zur Homepage",
+          "dx.h1":"Diagnose",
+          "dx.sub":"5 Module, 7 Typen, IDG/ADG-Pfad. Antworten werden lokal gespeichert (Browser).",
+          "dx.setup":"Setup",
+          "dx.context":"Kontext",
+          "dx.depth":"Tiefe",
+          "dx.name":"Bezeichnung (optional)",
+          "dx.calc":"Ergebnis berechnen",
+          "dx.reset":"Zurücksetzen",
+          "dx.note":"Hinweis: Dieses Diagnose-Prototype arbeitet clientseitig. Später kann Speicherung/Export über API erfolgen.",
+          "dx.progress":"Fortschritt",
+          "dx.saved":"Auto-Save aktiv",
+          "dx.quickhint":"Diese Flags werden nach „Ergebnis berechnen“ gesetzt.",
+          "dx.toResult":"→ Ergebnis",
+
+          "ans.yes":"Ja","ans.no":"Nein","ans.partial":"Teilweise","ans.none":"Keine",
+          "ans.never":"Nie","ans.rare":"Selten","ans.often":"Häufig","ans.permanent":"Permanent",
+          "ans.slow":"Langsam","ans.fast":"Schnell","ans.veryFast":"Sehr schnell",
+          "ans.stable":"Stabil","ans.tension":"Leichte Spannung","ans.qualityDrop":"Qualitätsverlust","ans.break":"Bruch",
+          "ans.sometimes":"Manchmal","ans.always":"Immer",
+          "ans.replaceable":"Voll ersetzbar","ans.withEffort":"Mit Aufwand","ans.hardly":"Kaum","ans.not":"Gar nicht",
+          "ans.yesFull":"Ja vollständig","ans.yesStructured":"Ja strukturiert"
+        },
+        tr: {
+          "cta.backHome":"Anasayfa",
+          "dx.h1":"Analiz",
+          "dx.sub":"5 modül, 7 tip, IDG/ADG yolu. Yanıtlar tarayıcıda yerel kaydedilir.",
+          "dx.setup":"Kurulum",
+          "dx.context":"Bağlam",
+          "dx.depth":"Derinlik",
+          "dx.name":"Etiket (opsiyonel)",
+          "dx.calc":"Sonucu hesapla",
+          "dx.reset":"Sıfırla",
+          "dx.note":"Not: Bu prototip istemci tarafında çalışır. Sonra API ile kayıt/rapor eklenebilir.",
+          "dx.progress":"İlerleme",
+          "dx.saved":"Otomatik kayıt açık",
+          "dx.quickhint":"Bu bayraklar “Sonucu hesapla” sonrası oluşur.",
+          "dx.toResult":"→ Sonuç",
+
+          "ans.yes":"Evet","ans.no":"Hayır","ans.partial":"Kısmen","ans.none":"Yok",
+          "ans.never":"Hiç","ans.rare":"Nadiren","ans.often":"Sık","ans.permanent":"Sürekli",
+          "ans.slow":"Yavaş","ans.fast":"Hızlı","ans.veryFast":"Çok hızlı",
+          "ans.stable":"Stabil","ans.tension":"Hafif gerilim","ans.qualityDrop":"Kalite düşüşü","ans.break":"Kırılma",
+          "ans.sometimes":"Bazen","ans.always":"Her zaman",
+          "ans.replaceable":"Tam değiştirilebilir","ans.withEffort":"Eforla","ans.hardly":"Zor","ans.not":"Değil",
+          "ans.yesFull":"Tam","ans.yesStructured":"Yapılandırılmış"
+        },
+        en: {
+          "cta.backHome":"Home",
+          "dx.h1":"Diagnosis",
+          "dx.sub":"5 modules, 7 types, IDG/ADG path. Answers are stored locally (browser).",
+          "dx.setup":"Setup",
+          "dx.context":"Context",
+          "dx.depth":"Depth",
+          "dx.name":"Label (optional)",
+          "dx.calc":"Calculate result",
+          "dx.reset":"Reset",
+          "dx.note":"Note: This prototype runs client-side. Later, storage/export can be done via API.",
+          "dx.progress":"Progress",
+          "dx.saved":"Auto-save on",
+          "dx.quickhint":"These flags are set after “Calculate result”.",
+          "dx.toResult":"→ Result",
+
+          "ans.yes":"Yes","ans.no":"No","ans.partial":"Partial","ans.none":"None",
+          "ans.never":"Never","ans.rare":"Rarely","ans.often":"Often","ans.permanent":"Permanent",
+          "ans.slow":"Slow","ans.fast":"Fast","ans.veryFast":"Very fast",
+          "ans.stable":"Stable","ans.tension":"Light tension","ans.qualityDrop":"Quality drop","ans.break":"Break",
+          "ans.sometimes":"Sometimes","ans.always":"Always",
+          "ans.replaceable":"Fully replaceable","ans.withEffort":"With effort","ans.hardly":"Hardly","ans.not":"Not at all",
+          "ans.yesFull":"Fully","ans.yesStructured":"Structured"
+        }
+      };
+
+      function applyLang(lang){
+        if (!dict[lang]) return;
+        document.documentElement.lang = lang;
+
+        // update aria-pressed
+        $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+
+        // apply only keys that exist (safe)
+        $$("[data-i18n]").forEach(el => {
+          const key = el.dataset.i18n;
+          const val = dict[lang][key];
+          if (val && el.children.length === 0) el.textContent = val;
+        });
+
+        // also update common toggle option labels if they exist as textContent
+        // (options already have data-i18n on them but options don't update reliably via textContent, so we keep simple)
+      }
+
+      $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => applyLang(btn.dataset.lang)));
+
+      // Default: DE
+      applyLang("de");
+    })();
+  </script>
+</body>
+</html>
