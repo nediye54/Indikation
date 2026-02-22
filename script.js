@@ -1,7 +1,9 @@
-// v62 — IDG/ADG Platform (stable charts + PDF embed)
-// - Radar + Trend + Ist->Soll are rendered as canvases with fixed heights (CSS)
-// - Each chart stores a PNG dataURL for PDF export
-// - Buy buttons text standardized to "Token kaufen (...)"
+// v63 — IDG/ADG Platform (stable charts + PDF embed) + Token/UI fix
+// - UI is single source of truth for layer/mode/productKey()
+// - runProOutput uses uiSelectedLayer/uiSelectedMode (no CURRENT_* drift)
+// - No stray “payload block” outside a function (the thing that broke your file)
+// - Radar + Trend + Ist->Soll rendered as canvases; PNG snapshots for PDF export
+// - Buy buttons standardized: "Token kaufen (...)"
 
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
@@ -76,8 +78,8 @@ const SCALE = [
 const el = (id) => document.getElementById(id);
 
 // ======= State =======
-const LS_MODE = "mdg_mode";      // private|business
-const LS_LAYER = "mdg_layer";    // idg|adg
+const LS_MODE  = "mdg_mode";   // private|business
+const LS_LAYER = "mdg_layer";  // idg|adg
 
 const LS_TOKEN = {
   idg_private:  "tok_idg_private",
@@ -86,16 +88,17 @@ const LS_TOKEN = {
   adg_business: "tok_adg_business",
 };
 
-let CURRENT_MODE = "private";
+// Kept for UI hints only (NOT a source of truth for payload)
+let CURRENT_MODE  = "private";
 let CURRENT_LAYER = "idg";
 
-let LAST_SCORES = null;
+let LAST_SCORES  = null;
 let LAST_PATTERN = null;
-let LAST_WEAK = null;
+let LAST_WEAK    = null;
 
 // PNG snapshots for PDF
-let LAST_RADAR_DATAURL = null;
-let LAST_TREND_DATAURL = null;
+let LAST_RADAR_DATAURL   = null;
+let LAST_TREND_DATAURL   = null;
 let LAST_ISTSOLL_DATAURL = null;
 
 // ======= Error UI =======
@@ -348,9 +351,11 @@ function renderRadar(scores, weak) {
   const canvas = getCanvasIn(host);
 
   const draw = () => {
+    // fallback height if CSS missing/collapsed
     if (host.getBoundingClientRect().height < 180) {
-  host.style.height = host.style.height || "360px";
-}
+      host.style.height = host.style.height || "360px";
+    }
+
     const rect = host.getBoundingClientRect();
     const cssW = Math.max(260, Math.floor(rect.width));
     const cssH = Math.max(260, Math.floor(rect.height));
@@ -491,7 +496,6 @@ function renderRadar(scores, weak) {
       ctx.fillStyle = arrowStroke;
       ctx.fill();
 
-      // label in top-right area, but clamped
       const label = `Schwach: ${weak.key} · ${weak.val.toFixed(2)}`;
       ctx.font = "700 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
       const m = 10;
@@ -532,20 +536,15 @@ function renderRadar(scores, weak) {
 
 // ======= Indices for XY charts =======
 function stabilityIndex(scores){
-  // “Stability” tends to be fairness/truth/balance/harmony (governance + tension)
   const s = avg([scores.Gerechtigkeit, scores.Wahrheit, scores.Balance, scores.Harmonie].map(clamp01));
   return clamp01(s);
 }
 function performanceIndex(scores){
-  // “Performance” tends to be efficiency/agency/resources (execution capacity)
   const p = avg([scores.Effizienz, scores.Handlungsspielraum, scores.Mittel, scores.Freiheit].map(clamp01));
   return clamp01(p);
 }
 
 // ======= Generic XY grid chart =======
-let _trendResizeObserver = null;
-let _istsollResizeObserver = null;
-
 function renderXYGrid(hostId, build, onSnapshot){
   const host = el(hostId);
   if (!host) return;
@@ -553,10 +552,10 @@ function renderXYGrid(hostId, build, onSnapshot){
   const canvas = getCanvasIn(host);
 
   const draw = () => {
-   // hard fallback if CSS is missing or container collapsed
-  if (host.getBoundingClientRect().height < 120) {
-  host.style.height = host.style.height || "260px";
-  }
+    if (host.getBoundingClientRect().height < 120) {
+      host.style.height = host.style.height || "260px";
+    }
+
     const rect = host.getBoundingClientRect();
     const cssW = Math.max(260, Math.floor(rect.width));
     const cssH = Math.max(220, Math.floor(rect.height));
@@ -569,20 +568,17 @@ function renderXYGrid(hostId, build, onSnapshot){
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0,0,cssW,cssH);
 
-    // chart area
     const padL = 44, padR = 14, padT = 18, padB = 30;
     const x0 = padL, y0 = padT;
     const w = cssW - padL - padR;
     const h = cssH - padT - padB;
 
-    // background glow
     const g = ctx.createRadialGradient(cssW*0.6, cssH*0.25, 10, cssW*0.6, cssH*0.25, cssW*0.9);
     g.addColorStop(0, "rgba(158,240,216,0.08)");
     g.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = g;
     ctx.fillRect(0,0,cssW,cssH);
 
-    // grid
     const grid = "rgba(255,255,255,0.12)";
     ctx.strokeStyle = grid;
     ctx.lineWidth = 1;
@@ -598,7 +594,6 @@ function renderXYGrid(hostId, build, onSnapshot){
     const toX = (x) => x0 + clamp01(x)*w;
     const toY = (y) => y0 + (1-clamp01(y))*h;
 
-    // axes labels
     ctx.save();
     ctx.fillStyle = "rgba(255,255,255,0.75)";
     ctx.font = "600 11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
@@ -622,15 +617,12 @@ function renderXYGrid(hostId, build, onSnapshot){
 function renderTrend(scores){
   const base = { x: stabilityIndex(scores), y: performanceIndex(scores) };
 
-  // deterministic projections (no fluff, but visually clear)
   const weak2 = weakestVars(scores, 2);
   const weakness = clamp01(1 - avg(weak2.map(k => scores[k] ?? 0)));
 
-  // best-case: stability + performance rise
   const best30 = { x: clamp01(base.x + 0.10 + 0.10*weakness), y: clamp01(base.y + 0.08 + 0.10*weakness) };
   const best90 = { x: clamp01(best30.x + 0.07), y: clamp01(best30.y + 0.09) };
 
-  // failure-case: stability erodes and/or performance stalls
   const fail30 = { x: clamp01(base.x - (0.05 + 0.07*weakness)), y: clamp01(base.y - (0.03 + 0.05*weakness)) };
   const fail90 = { x: clamp01(fail30.x - 0.05), y: clamp01(fail30.y - 0.05) };
 
@@ -643,31 +635,27 @@ function renderTrend(scores){
     Failure:[ {t:"D0",...base}, {t:"D30",...fail30}, {t:"D90",...fail90} ],
   };
 
-  const { draw } = renderXYGrid("trendPlot", ({ ctx, toX, toY }) => {
+  renderXYGrid("trendPlot", ({ ctx, toX, toY }) => {
     const colors = {
       Base: "rgba(255,255,255,0.70)",
       Best: "rgba(158,240,216,0.90)",
       Failure: "rgba(246,204,114,0.95)",
     };
 
-    // legend
     ctx.save();
     ctx.font = "700 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
     ctx.textAlign = "left"; ctx.textBaseline = "top";
     const lx = 16, ly = 8;
-    const items = ["Base","Best","Failure"];
-    items.forEach((k, i)=>{
+    ["Base","Best","Failure"].forEach((k, i)=>{
       ctx.fillStyle = colors[k];
       ctx.fillText(k, lx, ly + i*16);
     });
     ctx.restore();
 
-    // series
     for (const name of Object.keys(points)){
       const arr = points[name];
       const col = colors[name];
 
-      // line
       ctx.beginPath();
       arr.forEach((p, i)=>{
         const x = toX(p.x), y = toY(p.y);
@@ -677,7 +665,6 @@ function renderTrend(scores){
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // points + labels
       arr.forEach((p)=>{
         const x = toX(p.x), y = toY(p.y);
 
@@ -689,8 +676,10 @@ function renderTrend(scores){
         ctx.strokeStyle = "rgba(0,0,0,0.35)";
         ctx.stroke();
 
-        // D0/D30/D90 label (small) with anti-overlap shift by series
-        const shift = (name === "Base") ? {dx: 8, dy: -18} : (name === "Best" ? {dx: 8, dy: -2} : {dx: -34, dy: 4});
+        const shift = (name === "Base") ? {dx: 8, dy: -18}
+                    : (name === "Best" ? {dx: 8, dy: -2}
+                    : {dx: -34, dy: 4});
+
         textBadge(ctx, x + shift.dx, y + shift.dy, p.t, {
           padX: 8, padY: 6, r: 10,
           bg: "rgba(15,21,34,0.78)",
@@ -703,15 +692,13 @@ function renderTrend(scores){
     LAST_TREND_DATAURL = snapshotCanvas(canvas);
   });
 
-  // optional: keep function handle if later needed
-  return { draw, points };
+  return { points };
 }
 
 // ======= Ist->Soll chart =======
 function renderIstSoll(scores){
   const ist = { x: stabilityIndex(scores), y: performanceIndex(scores) };
 
-  // three intervention strengths as vectors
   const low  = { x: clamp01(ist.x + 0.06), y: clamp01(ist.y + 0.04) };
   const med  = { x: clamp01(ist.x + 0.12), y: clamp01(ist.y + 0.08) };
   const high = { x: clamp01(ist.x + 0.18), y: clamp01(ist.y + 0.14) };
@@ -723,45 +710,38 @@ function renderIstSoll(scores){
     { name:"HIGH", p: high, key:"high" },
   ];
 
-  // label placement with simple collision-avoidance
   function placeLabels(points, toX, toY){
     const placed = [];
     return points.map((d)=>{
       const x = toX(d.p.x), y = toY(d.p.y);
 
-      // default offsets
       let dx = 10, dy = -18;
       if (d.key === "ist"){ dx = -28; dy = 10; }
       if (d.key === "high"){ dx = 10; dy = -28; }
 
-      // nudge until not overlapping already-placed
       let bx = x + dx, by = y + dy;
-      const box = (w,h)=>({x:bx,y:by,w,h});
 
       for (let tries=0; tries<10; tries++){
         let collide = false;
         for (const b of placed){
-          const w = 140, h = 24;
-          const r = box(w,h);
-          const inter = !(r.x+r.w < b.x || r.x > b.x+b.w || r.y+r.h < b.y || r.y > b.y+b.h);
+          const w = 150, h = 26;
+          const inter = !(bx+w < b.x || bx > b.x+b.w || by+h < b.y || by > b.y+b.h);
           if (inter){ collide = true; break; }
         }
         if (!collide) break;
-        by += 18; // stack down
+        by += 18;
         bx += (tries%2===0) ? 10 : -10;
       }
-      // store an approximate box (good enough)
-      placed.push({x:bx,y:by,w:140,h:24});
+      placed.push({x:bx,y:by,w:150,h:26});
       return { x, y, bx, by };
     });
   }
 
-  const { draw } = renderXYGrid("istSollPlot", ({ ctx, toX, toY }) => {
+  renderXYGrid("istSollPlot", ({ ctx, toX, toY }) => {
     const colVec = "rgba(158,240,216,0.90)";
     const colGlow= "rgba(158,240,216,0.18)";
     const colIst = "rgba(246,204,114,0.95)";
 
-    // draw vectors IST->LOW->MED->HIGH
     const path = [ist, low, med, high].map(p => ({x:toX(p.x), y:toY(p.y)}));
 
     ctx.beginPath();
@@ -780,7 +760,6 @@ function renderIstSoll(scores){
     ctx.lineCap = "round";
     ctx.stroke();
 
-    // arrow head for HIGH
     const a = Math.atan2(path[3].y - path[2].y, path[3].x - path[2].x);
     const head = 10;
     ctx.beginPath();
@@ -791,18 +770,16 @@ function renderIstSoll(scores){
     ctx.fillStyle = colVec;
     ctx.fill();
 
-    // points
     pts.forEach((d)=>{
       const x = toX(d.p.x), y = toY(d.p.y);
       ctx.beginPath();
       ctx.arc(x,y,4.6,0,Math.PI*2);
-      ctx.fillStyle = (d.key==="ist") ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.82)";
+      ctx.fillStyle = "rgba(255,255,255,0.84)";
       ctx.fill();
       ctx.lineWidth = 1;
       ctx.strokeStyle = "rgba(0,0,0,0.35)";
       ctx.stroke();
 
-      // mark IST with a warm ring
       if (d.key==="ist"){
         ctx.beginPath();
         ctx.arc(x,y,7.6,0,Math.PI*2);
@@ -812,7 +789,6 @@ function renderIstSoll(scores){
       }
     });
 
-    // labels with anti-overlap placement
     const placed = placeLabels(pts, toX, toY);
     placed.forEach((pos, i)=>{
       const d = pts[i];
@@ -826,7 +802,6 @@ function renderIstSoll(scores){
         font: "800 11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial"
       });
 
-      // small connector line
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y);
       ctx.lineTo(pos.bx + 10, pos.by + 12);
@@ -838,7 +813,7 @@ function renderIstSoll(scores){
     LAST_ISTSOLL_DATAURL = snapshotCanvas(canvas);
   });
 
-  return { draw, ist, low, med, high };
+  return { ist, low, med, high };
 }
 
 // ======= Cards render =======
@@ -886,30 +861,29 @@ function buildCardsHTML(cards){
   return html.join("");
 }
 
-// ======= Product selection =======
+// ======= Product selection (UI is single source of truth) =======
 function uiSelectedLayer(){
-  // prefer real state, but fall back to DOM if handlers broke
-  const a = document.getElementById("layerADG");
-  const i = document.getElementById("layerIDG");
-  if (a && a.classList.contains("active")) return "adg";
-  if (i && i.classList.contains("active")) return "idg";
-  return CURRENT_LAYER || "idg";
+  const a = el("layerADG");
+  const i = el("layerIDG");
+  if (a?.classList.contains("active")) return "adg";
+  if (i?.classList.contains("active")) return "idg";
+  return localStorage.getItem(LS_LAYER) || "idg";
 }
 
 function uiSelectedMode(){
-  const b = document.getElementById("modeBusiness");
-  const p = document.getElementById("modePrivate");
-  if (b && b.classList.contains("active")) return "business";
-  if (p && p.classList.contains("active")) return "private";
-  return CURRENT_MODE || "private";
+  const b = el("modeBusiness");
+  const p = el("modePrivate");
+  if (b?.classList.contains("active")) return "business";
+  if (p?.classList.contains("active")) return "private";
+  return localStorage.getItem(LS_MODE) || "private";
 }
 
 function productKey(){
   const layer = uiSelectedLayer();
   const mode  = uiSelectedMode();
-  if (layer === "idg" && mode === "private") return "idg_private";
+  if (layer === "idg" && mode === "private")  return "idg_private";
   if (layer === "idg" && mode === "business") return "idg_business";
-  if (layer === "adg" && mode === "private") return "adg_private";
+  if (layer === "adg" && mode === "private")  return "adg_private";
   return "adg_business";
 }
 
@@ -920,15 +894,17 @@ function requiredPrefix(){
 function tokenLooksValidForSelection(tok){
   const pfx = requiredPrefix();
   const t = String(tok || "").trim().toUpperCase();
-  return t.startsWith(String(pfx).toUpperCase());
+  return t.startsWith(pfx.toUpperCase());
 }
+
 function getToken(){
   const key = productKey();
   const input = el("tokenInput");
   const fromInput = (input?.value || "").trim();
-  const stored = localStorage.getItem(LS_TOKEN[key]) || "";
-  return (fromInput || stored).trim();
+  if (fromInput) return fromInput;
+  return (localStorage.getItem(LS_TOKEN[key]) || "").trim();
 }
+
 function setTokenToStorage(raw){
   const key = productKey();
   const v = String(raw || "").trim();
@@ -936,7 +912,73 @@ function setTokenToStorage(raw){
   localStorage.setItem(LS_TOKEN[key], v);
 }
 
-// ======= UI state =======
+function hydrateTokenInput(){
+  const input = el("tokenInput");
+  if (!input) return;
+  const key = productKey();
+  const stored = localStorage.getItem(LS_TOKEN[key]) || "";
+  input.value = stored;
+  input.placeholder = `${requiredPrefix()}XXXX-XXXX-XXXX`;
+}
+
+function updateTokenUI(){
+  const key = productKey();
+
+  const tokenLabel = el("tokenLabel");
+  const tokenSmall = el("tokenSmall");
+  if (tokenLabel){
+    const names = {
+      idg_private:  "IDG Privat Token",
+      idg_business: "IDG Business Token",
+      adg_private:  "ADG Privat Token",
+      adg_business: "ADG Business Token",
+    };
+    tokenLabel.textContent = names[key] || "Token";
+  }
+  if (tokenSmall){
+    tokenSmall.textContent = `Erforderlich: Token mit Prefix ${requiredPrefix()}`;
+  }
+
+  const buyIDGP = el("buyIDGPrivate");
+  const buyIDGB = el("buyIDGBusiness");
+  const buyADGP = el("buyADGPrivate");
+  const buyADGB = el("buyADGBusiness");
+
+  if (buyIDGP) buyIDGP.href = CHECKOUT.idg_private;
+  if (buyIDGB) buyIDGB.href = CHECKOUT.idg_business;
+  if (buyADGP) buyADGP.href = CHECKOUT.adg_private;
+  if (buyADGB) buyADGB.href = CHECKOUT.adg_business;
+
+  if (buyIDGP) buyIDGP.textContent = "Token kaufen (19,99€)";
+  if (buyIDGB) buyIDGB.textContent = "Token kaufen (299,99€)";
+  if (buyADGP) buyADGP.textContent = "Token kaufen (49,99€)";
+  if (buyADGB) buyADGB.textContent = "Token kaufen (1.199,99€)";
+
+  const show = (node, on) => { if (node) node.style.display = on ? "inline-flex" : "none"; };
+  show(buyIDGP, key === "idg_private");
+  show(buyIDGB, key === "idg_business");
+  show(buyADGP, key === "adg_private");
+  show(buyADGB, key === "adg_business");
+}
+
+function updateRunButtonState(){
+  const btn = el("runBtn");
+  if (!btn) return;
+  const tok = getToken();
+  const ok = tokenLooksValidForSelection(tok);
+  btn.disabled = !LAST_SCORES || !ok;
+}
+
+function applyToken(){
+  const input = el("tokenInput");
+  const raw = (input?.value || "").trim();
+  if (!raw) { updateRunButtonState(); return; }
+  setTokenToStorage(raw);
+  hydrateTokenInput();
+  updateRunButtonState();
+}
+
+// ======= UI state setters (keep for visuals + localStorage) =======
 function setLayer(layer){
   CURRENT_LAYER = (layer === "adg") ? "adg" : "idg";
   localStorage.setItem(LS_LAYER, CURRENT_LAYER);
@@ -989,64 +1031,6 @@ function setMode(mode){
   clearOutput();
 }
 
-function hydrateTokenInput(){
-  const input = el("tokenInput");
-  if (!input) return;
-  const key = productKey();
-  const stored = localStorage.getItem(LS_TOKEN[key]) || "";
-  input.value = stored;
-  input.placeholder = `${requiredPrefix()}XXXX-XXXX-XXXX`;
-}
-
-function updateTokenUI(){
-  const key = productKey();
-
-  const tokenLabel = el("tokenLabel");
-  const tokenSmall = el("tokenSmall");
-  if (tokenLabel){
-    const names = {
-      idg_private:  "IDG Privat Token",
-      idg_business: "IDG Business Token",
-      adg_private:  "ADG Privat Token",
-      adg_business: "ADG Business Token",
-    };
-    tokenLabel.textContent = names[key] || "Token";
-  }
-  if (tokenSmall){
-    tokenSmall.textContent = `Erforderlich: Token mit Prefix ${requiredPrefix()}`;
-  }
-
-  const buyIDGP = el("buyIDGPrivate");
-  const buyIDGB = el("buyIDGBusiness");
-  const buyADGP = el("buyADGPrivate");
-  const buyADGB = el("buyADGBusiness");
-
-  if (buyIDGP) buyIDGP.href = CHECKOUT.idg_private;
-  if (buyIDGB) buyIDGB.href = CHECKOUT.idg_business;
-  if (buyADGP) buyADGP.href = CHECKOUT.adg_private;
-  if (buyADGB) buyADGB.href = CHECKOUT.adg_business;
-
-  // button text: Token kaufen
-  if (buyIDGP) buyIDGP.textContent = "Token kaufen (19,99€)";
-  if (buyIDGB) buyIDGB.textContent = "Token kaufen (299,99€)";
-  if (buyADGP) buyADGP.textContent = "Token kaufen (49,99€)";
-  if (buyADGB) buyADGB.textContent = "Token kaufen (1.199,99€)";
-
-  const show = (node, on) => { if (node) node.style.display = on ? "inline-flex" : "none"; };
-  show(buyIDGP, key === "idg_private");
-  show(buyIDGB, key === "idg_business");
-  show(buyADGP, key === "adg_private");
-  show(buyADGB, key === "adg_business");
-}
-
-function updateRunButtonState(){
-  const btn = el("runBtn");
-  if (!btn) return;
-  const tok = getToken();
-  const ok = tokenLooksValidForSelection(tok);
-  btn.disabled = !LAST_SCORES || !ok;
-}
-
 function clearOutput(){
   const out = el("deepOut");
   if (out){
@@ -1055,14 +1039,6 @@ function clearOutput(){
   }
   const pdfBtn = el("pdfBtn");
   if (pdfBtn) pdfBtn.disabled = true;
-}
-
-function applyToken(){
-  const input = el("tokenInput");
-  const raw = (input?.value || "").trim();
-  if (!raw) { updateRunButtonState(); return; }
-  setTokenToStorage(raw);
-  updateRunButtonState();
 }
 
 // ======= Worker errors mapping =======
@@ -1076,7 +1052,7 @@ function mapWorkerError(err){
   return e;
 }
 
-// ======= Deep output request =======
+// ======= Deep output request (FIXED) =======
 async function runProOutput(){
   hideErrorBox();
 
@@ -1096,19 +1072,25 @@ async function runProOutput(){
     return;
   }
 
-  const key = productKey();
+  const layer = uiSelectedLayer();
+  const mode  = uiSelectedMode();
+  const key   = productKey();
+
   const weakest = weakestVars(LAST_SCORES, 2);
   const pattern = LAST_PATTERN || calcPattern(LAST_SCORES);
 
   const payload = {
-    layer: CURRENT_LAYER,
-    mode: CURRENT_MODE,
+    layer,
+    mode,
     token: tok,
     language: "de",
     scores: LAST_SCORES,
     weakest,
     pattern,
-    meta: { product: key, tone: (CURRENT_MODE === "business") ? "board" : "clear" }
+    meta: {
+      product: key,
+      tone: (mode === "business") ? "board" : "clear"
+    }
   };
 
   try {
@@ -1128,6 +1110,7 @@ async function runProOutput(){
     }
 
     out.style.display = "block";
+
     if (Array.isArray(data.cards) && data.cards.length){
       out.innerHTML = buildCardsHTML(data.cards);
     } else {
@@ -1135,7 +1118,7 @@ async function runProOutput(){
       out.innerHTML = buildCardsHTML([{ title:"Ausgabe", pill:key.toUpperCase(), body: raw || "(leer)" }]);
     }
 
-    // single-use: clear after success
+    // single-use: clear token after success (per bucket)
     localStorage.removeItem(LS_TOKEN[key]);
     hydrateTokenInput();
 
@@ -1149,6 +1132,7 @@ async function runProOutput(){
     ]);
     const pdfBtn = el("pdfBtn");
     if (pdfBtn) pdfBtn.disabled = true;
+
   } finally {
     btn.textContent = "Pro-Ausgabe erzeugen";
     updateRunButtonState();
@@ -1187,9 +1171,8 @@ function exportPDF(){
     return;
   }
 
-  // Ensure latest snapshots exist
   if (!LAST_RADAR_DATAURL || !LAST_TREND_DATAURL || !LAST_ISTSOLL_DATAURL){
-    showErrorBox("Diagramm-Snapshots fehlen. Bitte einmal kurz warten, dann erneut PDF exportieren (oder Seite hard refresh).");
+    showErrorBox("Diagramm-Snapshots fehlen. Bitte kurz warten, dann erneut PDF exportieren (oder Hard Refresh).");
     return;
   }
 
@@ -1230,9 +1213,7 @@ function exportPDF(){
   .ddTimeline{ display:grid; grid-template-columns:110px 1fr; gap:10px; margin-top:10px; }
   .ddTime{ font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#374151; border:1px solid #e5e7eb; background:#f8fafc; border-radius:999px; padding:7px 10px; height:fit-content; width:fit-content; }
   .ddStep{ border:1px solid #eef2f7; border-radius:12px; padding:10px; font-size:13px; line-height:1.45; }
-  @media print{
-    body{ margin:0; }
-  }
+  @media print{ body{ margin:0; } }
 </style>
 </head>
 <body>
@@ -1311,25 +1292,22 @@ function onEvaluate() {
 
   el("results")?.classList.remove("hidden");
 
-  // Radar
   renderRadar(scores, weak);
 
-  // Bars + smalls
   renderBars(scores);
   renderWeakest(weak);
   renderTimewin(weak);
   renderMini(scores, 3);
 
-  // Ensure plot containers exist (create if missing in HTML)
-  // Trend + Ist/Soll are optional; if your index.html does not have them yet, we create below dynamically.
   ensureXYContainers();
   requestAnimationFrame(() => {
-  renderTrend(scores);
-  renderIstSoll(scores);
-});
+    renderTrend(scores);
+    renderIstSoll(scores);
+  });
 
   clearOutput();
   updateTokenUI();
+  hydrateTokenInput();
   updateRunButtonState();
 }
 
@@ -1360,36 +1338,23 @@ function onReset() {
 }
 
 // ======= Ensure XY containers exist in DOM =======
-// If your index.html already contains these divs, nothing happens.
-// If not, we inject them into the left-side panel grid.
 function ensureXYContainers(){
   const trend = el("trendPlot");
   const ist = el("istSollPlot");
   if (trend && ist) return;
 
-  // We insert into the RESULTS section after radar panel if possible.
-  // Safe strategy: find plot3d container, then build a 2nd panel block if missing.
   const plot3d = el("plot3d");
   if (!plot3d) return;
 
-  // If trend/ist already somewhere else, stop.
+  // If trend/ist already exist somewhere else, stop.
   if (el("trendPlot") || el("istSollPlot")) return;
 
-  // Try to find the grid2 layout
   const results = el("results");
   if (!results) return;
 
-  // Find the left panel container (parent of plot3d)
-  const radarPanel = plot3d.closest(".panel");
+  const radarPanel = plot3d.closest(".panel") || plot3d.parentElement;
   if (!radarPanel) return;
 
-  // Create wrappers that match your existing UI style (panel boxes)
-  // We reuse "panel" + "panelTitle" classes.
-  const grid2 = results.querySelector(".grid2");
-  if (!grid2) return;
-
-  // Create a new panel to the right of radar? No: we keep existing layout.
-  // We add two blocks below the Radar inside the same panel (clean, no index edits required).
   const wrap = document.createElement("div");
   wrap.style.marginTop = "14px";
   wrap.innerHTML = `
@@ -1413,8 +1378,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const savedLayer = localStorage.getItem(LS_LAYER);
   const savedMode = localStorage.getItem(LS_MODE);
 
-  setLayer(savedLayer === "adg" ? "adg" : "idg");                 // default IDG
-  setMode(savedMode === "business" ? "business" : "private");     // default private
+  setLayer(savedLayer === "adg" ? "adg" : "idg");
+  setMode(savedMode === "business" ? "business" : "private");
 
   updateTokenUI();
   hydrateTokenInput();
