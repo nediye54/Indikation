@@ -1,12 +1,11 @@
-// v61 — IDG/ADG Platform (SVG charts + Board PDF ready)
-// - Default: IDG + Private
-// - Pro output via Worker (token required, prefix enforced client-side; server enforces too)
-// - Charts: Radar Canvas (existing vibe) + Trend SVG + Ist→Soll SVG
-// - PDF export: inline SVG (crisp)
+// v62 — IDG/ADG Platform (stable charts + PDF embed)
+// - Radar + Trend + Ist->Soll are rendered as canvases with fixed heights (CSS)
+// - Each chart stores a PNG dataURL for PDF export
+// - Buy buttons text standardized to "Token kaufen (...)"
 
 const WORKER_BASE = "https://mdg-indikation-api.selim-87-cfe.workers.dev";
 
-// ======= CHECKOUT LINKS =======
+// ======= CHECKOUT LINKS (your Lemon Squeezy links) =======
 const CHECKOUT = {
   idg_private:  "https://mdg-indikation.lemonsqueezy.com/checkout/buy/c501c852-fa81-4410-99c9-aa3080667d5e",
   idg_business: "https://mdg-indikation.lemonsqueezy.com/checkout/buy/dc64687b-2237-44de-8d71-38eb547b0f41",
@@ -94,10 +93,10 @@ let LAST_SCORES = null;
 let LAST_PATTERN = null;
 let LAST_WEAK = null;
 
-// for PDF export assets
+// PNG snapshots for PDF
 let LAST_RADAR_DATAURL = null;
-let LAST_TREND_SVG = null;
-let LAST_ISTSOLL_SVG = null;
+let LAST_TREND_DATAURL = null;
+let LAST_ISTSOLL_DATAURL = null;
 
 // ======= Error UI =======
 function showErrorBox(msg) {
@@ -111,8 +110,11 @@ function hideErrorBox() {
   if (!box) return;
   box.classList.add("hidden");
 }
-window.addEventListener("error", () => {
-  showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
+window.addEventListener("error", (e) => {
+  try {
+    const file = (e && e.filename) ? String(e.filename) : "";
+    if (file.includes("script.js")) showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
+  } catch {}
 });
 window.addEventListener("unhandledrejection", () => {
   showErrorBox("Hinweis: Ein Script-Fehler wurde abgefangen. Bitte Seite neu laden (ggf. privater Modus).");
@@ -210,6 +212,8 @@ function timeWindowFor(value) {
   if (value <= 0.55) return "bald · 1–2 Wochen Fokus";
   return "stabil · nur Feintuning nötig";
 }
+function clamp01(x){ return Math.max(0, Math.min(1, Number(x)||0)); }
+
 function calcPattern(scores){
   const vals = Object.values(scores);
   const min = Math.min(...vals);
@@ -273,10 +277,7 @@ function renderMini(scores, maxN = 3) {
   });
 }
 
-// ======= Radar Canvas (same as before, moved to #plotRadar) =======
-let _radarResizeObserver = null;
-let _radarCanvasRef = null;
-
+// ======= Drawing helpers =======
 function roundRect(ctx, x, y, w, h, r){
   const rr = Math.min(r, w/2, h/2);
   ctx.beginPath();
@@ -287,18 +288,64 @@ function roundRect(ctx, x, y, w, h, r){
   ctx.arcTo(x, y, x+w, y, rr);
   ctx.closePath();
 }
+function textBadge(ctx, x, y, text, opt = {}){
+  const padX = opt.padX ?? 10;
+  const padY = opt.padY ?? 7;
+  const r = opt.r ?? 10;
+  const bg = opt.bg ?? "rgba(15,21,34,0.86)";
+  const stroke = opt.stroke ?? "rgba(255,255,255,0.18)";
+  const color = opt.color ?? "rgba(255,255,255,0.92)";
+  const font = opt.font ?? "700 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
 
-function renderRadar(scores, weak) {
-  const host = el("plotRadar");
-  if (!host) return;
+  ctx.save();
+  ctx.font = font;
+  const tw = ctx.measureText(text).width;
+  const w = tw + padX*2;
+  const h = 26 + padY - 7;
+  const bx = Math.round(x);
+  const by = Math.round(y);
+
+  ctx.shadowColor = "rgba(0,0,0,0.45)";
+  ctx.shadowBlur = 12;
+
+  ctx.fillStyle = bg;
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 1.2;
+  roundRect(ctx, bx, by, w, h, r);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = color;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, bx + padX, by + h/2);
+  ctx.restore();
+
+  return { w, h };
+}
+
+function getCanvasIn(host){
   host.innerHTML = "";
-
   const canvas = document.createElement("canvas");
   canvas.style.width = "100%";
   canvas.style.height = "100%";
   canvas.style.display = "block";
   host.appendChild(canvas);
-  _radarCanvasRef = canvas;
+  return canvas;
+}
+
+function snapshotCanvas(canvas){
+  try { return canvas.toDataURL("image/png"); } catch { return null; }
+}
+
+// ======= Radar =======
+let _radarResizeObserver = null;
+function renderRadar(scores, weak) {
+  const host = el("plot3d");
+  if (!host) return;
+
+  const canvas = getCanvasIn(host);
 
   const draw = () => {
     const rect = host.getBoundingClientRect();
@@ -441,6 +488,7 @@ function renderRadar(scores, weak) {
       ctx.fillStyle = arrowStroke;
       ctx.fill();
 
+      // label in top-right area, but clamped
       const label = `Schwach: ${weak.key} · ${weak.val.toFixed(2)}`;
       ctx.font = "700 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
       const m = 10;
@@ -448,12 +496,8 @@ function renderRadar(scores, weak) {
       const bw = tw + m*2;
       const bh = 30;
 
-      const gap = 30;
-      const side = 20;
-
-      let bx = tipX + (Math.cos(a) * gap) + (-Math.sin(a) * side);
-      let by = tipY + (Math.sin(a) * gap) + ( Math.cos(a) * side);
-
+      let bx = tipX + 18;
+      let by = tipY - 18 - bh;
       bx = Math.max(10, Math.min(cssW - bw - 10, bx));
       by = Math.max(10, Math.min(cssH - bh - 10, by));
 
@@ -474,11 +518,7 @@ function renderRadar(scores, weak) {
       ctx.fillText(label, bx + m, by + bh/2);
     }
 
-    try {
-      LAST_RADAR_DATAURL = canvas.toDataURL("image/png");
-    } catch {
-      LAST_RADAR_DATAURL = null;
-    }
+    LAST_RADAR_DATAURL = snapshotCanvas(canvas);
   };
 
   draw();
@@ -487,7 +527,314 @@ function renderRadar(scores, weak) {
   _radarResizeObserver.observe(host);
 }
 
-// ======= SVG helpers =======
+// ======= Indices for XY charts =======
+function stabilityIndex(scores){
+  // “Stability” tends to be fairness/truth/balance/harmony (governance + tension)
+  const s = avg([scores.Gerechtigkeit, scores.Wahrheit, scores.Balance, scores.Harmonie].map(clamp01));
+  return clamp01(s);
+}
+function performanceIndex(scores){
+  // “Performance” tends to be efficiency/agency/resources (execution capacity)
+  const p = avg([scores.Effizienz, scores.Handlungsspielraum, scores.Mittel, scores.Freiheit].map(clamp01));
+  return clamp01(p);
+}
+
+// ======= Generic XY grid chart =======
+let _trendResizeObserver = null;
+let _istsollResizeObserver = null;
+
+function renderXYGrid(hostId, build, onSnapshot){
+  const host = el(hostId);
+  if (!host) return;
+
+  const canvas = getCanvasIn(host);
+
+  const draw = () => {
+    const rect = host.getBoundingClientRect();
+    const cssW = Math.max(260, Math.floor(rect.width));
+    const cssH = Math.max(220, Math.floor(rect.height));
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+
+    canvas.width = Math.floor(cssW * dpr);
+    canvas.height = Math.floor(cssH * dpr);
+
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0,0,cssW,cssH);
+
+    // chart area
+    const padL = 44, padR = 14, padT = 18, padB = 30;
+    const x0 = padL, y0 = padT;
+    const w = cssW - padL - padR;
+    const h = cssH - padT - padB;
+
+    // background glow
+    const g = ctx.createRadialGradient(cssW*0.6, cssH*0.25, 10, cssW*0.6, cssH*0.25, cssW*0.9);
+    g.addColorStop(0, "rgba(158,240,216,0.08)");
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,cssW,cssH);
+
+    // grid
+    const grid = "rgba(255,255,255,0.12)";
+    ctx.strokeStyle = grid;
+    ctx.lineWidth = 1;
+
+    const steps = 5;
+    for (let i=0;i<=steps;i++){
+      const xx = x0 + (w * i/steps);
+      ctx.beginPath(); ctx.moveTo(xx, y0); ctx.lineTo(xx, y0+h); ctx.stroke();
+      const yy = y0 + (h * i/steps);
+      ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x0+w, yy); ctx.stroke();
+    }
+
+    const toX = (x) => x0 + clamp01(x)*w;
+    const toY = (y) => y0 + (1-clamp01(y))*h;
+
+    // axes labels
+    ctx.save();
+    ctx.fillStyle = "rgba(255,255,255,0.75)";
+    ctx.font = "600 11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText("Stability (0→1)", x0, y0+h+10);
+    ctx.translate(12, y0+h);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText("Performance (0→1)", 0, 0);
+    ctx.restore();
+
+    build({ ctx, cssW, cssH, x0, y0, w, h, toX, toY });
+
+    onSnapshot(canvas);
+  };
+
+  draw();
+  return { canvas, draw };
+}
+
+// ======= Trend chart =======
+function renderTrend(scores){
+  const base = { x: stabilityIndex(scores), y: performanceIndex(scores) };
+
+  // deterministic projections (no fluff, but visually clear)
+  const weak2 = weakestVars(scores, 2);
+  const weakness = clamp01(1 - avg(weak2.map(k => scores[k] ?? 0)));
+
+  // best-case: stability + performance rise
+  const best30 = { x: clamp01(base.x + 0.10 + 0.10*weakness), y: clamp01(base.y + 0.08 + 0.10*weakness) };
+  const best90 = { x: clamp01(best30.x + 0.07), y: clamp01(best30.y + 0.09) };
+
+  // failure-case: stability erodes and/or performance stalls
+  const fail30 = { x: clamp01(base.x - (0.05 + 0.07*weakness)), y: clamp01(base.y - (0.03 + 0.05*weakness)) };
+  const fail90 = { x: clamp01(fail30.x - 0.05), y: clamp01(fail30.y - 0.05) };
+
+  const base30 = { x: clamp01(base.x + 0.04), y: clamp01(base.y + 0.03) };
+  const base90 = { x: clamp01(base30.x + 0.04), y: clamp01(base30.y + 0.04) };
+
+  const points = {
+    Base:   [ {t:"D0",...base}, {t:"D30",...base30}, {t:"D90",...base90} ],
+    Best:   [ {t:"D0",...base}, {t:"D30",...best30}, {t:"D90",...best90} ],
+    Failure:[ {t:"D0",...base}, {t:"D30",...fail30}, {t:"D90",...fail90} ],
+  };
+
+  const { draw } = renderXYGrid("trendPlot", ({ ctx, toX, toY }) => {
+    const colors = {
+      Base: "rgba(255,255,255,0.70)",
+      Best: "rgba(158,240,216,0.90)",
+      Failure: "rgba(246,204,114,0.95)",
+    };
+
+    // legend
+    ctx.save();
+    ctx.font = "700 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+    ctx.textAlign = "left"; ctx.textBaseline = "top";
+    const lx = 16, ly = 8;
+    const items = ["Base","Best","Failure"];
+    items.forEach((k, i)=>{
+      ctx.fillStyle = colors[k];
+      ctx.fillText(k, lx, ly + i*16);
+    });
+    ctx.restore();
+
+    // series
+    for (const name of Object.keys(points)){
+      const arr = points[name];
+      const col = colors[name];
+
+      // line
+      ctx.beginPath();
+      arr.forEach((p, i)=>{
+        const x = toX(p.x), y = toY(p.y);
+        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // points + labels
+      arr.forEach((p)=>{
+        const x = toX(p.x), y = toY(p.y);
+
+        ctx.beginPath();
+        ctx.arc(x,y,4.2,0,Math.PI*2);
+        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(0,0,0,0.35)";
+        ctx.stroke();
+
+        // D0/D30/D90 label (small) with anti-overlap shift by series
+        const shift = (name === "Base") ? {dx: 8, dy: -18} : (name === "Best" ? {dx: 8, dy: -2} : {dx: -34, dy: 4});
+        textBadge(ctx, x + shift.dx, y + shift.dy, p.t, {
+          padX: 8, padY: 6, r: 10,
+          bg: "rgba(15,21,34,0.78)",
+          stroke: "rgba(255,255,255,0.14)",
+          font: "800 11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial"
+        });
+      });
+    }
+  }, (canvas)=>{
+    LAST_TREND_DATAURL = snapshotCanvas(canvas);
+  });
+
+  // optional: keep function handle if later needed
+  return { draw, points };
+}
+
+// ======= Ist->Soll chart =======
+function renderIstSoll(scores){
+  const ist = { x: stabilityIndex(scores), y: performanceIndex(scores) };
+
+  // three intervention strengths as vectors
+  const low  = { x: clamp01(ist.x + 0.06), y: clamp01(ist.y + 0.04) };
+  const med  = { x: clamp01(ist.x + 0.12), y: clamp01(ist.y + 0.08) };
+  const high = { x: clamp01(ist.x + 0.18), y: clamp01(ist.y + 0.14) };
+
+  const pts = [
+    { name:"IST",  p: ist,  key:"ist"  },
+    { name:"LOW",  p: low,  key:"low"  },
+    { name:"MED",  p: med,  key:"med"  },
+    { name:"HIGH", p: high, key:"high" },
+  ];
+
+  // label placement with simple collision-avoidance
+  function placeLabels(points, toX, toY){
+    const placed = [];
+    return points.map((d)=>{
+      const x = toX(d.p.x), y = toY(d.p.y);
+
+      // default offsets
+      let dx = 10, dy = -18;
+      if (d.key === "ist"){ dx = -28; dy = 10; }
+      if (d.key === "high"){ dx = 10; dy = -28; }
+
+      // nudge until not overlapping already-placed
+      let bx = x + dx, by = y + dy;
+      const box = (w,h)=>({x:bx,y:by,w,h});
+
+      for (let tries=0; tries<10; tries++){
+        let collide = false;
+        for (const b of placed){
+          const w = 140, h = 24;
+          const r = box(w,h);
+          const inter = !(r.x+r.w < b.x || r.x > b.x+b.w || r.y+r.h < b.y || r.y > b.y+b.h);
+          if (inter){ collide = true; break; }
+        }
+        if (!collide) break;
+        by += 18; // stack down
+        bx += (tries%2===0) ? 10 : -10;
+      }
+      // store an approximate box (good enough)
+      placed.push({x:bx,y:by,w:140,h:24});
+      return { x, y, bx, by };
+    });
+  }
+
+  const { draw } = renderXYGrid("istSollPlot", ({ ctx, toX, toY }) => {
+    const colVec = "rgba(158,240,216,0.90)";
+    const colGlow= "rgba(158,240,216,0.18)";
+    const colIst = "rgba(246,204,114,0.95)";
+
+    // draw vectors IST->LOW->MED->HIGH
+    const path = [ist, low, med, high].map(p => ({x:toX(p.x), y:toY(p.y)}));
+
+    ctx.beginPath();
+    ctx.moveTo(path[0].x, path[0].y);
+    for (let i=1;i<path.length;i++) ctx.lineTo(path[i].x, path[i].y);
+    ctx.strokeStyle = colGlow;
+    ctx.lineWidth = 10;
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(path[0].x, path[0].y);
+    for (let i=1;i<path.length;i++) ctx.lineTo(path[i].x, path[i].y);
+    ctx.strokeStyle = colVec;
+    ctx.lineWidth = 2.8;
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    // arrow head for HIGH
+    const a = Math.atan2(path[3].y - path[2].y, path[3].x - path[2].x);
+    const head = 10;
+    ctx.beginPath();
+    ctx.moveTo(path[3].x, path[3].y);
+    ctx.lineTo(path[3].x + Math.cos(a + Math.PI*0.85)*head, path[3].y + Math.sin(a + Math.PI*0.85)*head);
+    ctx.lineTo(path[3].x + Math.cos(a - Math.PI*0.85)*head, path[3].y + Math.sin(a - Math.PI*0.85)*head);
+    ctx.closePath();
+    ctx.fillStyle = colVec;
+    ctx.fill();
+
+    // points
+    pts.forEach((d)=>{
+      const x = toX(d.p.x), y = toY(d.p.y);
+      ctx.beginPath();
+      ctx.arc(x,y,4.6,0,Math.PI*2);
+      ctx.fillStyle = (d.key==="ist") ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.82)";
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.stroke();
+
+      // mark IST with a warm ring
+      if (d.key==="ist"){
+        ctx.beginPath();
+        ctx.arc(x,y,7.6,0,Math.PI*2);
+        ctx.strokeStyle = colIst;
+        ctx.lineWidth = 2.2;
+        ctx.stroke();
+      }
+    });
+
+    // labels with anti-overlap placement
+    const placed = placeLabels(pts, toX, toY);
+    placed.forEach((pos, i)=>{
+      const d = pts[i];
+      const label = `${d.name} (${d.p.x.toFixed(2)}, ${d.p.y.toFixed(2)})`;
+      const bg = (d.key==="ist") ? "rgba(246,204,114,0.18)" : "rgba(15,21,34,0.82)";
+      const stroke = (d.key==="ist") ? "rgba(246,204,114,0.70)" : "rgba(255,255,255,0.14)";
+      textBadge(ctx, pos.bx, pos.by, label, {
+        bg,
+        stroke,
+        padX: 10,
+        font: "800 11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial"
+      });
+
+      // small connector line
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      ctx.lineTo(pos.bx + 10, pos.by + 12);
+      ctx.strokeStyle = "rgba(255,255,255,0.18)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+  }, (canvas)=>{
+    LAST_ISTSOLL_DATAURL = snapshotCanvas(canvas);
+  });
+
+  return { draw, ist, low, med, high };
+}
+
+// ======= Cards render =======
 function escapeHTML(str){
   return String(str ?? "")
     .replaceAll("&", "&amp;")
@@ -496,200 +843,6 @@ function escapeHTML(str){
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-function clamp01(x){ return Math.max(0, Math.min(1, Number(x)||0)); }
-function svgEl(tag, attrs={}, children=""){
-  const a = Object.entries(attrs).map(([k,v]) => `${k}="${String(v)}"`).join(" ");
-  return `<${tag}${a ? " "+a : ""}>${children}</${tag}>`;
-}
-function line(x1,y1,x2,y2,attrs={}){
-  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(" ")} />`;
-}
-function circle(x,y,r,attrs={}){
-  return `<circle cx="${x}" cy="${y}" r="${r}" ${Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(" ")} />`;
-}
-function text(x,y,txt,attrs={}){
-  return `<text x="${x}" y="${y}" ${Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(" ")}>${escapeHTML(txt)}</text>`;
-}
-
-// ======= Trend SVG (Base/Best/Failure, D0->D30->D90) =======
-function buildTrendSeries(scores){
-  // Simple deterministic projection: stability = avg(low vars), performance = avg(high vars)
-  // (Worker output can later supply real projections; this is a stable visual.)
-  const vals = Object.values(scores).map(clamp01);
-  const mean = vals.reduce((a,b)=>a+b,0)/Math.max(1,vals.length);
-  const spread = Math.max(...vals) - Math.min(...vals);
-
-  const s0 = clamp01(mean - spread*0.10);
-  const p0 = clamp01(mean - spread*0.05);
-
-  const base = [
-    {t:"D0",  s:s0,                 p:p0},
-    {t:"D30", s:clamp01(s0+0.08),   p:clamp01(p0+0.06)},
-    {t:"D90", s:clamp01(s0+0.14),   p:clamp01(p0+0.12)},
-  ];
-  const best = base.map((pt,i)=>({
-    ...pt,
-    s: clamp01(pt.s + (i===0?0:0.06)),
-    p: clamp01(pt.p + (i===0?0:0.10)),
-  }));
-  const fail = base.map((pt,i)=>({
-    ...pt,
-    s: clamp01(pt.s - (i===0?0:0.08)),
-    p: clamp01(pt.p - (i===0?0:0.10)),
-  }));
-  return { base, best, fail };
-}
-
-function renderTrendSVG(scores){
-  const host = el("plotTrend");
-  if (!host) return;
-  const rect = host.getBoundingClientRect();
-  const W = Math.max(520, Math.floor(rect.width));
-  const H = Math.max(300, Math.floor(rect.height));
-
-  const pad = {l:58, r:18, t:18, b:44};
-  const iw = W - pad.l - pad.r;
-  const ih = H - pad.t - pad.b;
-
-  const x = (v)=> pad.l + iw*clamp01(v);              // Stability
-  const y = (v)=> pad.t + ih*(1-clamp01(v));          // Performance
-
-  const { base, best, fail } = buildTrendSeries(scores);
-
-  const bg = svgEl("rect", {x:0,y:0,width:W,height:H, rx:16, fill:"rgba(255,255,255,0.02)", stroke:"rgba(255,255,255,0.08)"});
-  const grid = [];
-  for (let i=0;i<=5;i++){
-    const gx = pad.l + iw*(i/5);
-    const gy = pad.t + ih*(i/5);
-    grid.push(line(gx, pad.t, gx, pad.t+ih, {stroke:"rgba(255,255,255,0.10)", "stroke-width":"1"}));
-    grid.push(line(pad.l, gy, pad.l+iw, gy, {stroke:"rgba(255,255,255,0.10)", "stroke-width":"1"}));
-  }
-  const axisLabels = [
-    text(pad.l, H-16, "Stability (0→1)", {fill:"rgba(255,255,255,0.70)", "font-size":"12", "font-weight":"600"}),
-    text(12, pad.t+12, "Performance (0→1)", {fill:"rgba(255,255,255,0.70)", "font-size":"12", "font-weight":"600", transform:`rotate(-90 12 ${pad.t+12})`}),
-  ];
-
-  function pathFor(arr){
-    return arr.map((pt,i)=> `${i===0?"M":"L"} ${x(pt.s).toFixed(1)} ${y(pt.p).toFixed(1)}`).join(" ");
-  }
-  function dotsFor(arr, label){
-    return arr.map((pt)=> {
-      const cx = x(pt.s), cy = y(pt.p);
-      return circle(cx,cy,4.2,{fill:"rgba(255,255,255,0.90)", stroke:"rgba(0,0,0,0.40)", "stroke-width":"1"})
-        + text(cx+8, cy-8, pt.t, {fill:"rgba(255,255,255,0.78)", "font-size":"12", "font-weight":"700"});
-    }).join("");
-  }
-
-  const legend = `
-    ${text(pad.l+6, pad.t+14, "Base",    {fill:"rgba(246,204,114,0.95)","font-size":"12","font-weight":"700"})}
-    ${text(pad.l+6, pad.t+30, "Best",    {fill:"rgba(158,240,216,0.90)","font-size":"12","font-weight":"700"})}
-    ${text(pad.l+6, pad.t+46, "Failure", {fill:"rgba(255,160,160,0.88)","font-size":"12","font-weight":"700"})}
-  `;
-
-  const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-  ${bg}
-  ${grid.join("")}
-  ${axisLabels.join("")}
-  ${legend}
-
-  <path d="${pathFor(base)}" fill="none" stroke="rgba(246,204,114,0.95)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="${pathFor(best)}" fill="none" stroke="rgba(158,240,216,0.85)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="${pathFor(fail)}" fill="none" stroke="rgba(255,160,160,0.80)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-
-  ${dotsFor(base)}
-</svg>`.trim();
-
-  host.innerHTML = svg;
-  LAST_TREND_SVG = svg;
-}
-
-// ======= IST→SOLL SVG (LOW/MED/HIGH) =======
-function buildIstSoll(scores){
-  const vals = Object.values(scores).map(clamp01);
-  const mean = vals.reduce((a,b)=>a+b,0)/Math.max(1,vals.length);
-  const min = Math.min(...vals);
-  const spread = Math.max(...vals) - min;
-
-  // IST: stability ~ mean, performance ~ mean - weakness penalty
-  const ist = { s: clamp01(mean), p: clamp01(mean - spread*0.18) };
-
-  // Targets depend on weakest severity
-  const low  = { s: clamp01(ist.s + 0.10), p: clamp01(ist.p + 0.08) };
-  const med  = { s: clamp01(ist.s + 0.16), p: clamp01(ist.p + 0.14) };
-  const high = { s: clamp01(ist.s + 0.22), p: clamp01(ist.p + 0.22) };
-
-  return { ist, low, med, high };
-}
-
-function renderIstSollSVG(scores){
-  const host = el("plotIstSoll");
-  if (!host) return;
-
-  const rect = host.getBoundingClientRect();
-  const W = Math.max(520, Math.floor(rect.width));
-  const H = Math.max(300, Math.floor(rect.height));
-
-  const pad = {l:58, r:18, t:18, b:44};
-  const iw = W - pad.l - pad.r;
-  const ih = H - pad.t - pad.b;
-
-  const x = (v)=> pad.l + iw*clamp01(v);     // Stability
-  const y = (v)=> pad.t + ih*(1-clamp01(v)); // Performance
-
-  const { ist, low, med, high } = buildIstSoll(scores);
-
-  const bg = svgEl("rect", {x:0,y:0,width:W,height:H, rx:16, fill:"rgba(255,255,255,0.02)", stroke:"rgba(255,255,255,0.08)"});
-  const grid = [];
-  for (let i=0;i<=5;i++){
-    const gx = pad.l + iw*(i/5);
-    const gy = pad.t + ih*(i/5);
-    grid.push(line(gx, pad.t, gx, pad.t+ih, {stroke:"rgba(255,255,255,0.10)", "stroke-width":"1"}));
-    grid.push(line(pad.l, gy, pad.l+iw, gy, {stroke:"rgba(255,255,255,0.10)", "stroke-width":"1"}));
-  }
-
-  const axisLabels = [
-    text(pad.l, H-16, "Stability (0→1)", {fill:"rgba(255,255,255,0.70)", "font-size":"12", "font-weight":"600"}),
-    text(12, pad.t+12, "Performance (0→1)", {fill:"rgba(255,255,255,0.70)", "font-size":"12", "font-weight":"600", transform:`rotate(-90 12 ${pad.t+12})`}),
-  ];
-
-  function vec(to, stroke){
-    return `
-      <path d="M ${x(ist.s)} ${y(ist.p)} L ${x(to.s)} ${y(to.p)}"
-        fill="none" stroke="${stroke}" stroke-width="3" stroke-linecap="round"/>
-      ${circle(x(to.s), y(to.p), 4.6, {fill:"rgba(255,255,255,0.92)", stroke:"rgba(0,0,0,0.40)", "stroke-width":"1"})}
-    `;
-  }
-
-  // label placement: offset so it never sits on top of each other
-  function labelAt(pt, name, dx, dy){
-    return text(x(pt.s)+dx, y(pt.p)+dy, `${name} (${pt.s.toFixed(2)}, ${pt.p.toFixed(2)})`,
-      {fill:"rgba(255,255,255,0.88)","font-size":"12","font-weight":"800"});
-  }
-
-  const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-  ${bg}
-  ${grid.join("")}
-  ${axisLabels.join("")}
-
-  ${circle(x(ist.s), y(ist.p), 5.2, {fill:"rgba(246,204,114,0.95)", stroke:"rgba(0,0,0,0.35)", "stroke-width":"1"})}
-  ${text(x(ist.s)+10, y(ist.p)+14, `IST (${ist.s.toFixed(2)}, ${ist.p.toFixed(2)})`, {fill:"rgba(246,204,114,0.95)","font-size":"12","font-weight":"900"})}
-
-  ${vec(low,  "rgba(158,240,216,0.60)")}
-  ${vec(med,  "rgba(158,240,216,0.78)")}
-  ${vec(high, "rgba(158,240,216,0.92)")}
-
-  ${labelAt(low,  "LOW",  10,  12)}
-  ${labelAt(med,  "MED",  10,  -8)}
-  ${labelAt(high, "HIGH", 10,  12)}
-</svg>`.trim();
-
-  host.innerHTML = svg;
-  LAST_ISTSOLL_SVG = svg;
-}
-
-// ======= Cards render =======
 function buildCardsHTML(cards){
   const html = [`<div class="ddCards">`];
   for (const c of cards){
@@ -733,7 +886,9 @@ function productKey(){
   if (CURRENT_LAYER === "adg" && CURRENT_MODE === "private") return "adg_private";
   return "adg_business";
 }
-function requiredPrefix(){ return TOKEN_PREFIX[productKey()] || "TOKEN-"; }
+function requiredPrefix(){
+  return TOKEN_PREFIX[productKey()] || "TOKEN-";
+}
 function getToken(){
   const key = productKey();
   const input = el("tokenInput");
@@ -778,6 +933,7 @@ function setLayer(layer){
   updateRunButtonState();
   clearOutput();
 }
+
 function setMode(mode){
   CURRENT_MODE = (mode === "business") ? "business" : "private";
   localStorage.setItem(LS_MODE, CURRENT_MODE);
@@ -803,6 +959,7 @@ function setMode(mode){
   updateRunButtonState();
   clearOutput();
 }
+
 function hydrateTokenInput(){
   const input = el("tokenInput");
   if (!input) return;
@@ -811,6 +968,7 @@ function hydrateTokenInput(){
   input.value = stored;
   input.placeholder = `${requiredPrefix()}XXXX-XXXX-XXXX`;
 }
+
 function updateTokenUI(){
   const key = productKey();
 
@@ -839,12 +997,19 @@ function updateTokenUI(){
   if (buyADGP) buyADGP.href = CHECKOUT.adg_private;
   if (buyADGB) buyADGB.href = CHECKOUT.adg_business;
 
+  // button text: Token kaufen
+  if (buyIDGP) buyIDGP.textContent = "Token kaufen (19,99€)";
+  if (buyIDGB) buyIDGB.textContent = "Token kaufen (299,99€)";
+  if (buyADGP) buyADGP.textContent = "Token kaufen (49,99€)";
+  if (buyADGB) buyADGB.textContent = "Token kaufen (1.199,99€)";
+
   const show = (node, on) => { if (node) node.style.display = on ? "inline-flex" : "none"; };
   show(buyIDGP, key === "idg_private");
   show(buyIDGB, key === "idg_business");
   show(buyADGP, key === "adg_private");
   show(buyADGB, key === "adg_business");
 }
+
 function updateRunButtonState(){
   const btn = el("runBtn");
   if (!btn) return;
@@ -852,6 +1017,7 @@ function updateRunButtonState(){
   const ok = tokenLooksValidForSelection(tok);
   btn.disabled = !LAST_SCORES || !ok;
 }
+
 function clearOutput(){
   const out = el("deepOut");
   if (out){
@@ -861,6 +1027,7 @@ function clearOutput(){
   const pdfBtn = el("pdfBtn");
   if (pdfBtn) pdfBtn.disabled = true;
 }
+
 function applyToken(){
   const input = el("tokenInput");
   const raw = (input?.value || "").trim();
@@ -874,8 +1041,9 @@ function mapWorkerError(err){
   const e = String(err || "");
   if (e.includes("TOKEN_REQUIRED")) return "Token erforderlich.";
   if (e.includes("TOKEN_INVALID")) return "Token ungültig.";
-  if (e.includes("TOKEN_EXHAUSTED")) return "Token ist aufgebraucht (1x nutzbar).";
-  if (e.includes("TOKEN_WRONG_TYPE")) return "Falscher Token-Typ (Prefix passt nicht zum Produkt).";
+  if (e.includes("TOKEN_EXHAUSTED")) return "Token ist aufgebraucht.";
+  if (e.includes("TOKEN_WRONG_TYPE")) return "Falscher Token-Typ für diese Ausgabe.";
+  if (e.includes("RATE_LIMIT")) return "Limit erreicht. Bitte später erneut versuchen.";
   return e;
 }
 
@@ -934,11 +1102,11 @@ async function runProOutput(){
     if (Array.isArray(data.cards) && data.cards.length){
       out.innerHTML = buildCardsHTML(data.cards);
     } else {
-      const raw = String(data.text || "").trim();
+      const raw = String(data.text || data.output || data.result || "").trim();
       out.innerHTML = buildCardsHTML([{ title:"Ausgabe", pill:key.toUpperCase(), body: raw || "(leer)" }]);
     }
 
-    // single-use: remove stored token after success
+    // single-use: clear after success
     localStorage.removeItem(LS_TOKEN[key]);
     hydrateTokenInput();
 
@@ -948,7 +1116,7 @@ async function runProOutput(){
   } catch (e) {
     out.style.display = "block";
     out.innerHTML = buildCardsHTML([
-      { title:"Fehler", pill:"Request", body: mapWorkerError(String(e.message || e)), small:"Token/Typ prüfen und erneut versuchen." }
+      { title:"Fehler", pill:"Request", body: mapWorkerError(String(e.message || e)), small:"Bitte Token/Typ prüfen und erneut versuchen." }
     ]);
     const pdfBtn = el("pdfBtn");
     if (pdfBtn) pdfBtn.disabled = true;
@@ -958,7 +1126,25 @@ async function runProOutput(){
   }
 }
 
-// ======= PDF Export (inline SVG for crispness) =======
+// ======= PDF Export =======
+function barsAsTableHTML(scores){
+  const rows = VARS.map(v => {
+    const val = Number(scores?.[v] ?? 0);
+    return `<tr><td>${escapeHTML(v)}</td><td style="text-align:right">${val.toFixed(2)}</td></tr>`;
+  }).join("");
+  return `
+    <table style="width:100%;border-collapse:collapse;margin-top:10px">
+      <thead>
+        <tr>
+          <th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:8px 0">Variable</th>
+          <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:8px 0">Score</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
 function exportPDF(){
   hideErrorBox();
 
@@ -972,27 +1158,20 @@ function exportPDF(){
     return;
   }
 
+  // Ensure latest snapshots exist
+  if (!LAST_RADAR_DATAURL || !LAST_TREND_DATAURL || !LAST_ISTSOLL_DATAURL){
+    showErrorBox("Diagramm-Snapshots fehlen. Bitte einmal kurz warten, dann erneut PDF exportieren (oder Seite hard refresh).");
+    return;
+  }
+
   const key = productKey();
   const title = `Indikation & Architektur des Gleichgewichts — ${key.replace("_"," ").toUpperCase()}`;
   const weakTxt = `${LAST_WEAK.key} (${LAST_WEAK.val.toFixed(2)})`;
   const timeTxt = timeWindowFor(LAST_WEAK.val);
 
-  const radarImg = LAST_RADAR_DATAURL
-    ? `<img src="${LAST_RADAR_DATAURL}" alt="Radar" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`
-    : `<div style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;color:#6b7280">Radar konnte nicht eingebettet werden.</div>`;
-
-  const trendSvg = LAST_TREND_SVG
-    ? `<div style="border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">${LAST_TREND_SVG}</div>`
-    : `<div style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;color:#6b7280">Trend fehlt.</div>`;
-
-  const istSollSvg = LAST_ISTSOLL_SVG
-    ? `<div style="border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">${LAST_ISTSOLL_SVG}</div>`
-    : `<div style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;color:#6b7280">Ist→Soll fehlt.</div>`;
-
-  const rows = VARS.map(v => {
-    const val = Number(LAST_SCORES?.[v] ?? 0);
-    return `<tr><td>${escapeHTML(v)}</td><td style="text-align:right">${val.toFixed(2)}</td></tr>`;
-  }).join("");
+  const radarImg = `<img src="${LAST_RADAR_DATAURL}" alt="Radar" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`;
+  const trendImg = `<img src="${LAST_TREND_DATAURL}" alt="Trend" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`;
+  const istSollImg = `<img src="${LAST_ISTSOLL_DATAURL}" alt="Ist-Soll" style="width:100%;max-width:720px;border:1px solid #e5e7eb;border-radius:12px" />`;
 
   const html = `
 <!doctype html>
@@ -1005,7 +1184,7 @@ function exportPDF(){
   body{ font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:#0b0f17; margin:24px; }
   h1{ margin:0 0 6px; font-size:22px; }
   .muted{ color:#4b5563; font-size:12px; }
-  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:start; margin-top:14px; }
+  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:18px; align-items:start; margin-top:14px; }
   .card{ border:1px solid #e5e7eb; border-radius:14px; padding:14px; }
   .pill{ display:inline-block; padding:6px 10px; border:1px solid #e5e7eb; border-radius:999px; background:#f8fafc; font-size:12px; }
   .secTitle{ font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#374151; margin:0 0 8px; }
@@ -1022,8 +1201,9 @@ function exportPDF(){
   .ddTimeline{ display:grid; grid-template-columns:110px 1fr; gap:10px; margin-top:10px; }
   .ddTime{ font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#374151; border:1px solid #e5e7eb; background:#f8fafc; border-radius:999px; padding:7px 10px; height:fit-content; width:fit-content; }
   .ddStep{ border:1px solid #eef2f7; border-radius:12px; padding:10px; font-size:13px; line-height:1.45; }
-  svg{ width:100%; height:320px; display:block; }
-  @media print{ body{ margin:0; } }
+  @media print{
+    body{ margin:0; }
+  }
 </style>
 </head>
 <body>
@@ -1038,28 +1218,18 @@ function exportPDF(){
     </div>
     <div class="card">
       <div class="secTitle">Scores</div>
-      <table style="width:100%;border-collapse:collapse;margin-top:10px">
-        <thead>
-          <tr>
-            <th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:8px 0">Variable</th>
-            <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:8px 0">Score</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
+      ${barsAsTableHTML(LAST_SCORES)}
     </div>
   </div>
 
-  <div class="divider"></div>
-
-  <div class="grid">
+  <div class="grid" style="margin-top:18px">
     <div class="card">
-      <div class="secTitle">Trend</div>
-      ${trendSvg}
+      <div class="secTitle">Trend · Base / Best / Failure (D0 → D30 → D90)</div>
+      ${trendImg}
     </div>
     <div class="card">
-      <div class="secTitle">Ist → Soll</div>
-      ${istSollSvg}
+      <div class="secTitle">Ist → Soll · Maßnahmen-Vektoren (LOW / MED / HIGH)</div>
+      ${istSollImg}
     </div>
   </div>
 
@@ -1084,12 +1254,15 @@ function exportPDF(){
   w.document.open();
   w.document.write(html);
   w.document.close();
+
   w.focus();
-  setTimeout(() => { try { w.print(); } catch {} }, 350);
+  setTimeout(() => {
+    try { w.print(); } catch {}
+  }, 350);
 }
 
 // ======= Evaluate / Reset =======
-async function onEvaluate() {
+function onEvaluate() {
   hideErrorBox();
 
   const collected = collectAnswersByVar();
@@ -1109,14 +1282,20 @@ async function onEvaluate() {
 
   el("results")?.classList.remove("hidden");
 
+  // Radar
   renderRadar(scores, weak);
-  renderTrendSVG(scores);
-  renderIstSollSVG(scores);
 
+  // Bars + smalls
   renderBars(scores);
   renderWeakest(weak);
   renderTimewin(weak);
   renderMini(scores, 3);
+
+  // Ensure plot containers exist (create if missing in HTML)
+  // Trend + Ist/Soll are optional; if your index.html does not have them yet, we create below dynamically.
+  ensureXYContainers();
+  renderTrend(scores);
+  renderIstSoll(scores);
 
   clearOutput();
   updateTokenUI();
@@ -1128,22 +1307,72 @@ function onReset() {
   document.querySelectorAll('input[type="radio"]').forEach(i => i.checked = false);
 
   el("results")?.classList.add("hidden");
-
-  ["plotRadar","plotTrend","plotIstSoll","bars","weakest","timewin","deepMini"].forEach(id=>{
-    const node = el(id);
-    if (node) node.innerHTML = "";
-  });
+  el("plot3d") && (el("plot3d").innerHTML = "");
+  el("bars") && (el("bars").innerHTML = "");
+  el("weakest") && (el("weakest").innerHTML = "");
+  el("timewin") && (el("timewin").innerHTML = "");
+  el("deepMini") && (el("deepMini").innerHTML = "");
+  el("trendPlot") && (el("trendPlot").innerHTML = "");
+  el("istSollPlot") && (el("istSollPlot").innerHTML = "");
 
   clearOutput();
 
   LAST_SCORES = null;
   LAST_PATTERN = null;
   LAST_WEAK = null;
+
   LAST_RADAR_DATAURL = null;
-  LAST_TREND_SVG = null;
-  LAST_ISTSOLL_SVG = null;
+  LAST_TREND_DATAURL = null;
+  LAST_ISTSOLL_DATAURL = null;
 
   updateRunButtonState();
+}
+
+// ======= Ensure XY containers exist in DOM =======
+// If your index.html already contains these divs, nothing happens.
+// If not, we inject them into the left-side panel grid.
+function ensureXYContainers(){
+  const trend = el("trendPlot");
+  const ist = el("istSollPlot");
+  if (trend && ist) return;
+
+  // We insert into the RESULTS section after radar panel if possible.
+  // Safe strategy: find plot3d container, then build a 2nd panel block if missing.
+  const plot3d = el("plot3d");
+  if (!plot3d) return;
+
+  // If trend/ist already somewhere else, stop.
+  if (el("trendPlot") || el("istSollPlot")) return;
+
+  // Try to find the grid2 layout
+  const results = el("results");
+  if (!results) return;
+
+  // Find the left panel container (parent of plot3d)
+  const radarPanel = plot3d.closest(".panel");
+  if (!radarPanel) return;
+
+  // Create wrappers that match your existing UI style (panel boxes)
+  // We reuse "panel" + "panelTitle" classes.
+  const grid2 = results.querySelector(".grid2");
+  if (!grid2) return;
+
+  // Create a new panel to the right of radar? No: we keep existing layout.
+  // We add two blocks below the Radar inside the same panel (clean, no index edits required).
+  const wrap = document.createElement("div");
+  wrap.style.marginTop = "14px";
+  wrap.innerHTML = `
+    <div class="divider"></div>
+    <h3 class="panelTitle">Trend</h3>
+    <div id="trendPlot" class="plotXY" aria-label="Trend Chart"></div>
+    <div class="plotHint">Achsen: Stability (0→1) · Performance (0→1)</div>
+
+    <div class="divider"></div>
+    <h3 class="panelTitle">Ist → Soll</h3>
+    <div id="istSollPlot" class="plotXY" aria-label="Ist-Soll Chart"></div>
+    <div class="plotHint">Ist→Soll: Maßnahmen-Vektoren (LOW/MED/HIGH)</div>
+  `;
+  radarPanel.appendChild(wrap);
 }
 
 // ======= Boot =======
@@ -1153,8 +1382,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const savedLayer = localStorage.getItem(LS_LAYER);
   const savedMode = localStorage.getItem(LS_MODE);
 
-  setLayer(savedLayer === "adg" ? "adg" : "idg");
-  setMode(savedMode === "business" ? "business" : "private");
+  setLayer(savedLayer === "adg" ? "adg" : "idg");                 // default IDG
+  setMode(savedMode === "business" ? "business" : "private");     // default private
 
   updateTokenUI();
   hydrateTokenInput();
