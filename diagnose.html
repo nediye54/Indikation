@@ -267,6 +267,7 @@
 
     const wantsBusiness = (modeParam === "business") || (storedMode === "business");
     const mode = (wantsBusiness && businessOk) ? "business" : "private";
+    const businessToken = sessionStorage.getItem("mdg_business_token") || " ";
 
     $("#modeBadge").textContent = mode === "business" ? "Business" : "Private";
     if (mode === "business") $("#tokenBadge").style.display = "";
