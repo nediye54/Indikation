@@ -63,6 +63,16 @@
             5 Module, 7 Typen, IDG/ADG-Pfad. Antworten werden lokal gespeichert (Browser).
           </p>
         </div>
+        
+        function getClientId() {
+          const key = "mdg_client_id";
+          let id = localStorage.getItem(key);
+          if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem(key, id);
+      }
+        return id;
+      }
 
         <!-- Top controls -->
         <div class="dx-top">
@@ -1088,6 +1098,10 @@
           role: $("#M_role").value,
           ts: new Date().toISOString()
         }};
+      }
+      meta: {
+        ...,
+        client_id: getClientId(),
       }
 
       // ---- Server save (anonymous) ----
