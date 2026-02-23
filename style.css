@@ -1,426 +1,496 @@
-// script.js — MDG V4 (Drop 4B)
-// Shared: burger/drawer, i18n, mode routing, business token modal.
-// Keep this file used by index.html + diagnose.html + verlauf.html.
+/* =========================================================
+   MDG V4 – Premium Dark UI
+   Clean, High-Contrast, Consulting Grade
+   ========================================================= */
 
-(() => {
-  "use strict";
+:root{
+  --bg-0:#05070c;
+  --bg-1:#0b111a;
+  --bg-2:#0f1622;
 
-  // If you already use api.mdg-indikation.de, keep it consistent:
-  const API_BASE = "https://api.mdg-indikation.de";
+  --card:rgba(255,255,255,.06);
+  --card-strong:rgba(255,255,255,.09);
+  --stroke:rgba(255,255,255,.12);
 
-  const $ = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  --text:#eaf0ff;
+  --muted:rgba(234,240,255,.72);
+  --muted-2:rgba(234,240,255,.55);
 
-  // -------- Storage keys --------
-  const K_LANG = "mdg_lang";
-  const K_MODE = "mdg_mode";       // "private" | "business"
-  const K_TOKEN = "mdg_token";     // business token
+  --primary:#6ee7b7;
+  --primary-2:#60a5fa;
 
-  // -------- i18n dictionary (Landing keys) --------
-  // Diagnose page has its own dict in diagnose.html later (Drop 5).
-  const I18N = {
-    de: {
-      "nav.how":"Wie es funktioniert",
-      "nav.why":"Warum MDG",
-      "nav.faq":"FAQ",
+  --danger:#f87171;
+  --warning:#fbbf24;
 
-      "hero.pill1":"In wenigen Minuten zur Entscheidungssicherheit",
-      "hero.pill2":"IDG · ADG · MDG",
-      "hero.h1":"Instabilität früh erkennen. Ursache präzise diagnostizieren. Architektur bauen – bevor es bricht.",
-      "hero.lead":"MDG, IDG und ADG geben dir ein strukturelles Instrumentarium, um Spannungen sichtbar zu machen und tragfähige Entscheidungen zu treffen – privat oder im Unternehmen.",
-      "hero.note":"Privat: sofort starten. Business: Token erforderlich (eigene Fragen & Output für Entscheider).",
+  --radius:18px;
+  --radius-sm:12px;
+  --max:1180px;
+}
 
-      "cta.private":"Jetzt ermitteln (privat)",
-      "cta.business":"Für Unternehmen (Token)",
+/* =========================================================
+   Reset
+   ========================================================= */
 
-      "hero.panelTitle":"So läuft es ab",
-      "hero.step1k":"1 Satz Kontext",
-      "hero.step1t":"Worum geht es?",
-      "hero.step2k":"Ziel wählen",
-      "hero.step2t":"Stabilisieren oder Umbauen?",
-      "hero.step3k":"Quick Scan",
-      "hero.step3t":"Ebenenanalyse + Frühindikatoren",
-      "hero.step4k":"Ergebnis",
-      "hero.step4t":"Radar, Spannungen, klare Schritte",
-      "hero.step5k":"Deep Dive",
-      "hero.step5t":"Executive Report (Premium)",
-      "hero.m1k":"Dauer",
-      "hero.m1v":"3–10 Min",
-      "hero.m2k":"Output",
-      "hero.m2v":"Entscheidungspfad + Maßnahmen",
+*,
+*::before,
+*::after{ box-sizing:border-box; }
 
-      "how.h2":"Wie es funktioniert",
-      "how.sub":"Du beschreibst dein Thema in einem Satz – wir führen dich dann streng und präzise zur Diagnose.",
-      "how.c1t":"1) Kontext",
-      "how.c1p":"Ein Satz, keine Story. Wir brauchen die Struktur, nicht die Details.",
-      "how.c1ex":"Beispiel: „Wir liefern zu spät und streiten ständig über Prioritäten.“",
-      "how.c2t":"2) Ziel",
-      "how.c2p":"Stabilisieren = Belastung reduzieren & Kontrolle zurückholen. Umbauen = Architektur neu bauen.",
-      "how.c2ex":"Beispiel: Stabilisieren zuerst, dann Umbau planen.",
-      "how.c3t":"3) Ergebnis",
-      "how.c3p":"Radar & Spannungen zeigen Primärinstabilität – plus konkrete nächste Schritte.",
-      "how.c3ex":"Beispiel: „Entscheidungsmonopol“ + „Lastasymmetrie“ → IDG → ADG.",
+html,body{
+  margin:0;
+  padding:0;
+  background:radial-gradient(circle at 20% 0%, #0c1422 0%, var(--bg-0) 60%);
+  color:var(--text);
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
 
-      "why.h2":"Warum MDG",
-      "why.sub":"Die meisten Systeme brechen nicht an „zu wenig Stärke“, sondern an falscher Lastverteilung und schlechter Entscheidungsarchitektur.",
-      "why.a1t":"Struktur statt Bauchgefühl",
-      "why.a1p":"Du bekommst ein klares Modell, das Spannung, Engpässe und Verstärkung sichtbar macht.",
-      "why.a2t":"Entscheidungssicherheit",
-      "why.a2p":"Nicht nur Diagnose – sondern ein Pfad: Stabilisieren (IDG) oder Umbauen (ADG) mit konkreten Moves.",
+img{ max-width:100%; display:block; }
 
-      "faq.h2":"FAQ",
-      "faq.sub":"Kurz & klar.",
-      "faq.q1":"Was ist der Unterschied zwischen Privat und Business?",
-      "faq.a1":"Business nutzt eigene Fragen (Führung, Verantwortung, Risiko, Skalierung) und liefert Executive Output.",
-      "faq.q2":"Muss ich viele Fragen beantworten?",
-      "faq.a2":"So viele wie nötig für Präzision. Du kannst jederzeit abbrechen und später fortsetzen.",
-      "faq.q3":"Wird etwas gespeichert?",
-      "faq.a3":"Standard: lokal im Browser. Business kann optional anonym Server-Saves nutzen (wenn aktiviert).",
+a{
+  color:var(--primary);
+  text-decoration:none;
+}
+a:hover{ opacity:.8; }
 
-      "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau.",
-      "footer.gotoDx":"Zur Diagnose",
+button{
+  font-family:inherit;
+  cursor:pointer;
+}
 
-      "token.pill":"Business Zugang",
-      "token.h3":"Token eingeben",
-      "token.p":"Unternehmen erhalten ein eigenes Fragen-Set und Executive Output. Bitte Token eingeben.",
-      "token.label":"Token",
-      "token.submit":"Weiter",
-      "token.cancel":"Abbrechen",
-      "token.ok":"Token akzeptiert. Starte …",
-      "token.bad":"Token ungültig. Bitte prüfen.",
-      "token.err":"Fehler beim Prüfen. Bitte erneut versuchen.",
-      "token.need":"Bitte Token eingeben."
-    },
+/* =========================================================
+   Layout
+   ========================================================= */
 
-    tr: {
-      "nav.how":"Nasıl çalışır",
-      "nav.why":"Neden MDG",
-      "nav.faq":"SSS",
+.container{
+  width:100%;
+  max-width:var(--max);
+  margin:0 auto;
+  padding:0 20px;
+}
 
-      "hero.pill1":"Dakikalar içinde karar netliği",
-      "hero.pill2":"IDG · ADG · MDG",
-      "hero.h1":"İstikrarsızlığı erken gör. Nedeni kesin teşhis et. Kırılmadan önce mimari kur.",
-      "hero.lead":"MDG, IDG ve ADG; gerilimleri görünür kılan ve sağlam kararlar almanı sağlayan yapısal bir araç setidir — özel hayat veya iş için.",
-      "hero.note":"Özel: hemen başla. Kurumsal: Token gerekir (yöneticiler için ayrı sorular ve çıktı).",
+.section{
+  padding:90px 0;
+}
 
-      "cta.private":"Şimdi analiz et (özel)",
-      "cta.business":"Şirketler için (Token)",
+.section--hero{
+  padding-top:120px;
+  padding-bottom:110px;
+}
 
-      "hero.panelTitle":"Akış",
-      "hero.step1k":"1 cümle bağlam",
-      "hero.step1t":"Konu nedir?",
-      "hero.step2k":"Hedef",
-      "hero.step2t":"Stabilize mi, yeniden kurulum mu?",
-      "hero.step3k":"Hızlı tarama",
-      "hero.step3t":"Katman analizi + erken göstergeler",
-      "hero.step4k":"Sonuç",
-      "hero.step4t":"Radar, gerilimler, net adımlar",
-      "hero.step5k":"Derin analiz",
-      "hero.step5t":"Executive Report (Premium)",
-      "hero.m1k":"Süre",
-      "hero.m1v":"3–10 dk",
-      "hero.m2k":"Çıktı",
-      "hero.m2v":"Karar yolu + aksiyonlar",
+.section__head{
+  margin-bottom:50px;
+  text-align:center;
+}
 
-      "how.h2":"Nasıl çalışır",
-      "how.sub":"Konuyu bir cümleyle yaz — sonra seni sıkı ve net bir teşhise götürüyoruz.",
-      "how.c1t":"1) Bağlam",
-      "how.c1p":"Bir cümle, hikâye değil. Detay değil yapı gerekir.",
-      "how.c1ex":"Örnek: “Geç teslim ediyoruz ve önceliklerde sürekli tartışıyoruz.”",
-      "how.c2t":"2) Hedef",
-      "how.c2p":"Stabilize = yükü azalt & kontrolü geri al. Yeniden kurulum = mimariyi yeniden tasarla.",
-      "how.c2ex":"Örnek: önce stabilize, sonra yeniden kurulum planı.",
-      "how.c3t":"3) Sonuç",
-      "how.c3p":"Radar ve gerilimler birincil instabiliteyi gösterir — ayrıca net sonraki adımlar verir.",
-      "how.c3ex":"Örnek: “Karar tekeli” + “Yük asimetrisi” → IDG → ADG.",
+.grid-2{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:28px;
+}
 
-      "why.h2":"Neden MDG",
-      "why.sub":"Çoğu sistem “güç eksikliği” yüzünden değil, yanlış yük dağılımı ve zayıf karar mimarisi yüzünden kırılır.",
-      "why.a1t":"İçgüdü değil yapı",
-      "why.a1p":"Gerilimleri, darboğazları ve büyüme etkisini görünür kılan net bir model.",
-      "why.a2t":"Karar netliği",
-      "why.a2p":"Sadece teşhis değil — yol: Stabilize (IDG) veya Yeniden Kur (ADG) + net aksiyonlar.",
+.grid-3{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:28px;
+}
 
-      "faq.h2":"SSS",
-      "faq.sub":"Kısa ve net.",
-      "faq.q1":"Özel ve Kurumsal arasındaki fark nedir?",
-      "faq.a1":"Kurumsal sürüm; liderlik, sorumluluk, risk, ölçekleme gibi ayrı sorular ve executive çıktı verir.",
-      "faq.q2":"Çok soru yanıtlamam gerekir mi?",
-      "faq.a2":"Kesinlik için gerektiği kadar. İstediğinde durdurup sonra devam edebilirsin.",
-      "faq.q3":"Veri kaydediliyor mu?",
-      "faq.a3":"Varsayılan: tarayıcıda yerel. Kurumsal sürüm opsiyonel anonim sunucu kaydı kullanabilir.",
+/* =========================================================
+   Typography
+   ========================================================= */
 
-      "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
-      "footer.gotoDx":"Teşhise git",
+.h1{
+  font-size:clamp(2rem,4vw,3rem);
+  line-height:1.15;
+  font-weight:800;
+  margin:18px 0;
+}
 
-      "token.pill":"Kurumsal erişim",
-      "token.h3":"Token gir",
-      "token.p":"Şirketler için ayrı soru seti ve executive çıktı. Lütfen token girin.",
-      "token.label":"Token",
-      "token.submit":"Devam",
-      "token.cancel":"İptal",
-      "token.ok":"Token kabul edildi. Başlatılıyor …",
-      "token.bad":"Token geçersiz. Lütfen kontrol edin.",
-      "token.err":"Kontrol hatası. Lütfen tekrar deneyin.",
-      "token.need":"Lütfen token girin."
-    },
+.h2{
+  font-size:clamp(1.6rem,3vw,2.2rem);
+  font-weight:800;
+}
 
-    en: {
-      "nav.how":"How it works",
-      "nav.why":"Why MDG",
-      "nav.faq":"FAQ",
+.h3{
+  font-size:1.1rem;
+  font-weight:700;
+}
 
-      "hero.pill1":"Decision confidence in minutes",
-      "hero.pill2":"IDG · ADG · MDG",
-      "hero.h1":"Detect instability early. Diagnose the cause precisely. Build architecture — before it breaks.",
-      "hero.lead":"MDG, IDG and ADG provide a structural toolkit to make tensions visible and enable durable decisions — for personal life or business.",
-      "hero.note":"Private: start instantly. Business: token required (separate questions & executive output).",
+.lead{
+  font-size:1.05rem;
+  color:var(--muted);
+  max-width:640px;
+}
 
-      "cta.private":"Assess now (private)",
-      "cta.business":"For business (token)",
+.p{ color:var(--muted); line-height:1.6; }
 
-      "hero.panelTitle":"The flow",
-      "hero.step1k":"One-sentence context",
-      "hero.step1t":"What is this about?",
-      "hero.step2k":"Choose intent",
-      "hero.step2t":"Stabilize or redesign?",
-      "hero.step3k":"Quick scan",
-      "hero.step3t":"Layer analysis + early indicators",
-      "hero.step4k":"Result",
-      "hero.step4t":"Radar, tensions, clear steps",
-      "hero.step5k":"Deep dive",
-      "hero.step5t":"Executive Report (Premium)",
-      "hero.m1k":"Time",
-      "hero.m1v":"3–10 min",
-      "hero.m2k":"Output",
-      "hero.m2v":"Decision path + actions",
+.micro{
+  font-size:.85rem;
+  color:var(--muted-2);
+}
 
-      "how.h2":"How it works",
-      "how.sub":"Describe your case in one sentence — we then guide you strictly to a precise diagnosis.",
-      "how.c1t":"1) Context",
-      "how.c1p":"One sentence, no story. We need structure, not details.",
-      "how.c1ex":"Example: “We deliver late and keep fighting about priorities.”",
-      "how.c2t":"2) Intent",
-      "how.c2p":"Stabilize = reduce load & regain control. Redesign = rebuild the architecture.",
-      "how.c2ex":"Example: stabilize first, then plan redesign.",
-      "how.c3t":"3) Result",
-      "how.c3p":"Radar & tensions reveal the primary instability — plus concrete next steps.",
-      "how.c3ex":"Example: “Decision monopoly” + “load asymmetry” → IDG → ADG.",
+.ol{
+  margin:0;
+  padding-left:18px;
+}
 
-      "why.h2":"Why MDG",
-      "why.sub":"Most systems don’t break from “lack of strength”, but from wrong load distribution and weak decision architecture.",
-      "why.a1t":"Structure over gut-feel",
-      "why.a1p":"A clear model that makes tensions, bottlenecks and amplification visible.",
-      "why.a2t":"Decision confidence",
-      "why.a2p":"Not only diagnosis — a path: stabilize (IDG) or redesign (ADG) with concrete moves.",
+.ol--clean li{
+  display:flex;
+  gap:10px;
+  margin-bottom:8px;
+}
 
-      "faq.h2":"FAQ",
-      "faq.sub":"Short & clear.",
-      "faq.q1":"What’s the difference between private and business?",
-      "faq.a1":"Business uses a dedicated question set (leadership, responsibility, risk, scaling) and produces executive-grade output.",
-      "faq.q2":"Do I have to answer many questions?",
-      "faq.a2":"As many as needed for precision. You can stop anytime and continue later.",
-      "faq.q3":"Is anything stored?",
-      "faq.a3":"Default: locally in your browser. Business can optionally enable anonymous server saves.",
+.ol--clean .k{
+  font-weight:700;
+  min-width:130px;
+}
 
-      "footer.tag":"Structural diagnosis for stabilization and redesign.",
-      "footer.gotoDx":"Go to diagnosis",
+.ol--clean .t{
+  color:var(--muted);
+}
 
-      "token.pill":"Business access",
-      "token.h3":"Enter token",
-      "token.p":"Business gets a dedicated question set and executive output. Please enter your token.",
-      "token.label":"Token",
-      "token.submit":"Continue",
-      "token.cancel":"Cancel",
-      "token.ok":"Token accepted. Starting …",
-      "token.bad":"Invalid token. Please check.",
-      "token.err":"Verification error. Please try again.",
-      "token.need":"Please enter a token."
-    }
-  };
+/* =========================================================
+   Header
+   ========================================================= */
 
-  // -------- Basic UI helpers --------
-  function currentLang() {
-    return localStorage.getItem(K_LANG) || "de";
+.header{
+  position:fixed;
+  top:0;
+  width:100%;
+  backdrop-filter:blur(12px);
+  background:rgba(5,7,12,.7);
+  border-bottom:1px solid var(--stroke);
+  z-index:100;
+}
+
+.header__inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height:72px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:800;
+}
+
+.brand__mark{
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));
+  color:#000;
+  padding:6px 10px;
+  border-radius:10px;
+  font-weight:900;
+}
+
+.nav{
+  display:flex;
+  gap:26px;
+}
+
+.nav__link{
+  color:var(--muted);
+  font-weight:600;
+}
+
+.nav__link:hover{
+  color:var(--text);
+}
+
+/* =========================================================
+   Buttons
+   ========================================================= */
+
+.btn{
+  padding:12px 18px;
+  border-radius:999px;
+  border:1px solid var(--stroke);
+  background:var(--card);
+  color:var(--text);
+  font-weight:600;
+  transition:.2s ease;
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+  border-color:var(--primary);
+}
+
+.btn--primary{
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));
+  color:#000;
+  border:none;
+}
+
+.btn--ghost{
+  background:transparent;
+}
+
+.btn--full{
+  width:100%;
+}
+
+.hero__cta{
+  display:flex;
+  gap:14px;
+  margin-top:26px;
+  flex-wrap:wrap;
+}
+
+/* =========================================================
+   Cards
+   ========================================================= */
+
+.card{
+  background:var(--card);
+  border:1px solid var(--stroke);
+  border-radius:var(--radius);
+  padding:26px;
+  backdrop-filter:blur(10px);
+}
+
+.hr{
+  height:1px;
+  background:var(--stroke);
+  margin:18px 0;
+}
+
+/* =========================================================
+   Hero
+   ========================================================= */
+
+.hero{
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:50px;
+  align-items:center;
+}
+
+.hero__panel{
+  position:relative;
+}
+
+.badge-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.pill{
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:.8rem;
+  border:1px solid var(--stroke);
+}
+
+.pill--muted{
+  background:var(--card);
+  color:var(--muted);
+}
+
+/* =========================================================
+   Mini grid
+   ========================================================= */
+
+.mini-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+.mini{
+  background:var(--bg-2);
+  padding:12px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--stroke);
+}
+
+.mini__k{
+  font-size:.75rem;
+  color:var(--muted-2);
+}
+
+.mini__v{
+  font-weight:700;
+  margin-top:4px;
+}
+
+/* =========================================================
+   FAQ
+   ========================================================= */
+
+.faq__item{
+  border:1px solid var(--stroke);
+  border-radius:var(--radius);
+  padding:18px;
+  margin-bottom:14px;
+  background:var(--card);
+}
+
+.faq__q{
+  font-weight:700;
+  cursor:pointer;
+}
+
+.faq__a{
+  margin-top:12px;
+}
+
+/* =========================================================
+   Wizard (Diagnosis)
+   ========================================================= */
+
+.wizard{
+  padding-top:120px;
+  padding-bottom:90px;
+}
+
+.wizard__shell{
+  background:var(--card-strong);
+  border:1px solid var(--stroke);
+  border-radius:var(--radius);
+  padding:30px;
+}
+
+.wizard__head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  margin-bottom:30px;
+}
+
+.progress{
+  min-width:180px;
+}
+
+.progress__bar{
+  height:8px;
+  background:var(--bg-2);
+  border-radius:999px;
+  overflow:hidden;
+}
+
+.progress__bar i{
+  display:block;
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,var(--primary),var(--primary-2));
+  transition:width .3s ease;
+}
+
+.progress__pct{
+  font-size:.8rem;
+  margin-top:6px;
+  text-align:right;
+  color:var(--muted);
+}
+
+/* =========================================================
+   Inputs
+   ========================================================= */
+
+.dx-input,
+textarea{
+  width:100%;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid var(--stroke);
+  background:var(--bg-2);
+  color:var(--text);
+  outline:none;
+}
+
+.dx-input:focus,
+textarea:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(110,231,183,.2);
+}
+
+.dx-label{
+  display:block;
+  font-weight:700;
+  margin-bottom:8px;
+  color:var(--muted);
+}
+
+/* =========================================================
+   Modal
+   ========================================================= */
+
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:200;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal__backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.7);
+}
+
+.modal__card{
+  position:relative;
+  background:var(--bg-1);
+  border:1px solid var(--stroke);
+  border-radius:var(--radius);
+  padding:30px;
+  max-width:420px;
+  width:100%;
+  z-index:1;
+}
+
+.modal__head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+/* =========================================================
+   Footer
+   ========================================================= */
+
+.footer{
+  border-top:1px solid var(--stroke);
+  padding:60px 0;
+  margin-top:80px;
+  background:var(--bg-1);
+}
+
+.footer__grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:40px;
+}
+
+.footer__links,
+.footer__legal{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+
+@media (max-width:1000px){
+  .hero{
+    grid-template-columns:1fr;
   }
-
-  function applyLang(lang) {
-    if (!I18N[lang]) lang = "de";
-    localStorage.setItem(K_LANG, lang);
-    document.documentElement.lang = lang;
-
-    $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
-
-    $$("[data-i18n]").forEach(el => {
-      const key = el.dataset.i18n;
-      const val = I18N[lang]?.[key];
-      if (!val) return;
-      // Keep elements with nested children safe (don’t overwrite complex nodes)
-      if (el.children && el.children.length) return;
-      el.textContent = val;
-    });
+  .grid-3{
+    grid-template-columns:1fr;
   }
-
-  function wireLangButtons() {
-    $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => applyLang(btn.dataset.lang)));
-    applyLang(currentLang());
+  .grid-2{
+    grid-template-columns:1fr;
   }
-
-  // -------- Burger / Drawer --------
-  function wireBurger() {
-    const burger = $(".burger");
-    const drawer = $(".drawer");
-    if (!burger || !drawer) return;
-
-    const open = () => {
-      drawer.hidden = false;
-      burger.setAttribute("aria-expanded", "true");
-      document.body.classList.add("no-scroll");
-    };
-    const close = () => {
-      drawer.hidden = true;
-      burger.setAttribute("aria-expanded", "false");
-      document.body.classList.remove("no-scroll");
-    };
-
-    burger.addEventListener("click", () => {
-      const expanded = burger.getAttribute("aria-expanded") === "true";
-      expanded ? close() : open();
-    });
-
-    // close on click outside drawer content (if backdrop exists in your CSS). If not, ignore.
-    drawer.addEventListener("click", (e) => {
-      const content = drawer.querySelector(".drawer__content");
-      if (!content) return;
-      if (!content.contains(e.target)) close();
-    });
-
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") close();
-    });
+  .footer__grid{
+    grid-template-columns:1fr;
   }
-
-  // -------- Modal (Token) --------
-  function modalOpen(id) {
-    const m = document.getElementById(id);
-    if (!m) return;
-    m.hidden = false;
-    document.body.classList.add("no-scroll");
-  }
-  function modalClose(id) {
-    const m = document.getElementById(id);
-    if (!m) return;
-    m.hidden = true;
-    document.body.classList.remove("no-scroll");
-  }
-
-  function wireModal() {
-    const m = $("#token_modal");
-    if (!m) return;
-
-    m.addEventListener("click", (e) => {
-      const t = e.target;
-      if (t && (t.hasAttribute("data-modal-close") || t.closest("[data-modal-close]"))) {
-        modalClose("token_modal");
-      }
-    });
-
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") modalClose("token_modal");
-    });
-  }
-
-  // -------- Token verify (calls worker) --------
-  async function verifyToken(token) {
-    // endpoint will be implemented in worker (Drop 5/6). For now: will fail gracefully.
-    const res = await fetch(`${API_BASE}/api/token/verify`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) return { ok: false, error: data?.error || "verify_failed" };
-    return { ok: true, data };
-  }
-
-  function langT(key) {
-    const l = currentLang();
-    return I18N[l]?.[key] || I18N.de[key] || key;
-  }
-
-  function setModeAndGo(mode) {
-    localStorage.setItem(K_MODE, mode);
-    // pass mode via query too (helps diagnose.html bootstrap)
-    location.href = `./diagnose.html?mode=${encodeURIComponent(mode)}`;
-  }
-
-  function wireCTAs() {
-    const btnsPrivate = ["#cta_private","#cta_private_panel","#cta_private_drawer","#cta_private_bottom"]
-      .map(s => $(s)).filter(Boolean);
-
-    const btnsBusiness = ["#cta_business","#cta_business_drawer","#cta_business_bottom"]
-      .map(s => $(s)).filter(Boolean);
-
-    btnsPrivate.forEach(b => b.addEventListener("click", () => {
-      localStorage.removeItem(K_TOKEN);
-      setModeAndGo("private");
-    }));
-
-    btnsBusiness.forEach(b => b.addEventListener("click", () => {
-      modalOpen("token_modal");
-      setTimeout(() => $("#token_input")?.focus(), 50);
-    }));
-
-    // modal submit
-    const submit = $("#token_submit");
-    const input = $("#token_input");
-    const status = $("#token_status");
-
-    if (submit && input) {
-      submit.addEventListener("click", async () => {
-        const token = (input.value || "").trim();
-        if (!token) {
-          if (status) status.textContent = langT("token.need");
-          return;
-        }
-        if (status) status.textContent = "…";
-
-        try {
-          const out = await verifyToken(token);
-          if (!out.ok) {
-            if (status) status.textContent = langT("token.bad");
-            return;
-          }
-          localStorage.setItem(K_TOKEN, token);
-          if (status) status.textContent = langT("token.ok");
-          setTimeout(() => {
-            modalClose("token_modal");
-            setModeAndGo("business");
-          }, 350);
-        } catch {
-          if (status) status.textContent = langT("token.err");
-        }
-      });
-
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") submit.click();
-      });
-    }
-  }
-
-  // -------- Init --------
-  function init() {
-    wireLangButtons();
-    wireBurger();
-    wireModal();
-    wireCTAs();
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-
-  // Expose minimal shared constants for other pages (diagnose/verlauf)
-  window.MDG = window.MDG || {};
-  window.MDG.API_BASE = API_BASE;
-  window.MDG.storage = { K_LANG, K_MODE, K_TOKEN };
-  window.MDG.i18n = { applyLang, currentLang };
-})();
+}
