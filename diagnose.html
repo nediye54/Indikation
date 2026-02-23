@@ -8,6 +8,19 @@
   <meta name="description" content="MDG Diagnose: Instabilität früh erkennen, Ursachen präzise diagnostizieren, IDG/ADG-Pfad und Executive Report." />
   <link rel="stylesheet" href="./style.css" />
 </head>
+  
+  // ===== MODE DETECTION (PRIVATE / BUSINESS) =====
+const mode =
+  new URLSearchParams(location.search).get("mode") ||
+  localStorage.getItem("mdg_mode") ||
+  "private";
+
+localStorage.setItem("mdg_mode", mode);
+
+// Optional: für CSS oder Debug sichtbar machen
+document.documentElement.dataset.mode = mode;
+
+console.log("MDG Mode:", mode);
 
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
