@@ -1,221 +1,72 @@
+<!-- diagnose.html — MDG V4 (Drop 4A) -->
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Diagnose – MDG</title>
-  <meta name="description" content="Structured diagnostic with boutique-grade executive memo." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MDG – Diagnosis</title>
+  <meta name="description" content="MDG diagnosis wizard: one-liner, intent, structured scan, adaptive questions, result." />
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <div class="shell">
-    <header class="topbar">
-      <a class="brand" href="./index.html" aria-label="Home">
-        <span class="brand__mark">MDG</span>
-        <span class="brand__sub">Diagnostic</span>
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="container inner">
+      <a class="logo" href="./index.html" aria-label="Back to home">
+        <span class="logo__mark">M</span>
+        <span class="logo__text">
+          <span>MDG</span>
+          <span>v4 · consulting engine</span>
+        </span>
       </a>
-      <nav class="topnav">
-        <a class="topnav__link" href="./index.html">Home</a>
-        <a class="topnav__link" href="./verlauf.html">Verlauf</a>
-      </nav>
 
-      <div class="lang">
-        <button class="chip" type="button" data-lang="de" aria-pressed="true">DE</button>
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button class="chip" type="button" data-lang="en" aria-pressed="true">EN</button>
+        <button class="chip" type="button" data-lang="de" aria-pressed="false">DE</button>
         <button class="chip" type="button" data-lang="tr" aria-pressed="false">TR</button>
-        <button class="chip" type="button" data-lang="en" aria-pressed="false">EN</button>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <main class="stack">
-      <section class="card">
-        <div class="row row--between row--wrap">
-          <div>
-            <h1 class="h1" data-i18n="dx.title">Diagnose</h1>
-            <p class="lead" data-i18n="dx.subtitle">
-              Simple sliders. High-resolution analysis. Executive memo in English.
-            </p>
-          </div>
-          <div class="pillGroup">
-            <span class="pill" id="pill_depth">Depth: –</span>
-            <span class="pill" id="pill_ssi">SSI: –</span>
-            <span class="pill" id="pill_conf">Confidence: –</span>
-          </div>
-        </div>
+  <main class="wizard">
+    <div class="container">
 
-        <div class="hr"></div>
+      <div class="wizard__shell">
 
-        <div class="grid2">
-          <div>
-            <label class="label" for="dx_name" data-i18n="dx.labelName">Label (optional)</label>
-            <input class="input" id="dx_name" type="text" placeholder="e.g., Team Alpha / Project X" />
-          </div>
-          <div>
-            <label class="label" for="dx_sector" data-i18n="dx.labelSector">Context (optional)</label>
-            <input class="input" id="dx_sector" type="text" placeholder="e.g., SaaS, ops team, agency" />
-          </div>
-        </div>
+        <!-- Wizard Head -->
+        <div class="wizard__head">
+          <div class="title" id="wiz_title">MDG · Diagnosis</div>
 
-        <div class="note" data-i18n="dx.note">
-          Tip: Use extremes. “0” means no meaningful issue. “5” means dominant constraint.
-        </div>
-      </section>
-
-      <!-- Sliders -->
-      <section class="card">
-        <h2 class="h2" data-i18n="sliders.title">Core dimensions (0–5)</h2>
-
-        <div class="sliderBlock">
-          <div class="sliderHead">
-            <div>
-              <div class="kicker">D</div>
-              <div class="h3" data-i18n="D.title">Decision concentration</div>
-              <div class="muted" data-i18n="D.ex">
-                Example: “Nothing moves unless one person approves.”
-              </div>
+          <div class="right">
+            <span class="badge" id="wiz_mode_badge">mode: private</span>
+            <div class="progress">
+              <div class="progress__bar"><i id="wiz_prog_bar"></i></div>
+              <div class="progress__pct" id="wiz_prog_pct">0%</div>
             </div>
-            <span class="pill" id="val_D">0</span>
-          </div>
-          <input class="range" id="D" type="range" min="0" max="5" step="1" value="0" />
-          <div class="rangeMeta"><span>0</span><span>5</span></div>
-        </div>
-
-        <div class="sliderBlock">
-          <div class="sliderHead">
-            <div>
-              <div class="kicker">L</div>
-              <div class="h3" data-i18n="L.title">Load imbalance</div>
-              <div class="muted" data-i18n="L.ex">
-                Example: “One role carries the critical workload; others idle or wait.”
-              </div>
-            </div>
-            <span class="pill" id="val_L">0</span>
-          </div>
-          <input class="range" id="L" type="range" min="0" max="5" step="1" value="0" />
-          <div class="rangeMeta"><span>0</span><span>5</span></div>
-        </div>
-
-        <div class="sliderBlock">
-          <div class="sliderHead">
-            <div>
-              <div class="kicker">G</div>
-              <div class="h3" data-i18n="G.title">Growth sensitivity</div>
-              <div class="muted" data-i18n="G.ex">
-                Example: “A +20% increase creates chaos, rework, or quality collapse.”
-              </div>
-            </div>
-            <span class="pill" id="val_G">0</span>
-          </div>
-          <input class="range" id="G" type="range" min="0" max="5" step="1" value="0" />
-          <div class="rangeMeta"><span>0</span><span>5</span></div>
-        </div>
-
-        <div class="sliderBlock">
-          <div class="sliderHead">
-            <div>
-              <div class="kicker">M</div>
-              <div class="h3" data-i18n="M.title">Power–responsibility mismatch</div>
-              <div class="muted" data-i18n="M.ex">
-                Example: “People are accountable but lack decision rights (or vice versa).”
-              </div>
-            </div>
-            <span class="pill" id="val_M">0</span>
-          </div>
-          <input class="range" id="M" type="range" min="0" max="5" step="1" value="0" />
-          <div class="rangeMeta"><span>0</span><span>5</span></div>
-        </div>
-
-        <div class="sliderBlock">
-          <div class="sliderHead">
-            <div>
-              <div class="kicker">E/F</div>
-              <div class="h3" data-i18n="EF.title">Energy & error integration</div>
-              <div class="muted" data-i18n="EF.ex">
-                Example: “Fatigue rises, mistakes repeat, learning loops don’t close.”
-              </div>
-            </div>
-            <span class="pill" id="val_EF">0</span>
-          </div>
-          <input class="range" id="EF" type="range" min="0" max="5" step="1" value="0" />
-          <div class="rangeMeta"><span>0</span><span>5</span></div>
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="row row--between row--wrap">
-          <div class="muted" id="dx_status">Status: –</div>
-          <button class="btn btn--primary" id="btn_analyze" type="button" data-i18n="dx.analyze">Analyze</button>
-        </div>
-      </section>
-
-      <!-- AI Followups -->
-      <section class="card" id="followups" hidden>
-        <h2 class="h2" data-i18n="fu.title">Targeted clarifications</h2>
-        <p class="muted" id="fu_intro"></p>
-        <div class="stack" id="fu_questions"></div>
-
-        <div class="row row--between row--wrap">
-          <button class="btn btn--ghost" type="button" id="btn_back" data-i18n="fu.back">Back</button>
-          <button class="btn btn--primary" type="button" id="btn_finalize" data-i18n="fu.finalize">Finalize</button>
-        </div>
-      </section>
-
-      <!-- Results + SVG -->
-      <section class="card" id="results" hidden>
-        <div class="row row--between row--wrap">
-          <h2 class="h2" data-i18n="res.title">Outcome</h2>
-          <div class="pillGroup">
-            <span class="pill" id="res_primary">Primary: –</span>
-            <span class="pill" id="res_path">Path: –</span>
           </div>
         </div>
 
-        <div class="grid2">
-          <div class="miniCard">
-            <div class="kicker">Structural Severity</div>
-            <div class="big" id="res_ssi">–</div>
-            <div class="muted" id="res_conf">–</div>
-            <div class="muted" id="res_note"></div>
-          </div>
-
-          <div class="miniCard">
-            <div class="kicker">Decision triggers</div>
-            <ul class="bullets" id="res_triggers"></ul>
-          </div>
+        <!-- Wizard Body -->
+        <div class="wizard__body" id="wiz_body">
+          <!-- injected by script.js -->
         </div>
 
-        <div class="grid2">
-          <div class="miniCard">
-            <div class="kicker">Radar</div>
-            <svg id="svg_radar" class="svgBox" viewBox="0 0 320 260" aria-label="Radar chart"></svg>
-          </div>
-          <div class="miniCard">
-            <div class="kicker">Amplification curve</div>
-            <svg id="svg_curve" class="svgBox" viewBox="0 0 320 260" aria-label="Risk curve"></svg>
-          </div>
+        <!-- Wizard Actions -->
+        <div class="wizard__actions" id="wiz_actions">
+          <!-- injected by script.js -->
         </div>
 
-        <div class="hr"></div>
-
-        <div class="row row--between row--wrap">
-          <div class="muted" id="save_status">Saved: –</div>
-          <div class="row row--gap">
-            <a class="btn btn--ghost" href="./verlauf.html">Verlauf</a>
-            <button class="btn btn--primary" id="btn_to_report" type="button" data-i18n="res.report">
-              Open Executive Report
-            </button>
-          </div>
-        </div>
-      </section>
-
-    </main>
-
-    <footer class="footer">
-      <div class="footer__row">
-        <span class="muted">MDG • Boutique Intelligence</span>
-        <span class="muted">Executive report is generated in English.</span>
       </div>
-    </footer>
-  </div>
+
+      <div style="margin-top:14px;">
+        <p class="micro" id="wiz_footer_note">
+          Answers are stored locally in your browser. Business access requires a valid checkout session.
+        </p>
+      </div>
+
+    </div>
+  </main>
 
   <script src="./script.js" defer></script>
 </body>
