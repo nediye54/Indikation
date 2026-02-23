@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Verlauf – MDG v2</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+  <header class="header">
+    <div class="container header__inner">
+      <div class="brand">
+        <span class="brand__mark">MDG</span>
+        <span class="brand__sub">v2</span>
+      </div>
+
+      <nav class="nav">
+        <a href="index.html">Homepage</a>
+        <a href="diagnose.html">Diagnose</a>
+        <a href="verlauf.html" aria-current="page">Verlauf</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="container" style="padding-bottom:3rem;">
+    <section class="hero" style="margin-top:1.2rem;">
+      <h1 class="h1">Verlauf</h1>
+      <p class="lead">Deine letzten Diagnosen (anonym). Gespeichert im Server-Verlauf über deine Client-ID.</p>
+
+      <div class="card" style="margin-top:1rem;">
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
+          <button class="btn btn--primary" id="btn_reload" type="button">Neu laden</button>
+          <button class="btn btn--ghost" id="btn_copy_id" type="button">Client-ID kopieren</button>
+          <span class="micro" id="status">Status: –</span>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:1rem;">
+      <div class="card">
+        <h2 class="h3">Letzte Diagnosen</h2>
+        <div id="list" style="display:grid; gap:.8rem; margin-top:.8rem;"></div>
+      </div>
+    </section>
+  </main>
+
+<script>
+(() => {
+  const API_BASE = "https://api.mdg-indikation.de";
+  const $ = (s, r=document) => r.querySelector(s);
+
+  function getClientId() {
+    const key = "mdg_client_id";
+    let id = localStorage.getItem(key);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(key, id);
+    }
+    return id;
+  }
+
+  function setStatus(t){ $("#status").textContent = "Status: " + t; }
+
+  function fmt(ts){
+    try {
+      const d = new Date(ts);
+      return d.toLocaleString("de-DE", { dateStyle:"medium", timeStyle:"short" });
+    } catch { return ts; }
+  }
+
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  function renderList(items){
+    const root = $("#list");
+    if (!items.length) {
+      root.innerHTML = `<p class="micro">Noch keine Diagnosen gespeichert.</p>`;
+      return;
+    }
+
+    root.innerHTML = items.map(it => {
+      const title = it.dominant ? it.dominant : (it.name || "Diagnose");
+      const badge = (t) => t ? `<span class="pill">${esc(t)}</span>` : "";
+      const href = `diagnose.html?id=${encodeURIComponent(it.id)}`;
+
+      return `
+        <div class="card">
+          <div style="display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+            <div>
+              <div style="display:flex; gap:.5rem; flex-wrap:wrap; align-items:center;">
+                <strong>${esc(title)}</strong>
+                ${badge(it.context)}
+                ${badge(it.depth)}
+                ${badge(it.path)}
+                ${badge(it.growth)}
+                ${badge(it.recommendation)}
+              </div>
+              <div class="micro" style="margin-top:.3rem;">
+                ${esc(fmt(it.created_at))} · ID: <code>${esc(it.id.slice(0,8))}…</code>
+              </div>
+            </div>
+            <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+              <a class="btn btn--primary" href="${href}">Öffnen</a>
+              <button class="btn btn--ghost" type="button" data-copy="${esc(href)}">Link kopieren</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    root.querySelectorAll("[data-copy]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const url = new URL(btn.dataset.copy, location.href).toString();
+        try { await navigator.clipboard.writeText(url); setStatus("Link kopiert."); }
+        catch { setStatus("Kopieren nicht möglich – manuell kopieren."); }
+      });
+    });
+  }
+
+  async function loadHistory(){
+    const clientId = getClientId();
+    setStatus("Lade …");
+    try {
+      const res = await fetch(`${API_BASE}/api/diagnoses?client_id=${encodeURIComponent(clientId)}&limit=30`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Load failed");
+      renderList(data.items || []);
+      setStatus("OK (" + (data.items?.length || 0) + ")");
+    } catch (e) {
+      setStatus("Fehler: " + (e?.message || String(e)));
+    }
+  }
+
+  $("#btn_reload").addEventListener("click", loadHistory);
+  $("#btn_copy_id").addEventListener("click", async () => {
+    const id = getClientId();
+    try { await navigator.clipboard.writeText(id); setStatus("Client-ID kopiert."); }
+    catch { setStatus("Client-ID: " + id); }
+  });
+
+  loadHistory();
+})();
+</script>
+</body>
+</html>
