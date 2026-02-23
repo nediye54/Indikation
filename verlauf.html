@@ -1,35 +1,41 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="de">
 <head>
-<title>History</title>
-<link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Verlauf – MDG</title>
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-<div class="container">
-<h1>Diagnosis History</h1>
-<div id="list"></div>
-</div>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="./index.html">
+        <span class="brand__mark">MDG</span>
+        <span class="brand__sub">History</span>
+      </a>
+      <nav class="topnav">
+        <a class="topnav__link" href="./diagnose.html">Diagnose</a>
+        <a class="topnav__link" href="./index.html">Home</a>
+      </nav>
+    </header>
 
-<script>
-const API = "https://api.mdg-indikation.de";
-const clientId = localStorage.getItem("mdg_client_id");
+    <main class="stack">
+      <section class="card">
+        <h1 class="h1">Verlauf</h1>
+        <p class="muted">Client-local history (server stored, keyed by your browser client id).</p>
+        <div class="hr"></div>
+        <div id="historyList" class="stack"></div>
+        <div class="muted" id="historyStatus">Loading…</div>
+      </section>
+    </main>
 
-(async ()=>{
-  const res = await fetch(`${API}/api/diagnoses?client_id=${clientId}`);
-  const data = await res.json();
+    <footer class="footer">
+      <div class="footer__row">
+        <span class="muted">MDG • Boutique Intelligence</span>
+      </div>
+    </footer>
+  </div>
 
-  const list = document.getElementById("list");
-
-  data.items?.forEach(item=>{
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <p><strong>ID:</strong> ${item.id}</p>
-      <p><strong>Date:</strong> ${item.created_at}</p>
-    `;
-    list.appendChild(div);
-  });
-})();
-</script>
+  <script src="./script.js" defer></script>
 </body>
 </html>
