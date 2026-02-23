@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Why MDG</title>
+  <meta name="description" content="Warum MDG: Struktur statt Symptome. Entscheidungssicherheit statt Bauchgefühl." />
+  <link rel="stylesheet" href="./style.css" />
+  <style>
+    .page{ max-width: 980px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+    .grid{ display:grid; gap:1rem; }
+    .two{ display:grid; grid-template-columns: 1fr 1fr; gap:1rem; }
+    @media (max-width: 900px){ .two{ grid-template-columns:1fr; } }
+    .box{ padding: 1rem; border:1px solid rgba(255,255,255,.10); border-radius: var(--radius2,18px); background: rgba(255,255,255,.02); }
+    .box h3{ margin:0 0 .35rem; }
+    .mini{ color: var(--muted,#aab); font-size:.95rem; line-height:1.5; }
+    .list{ display:grid; gap:.55rem; margin-top:.5rem; }
+    .li{ display:flex; gap:.55rem; align-items:flex-start; }
+    .dot{ width:.55rem; height:.55rem; border-radius:999px; background: rgba(110,231,183,.9); margin-top:.45rem; flex:0 0 auto; }
+  </style>
+</head>
+
+<body>
+<header class="header" id="top">
+  <div class="container header__inner">
+    <a class="brand" href="./index.html" aria-label="Home">
+      <span class="brand__mark" aria-hidden="true">MDG</span>
+      <span class="brand__text">v4</span>
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      <a class="nav__link" href="./how.html" data-i18n="nav.how">How it works</a>
+      <a class="nav__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
+      <a class="nav__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
+    </nav>
+
+    <div class="header__actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
+        <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
+        <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="btn btn--ghost" href="./index.html" data-i18n="cta.backHome">Home</a>
+    </div>
+
+    <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="drawer" hidden>
+    <div class="drawer__content">
+      <a class="drawer__link" href="./how.html" data-i18n="nav.how">How it works</a>
+      <a class="drawer__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
+      <a class="drawer__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
+      <div class="drawer__sep"></div>
+      <a class="btn btn--ghost btn--full" href="./index.html" data-i18n="cta.backHome">Home</a>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="section__head">
+    <h1 class="h2" data-i18n="why.title">Why MDG</h1>
+    <p class="sub" data-i18n="why.sub">
+      Most problems are treated as “symptoms”. MDG treats structure: decision rights, load paths, energy limits, feedback loops.
+    </p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2 class="h3" data-i18n="why.coreTitle">Core idea</h2>
+      <div class="two">
+        <div class="box">
+          <h3 class="h3" data-i18n="why.core1.t">Structure over variables</h3>
+          <p class="mini" data-i18n="why.core1.b">
+            If you change only “effort”, “motivation” or “pressure”, the same pattern returns. MDG identifies the load-bearing structure.
+          </p>
+        </div>
+        <div class="box">
+          <h3 class="h3" data-i18n="why.core2.t">Decision architecture</h3>
+          <p class="mini" data-i18n="why.core2.b">
+            When ownership and decision rights are unclear, friction grows, and politics replaces execution. MDG makes it explicit.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="h3" data-i18n="why.diffTitle">What makes it different</h2>
+      <div class="two">
+        <div class="box">
+          <h3 class="h3" data-i18n="why.d1.t">High leverage, low input</h3>
+          <div class="list">
+            <div class="li"><span class="dot"></span><div class="mini" data-i18n="why.d1.b1">Few questions, designed to reduce ambiguity.</div></div>
+            <div class="li"><span class="dot"></span><div class="mini" data-i18n="why.d1.b2">No “therapy talk”, no generic advice.</div></div>
+            <div class="li"><span class="dot"></span><div class="mini" data-i18n="why.d1.b3">Outputs are operational: what to do, in what order, with what signals.</div></div>
+          </div>
+        </div>
+        <div class="box">
+          <h3 class="h3" data-i18n="why.d2.t">Stabilize vs Rebuild</h3>
+          <div class="list">
+            <div class="li"><span class="dot"></span><div class="mini" data-i18n="why.d2.b1">Stabilize: reduce tension quickly, stop escalation.</div></div>
+            <div class="li"><span class="dot"></span><div class="mini" data-i18n="why.d2.b2">Rebuild: design a structure that can carry future load.</div></div>
+            <div class="li"><span class="dot"></span><div class="mini" data-i18n="why.d2.b3">MDG keeps both paths separate—so execution stays clean.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="h3" data-i18n="why.useTitle">When to use MDG</h2>
+      <div class="two">
+        <div class="box">
+          <h3 class="h3" data-i18n="why.u1.t">If you feel “stuck”</h3>
+          <p class="mini" data-i18n="why.u1.b">Recurring loops, endless debates, rework, conflict, burnout signals, unclear ownership.</p>
+        </div>
+        <div class="box">
+          <h3 class="h3" data-i18n="why.u2.t">If growth increases fragility</h3>
+          <p class="mini" data-i18n="why.u2.b">More scope without new structure: complexity rises faster than capacity and decisions.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="h3" data-i18n="why.modesTitle">Private vs Business</h2>
+      <div class="two">
+        <div class="box">
+          <h3 class="h3" data-i18n="why.p.t">Private</h3>
+          <p class="mini" data-i18n="why.p.b">Personal systems: roles, routines, relationships, individual load and recovery.</p>
+        </div>
+        <div class="box">
+          <h3 class="h3" data-i18n="why.b.t">Business</h3>
+          <p class="mini" data-i18n="why.b.b">Organizations: decision rights, operating model, roles, cadence, KPIs, cross-team friction.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="dx-actions">
+      <a class="btn btn--primary" href="./index.html" data-i18n="why.cta">Start diagnosis</a>
+      <a class="btn btn--ghost" href="#top" data-i18n="why.top">Back to top</a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <div class="brand brand--footer">
+        <span class="brand__mark" aria-hidden="true">MDG</span>
+        <span class="brand__text">v4</span>
+      </div>
+      <p class="micro" data-i18n="footer.tag">Structure diagnosis for stabilization and rebuild.</p>
+    </div>
+    <div class="footer__legal">
+      <a href="./impressum.html" rel="nofollow">Impressum</a>
+      <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+      <a href="./kontakt.html" rel="nofollow">Kontakt</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  const burger = $(".burger");
+  const drawer = $(".drawer");
+  if (burger && drawer) {
+    burger.addEventListener("click", () => {
+      const open = !drawer.hasAttribute("hidden");
+      if (open) { drawer.setAttribute("hidden",""); burger.setAttribute("aria-expanded","false"); }
+      else { drawer.removeAttribute("hidden"); burger.setAttribute("aria-expanded","true"); }
+    });
+  }
+
+  const dict = {
+    de: {
+      "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ","cta.backHome":"Zur Homepage",
+      "why.title":"Warum MDG",
+      "why.sub":"Die meisten Probleme werden als „Symptome“ behandelt. MDG behandelt Struktur: Entscheidungsrechte, Lastpfade, Energielimits, Feedback-Schleifen.",
+      "why.coreTitle":"Kernidee",
+      "why.core1.t":"Struktur vor Variablen","why.core1.b":"Wenn du nur „Aufwand“, „Motivation“ oder „Druck“ änderst, kommt das Muster zurück. MDG identifiziert die tragende Struktur.",
+      "why.core2.t":"Entscheidungsarchitektur","why.core2.b":"Wenn Ownership und Decision Rights unklar sind, wächst Reibung – Politik ersetzt Umsetzung. MDG macht es explizit.",
+      "why.diffTitle":"Was anders ist",
+      "why.d1.t":"Hoher Hebel, wenig Input","why.d1.b1":"Wenige Fragen – designed, um Unklarheit zu reduzieren.","why.d1.b2":"Kein „Therapie-Talk“, keine generischen Tipps.","why.d1.b3":"Operationaler Output: was tun, in welcher Reihenfolge, mit welchen Signalen.",
+      "why.d2.t":"Stabilisieren vs Umbauen","why.d2.b1":"Stabilisieren: Spannung schnell senken, Eskalation stoppen.","why.d2.b2":"Umbauen: Struktur so designen, dass sie zukünftige Last trägt.","why.d2.b3":"Beide Pfade bleiben getrennt – damit Umsetzung sauber bleibt.",
+      "why.useTitle":"Wann MDG sinnvoll ist",
+      "why.u1.t":"Wenn du „festhängst“","why.u1.b":"Wiederkehrende Schleifen, Endlosdebatten, Rework, Konflikte, Burnout-Signale, unklare Zuständigkeit.",
+      "why.u2.t":"Wenn Wachstum Fragilität erhöht","why.u2.b":"Mehr Scope ohne neue Struktur: Komplexität wächst schneller als Kapazität und Entscheidungen.",
+      "why.modesTitle":"Privat vs Business",
+      "why.p.t":"Privat","why.p.b":"Persönliche Systeme: Rollen, Routinen, Beziehungen, individuelle Last & Regeneration.",
+      "why.b.t":"Business","why.b.b":"Organisationen: Decision Rights, Operating Model, Rollen, Rhythmus, KPIs, Cross-Team-Reibung.",
+      "why.cta":"Diagnose starten","why.top":"Nach oben",
+      "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau."
+    },
+    tr: {
+      "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS","cta.backHome":"Anasayfa",
+      "why.title":"Neden MDG",
+      "why.sub":"Çoğu problem “belirti” olarak ele alınır. MDG yapıyı ele alır: karar hakları, yük yolları, enerji limitleri, geri-bildirim döngüleri.",
+      "why.coreTitle":"Temel fikir",
+      "why.core1.t":"Değişken değil yapı","why.core1.b":"Sadece “çaba”, “motivasyon” veya “baskı” değişirse desen geri gelir. MDG taşıyıcı yapıyı bulur.",
+      "why.core2.t":"Karar mimarisi","why.core2.b":"Sahiplik ve karar hakları belirsizse sürtünme artar; politika icranın yerini alır. MDG bunu netleştirir.",
+      "why.diffTitle":"Farkı ne?",
+      "why.d1.t":"Yüksek kaldıraç, az input","why.d1.b1":"Az soru—belirsizliği azaltmak için tasarlı.","why.d1.b2":"Genel nasihat yok, terapi dili yok.","why.d1.b3":"Operasyonel çıktı: ne, hangi sırada, hangi sinyallerle.",
+      "why.d2.t":"Stabilize vs Yeniden kur","why.d2.b1":"Stabilize: gerilimi hızlı düşür, tırmanmayı durdur.","why.d2.b2":"Yeniden kur: gelecekteki yükü taşıyacak yapıyı tasarla.","why.d2.b3":"İki yol ayrı tutulur—uygulama temiz kalır.",
+      "why.useTitle":"Ne zaman MDG?",
+      "why.u1.t":"“Sıkıştım” hissi varsa","why.u1.b":"Tekrarlayan döngüler, bitmeyen tartışmalar, rework, çatışma, tükenmişlik sinyalleri, belirsiz sahiplik.",
+      "why.u2.t":"Büyüme kırılganlığı artırıyorsa","why.u2.b":"Yeni yapı olmadan scope artar: karmaşıklık kapasite ve kararlardan hızlı büyür.",
+      "why.modesTitle":"Özel vs Business",
+      "why.p.t":"Özel","why.p.b":"Kişisel sistemler: roller, rutinler, ilişkiler, yük & toparlanma.",
+      "why.b.t":"Business","why.b.b":"Organizasyon: karar hakları, işletim modeli, roller, ritim, KPI, takımlar arası sürtünme.",
+      "why.cta":"Analizi başlat","why.top":"Yukarı",
+      "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi."
+    },
+    en: {
+      "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
+      "why.title":"Why MDG",
+      "why.sub":"Most problems are treated as symptoms. MDG treats structure: decision rights, load paths, energy limits, feedback loops.",
+      "why.coreTitle":"Core idea",
+      "why.core1.t":"Structure over variables","why.core1.b":"If you only change effort/motivation/pressure, the pattern returns. MDG identifies the load-bearing structure.",
+      "why.core2.t":"Decision architecture","why.core2.b":"When ownership and decision rights are unclear, friction grows and politics replaces execution. MDG makes it explicit.",
+      "why.diffTitle":"What makes it different",
+      "why.d1.t":"High leverage, low input","why.d1.b1":"Few questions—designed to reduce ambiguity.","why.d1.b2":"No therapy talk, no generic advice.","why.d1.b3":"Operational output: what to do, in what order, with what signals.",
+      "why.d2.t":"Stabilize vs Rebuild","why.d2.b1":"Stabilize: reduce tension quickly, stop escalation.","why.d2.b2":"Rebuild: design structure that can carry future load.","why.d2.b3":"Both paths stay separate—so execution stays clean.",
+      "why.useTitle":"When to use MDG",
+      "why.u1.t":"If you feel stuck","why.u1.b":"Recurring loops, endless debates, rework, conflict, burnout signals, unclear ownership.",
+      "why.u2.t":"If growth increases fragility","why.u2.b":"More scope without new structure: complexity grows faster than capacity and decisions.",
+      "why.modesTitle":"Private vs Business",
+      "why.p.t":"Private","why.p.b":"Personal systems: roles, routines, relationships, individual load & recovery.",
+      "why.b.t":"Business","why.b.b":"Organizations: decision rights, operating model, roles, cadence, KPIs, cross-team friction.",
+      "why.cta":"Start diagnosis","why.top":"Back to top",
+      "footer.tag":"Structure diagnosis for stabilization and rebuild."
+    }
+  };
+
+  function applyLang(lang){
+    if(!dict[lang]) lang="de";
+    document.documentElement.lang = lang;
+    $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang===lang)));
+    $$("[data-i18n]").forEach(el => {
+      const k = el.dataset.i18n;
+      if (dict[lang][k]) el.textContent = dict[lang][k];
+    });
+  }
+
+  $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => applyLang(btn.dataset.lang)));
+  applyLang("de");
+})();
+</script>
+</body>
+</html>
