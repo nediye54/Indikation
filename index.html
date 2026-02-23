@@ -1,91 +1,286 @@
-<!DOCTYPE html>
-<html lang="en">
+<!-- index.html — MDG V4 (Drop 4B) -->
+<!doctype html>
+<html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MDG – Decision Clarity</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MDG – In wenigen Minuten zur Entscheidungssicherheit</title>
+  <meta name="description" content="MDG/IDG/ADG: Instabilität früh erkennen, Ursachen präzise diagnostizieren, tragfähige Entscheidungs- und Handlungsarchitekturen bauen." />
+  <link rel="stylesheet" href="./style.css" />
 </head>
+
 <body>
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
 
-<header class="topbar">
-  <div class="logo">MDG</div>
-  <div class="lang-switch">
-    <button data-lang="en">EN</button>
-    <button data-lang="de">DE</button>
-    <button data-lang="tr">TR</button>
+  <header class="header" id="top">
+    <div class="container header__inner">
+      <a class="brand" href="./index.html" aria-label="Zur Startseite">
+        <span class="brand__mark" aria-hidden="true">MDG</span>
+        <span class="brand__text">v4</span>
+      </a>
+
+      <nav class="nav" aria-label="Hauptnavigation">
+        <a class="nav__link" href="#how" data-i18n="nav.how">Wie es funktioniert</a>
+        <a class="nav__link" href="#why" data-i18n="nav.why">Warum MDG</a>
+        <a class="nav__link" href="#faq" data-i18n="nav.faq">FAQ</a>
+      </nav>
+
+      <div class="header__actions">
+        <div class="lang" role="group" aria-label="Sprache">
+          <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
+          <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
+          <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+
+      <button class="burger" type="button" aria-label="Menü öffnen" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <div class="drawer" hidden>
+      <div class="drawer__content">
+        <a class="drawer__link" href="#how" data-i18n="nav.how">Wie es funktioniert</a>
+        <a class="drawer__link" href="#why" data-i18n="nav.why">Warum MDG</a>
+        <a class="drawer__link" href="#faq" data-i18n="nav.faq">FAQ</a>
+        <div class="drawer__sep"></div>
+        <button class="btn btn--primary btn--full" type="button" id="cta_private_drawer" data-i18n="cta.private">Jetzt ermitteln (privat)</button>
+        <button class="btn btn--ghost btn--full" type="button" id="cta_business_drawer" data-i18n="cta.business">Für Unternehmen (Token)</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="section section--hero">
+      <div class="container">
+        <div class="hero">
+          <div class="hero__copy">
+            <div class="badge-row">
+              <span class="pill pill--muted" data-i18n="hero.pill1">In wenigen Minuten zur Entscheidungssicherheit</span>
+              <span class="pill pill--muted" data-i18n="hero.pill2">IDG · ADG · MDG</span>
+            </div>
+
+            <h1 class="h1" data-i18n="hero.h1">
+              Instabilität früh erkennen. Ursache präzise diagnostizieren. Architektur bauen – bevor es bricht.
+            </h1>
+
+            <p class="lead" data-i18n="hero.lead">
+              MDG, IDG und ADG geben dir ein strukturelles Instrumentarium, um Spannungen sichtbar zu machen und
+              tragfähige Entscheidungen zu treffen – privat oder im Unternehmen.
+            </p>
+
+            <div class="hero__cta">
+              <!-- max 2 CTAs in hero -->
+              <button class="btn btn--primary" type="button" id="cta_private" data-i18n="cta.private">Jetzt ermitteln (privat)</button>
+              <button class="btn btn--ghost" type="button" id="cta_business" data-i18n="cta.business">Für Unternehmen (Token)</button>
+            </div>
+
+            <p class="micro" data-i18n="hero.note">
+              Privat: sofort starten. Business: Token erforderlich (eigene Fragen & Output für Entscheider).
+            </p>
+          </div>
+
+          <div class="hero__panel">
+            <div class="card">
+              <h2 class="h3" data-i18n="hero.panelTitle">So läuft es ab</h2>
+
+              <ol class="ol ol--clean">
+                <li><span class="k" data-i18n="hero.step1k">1 Satz Kontext</span><span class="t" data-i18n="hero.step1t">Worum geht es?</span></li>
+                <li><span class="k" data-i18n="hero.step2k">Ziel wählen</span><span class="t" data-i18n="hero.step2t">Stabilisieren oder Umbauen?</span></li>
+                <li><span class="k" data-i18n="hero.step3k">Quick Scan</span><span class="t" data-i18n="hero.step3t">Ebenenanalyse + Frühindikatoren</span></li>
+                <li><span class="k" data-i18n="hero.step4k">Ergebnis</span><span class="t" data-i18n="hero.step4t">Radar, Spannungen, klare Schritte</span></li>
+                <li><span class="k" data-i18n="hero.step5k">Deep Dive</span><span class="t" data-i18n="hero.step5t">Executive Report (Premium)</span></li>
+              </ol>
+
+              <div class="hr"></div>
+
+              <div class="mini-grid">
+                <div class="mini">
+                  <div class="mini__k" data-i18n="hero.m1k">Dauer</div>
+                  <div class="mini__v" data-i18n="hero.m1v">3–10 Min</div>
+                </div>
+                <div class="mini">
+                  <div class="mini__k" data-i18n="hero.m2k">Output</div>
+                  <div class="mini__v" data-i18n="hero.m2v">Entscheidungspfad + Maßnahmen</div>
+                </div>
+              </div>
+
+              <div class="section__cta" style="margin-top:1rem;">
+                <!-- 3rd button allowed total -->
+                <button class="btn btn--primary btn--full" type="button" id="cta_private_panel" data-i18n="cta.private">Jetzt ermitteln (privat)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW -->
+    <section class="section" id="how">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="h2" data-i18n="how.h2">Wie es funktioniert</h2>
+          <p class="sub" data-i18n="how.sub">
+            Du beschreibst dein Thema in einem Satz – wir führen dich dann streng und präzise zur Diagnose.
+          </p>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <h3 class="h3" data-i18n="how.c1t">1) Kontext</h3>
+            <p class="p" data-i18n="how.c1p">
+              Ein Satz, keine Story. Wir brauchen die Struktur, nicht die Details.
+            </p>
+            <p class="micro" data-i18n="how.c1ex">
+              Beispiel: „Wir liefern zu spät und streiten ständig über Prioritäten.“
+            </p>
+          </div>
+          <div class="card">
+            <h3 class="h3" data-i18n="how.c2t">2) Ziel</h3>
+            <p class="p" data-i18n="how.c2p">
+              Stabilisieren = Belastung reduzieren & Kontrolle zurückholen. Umbauen = Architektur neu bauen.
+            </p>
+            <p class="micro" data-i18n="how.c2ex">
+              Beispiel: Stabilisieren zuerst, dann Umbau planen.
+            </p>
+          </div>
+          <div class="card">
+            <h3 class="h3" data-i18n="how.c3t">3) Ergebnis</h3>
+            <p class="p" data-i18n="how.c3p">
+              Radar & Spannungen zeigen Primärinstabilität – plus konkrete nächste Schritte.
+            </p>
+            <p class="micro" data-i18n="how.c3ex">
+              Beispiel: „Entscheidungsmonopol“ + „Lastasymmetrie“ → IDG → ADG.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHY -->
+    <section class="section" id="why">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="h2" data-i18n="why.h2">Warum MDG</h2>
+          <p class="sub" data-i18n="why.sub">
+            Die meisten Systeme brechen nicht an „zu wenig Stärke“, sondern an falscher Lastverteilung und schlechter Entscheidungsarchitektur.
+          </p>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3 class="h3" data-i18n="why.a1t">Struktur statt Bauchgefühl</h3>
+            <p class="p" data-i18n="why.a1p">
+              Du bekommst ein klares Modell, das Spannung, Engpässe und Verstärkung sichtbar macht.
+            </p>
+          </div>
+          <div class="card">
+            <h3 class="h3" data-i18n="why.a2t">Entscheidungssicherheit</h3>
+            <p class="p" data-i18n="why.a2p">
+              Nicht nur Diagnose – sondern ein Pfad: Stabilisieren (IDG) oder Umbauen (ADG) mit konkreten Moves.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq">
+      <div class="container">
+        <div class="section__head">
+          <h2 class="h2" data-i18n="faq.h2">FAQ</h2>
+          <p class="sub" data-i18n="faq.sub">Kurz & klar.</p>
+        </div>
+
+        <div class="faq">
+          <details class="faq__item">
+            <summary class="faq__q" data-i18n="faq.q1">Was ist der Unterschied zwischen Privat und Business?</summary>
+            <div class="faq__a">
+              <p class="p" data-i18n="faq.a1">
+                Business nutzt eigene Fragen (Führung, Verantwortung, Risiko, Skalierung) und liefert Executive Output.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q" data-i18n="faq.q2">Muss ich viele Fragen beantworten?</summary>
+            <div class="faq__a">
+              <p class="p" data-i18n="faq.a2">
+                So viele wie nötig für Präzision. Du kannst jederzeit abbrechen und später fortsetzen.
+              </p>
+            </div>
+          </details>
+
+          <details class="faq__item">
+            <summary class="faq__q" data-i18n="faq.q3">Wird etwas gespeichert?</summary>
+            <div class="faq__a">
+              <p class="p" data-i18n="faq.a3">
+                Standard: lokal im Browser. Business kann optional anonym Server-Saves nutzen (wenn aktiviert).
+              </p>
+            </div>
+          </details>
+        </div>
+
+        <div class="section__cta" style="margin-top:1.2rem;">
+          <button class="btn btn--primary" type="button" id="cta_private_bottom" data-i18n="cta.private">Jetzt ermitteln (privat)</button>
+          <button class="btn btn--ghost" type="button" id="cta_business_bottom" data-i18n="cta.business">Für Unternehmen (Token)</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <div class="brand brand--footer">
+          <span class="brand__mark" aria-hidden="true">MDG</span>
+          <span class="brand__text">v4</span>
+        </div>
+        <p class="micro" data-i18n="footer.tag">Strukturdiagnose für Stabilisierung und Umbau.</p>
+      </div>
+      <div class="footer__links">
+        <a href="#how" data-i18n="nav.how">Wie es funktioniert</a>
+        <a href="#why" data-i18n="nav.why">Warum MDG</a>
+        <a href="#faq" data-i18n="nav.faq">FAQ</a>
+        <a href="./diagnose.html" data-i18n="footer.gotoDx">Zur Diagnose</a>
+      </div>
+      <div class="footer__legal">
+        <a href="./impressum.html" rel="nofollow">Impressum</a>
+        <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+        <a href="./kontakt.html" rel="nofollow">Kontakt</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Token Modal -->
+  <div class="modal" id="token_modal" hidden>
+    <div class="modal__backdrop" data-modal-close></div>
+    <div class="modal__card">
+      <div class="modal__head">
+        <div>
+          <div class="pill pill--muted" data-i18n="token.pill">Business Zugang</div>
+          <h3 class="h3" style="margin:.4rem 0 0;" data-i18n="token.h3">Token eingeben</h3>
+        </div>
+        <button class="chip chip--ghost" type="button" data-modal-close aria-label="Close">✕</button>
+      </div>
+
+      <p class="p" data-i18n="token.p">
+        Unternehmen erhalten ein eigenes Fragen-Set und Executive Output. Bitte Token eingeben.
+      </p>
+
+      <div class="modal__form">
+        <label class="dx-label" for="token_input" data-i18n="token.label">Token</label>
+        <input class="dx-input" id="token_input" type="text" placeholder="MDG-XXXX-XXXX" autocomplete="off" />
+        <p class="micro" id="token_status" style="margin-top:.5rem;">&nbsp;</p>
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap; margin-top:.6rem;">
+          <button class="btn btn--primary" type="button" id="token_submit" data-i18n="token.submit">Weiter</button>
+          <button class="btn btn--ghost" type="button" data-modal-close data-i18n="token.cancel">Abbrechen</button>
+        </div>
+      </div>
+    </div>
   </div>
-</header>
 
-<section class="hero">
-  <h1 data-i18n="hero.headline">
-    Decision clarity in minutes.
-  </h1>
-  <p data-i18n="hero.sub">
-    A structural diagnostic system for early instability detection and resilient decision architecture.
-  </p>
-
-  <div class="cta-row">
-    <a href="diagnose.html?mode=private" class="btn-primary" data-i18n="hero.private">
-      Assess now
-    </a>
-
-    <a href="https://YOUR_LEMONSQUEEZY_CHECKOUT_URL"
-       class="btn-secondary"
-       data-i18n="hero.business">
-      For companies (Token required)
-    </a>
-  </div>
-</section>
-
-<section class="features">
-  <div class="card">
-    <h3 data-i18n="features.primary.title">Primary instability</h3>
-    <p data-i18n="features.primary.text">
-      Identify the structural root cause precisely.
-    </p>
-  </div>
-
-  <div class="card">
-    <h3 data-i18n="features.secondary.title">Secondary tensions</h3>
-    <p data-i18n="features.secondary.text">
-      Understand what amplifies the problem.
-    </p>
-  </div>
-
-  <div class="card">
-    <h3 data-i18n="features.path.title">Strategic path</h3>
-    <p data-i18n="features.path.text">
-      Stabilize or rebuild – based on signals.
-    </p>
-  </div>
-
-  <div class="card">
-    <h3 data-i18n="features.moves.title">Immediate moves</h3>
-    <p data-i18n="features.moves.text">
-      Concrete actions for the next 48 hours.
-    </p>
-  </div>
-</section>
-
-<section class="how">
-  <h2 data-i18n="how.title">How it works</h2>
-  <ol>
-    <li data-i18n="how.step1">Describe the situation.</li>
-    <li data-i18n="how.step2">Choose your intent.</li>
-    <li data-i18n="how.step3">Complete the structured scan.</li>
-    <li data-i18n="how.step4">Receive your diagnosis.</li>
-  </ol>
-</section>
-
-<footer class="footer">
-  <p>MDG – Structural Diagnostic System</p>
-</footer>
-
-<script src="script.js"></script>
-<script>
-initLanding();
-</script>
-
+  <script src="./script.js" defer></script>
 </body>
 </html>
