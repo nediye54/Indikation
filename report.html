@@ -1,108 +1,143 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Executive Memorandum – MDG</title>
-  <meta name="description" content="Board-ready executive memorandum." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Executive Report – MDG</title>
+  <meta name="description" content="Premium Executive Report (MDG) – print-ready." />
   <link rel="stylesheet" href="./style.css" />
+  <style>
+    /* Premium report layout (keeps v2 look via style.css) */
+    .rp-wrap{ max-width: 980px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+    .rp-top{ display:flex; justify-content:space-between; gap:1rem; align-items:flex-start; flex-wrap:wrap; }
+    .rp-title{ margin:0; }
+    .rp-sub{ margin:.35rem 0 0; color: var(--muted,#aab); }
+    .rp-meta{ display:flex; gap:.5rem; flex-wrap:wrap; justify-content:flex-end; }
+    .rp-section{ margin-top: 1rem; }
+    .rp-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:1rem; }
+    @media (max-width: 900px){ .rp-grid{ grid-template-columns:1fr; } }
+    .rp-box{ padding: 1rem; border:1px solid rgba(255,255,255,.10); border-radius: var(--radius2,18px); background: rgba(255,255,255,.02); }
+    .rp-box h3{ margin:0 0 .6rem; }
+    .rp-kpis{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.5rem; }
+    .rp-hr{ height:1px; background: rgba(255,255,255,.08); margin: 1rem 0; }
+    .rp-md{ white-space: pre-wrap; word-break: break-word; line-height: 1.55; }
+    .rp-treeWrap{ overflow:auto; border-radius: var(--radius2,18px); border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.02); padding:.75rem; }
+    .rp-actions{ display:flex; gap:.6rem; flex-wrap:wrap; }
+    .rp-note{ color: var(--muted,#aab); font-size:.9rem; }
+
+    /* Print-to-PDF polish */
+    @media print {
+      .header, .footer, .rp-actions { display:none !important; }
+      body{ background: #fff !important; color:#111 !important; }
+      .rp-box, .rp-treeWrap{ border:1px solid #ddd !important; background:#fff !important; }
+      .pill{ border:1px solid #ddd !important; color:#111 !important; }
+      a{ color:#111 !important; text-decoration:none !important; }
+      .rp-sub, .rp-note{ color:#444 !important; }
+    }
+  </style>
 </head>
-<body class="reportBody">
-  <div class="shell reportShell">
-    <header class="reportTop">
-      <div class="reportTop__left">
-        <div class="reportMark">MDG</div>
-        <div class="reportSub">Executive Memorandum</div>
+
+<body>
+<header class="header" id="top">
+  <div class="container header__inner">
+    <a class="brand" href="./index.html" aria-label="Home">
+      <span class="brand__mark" aria-hidden="true">MDG</span>
+      <span class="brand__text">v4</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a class="nav__link" href="./how.html" data-i18n="nav.how">How it works</a>
+      <a class="nav__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
+      <a class="nav__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
+    </nav>
+
+    <div class="header__actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
+        <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
+        <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
       </div>
-      <div class="reportTop__right">
-        <a class="btn btn--ghost" href="./diagnose.html">Back to Diagnose</a>
-        <button class="btn btn--primary" id="btn_pdf">Download PDF</button>
-      </div>
-    </header>
+      <a class="btn btn--ghost" href="./diagnose.html" data-i18n="cta.backDx">Back</a>
+    </div>
 
-    <main class="reportMain">
-      <section class="reportHeader">
-        <h1 class="reportTitle">Structural Diagnostic Memorandum</h1>
-        <div class="reportMeta">
-          <div><span class="metaKey">Label</span> <span id="r_label">–</span></div>
-          <div><span class="metaKey">Context</span> <span id="r_context">–</span></div>
-          <div><span class="metaKey">Created</span> <span id="r_created">–</span></div>
-          <div><span class="metaKey">SSI</span> <span id="r_ssi">–</span></div>
-          <div><span class="metaKey">Confidence</span> <span id="r_conf">–</span></div>
-        </div>
-      </section>
-
-      <section class="reportGrid">
-        <article class="memoCard">
-          <h2>Executive Summary</h2>
-          <p id="m_exec">–</p>
-        </article>
-        <article class="memoCard">
-          <h2>Primary Structural Instability</h2>
-          <p id="m_primary">–</p>
-          <div class="hrLight"></div>
-          <h3>Root Cause Chain</h3>
-          <p id="m_root">–</p>
-        </article>
-      </section>
-
-      <section class="reportGrid">
-        <article class="memoCard">
-          <h2>Amplification Dynamics</h2>
-          <p id="m_amp">–</p>
-          <div class="hrLight"></div>
-          <h3>Nonlinearity</h3>
-          <p id="m_nonlin">–</p>
-        </article>
-
-        <article class="memoCard">
-          <h2>Decision Tree</h2>
-          <div id="m_tree" class="tree"></div>
-        </article>
-      </section>
-
-      <section class="reportGrid">
-        <article class="memoCard">
-          <h2>30–60–90 Outline</h2>
-          <h3>0–30 Days</h3>
-          <p id="m_30">–</p>
-          <h3>31–60 Days</h3>
-          <p id="m_60">–</p>
-          <h3>61–90 Days</h3>
-          <p id="m_90">–</p>
-        </article>
-
-        <article class="memoCard">
-          <h2>CEO Memo</h2>
-          <p id="m_ceo">–</p>
-        </article>
-      </section>
-
-      <section class="reportGrid">
-        <article class="memoCard">
-          <h2>Charts (for record)</h2>
-          <div class="grid2">
-            <div>
-              <div class="metaKey">Radar</div>
-              <svg id="r_svg_radar" class="svgBox svgBox--light" viewBox="0 0 320 260"></svg>
-            </div>
-            <div>
-              <div class="metaKey">Amplification curve</div>
-              <svg id="r_svg_curve" class="svgBox svgBox--light" viewBox="0 0 320 260"></svg>
-            </div>
-          </div>
-        </article>
-      </section>
-    </main>
-
-    <footer class="reportFooter">
-      <span>MDG • Boutique Intelligence • Board-ready memo (EN)</span>
-    </footer>
+    <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 
-  <script src="./script.js" defer></script>
-  <script defer>
-    window.__MDG_REPORT_PAGE__ = true;
-  </script>
+  <div class="drawer" hidden>
+    <div class="drawer__content">
+      <a class="drawer__link" href="./how.html" data-i18n="nav.how">How it works</a>
+      <a class="drawer__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
+      <a class="drawer__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
+      <div class="drawer__sep"></div>
+      <a class="btn btn--ghost btn--full" href="./diagnose.html" data-i18n="cta.backDx">Back</a>
+    </div>
+  </div>
+</header>
+
+<main class="rp-wrap">
+  <div class="rp-top">
+    <div>
+      <h1 class="h2 rp-title" data-i18n="rp.title">Executive Report</h1>
+      <p class="rp-sub" id="rpSubtitle" data-i18n="rp.sub">Premium report (print-ready).</p>
+      <div class="rp-kpis">
+        <span class="pill pill--muted" id="rpMode">—</span>
+        <span class="pill pill--muted" id="rpPrimary">Primary: —</span>
+        <span class="pill pill--muted" id="rpPath">Path: —</span>
+        <span class="pill pill--muted" id="rpRisk">Risk: —</span>
+      </div>
+    </div>
+
+    <div class="rp-actions">
+      <button class="btn btn--primary" type="button" id="printBtn" data-i18n="rp.print">Print / Save as PDF</button>
+      <button class="btn btn--ghost" type="button" id="copyBtn" data-i18n="rp.copy">Copy report</button>
+    </div>
+  </div>
+
+  <div class="rp-section rp-grid">
+    <div class="rp-box">
+      <h3 class="h3" data-i18n="rp.caseTitle">Case header</h3>
+      <div class="rp-note" id="rpCase">—</div>
+      <div class="rp-hr"></div>
+      <h3 class="h3" data-i18n="rp.scanTitle">Quick Scan</h3>
+      <div class="rp-note" id="rpScan">—</div>
+    </div>
+
+    <div class="rp-box">
+      <h3 class="h3" data-i18n="rp.treeTitle">Architecture Tree</h3>
+      <div class="rp-note" data-i18n="rp.treeHint">Decision → Structure → Load → Failure modes → Interventions.</div>
+      <div class="rp-hr"></div>
+      <div class="rp-treeWrap" id="treeMount">—</div>
+    </div>
+  </div>
+
+  <div class="rp-section rp-box">
+    <h3 class="h3" data-i18n="rp.execTitle">Executive Report</h3>
+    <div class="rp-md" id="rpReport">—</div>
+  </div>
+
+  <p class="rp-note" style="margin-top:.9rem;" data-i18n="rp.footerNote">
+    Note: This report is generated from your inputs and the MDG model logic. It is not legal/medical advice.
+  </p>
+</main>
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <div class="brand brand--footer">
+        <span class="brand__mark" aria-hidden="true">MDG</span>
+        <span class="brand__text">v4</span>
+      </div>
+      <p class="micro" data-i18n="footer.tag">Structure diagnosis for stabilization and rebuild.</p>
+    </div>
+    <div class="footer__legal">
+      <a href="./impressum.html" rel="nofollow">Impressum</a>
+      <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+      <a href="./kontakt.html" rel="nofollow">Kontakt</a>
+    </div>
+  </div>
+</footer>
+
+<script src="./report.js" defer></script>
 </body>
 </html>
