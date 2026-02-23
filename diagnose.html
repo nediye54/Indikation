@@ -1,1133 +1,874 @@
-<!-- diagnose.html — MDG V4 (Drop: Diagnose) -->
+<!-- diagnose.html (V4) — COMPLETE FILE (private/business separated + token only for business) -->
 <!doctype html>
-<html lang="de">
+<html lang="en" data-mode="private">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Diagnose – MDG v4</title>
-  <meta name="description" content="MDG Diagnose: Instabilität früh erkennen, Ursachen präzise diagnostizieren, IDG/ADG-Pfad und Executive Report." />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MDG – Diagnosis</title>
+  <meta name="description" content="MDG Diagnosis: detect instability early, diagnose causes precisely, decide Stabilize vs Rebuild." />
   <link rel="stylesheet" href="./style.css" />
+  <style>
+    /* Minimal page-only styling (keeps your style.css as primary) */
+    .dx-wrap{ max-width:1100px; margin:0 auto; padding:24px; }
+    .dx-topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .dx-brand{ display:flex; align-items:center; gap:10px; }
+    .dx-chip{ border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:inherit; border-radius:999px; padding:8px 12px; cursor:pointer; }
+    .dx-chip[aria-pressed="true"]{ border-color:rgba(110,231,183,.35); box-shadow:0 0 0 3px rgba(110,231,183,.10); }
+    .dx-card{ border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.18); border-radius:18px; padding:18px; }
+    .dx-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media (max-width: 980px){ .dx-grid{ grid-template-columns:1fr; } }
+    .dx-h1{ font-size:34px; line-height:1.1; margin:0 0 10px; }
+    .dx-sub{ opacity:.82; margin:0 0 14px; }
+    .dx-row{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 980px){ .dx-row{ grid-template-columns:1fr; } }
+
+    .dx-label{ display:block; font-weight:800; margin:0 0 6px; opacity:.9; }
+    .dx-help{ font-size:12px; opacity:.75; margin-top:8px; }
+    .dx-help b{ opacity:.95; }
+    .dx-text{ width:100%; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03); color:inherit; padding:12px 12px; outline:none; }
+    .dx-text:focus{ border-color:rgba(110,231,183,.35); box-shadow:0 0 0 3px rgba(110,231,183,.10); }
+
+    .dx-cta{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:14px; }
+    .dx-btn{ border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:inherit; padding:10px 14px; cursor:pointer; }
+    .dx-btn.primary{ border-color:rgba(110,231,183,.40); background:rgba(110,231,183,.15); }
+    .dx-btn.danger{ border-color:rgba(239,68,68,.45); background:rgba(239,68,68,.12); }
+    .dx-btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+    .dx-sectionTitle{ font-weight:950; margin:0 0 10px; letter-spacing:.2px; }
+    .dx-hr{ border:0; border-top:1px solid rgba(255,255,255,.10); margin:14px 0; }
+
+    .q{ padding-top:12px; margin-top:12px; border-top:1px solid rgba(255,255,255,.08); }
+    .q:first-child{ border-top:0; padding-top:0; margin-top:0; }
+    .q-title{ font-weight:900; margin:0 0 8px; }
+    .q-ex{ font-size:12px; opacity:.78; margin:0 0 10px; }
+    .q-ex .exline{ display:block; margin-top:3px; }
+    .q-sliderRow{ display:flex; align-items:center; gap:10px; }
+    .q-slider{ width:100%; }
+    .q-val{ min-width:54px; text-align:right; font-variant-numeric: tabular-nums; opacity:.9; font-weight:900; }
+    .pill{ display:inline-flex; align-items:center; gap:8px; border:1px solid rgba(255,255,255,.12); border-radius:999px; padding:8px 10px; background:rgba(255,255,255,.04); opacity:.92; }
+    .pill small{ opacity:.7; font-weight:800; }
+    .dx-kpis{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+
+    .dx-result{ display:none; margin-top:14px; }
+    .dx-pre{ white-space:pre-wrap; word-break:break-word; border-radius:16px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.25); padding:14px; }
+
+    /* Modal */
+    .modalBackdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; padding:18px; z-index:9999; }
+    .modal{ max-width:520px; width:100%; border-radius:18px; border:1px solid rgba(255,255,255,.12); background:rgba(10,12,18,.92); backdrop-filter: blur(10px); padding:16px; }
+    .modalHead{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .modalTitle{ font-weight:950; margin:0; }
+    .modalClose{ border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:inherit; border-radius:12px; padding:6px 10px; cursor:pointer; }
+  </style>
 </head>
-  
-  // ===== MODE DETECTION (PRIVATE / BUSINESS) =====
-const mode =
-  new URLSearchParams(location.search).get("mode") ||
-  localStorage.getItem("mdg_mode") ||
-  "private";
-
-localStorage.setItem("mdg_mode", mode);
-
-// Optional: für CSS oder Debug sichtbar machen
-document.documentElement.dataset.mode = mode;
-
-console.log("MDG Mode:", mode);
 
 <body>
-  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+  <div class="dx-wrap">
+    <div class="dx-topbar">
+      <div class="dx-brand">
+        <div class="pill"><b>MDG</b> <small id="modeBadge">private</small></div>
+        <div class="pill"><small id="langBadge">EN</small></div>
+      </div>
 
-  <header class="header" id="top">
-    <div class="container header__inner">
-      <a class="brand" href="./index.html" aria-label="Zur Startseite">
-        <span class="brand__mark" aria-hidden="true">MDG</span>
-        <span class="brand__text">v4</span>
-      </a>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <button class="dx-chip" type="button" data-lang="de" aria-pressed="false">DE</button>
+        <button class="dx-chip" type="button" data-lang="tr" aria-pressed="false">TR</button>
+        <button class="dx-chip" type="button" data-lang="en" aria-pressed="true">EN</button>
+        <a class="dx-btn" href="./index.html" id="backHome">Home</a>
+      </div>
+    </div>
 
-      <nav class="nav" aria-label="Hauptnavigation">
-        <a class="nav__link" href="./index.html#how" data-i18n="nav.how">Wie es funktioniert</a>
-        <a class="nav__link" href="#main" data-i18n="nav.dx">Diagnose</a>
-        <a class="nav__link" href="./verlauf.html" data-i18n="nav.history">Verlauf</a>
-      </nav>
+    <div class="dx-card">
+      <h1 class="dx-h1" data-i18n="h1">In a few minutes to decision certainty.</h1>
+      <p class="dx-sub" data-i18n="sub">
+        You describe your situation in one sentence, choose “Stabilize” or “Rebuild”, answer a focused scan, and get a premium executive diagnosis.
+      </p>
 
-      <div class="header__actions">
-        <div class="lang" role="group" aria-label="Sprache">
-          <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
-          <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
-          <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
+      <div class="dx-row">
+        <div>
+          <label class="dx-label" for="oneLiner" data-i18n="oneLinerLabel">Describe the situation in one sentence</label>
+          <textarea class="dx-text" id="oneLiner" rows="3" placeholder="e.g., ‘Our project is late and everyone is overloaded.’"></textarea>
+          <div class="dx-help">
+            <b data-i18n="twoExamples">Two examples:</b>
+            <span class="exline" data-i18n="oneLinerEx1">• “We keep arguing at home about the same topic every week.”</span>
+            <span class="exline" data-i18n="oneLinerEx2">• “Decisions are stuck with me and my team can’t move without approval.”</span>
+          </div>
         </div>
-        <a class="btn btn--ghost" href="./index.html" data-i18n="cta.backHome">Zur Homepage</a>
-      </div>
 
-      <button class="burger" type="button" aria-label="Menü öffnen" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-
-    <div class="drawer" hidden>
-      <div class="drawer__content">
-        <a class="drawer__link" href="./index.html#how" data-i18n="nav.how">Wie es funktioniert</a>
-        <a class="drawer__link" href="#main" data-i18n="nav.dx">Diagnose</a>
-        <a class="drawer__link" href="./verlauf.html" data-i18n="nav.history">Verlauf</a>
-        <div class="drawer__sep"></div>
-        <a class="btn btn--ghost btn--full" href="./index.html" data-i18n="cta.backHome">Zur Homepage</a>
-      </div>
-    </div>
-  </header>
-
-  <main id="main">
-    <section class="section wizard">
-      <div class="container">
-        <div class="wizard__shell">
-
-          <div class="wizard__head">
-            <div>
-              <div class="pill pill--muted" id="dx_mode_badge">—</div>
-              <h1 class="h2" data-i18n="dx.h1" style="margin:.65rem 0 0;">Diagnose</h1>
-              <p class="sub" data-i18n="dx.sub" style="margin:.6rem auto 0; max-width:820px;">
-                In wenigen Minuten zur Entscheidungssicherheit: Quick Scan → Ergebnis → Executive Report.
-              </p>
-            </div>
-
-            <div class="progress">
-              <div class="progress__bar"><i id="dx_prog_i" style="width:0%"></i></div>
-              <div class="progress__pct" id="dx_prog_t">0%</div>
-            </div>
+        <div>
+          <label class="dx-label" data-i18n="goalLabel">What do you want?</label>
+          <div class="dx-cta">
+            <button class="dx-btn primary" type="button" id="goalStabilize" data-goal="stabilize" aria-pressed="true" data-i18n="stabilize">Stabilize (IDG)</button>
+            <button class="dx-btn" type="button" id="goalRebuild" data-goal="rebuild" aria-pressed="false" data-i18n="rebuild">Rebuild (ADG)</button>
+          </div>
+          <div class="dx-help">
+            <b data-i18n="goalExamples">Two examples:</b>
+            <span class="exline" data-i18n="goalEx1">• Stabilize: “Stop the bleeding, reduce overload, regain control.”</span>
+            <span class="exline" data-i18n="goalEx2">• Rebuild: “Change the structure so the same problems can’t return.”</span>
           </div>
 
-          <!-- STEP NAV -->
-          <div class="dx-nav">
-            <button class="chip" type="button" data-stepgo="1">1 · Kontext</button>
-            <button class="chip" type="button" data-stepgo="2">2 · Ziel</button>
-            <button class="chip" type="button" data-stepgo="3">3 · Quick Scan</button>
-            <button class="chip chip--ghost" type="button" data-stepgo="4">→ Ergebnis</button>
+          <hr class="dx-hr" />
+
+          <div class="dx-kpis">
+            <div class="pill"><small data-i18n="progress">Progress</small> <b id="progressPct">0%</b></div>
+            <div class="pill"><small data-i18n="saved">Autosave</small> <b id="autosaveState">ON</b></div>
           </div>
 
-          <!-- STEP 1 -->
-          <section class="dx-step" id="step1" data-step="1">
-            <div class="card">
-              <h2 class="h3" data-i18n="s1.h">1) Beschreibe dein Thema in einem Satz</h2>
-              <p class="p" data-i18n="s1.p">
-                Kein Roman. Wir brauchen den Kern, damit die Struktur sichtbar wird.
-              </p>
-
-              <label class="dx-label" for="dx_context" data-i18n="s1.label">Kontext (1 Satz)</label>
-              <textarea id="dx_context" rows="3" placeholder="z.B. Wir streiten ständig über Prioritäten und alles hängt an einer Person."></textarea>
-
-              <div class="ex2">
-                <div class="ex2__t" data-i18n="ex.title">Beispiele</div>
-                <div class="ex2__grid">
-                  <div class="ex2__item" data-i18n="s1.ex1">„Ich streite häufig mit meinem Partner über Kleinigkeiten.“</div>
-                  <div class="ex2__item" data-i18n="s1.ex2">„Im Team entscheidet alles der Chef, Lieferungen sind unzuverlässig.“</div>
-                </div>
-              </div>
-
-              <div class="dx-actions">
-                <button class="btn btn--primary" type="button" id="go2" data-i18n="cta.next">Weiter</button>
-              </div>
-            </div>
-          </section>
-
-          <!-- STEP 2 -->
-          <section class="dx-step" id="step2" data-step="2" hidden>
-            <div class="card">
-              <h2 class="h3" data-i18n="s2.h">2) Was willst du jetzt?</h2>
-              <p class="p" data-i18n="s2.p">
-                Stabilisieren = Spannung runter, Kontrolle zurück. Umbauen = Architektur neu designen.
-              </p>
-
-              <div class="choice2">
-                <button class="choice2__btn" type="button" data-intent="stabilize">
-                  <div class="choice2__k" data-i18n="s2.a">Stabilisieren</div>
-                  <div class="choice2__t" data-i18n="s2.a2">Schnell Ruhe reinbringen, Fehler stoppen, Last senken.</div>
-                </button>
-
-                <button class="choice2__btn" type="button" data-intent="redesign">
-                  <div class="choice2__k" data-i18n="s2.b">Umbauen</div>
-                  <div class="choice2__t" data-i18n="s2.b2">Struktur neu: Entscheidungen, Rollen, Schnittstellen, Rhythmus.</div>
-                </button>
-              </div>
-
-              <div class="ex2">
-                <div class="ex2__t" data-i18n="ex.title">Beispiele</div>
-                <div class="ex2__grid">
-                  <div class="ex2__item" data-i18n="s2.ex1">Stabilisieren: „Wir haben Chaos – erstmal stoppen, sortieren, priorisieren.“</div>
-                  <div class="ex2__item" data-i18n="s2.ex2">Umbauen: „So geht es nicht weiter – Verantwortungen & Entscheidungswege müssen neu.“</div>
-                </div>
-              </div>
-
-              <div class="dx-actions">
-                <button class="btn btn--ghost" type="button" id="back1" data-i18n="cta.back">Zurück</button>
-                <button class="btn btn--primary" type="button" id="go3" data-i18n="cta.next">Weiter</button>
-              </div>
-            </div>
-          </section>
-
-          <!-- STEP 3 -->
-          <section class="dx-step" id="step3" data-step="3" hidden>
-            <div class="card">
-              <h2 class="h3" data-i18n="s3.h">3) Quick Scan (streng, klar, präzise)</h2>
-              <p class="p" data-i18n="s3.p">
-                Schiebe den Regler so, wie es heute wirklich ist. 0 = unkritisch · 10 = kritisch.
-              </p>
-
-              <div class="scan">
-                <!-- Q1 -->
-                <div class="scan__q">
-                  <div class="scan__head">
-                    <div>
-                      <div class="scan__k" data-i18n="q1.t">Entscheidungen sind an eine Person gebunden</div>
-                      <div class="scan__d" data-i18n="q1.d">Wie sehr hängt „Weiterkommen“ an einer Person?</div>
-                    </div>
-                    <div class="scan__v"><span id="v1">0</span>/10</div>
-                  </div>
-                  <input class="scan__r" id="q1" type="range" min="0" max="10" step="1" value="0" />
-                  <div class="exline">
-                    <div class="exline__a" data-i18n="q1.ex1">Beispiel A: „Ohne ihn passiert nichts.“</div>
-                    <div class="exline__b" data-i18n="q1.ex2">Beispiel B: „Auch ohne ihn läuft es stabil weiter.“</div>
-                  </div>
-                </div>
-
-                <!-- Q2 -->
-                <div class="scan__q">
-                  <div class="scan__head">
-                    <div>
-                      <div class="scan__k" data-i18n="q2.t">Last ist unfair / konzentriert</div>
-                      <div class="scan__d" data-i18n="q2.d">Tragen wenige Rollen zu viel (Zeit, Verantwortung, Stress)?</div>
-                    </div>
-                    <div class="scan__v"><span id="v2">0</span>/10</div>
-                  </div>
-                  <input class="scan__r" id="q2" type="range" min="0" max="10" step="1" value="0" />
-                  <div class="exline">
-                    <div class="exline__a" data-i18n="q2.ex1">Beispiel A: „1–2 Leute brennen aus, alle fragen sie.“</div>
-                    <div class="exline__b" data-i18n="q2.ex2">Beispiel B: „Arbeit ist gut verteilt, Vertretung klappt.“</div>
-                  </div>
-                </div>
-
-                <!-- Q3 -->
-                <div class="scan__q">
-                  <div class="scan__head">
-                    <div>
-                      <div class="scan__k" data-i18n="q3.t">Wachstum / Komplexität überfordert Struktur</div>
-                      <div class="scan__d" data-i18n="q3.d">Wird es bei mehr Last sofort chaotisch?</div>
-                    </div>
-                    <div class="scan__v"><span id="v3">0</span>/10</div>
-                  </div>
-                  <input class="scan__r" id="q3" type="range" min="0" max="10" step="1" value="0" />
-                  <div class="exline">
-                    <div class="exline__a" data-i18n="q3.ex1">Beispiel A: „+20% reicht und Qualität kippt.“</div>
-                    <div class="exline__b" data-i18n="q3.ex2">Beispiel B: „Mehr Last bleibt kontrollierbar.“</div>
-                  </div>
-                </div>
-
-                <!-- Q4 -->
-                <div class="scan__q">
-                  <div class="scan__head">
-                    <div>
-                      <div class="scan__k" data-i18n="q4.t">Macht & Verantwortung sind entkoppelt</div>
-                      <div class="scan__d" data-i18n="q4.d">Entscheidet jemand, der die Konsequenzen nicht trägt?</div>
-                    </div>
-                    <div class="scan__v"><span id="v4">0</span>/10</div>
-                  </div>
-                  <input class="scan__r" id="q4" type="range" min="0" max="10" step="1" value="0" />
-                  <div class="exline">
-                    <div class="exline__a" data-i18n="q4.ex1">Beispiel A: „Andere entscheiden, ich muss es ausbaden.“</div>
-                    <div class="exline__b" data-i18n="q4.ex2">Beispiel B: „Wer entscheidet, trägt auch die Folgen.“</div>
-                  </div>
-                </div>
-
-                <!-- Q5 -->
-                <div class="scan__q">
-                  <div class="scan__head">
-                    <div>
-                      <div class="scan__k" data-i18n="q5.t">Energie / Fehler werden nicht integriert</div>
-                      <div class="scan__d" data-i18n="q5.d">Wird Stress höher und Fehler wiederholen sich?</div>
-                    </div>
-                    <div class="scan__v"><span id="v5">0</span>/10</div>
-                  </div>
-                  <input class="scan__r" id="q5" type="range" min="0" max="10" step="1" value="0" />
-                  <div class="exline">
-                    <div class="exline__a" data-i18n="q5.ex1">Beispiel A: „Man ist müde, Fehler passieren wieder.“</div>
-                    <div class="exline__b" data-i18n="q5.ex2">Beispiel B: „Erholung & Lernen sind fest eingebaut.“</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="dx-actions">
-                <button class="btn btn--ghost" type="button" id="back2" data-i18n="cta.back">Zurück</button>
-                <button class="btn btn--primary" type="button" id="calc" data-i18n="cta.calc">Ergebnis berechnen</button>
-              </div>
-            </div>
-          </section>
-
-          <!-- STEP 4 RESULT -->
-          <section class="dx-step" id="step4" data-step="4" hidden>
-            <div class="card">
-              <div class="res-head">
-                <div>
-                  <h2 class="h3" data-i18n="r.h">Ergebnis</h2>
-                  <p class="micro" id="r_sub">—</p>
-                </div>
-                <div class="res-actions">
-                  <button class="btn btn--ghost" type="button" id="recalc" data-i18n="cta.recalc">Neu berechnen</button>
-                  <button class="btn btn--primary" type="button" id="exec" data-i18n="cta.exec">Executive Report</button>
-                </div>
-              </div>
-
-              <div class="res-grid">
-                <div class="res-card">
-                  <div class="pill pill--muted" data-i18n="r.primary">Primärinstabilität</div>
-                  <div class="res-title" id="r_primary">—</div>
-                  <p class="p" id="r_primary_why">—</p>
-                </div>
-
-                <div class="res-card">
-                  <div class="pill pill--muted" data-i18n="r.path">Pfad</div>
-                  <div class="res-title" id="r_path">—</div>
-                  <p class="p" id="r_path_why">—</p>
-                </div>
-              </div>
-
-              <div class="viz-grid">
-                <div class="viz-card">
-                  <div class="viz-head">
-                    <div class="h3" data-i18n="viz.radar">Radar</div>
-                    <div class="micro" data-i18n="viz.radar2">Strukturspannung je Dimension</div>
-                  </div>
-                  <div id="radar_mount"></div>
-                </div>
-
-                <div class="viz-card">
-                  <div class="viz-head">
-                    <div class="h3" data-i18n="viz.tensions">Spannungen</div>
-                    <div class="micro" data-i18n="viz.tensions2">Wo bricht es zuerst?</div>
-                  </div>
-                  <div id="bars_mount"></div>
-                </div>
-              </div>
-
-              <div class="moves">
-                <div class="moves__col">
-                  <div class="pill pill--muted" data-i18n="moves.now">3 Moves jetzt</div>
-                  <ol class="ol" id="moves_now"></ol>
-                </div>
-                <div class="moves__col">
-                  <div class="pill pill--muted" data-i18n="moves.week">3 Moves diese Woche</div>
-                  <ol class="ol" id="moves_week"></ol>
-                </div>
-              </div>
-
-              <!-- Adaptive precision question -->
-              <div class="card" id="prec_block" style="margin-top:18px; display:none;">
-                <div class="pill pill--muted" data-i18n="prec.pill">Präzisionsfrage</div>
-                <h3 class="h3" id="prec_q" style="margin:.6rem 0 0;">—</h3>
-                <p class="micro" id="prec_hint" style="margin:.5rem 0 0;">—</p>
-
-                <label class="dx-label" for="prec_a" style="margin-top:14px;" data-i18n="prec.answer">Deine Antwort</label>
-                <textarea id="prec_a" rows="3" placeholder=""></textarea>
-
-                <div class="dx-actions" style="margin-top:12px;">
-                  <button class="btn btn--ghost" type="button" id="prec_skip" data-i18n="prec.skip">Überspringen</button>
-                  <button class="btn btn--primary" type="button" id="prec_apply" data-i18n="prec.apply">Antwort anwenden</button>
-                </div>
-              </div>
-
-              <!-- Executive report output -->
-              <div class="card" id="report_block" style="margin-top:18px; display:none;">
-                <div class="pill pill--muted" data-i18n="rep.pill">Executive Report</div>
-                <p class="micro" id="rep_status" style="margin:.65rem 0 0;">—</p>
-                <div class="report" id="rep_html"></div>
-              </div>
-
-            </div>
-          </section>
-
+          <div class="dx-cta" style="margin-top:10px;">
+            <button class="dx-btn primary" type="button" id="run" data-i18n="run">Run diagnosis</button>
+            <button class="dx-btn" type="button" id="reset" data-i18n="reset">Reset</button>
+          </div>
+          <div class="dx-help" id="businessHint" style="display:none;">
+            <b data-i18n="businessNote">Business mode:</b>
+            <span data-i18n="businessNote2">questions and output are optimized for managers, owners, leaders.</span>
+          </div>
         </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <div class="container footer__grid">
-      <div>
-        <div class="brand brand--footer">
-          <span class="brand__mark" aria-hidden="true">MDG</span>
-          <span class="brand__text">v4</span>
-        </div>
-        <p class="micro" data-i18n="footer.tag">Strukturdiagnose für Stabilisierung und Umbau.</p>
-      </div>
-      <div class="footer__links">
-        <a href="./index.html#how" data-i18n="nav.how">Wie es funktioniert</a>
-        <a href="./verlauf.html" data-i18n="nav.history">Verlauf</a>
-        <a href="#top" data-i18n="footer.top">Nach oben</a>
-      </div>
-      <div class="footer__legal">
-        <a href="./impressum.html" rel="nofollow">Impressum</a>
-        <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
-        <a href="./kontakt.html" rel="nofollow">Kontakt</a>
       </div>
     </div>
-  </footer>
 
-  <script src="./script.js" defer></script>
+    <div class="dx-grid" style="margin-top:14px;">
+      <div class="dx-card">
+        <div class="dx-sectionTitle" data-i18n="scanTitle">Quick scan (sliders)</div>
+        <div class="dx-help" style="margin-top:-6px; margin-bottom:10px;" data-i18n="scanSub">
+          Move each slider to what feels most true today. 0 = no issue, 10 = critical.
+        </div>
 
-  <!-- Diagnose logic + SVG viz -->
-  <script defer>
-    (() => {
-      "use strict";
-      const $ = (s, r=document) => r.querySelector(s);
-      const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+        <div id="questions"></div>
+      </div>
 
-      const API_BASE = (window.MDG && window.MDG.API_BASE) ? window.MDG.API_BASE : "https://api.mdg-indikation.de";
-      const K = (window.MDG && window.MDG.storage) ? window.MDG.storage : { K_LANG:"mdg_lang", K_MODE:"mdg_mode", K_TOKEN:"mdg_token" };
+      <div class="dx-card">
+        <div class="dx-sectionTitle" data-i18n="followupTitle">Clarification question (adaptive)</div>
+        <div class="dx-help" data-i18n="followupSub">
+          After the scan, the engine asks 1 question to increase precision, then finalizes.
+        </div>
 
-      const clamp01 = (x)=> Math.max(0, Math.min(1, x));
-      const esc = (s)=> String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+        <div class="q" id="followupBox" style="display:none;">
+          <p class="q-title" id="followupQ">—</p>
+          <div id="followupChoices" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+        </div>
 
-      // ======= Premium minimal CSS add-ons for this page (keeps your main style.css intact) =======
-      const style = document.createElement("style");
-      style.textContent = `
-        .dx-nav{ display:flex; gap:.5rem; flex-wrap:wrap; margin: 0 0 18px; }
-        .dx-step{ scroll-margin-top: 90px; }
-        .dx-actions{ display:flex; gap:.7rem; flex-wrap:wrap; margin-top:18px; }
-        .choice2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
-        .choice2__btn{ text-align:left; padding:16px; border-radius: 18px; border:1px solid var(--stroke); background: rgba(255,255,255,.05); color: var(--text); }
-        .choice2__btn:hover{ border-color: rgba(110,231,183,.55); transform: translateY(-1px); }
-        .choice2__k{ font-weight:900; font-size:1.05rem; }
-        .choice2__t{ color: var(--muted); margin-top:6px; line-height:1.5; }
-        .scan{ display:grid; gap:12px; margin-top:16px; }
-        .scan__q{ border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.04); border-radius: 18px; padding:14px; }
-        .scan__head{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
-        .scan__k{ font-weight:900; }
-        .scan__d{ color: var(--muted); font-size:.92rem; margin-top:4px; }
-        .scan__v{ font-weight:900; color: var(--text); opacity:.9; }
-        .scan__r{ width:100%; margin-top:12px; }
-        .ex2{ margin-top:14px; border:1px dashed rgba(255,255,255,.14); background: rgba(0,0,0,.10); border-radius: 16px; padding:12px; }
-        .ex2__t{ font-weight:900; color: var(--muted); font-size:.85rem; }
-        .ex2__grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
-        .ex2__item{ color: var(--muted); background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius: 14px; padding:10px; line-height:1.45; }
-        .exline{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
-        .exline__a,.exline__b{ font-size:.86rem; color: var(--muted); background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius: 14px; padding:10px; }
-        .res-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
-        .res-actions{ display:flex; gap:.6rem; flex-wrap:wrap; }
-        .res-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
-        .res-card{ border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.04); border-radius: 18px; padding:14px; }
-        .res-title{ font-weight:950; font-size:1.25rem; margin:.6rem 0 .2rem; }
-        .viz-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
-        .viz-card{ border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.04); border-radius: 18px; padding:14px; overflow:hidden; }
-        .viz-head{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:10px; }
-        .moves{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
-        .moves__col{ border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.04); border-radius: 18px; padding:14px; }
-        .report{ margin-top:14px; color: var(--text); }
-        .report h1,.report h2,.report h3{ margin: 14px 0 8px; }
-        .report p{ color: var(--muted); line-height:1.65; margin: 8px 0; }
-        .report ul{ margin: 8px 0 8px 18px; color: var(--muted); }
-        .report code{ background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,.10); }
-        @media (max-width: 980px){
-          .choice2{ grid-template-columns:1fr; }
-          .ex2__grid{ grid-template-columns:1fr; }
-          .exline{ grid-template-columns:1fr; }
-          .res-grid{ grid-template-columns:1fr; }
-          .viz-grid{ grid-template-columns:1fr; }
-          .moves{ grid-template-columns:1fr; }
-        }
-      `;
-      document.head.appendChild(style);
+        <hr class="dx-hr" />
 
-      // ======= i18n (this page only) =======
-      const dict = {
-        de: {
-          "nav.how":"Wie es funktioniert",
-          "nav.dx":"Diagnose",
-          "nav.history":"Verlauf",
-          "cta.backHome":"Zur Homepage",
-          "dx.h1":"Diagnose",
-          "dx.sub":"In wenigen Minuten zur Entscheidungssicherheit: Quick Scan → Ergebnis → Executive Report.",
-          "ex.title":"Beispiele",
-          "cta.next":"Weiter",
-          "cta.back":"Zurück",
-          "cta.calc":"Ergebnis berechnen",
-          "cta.recalc":"Neu berechnen",
-          "cta.exec":"Executive Report",
-          "s1.h":"1) Beschreibe dein Thema in einem Satz",
-          "s1.p":"Kein Roman. Wir brauchen den Kern, damit die Struktur sichtbar wird.",
-          "s1.label":"Kontext (1 Satz)",
-          "s1.ex1":"„Ich streite häufig mit meinem Partner über Kleinigkeiten.“",
-          "s1.ex2":"„Im Team entscheidet alles der Chef, Lieferungen sind unzuverlässig.“",
-          "s2.h":"2) Was willst du jetzt?",
-          "s2.p":"Stabilisieren = Spannung runter, Kontrolle zurück. Umbauen = Architektur neu designen.",
-          "s2.a":"Stabilisieren",
-          "s2.a2":"Schnell Ruhe reinbringen, Fehler stoppen, Last senken.",
-          "s2.b":"Umbauen",
-          "s2.b2":"Struktur neu: Entscheidungen, Rollen, Schnittstellen, Rhythmus.",
-          "s2.ex1":"Stabilisieren: „Wir haben Chaos – erstmal stoppen, sortieren, priorisieren.“",
-          "s2.ex2":"Umbauen: „So geht es nicht weiter – Verantwortungen & Entscheidungswege müssen neu.“",
-          "s3.h":"3) Quick Scan (streng, klar, präzise)",
-          "s3.p":"Schiebe den Regler so, wie es heute wirklich ist. 0 = unkritisch · 10 = kritisch.",
-          "q1.t":"Entscheidungen sind an eine Person gebunden",
-          "q1.d":"Wie sehr hängt „Weiterkommen“ an einer Person?",
-          "q1.ex1":"Beispiel A: „Ohne ihn passiert nichts.“",
-          "q1.ex2":"Beispiel B: „Auch ohne ihn läuft es stabil weiter.“",
-          "q2.t":"Last ist unfair / konzentriert",
-          "q2.d":"Tragen wenige Rollen zu viel (Zeit, Verantwortung, Stress)?",
-          "q2.ex1":"Beispiel A: „1–2 Leute brennen aus, alle fragen sie.“",
-          "q2.ex2":"Beispiel B: „Arbeit ist gut verteilt, Vertretung klappt.“",
-          "q3.t":"Wachstum / Komplexität überfordert Struktur",
-          "q3.d":"Wird es bei mehr Last sofort chaotisch?",
-          "q3.ex1":"Beispiel A: „+20% reicht und Qualität kippt.“",
-          "q3.ex2":"Beispiel B: „Mehr Last bleibt kontrollierbar.“",
-          "q4.t":"Macht & Verantwortung sind entkoppelt",
-          "q4.d":"Entscheidet jemand, der die Konsequenzen nicht trägt?",
-          "q4.ex1":"Beispiel A: „Andere entscheiden, ich muss es ausbaden.“",
-          "q4.ex2":"Beispiel B: „Wer entscheidet, trägt auch die Folgen.“",
-          "q5.t":"Energie / Fehler werden nicht integriert",
-          "q5.d":"Wird Stress höher und Fehler wiederholen sich?",
-          "q5.ex1":"Beispiel A: „Man ist müde, Fehler passieren wieder.“",
-          "q5.ex2":"Beispiel B: „Erholung & Lernen sind fest eingebaut.“",
-          "r.h":"Ergebnis",
-          "r.primary":"Primärinstabilität",
-          "r.path":"Pfad",
-          "viz.radar":"Radar",
-          "viz.radar2":"Strukturspannung je Dimension",
-          "viz.tensions":"Spannungen",
-          "viz.tensions2":"Wo bricht es zuerst?",
-          "moves.now":"3 Moves jetzt",
-          "moves.week":"3 Moves diese Woche",
-          "prec.pill":"Präzisionsfrage",
-          "prec.answer":"Deine Antwort",
-          "prec.skip":"Überspringen",
-          "prec.apply":"Antwort anwenden",
-          "rep.pill":"Executive Report",
-          "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau.",
-          "footer.top":"Nach oben"
+        <div class="dx-sectionTitle" data-i18n="resultTitle">Strategic assessment</div>
+        <div class="dx-help" data-i18n="resultSub">
+          Your output appears here after “Run diagnosis”. (Private and Business differ.)
+        </div>
+
+        <div class="dx-result" id="resultBox">
+          <div class="dx-pre" id="resultText"></div>
+          <div class="dx-cta">
+            <button class="dx-btn primary" id="execReport" type="button" data-i18n="execReport">Generate Executive Report</button>
+            <button class="dx-btn" id="copyReport" type="button" data-i18n="copy">Copy</button>
+          </div>
+          <div class="dx-help" id="statusLine">Status: —</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Business token modal (only shown in business mode, closable) -->
+  <div class="modalBackdrop" id="tokenBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tokenTitle">
+      <div class="modalHead">
+        <h3 class="modalTitle" id="tokenTitle" data-i18n="tokenTitle">Business access</h3>
+        <button class="modalClose" type="button" id="tokenClose" data-i18n="close">Close</button>
+      </div>
+      <p class="dx-help" style="margin-top:10px;" data-i18n="tokenInfo">
+        Business requires a token. Private mode is free and does not require a token.
+      </p>
+      <label class="dx-label" for="tokenInput" style="margin-top:12px;" data-i18n="tokenLabel">Token</label>
+      <input class="dx-text" id="tokenInput" placeholder="MDG-XXXX-XXXX" />
+      <div class="dx-cta">
+        <button class="dx-btn primary" type="button" id="tokenSave" data-i18n="continue">Continue</button>
+        <button class="dx-btn" type="button" id="tokenToPrivate" data-i18n="switchPrivate">Switch to Private</button>
+      </div>
+      <div class="dx-help" id="tokenStatus">—</div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================
+    // PATCHES INCLUDED: mode separation + token only for business
+    // =========================================================
+
+    const $ = (s, r=document) => r.querySelector(s);
+    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+    // ---- API base (your CF custom domain) ----
+    const API_BASE = "https://api.mdg-indikation.de"; // keep
+
+    // ===== MODE DETECTION (PRIVATE / BUSINESS) =====
+    const mode =
+      new URLSearchParams(location.search).get("mode") ||
+      localStorage.getItem("mdg_mode") ||
+      "private";
+
+    localStorage.setItem("mdg_mode", mode);
+    document.documentElement.dataset.mode = mode;
+    $("#modeBadge").textContent = mode;
+    $("#businessHint").style.display = (mode === "business") ? "block" : "none";
+
+    // ===== Language =====
+    const dict = {
+      en: {
+        h1:"In a few minutes to decision certainty.",
+        sub:"You describe your situation in one sentence, choose “Stabilize” or “Rebuild”, answer a focused scan, and get a premium executive diagnosis.",
+        oneLinerLabel:"Describe the situation in one sentence",
+        twoExamples:"Two examples:",
+        oneLinerEx1:"• “We keep arguing at home about the same topic every week.”",
+        oneLinerEx2:"• “Decisions are stuck with me and my team can’t move without approval.”",
+        goalLabel:"What do you want?",
+        stabilize:"Stabilize (IDG)",
+        rebuild:"Rebuild (ADG)",
+        goalExamples:"Two examples:",
+        goalEx1:"• Stabilize: “Stop the bleeding, reduce overload, regain control.”",
+        goalEx2:"• Rebuild: “Change the structure so the same problems can’t return.”",
+        progress:"Progress",
+        saved:"Autosave",
+        run:"Run diagnosis",
+        reset:"Reset",
+        businessNote:"Business mode:",
+        businessNote2:"questions and output are optimized for managers, owners, leaders.",
+        scanTitle:"Quick scan (sliders)",
+        scanSub:"Move each slider to what feels most true today. 0 = no issue, 10 = critical.",
+        followupTitle:"Clarification question (adaptive)",
+        followupSub:"After the scan, the engine asks 1 question to increase precision, then finalizes.",
+        resultTitle:"Strategic assessment",
+        resultSub:"Your output appears here after “Run diagnosis”. (Private and Business differ.)",
+        execReport:"Generate Executive Report",
+        copy:"Copy",
+        tokenTitle:"Business access",
+        close:"Close",
+        tokenInfo:"Business requires a token. Private mode is free and does not require a token.",
+        tokenLabel:"Token",
+        continue:"Continue",
+        switchPrivate:"Switch to Private",
+      },
+      de: {
+        h1:"In wenigen Minuten zur Entscheidungssicherheit.",
+        sub:"Du beschreibst dein Thema in einem Satz, wählst „Stabilisieren“ oder „Umbauen“, beantwortest einen fokussierten Scan – und erhältst eine Premium-Diagnose.",
+        oneLinerLabel:"Beschreibe die Situation in einem Satz",
+        twoExamples:"Zwei Beispiele:",
+        oneLinerEx1:"• „Wir streiten zuhause jede Woche über das gleiche Thema.“",
+        oneLinerEx2:"• „Entscheidungen hängen bei mir fest und das Team kommt ohne Freigabe nicht weiter.“",
+        goalLabel:"Was willst du?",
+        stabilize:"Stabilisieren (IDG)",
+        rebuild:"Umbauen (ADG)",
+        goalExamples:"Zwei Beispiele:",
+        goalEx1:"• Stabilisieren: „Überlast stoppen, Druck rausnehmen, Kontrolle zurückholen.“",
+        goalEx2:"• Umbauen: „Struktur ändern, damit die gleichen Probleme nicht zurückkommen.“",
+        progress:"Fortschritt",
+        saved:"Auto-Save",
+        run:"Diagnose starten",
+        reset:"Zurücksetzen",
+        businessNote:"Business-Modus:",
+        businessNote2:"Fragen & Output sind auf Manager, Unternehmer, Verantwortliche optimiert.",
+        scanTitle:"Quick Scan (Slider)",
+        scanSub:"Jeden Slider auf „heute trifft zu“ setzen. 0 = kein Problem, 10 = kritisch.",
+        followupTitle:"Klärungsfrage (adaptiv)",
+        followupSub:"Nach dem Scan stellt die Engine 1 Frage für mehr Präzision, dann finalisiert sie.",
+        resultTitle:"Strategische Einschätzung",
+        resultSub:"Output erscheint nach „Diagnose starten“. (Privat/Business unterschiedlich.)",
+        execReport:"Executive Report erzeugen",
+        copy:"Kopieren",
+        tokenTitle:"Business-Zugang",
+        close:"Schließen",
+        tokenInfo:"Business benötigt Token. Privat ist frei und benötigt keinen Token.",
+        tokenLabel:"Token",
+        continue:"Weiter",
+        switchPrivate:"Zu Privat wechseln",
+      },
+      tr: {
+        h1:"Birkaç dakikada karar netliği.",
+        sub:"Konuyu tek cümlede yaz, “Stabilize” veya “Rebuild” seç, kısa taramayı yap ve premium yönetici çıktısını al.",
+        oneLinerLabel:"Durumu tek cümlede anlat",
+        twoExamples:"İki örnek:",
+        oneLinerEx1:"• “Evde her hafta aynı konuda tartışıyoruz.”",
+        oneLinerEx2:"• “Kararlar bende kilitleniyor, ekip onaysız ilerleyemiyor.”",
+        goalLabel:"Ne istiyorsun?",
+        stabilize:"Stabilize (IDG)",
+        rebuild:"Rebuild (ADG)",
+        goalExamples:"İki örnek:",
+        goalEx1:"• Stabilize: “Aşırı yükü azalt, kontrolü geri kazan.”",
+        goalEx2:"• Rebuild: “Sorunların geri gelmemesi için yapıyı değiştir.”",
+        progress:"İlerleme",
+        saved:"Oto-kayıt",
+        run:"Analizi başlat",
+        reset:"Sıfırla",
+        businessNote:"Business modu:",
+        businessNote2:"Sorular ve çıktı; yönetici, işletme sahibi ve sorumlular için optimize edilir.",
+        scanTitle:"Hızlı tarama (slider)",
+        scanSub:"Sliderları bugüne göre ayarla. 0 = sorun yok, 10 = kritik.",
+        followupTitle:"Netleştirme sorusu (adaptif)",
+        followupSub:"Taramadan sonra 1 soru sorar, sonra sonucu kesinleştirir.",
+        resultTitle:"Stratejik değerlendirme",
+        resultSub:"“Analizi başlat” sonrası burada görünür. (Private/Business farklı.)",
+        execReport:"Executive Report üret",
+        copy:"Kopyala",
+        tokenTitle:"Business erişimi",
+        close:"Kapat",
+        tokenInfo:"Business için token gerekir. Private ücretsizdir ve token istemez.",
+        tokenLabel:"Token",
+        continue:"Devam",
+        switchPrivate:"Private’a geç",
+      }
+    };
+
+    let lang = localStorage.getItem("mdg_lang") || "en";
+    function applyLang(next){
+      if (!dict[next]) next = "en";
+      lang = next;
+      localStorage.setItem("mdg_lang", lang);
+      $("#langBadge").textContent = lang.toUpperCase();
+      $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+      $$("[data-i18n]").forEach(el => {
+        const key = el.dataset.i18n;
+        const val = dict[lang][key];
+        if (val) el.textContent = val;
+      });
+      document.documentElement.lang = lang;
+    }
+    $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => applyLang(btn.dataset.lang)));
+    applyLang(lang);
+
+    // ===== Token gating (ONLY for business) =====
+    function showTokenModal(){
+      $("#tokenBackdrop").style.display = "flex";
+      $("#tokenBackdrop").setAttribute("aria-hidden", "false");
+      $("#tokenStatus").textContent = "—";
+      $("#tokenInput").value = localStorage.getItem("mdg_token") || "";
+      setTimeout(() => $("#tokenInput").focus(), 10);
+    }
+    function hideTokenModal(){
+      $("#tokenBackdrop").style.display = "none";
+      $("#tokenBackdrop").setAttribute("aria-hidden", "true");
+    }
+    $("#tokenClose").addEventListener("click", hideTokenModal);
+    $("#tokenToPrivate").addEventListener("click", () => {
+      localStorage.setItem("mdg_mode", "private");
+      // reload to re-render private set
+      location.href = "diagnose.html?mode=private";
+    });
+    $("#tokenSave").addEventListener("click", () => {
+      const t = ($("#tokenInput").value || "").trim();
+      if (t.length < 6) { $("#tokenStatus").textContent = "Invalid token."; return; }
+      localStorage.setItem("mdg_token", t);
+      $("#tokenStatus").textContent = "Saved.";
+      hideTokenModal();
+    });
+
+    if (mode === "business") {
+      const token = localStorage.getItem("mdg_token");
+      if (!token) showTokenModal();
+    }
+
+    // ===== Goal toggle =====
+    let goal = localStorage.getItem("mdg_goal") || "stabilize";
+    function setGoal(g){
+      goal = g;
+      localStorage.setItem("mdg_goal", goal);
+      $("#goalStabilize").classList.toggle("primary", goal === "stabilize");
+      $("#goalRebuild").classList.toggle("primary", goal === "rebuild");
+      $("#goalStabilize").setAttribute("aria-pressed", String(goal === "stabilize"));
+      $("#goalRebuild").setAttribute("aria-pressed", String(goal === "rebuild"));
+    }
+    $("#goalStabilize").addEventListener("click", () => setGoal("stabilize"));
+    $("#goalRebuild").addEventListener("click", () => setGoal("rebuild"));
+    setGoal(goal);
+
+    // ===== Questions (Private vs Business) =====
+    // Slider scale: 0..10 where 10 = critical
+    const PRIVATE_QUESTIONS = [
+      {
+        id:"q_load",
+        title: {en:"Overload & pressure", de:"Überlast & Druck", tr:"Aşırı yük & baskı"},
+        text: {
+          en:"How overloaded are you (or the system) right now?",
+          de:"Wie überlastet bist du (oder das System) gerade?",
+          tr:"Şu anda ne kadar aşırı yüklüsün (veya sistem)?"
         },
-        tr: {
-          "nav.how":"Nasıl çalışır",
-          "nav.dx":"Analiz",
-          "nav.history":"Geçmiş",
-          "cta.backHome":"Anasayfa",
-          "dx.h1":"Analiz",
-          "dx.sub":"Dakikalar içinde karar netliği: Hızlı tarama → Sonuç → Executive Report.",
-          "ex.title":"Örnekler",
-          "cta.next":"Devam",
-          "cta.back":"Geri",
-          "cta.calc":"Sonucu hesapla",
-          "cta.recalc":"Yeniden hesapla",
-          "cta.exec":"Executive Report",
-          "s1.h":"1) Konuyu tek cümleyle yaz",
-          "s1.p":"Hikâye değil. Yapıyı görmek için çekirdek gerekir.",
-          "s1.label":"Bağlam (1 cümle)",
-          "s1.ex1":"“Partnerimle sık sık küçük şeyler yüzünden tartışıyorum.”",
-          "s1.ex2":"“Ekipte her şeye patron karar veriyor, teslimatlar düzensiz.”",
-          "s2.h":"2) Şu an ne istiyorsun?",
-          "s2.p":"Stabilize = gerilimi düşür, kontrolü geri al. Yeniden kur = mimariyi yeniden tasarla.",
-          "s2.a":"Stabilize",
-          "s2.a2":"Hızlı sakinleşme, hataları durdur, yükü azalt.",
-          "s2.b":"Yeniden kur",
-          "s2.b2":"Karar, rol, arayüz, ritim yeniden tasarım.",
-          "s2.ex1":"Stabilize: “Kaos var — önce durdur, sırala, önceliklendir.”",
-          "s2.ex2":"Yeniden kur: “Böyle gitmez — sorumluluklar & karar yolları değişmeli.”",
-          "s3.h":"3) Hızlı Tarama (sıkı, net, kesin)",
-          "s3.p":"Bugünü dürüstçe işaretle. 0 = sorun yok · 10 = kritik.",
-          "q1.t":"Kararlar tek kişiye bağlı",
-          "q1.d":"İlerleme ne kadar tek kişiye bağlı?",
-          "q1.ex1":"Örnek A: “O olmadan hiçbir şey olmaz.”",
-          "q1.ex2":"Örnek B: “O olmasa da sistem işler.”",
-          "q2.t":"Yük adaletsiz / yoğunlaşmış",
-          "q2.d":"Az kişi fazla yük mü taşıyor (zaman, stres, sorumluluk)?",
-          "q2.ex1":"Örnek A: “1–2 kişi tükeniyor, herkes onlara soruyor.”",
-          "q2.ex2":"Örnek B: “Yük dağıtılmış, yedekleme var.”",
-          "q3.t":"Büyüme / karmaşıklık yapıyı aşıyor",
-          "q3.d":"Daha fazla yükte hemen kaos mu oluyor?",
-          "q3.ex1":"Örnek A: “%20 artış bile kaliteyi düşürür.”",
-          "q3.ex2":"Örnek B: “Artış kontrol edilebilir.”",
-          "q4.t":"Güç ve sorumluluk kopuk",
-          "q4.d":"Sonucu taşımayan biri mi karar veriyor?",
-          "q4.ex1":"Örnek A: “Başka biri karar veriyor, ben bedelini ödüyorum.”",
-          "q4.ex2":"Örnek B: “Karar veren sonucu da taşır.”",
-          "q5.t":"Enerji / hatalar entegre edilmiyor",
-          "q5.d":"Stres artıyor ve hatalar tekrar mı ediyor?",
-          "q5.ex1":"Örnek A: “Yorgunluk var, aynı hatalar geri geliyor.”",
-          "q5.ex2":"Örnek B: “Dinlenme & öğrenme ritmi var.”",
-          "r.h":"Sonuç",
-          "r.primary":"Birincil instabilite",
-          "r.path":"Yol",
-          "viz.radar":"Radar",
-          "viz.radar2":"Boyutlara göre gerilim",
-          "viz.tensions":"Gerilimler",
-          "viz.tensions2":"İlk neresi kırılır?",
-          "moves.now":"Şimdi 3 hamle",
-          "moves.week":"Bu hafta 3 hamle",
-          "prec.pill":"Kesinleştirme sorusu",
-          "prec.answer":"Cevabın",
-          "prec.skip":"Atla",
-          "prec.apply":"Uygula",
-          "rep.pill":"Executive Report",
-          "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
-          "footer.top":"Yukarı"
+        ex: {
+          en:["0: “I feel fine, enough time and energy.”","10: “I’m constantly at the limit, things drop.”"],
+          de:["0: „Alles im Rahmen, genug Zeit/Energie.“","10: „Dauerhaft am Limit, Dinge fallen runter.“"],
+          tr:["0: “İyi hissediyorum, yeterli zaman/enerji var.”","10: “Sürekli sınırdayım, işler düşüyor.”"]
+        }
+      },
+      {
+        id:"q_conflict",
+        title:{en:"Conflict & tension", de:"Konflikt & Spannung", tr:"Çatışma & gerilim"},
+        text:{
+          en:"How much tension/conflict is present?",
+          de:"Wie viel Spannung/Konflikt ist vorhanden?",
+          tr:"Ne kadar gerilim/çatışma var?"
         },
-        en: {
-          "nav.how":"How it works",
-          "nav.dx":"Diagnosis",
-          "nav.history":"History",
-          "cta.backHome":"Home",
-          "dx.h1":"Diagnosis",
-          "dx.sub":"Decision confidence in minutes: Quick scan → Result → Executive Report.",
-          "ex.title":"Examples",
-          "cta.next":"Next",
-          "cta.back":"Back",
-          "cta.calc":"Calculate result",
-          "cta.recalc":"Recalculate",
-          "cta.exec":"Executive Report",
-          "s1.h":"1) Describe your case in one sentence",
-          "s1.p":"No story. We need the core to reveal structure.",
-          "s1.label":"Context (1 sentence)",
-          "s1.ex1":"“I often argue with my partner about small things.”",
-          "s1.ex2":"“In the team, the boss decides everything; deliveries are unreliable.”",
-          "s2.h":"2) What do you want now?",
-          "s2.p":"Stabilize = reduce tension and regain control. Redesign = rebuild architecture.",
-          "s2.a":"Stabilize",
-          "s2.a2":"Bring calm fast, stop errors, reduce load.",
-          "s2.b":"Redesign",
-          "s2.b2":"Rebuild decisions, roles, interfaces, rhythm.",
-          "s2.ex1":"Stabilize: “We’re in chaos — stop, sort, prioritize first.”",
-          "s2.ex2":"Redesign: “This cannot continue — responsibilities & decision paths must change.”",
-          "s3.h":"3) Quick Scan (strict, clear, precise)",
-          "s3.p":"Move the slider to match reality today. 0 = safe · 10 = critical.",
-          "q1.t":"Decisions are bound to one person",
-          "q1.d":"How much does progress depend on one person?",
-          "q1.ex1":"Example A: “Without them, nothing moves.”",
-          "q1.ex2":"Example B: “It runs even without them.”",
-          "q2.t":"Load is unfair / concentrated",
-          "q2.d":"Do a few roles carry too much load (time, stress, responsibility)?",
-          "q2.ex1":"Example A: “1–2 people burn out, everyone asks them.”",
-          "q2.ex2":"Example B: “Work is distributed; backup works.”",
-          "q3.t":"Growth / complexity overwhelms structure",
-          "q3.d":"Does +load immediately create chaos?",
-          "q3.ex1":"Example A: “+20% flips quality.”",
-          "q3.ex2":"Example B: “More load stays controlled.”",
-          "q4.t":"Power and responsibility are decoupled",
-          "q4.d":"Does someone decide who doesn’t carry consequences?",
-          "q4.ex1":"Example A: “Others decide; I pay the price.”",
-          "q4.ex2":"Example B: “Decision-makers carry consequences.”",
-          "q5.t":"Energy / errors are not integrated",
-          "q5.d":"Does stress rise and do errors repeat?",
-          "q5.ex1":"Example A: “Tiredness; the same errors repeat.”",
-          "q5.ex2":"Example B: “Recovery & learning are built-in.”",
-          "r.h":"Result",
-          "r.primary":"Primary instability",
-          "r.path":"Path",
-          "viz.radar":"Radar",
-          "viz.radar2":"Structural tension per dimension",
-          "viz.tensions":"Tensions",
-          "viz.tensions2":"Where it breaks first",
-          "moves.now":"3 moves now",
-          "moves.week":"3 moves this week",
-          "prec.pill":"Precision question",
-          "prec.answer":"Your answer",
-          "prec.skip":"Skip",
-          "prec.apply":"Apply answer",
-          "rep.pill":"Executive Report",
-          "footer.tag":"Structural diagnosis for stabilization and redesign.",
-          "footer.top":"Top"
+        ex:{
+          en:["0: “Disagreements are rare and resolved quickly.”","10: “Constant fights / cold war / escalation.”"],
+          de:["0: „Selten, schnell lösbar.“","10: „Dauerstreit / kalter Krieg / Eskalation.“"],
+          tr:["0: “Nadiren, hızlı çözülüyor.”","10: “Sürekli kavga / soğuk savaş / tırmanma.”"]
         }
-      };
-
-      function lang(){
-        return localStorage.getItem(K.K_LANG) || "de";
-      }
-
-      function t(key){
-        const l = lang();
-        return dict[l]?.[key] || dict.de[key] || key;
-      }
-
-      function applyLang(){
-        const l = lang();
-        document.documentElement.lang = l;
-        $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === l)));
-        $$("[data-i18n]").forEach(el => {
-          const key = el.dataset.i18n;
-          const val = dict[l]?.[key];
-          if (!val) return;
-          if (el.children && el.children.length) return;
-          el.textContent = val;
-        });
-      }
-
-      $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => {
-        localStorage.setItem(K.K_LANG, btn.dataset.lang);
-        applyLang();
-        // rerender viz labels if needed
-        if (window.__MDG_VIZ__) window.__MDG_VIZ__.rerender();
-      }));
-
-      // ======= Mode bootstrap =======
-      function getMode(){
-        const qs = new URLSearchParams(location.search);
-        const qmode = qs.get("mode");
-        const stored = localStorage.getItem(K.K_MODE);
-        const mode = qmode || stored || "private";
-        localStorage.setItem(K.K_MODE, mode);
-        return mode;
-      }
-
-      const mode = getMode();
-      $("#dx_mode_badge").textContent = mode === "business" ? "Business" : "Private";
-
-      // If business: token required
-      function requireTokenIfBusiness(){
-        if (mode !== "business") return true;
-        const tok = localStorage.getItem(K.K_TOKEN) || "";
-        if (!tok) {
-          alert("Business requires token. Please enter token on landing page.");
-          location.href = "./index.html";
-          return false;
+      },
+      {
+        id:"q_decisions",
+        title:{en:"Decision clarity", de:"Entscheidungsklarheit", tr:"Karar netliği"},
+        text:{
+          en:"How clear are decisions and next steps?",
+          de:"Wie klar sind Entscheidungen und nächste Schritte?",
+          tr:"Kararlar ve sonraki adımlar ne kadar net?"
+        },
+        ex:{
+          en:["0: “Clear decisions, action happens.”","10: “Stuck, unclear, looping discussions.”"],
+          de:["0: „Klar entschieden, umgesetzt.“","10: „Blockiert, unklar, Endlosschleife.“"],
+          tr:["0: “Net karar, aksiyon var.”","10: “Kilitli, belirsiz, döngü.”"]
         }
-        return true;
-      }
-      requireTokenIfBusiness();
-
-      // ======= Steps =======
-      let intent = "stabilize"; // stabilize|redesign
-      let lastScores = null;
-      let lastResult = null;
-      let precision = { q:null, hint:null };
-
-      function showStep(n){
-        $$(".dx-step").forEach(s => s.hidden = true);
-        const sec = $(`#step${n}`);
-        if (sec) sec.hidden = false;
-        updateProgress(n);
-        sec?.scrollIntoView({behavior:"smooth", block:"start"});
-      }
-
-      function updateProgress(step){
-        const pct = Math.round(((step-1)/3)*100);
-        $("#dx_prog_i").style.width = pct + "%";
-        $("#dx_prog_t").textContent = pct + "%";
-      }
-
-      $$("[data-stepgo]").forEach(b => b.addEventListener("click", () => showStep(Number(b.dataset.stepgo))));
-
-      $("#go2").addEventListener("click", () => {
-        const s = ($("#dx_context").value || "").trim();
-        if (s.length < 8) { alert("Please enter a short context sentence."); return; }
-        showStep(2);
-      });
-      $("#back1").addEventListener("click", () => showStep(1));
-      $("#back2").addEventListener("click", () => showStep(2));
-      $("#go3").addEventListener("click", () => showStep(3));
-
-      $$(".choice2__btn").forEach(btn => btn.addEventListener("click", () => {
-        $$(".choice2__btn").forEach(x => x.style.borderColor = "rgba(255,255,255,.12)");
-        btn.style.borderColor = "rgba(110,231,183,.55)";
-        intent = btn.dataset.intent || "stabilize";
-      }));
-
-      // ======= Slider sync =======
-      const pairs = [["q1","v1"],["q2","v2"],["q3","v3"],["q4","v4"],["q5","v5"]];
-      pairs.forEach(([qid, vid]) => {
-        const q = document.getElementById(qid);
-        const v = document.getElementById(vid);
-        if (q && v) {
-          v.textContent = q.value;
-          q.addEventListener("input", () => v.textContent = q.value);
+      },
+      {
+        id:"q_trust",
+        title:{en:"Trust & safety", de:"Vertrauen & Sicherheit", tr:"Güven & güvenlik"},
+        text:{
+          en:"How safe is it to speak openly (without punishment)?",
+          de:"Wie sicher ist Offenheit (ohne Bestrafung)?",
+          tr:"Açık konuşmak ne kadar güvenli (ceza yok)?"
+        },
+        ex:{
+          en:["0: “We can speak openly; mistakes are handled calmly.”","10: “People hide, fear, blame dominates.”"],
+          de:["0: „Offenheit möglich, Fehler ruhig bearbeitet.“","10: „Verstecken, Angst, Schuld dominiert.“"],
+          tr:["0: “Açık konuşulur, hata sakin ele alınır.”","10: “Gizleme, korku, suçlama.”"]
         }
+      },
+      {
+        id:"q_energy",
+        title:{en:"Energy & recovery", de:"Energie & Regeneration", tr:"Enerji & toparlanma"},
+        text:{
+          en:"Are you recovering enough to stay stable?",
+          de:"Regenerierst du genug, um stabil zu bleiben?",
+          tr:"Stabil kalmak için yeterince toparlanıyor musun?"
+        },
+        ex:{
+          en:["0: “Sleep/rest is good; I recharge.”","10: “No recovery; fatigue accumulates.”"],
+          de:["0: „Schlaf/Erholung gut, ich lade auf.“","10: „Keine Regeneration, Müdigkeit wächst.“"],
+          tr:["0: “Uyku/dinlenme iyi; şarj oluyorum.”","10: “Toparlanma yok; yorgunluk birikiyor.”"]
+        }
+      }
+    ];
+
+    const BUSINESS_QUESTIONS = [
+      {
+        id:"b_bottleneck",
+        title:{en:"Bottleneck risk (SPOF)", de:"Engpassrisiko (SPOF)", tr:"Darboğaz riski (SPOF)"},
+        text:{
+          en:"How dependent is execution on one person/role?",
+          de:"Wie stark hängt Umsetzung an einer Person/Rolle?",
+          tr:"Uygulama tek kişi/role ne kadar bağlı?"
+        },
+        ex:{
+          en:["0: “Work continues even if one key person is absent.”","10: “If X is out, everything stops.”"],
+          de:["0: „Auch ohne Schlüsselperson läuft es weiter.“","10: „Wenn X ausfällt, steht alles.“"],
+          tr:["0: “Kilit kişi yokken de işler yürür.”","10: “X yoksa her şey durur.”"]
+        }
+      },
+      {
+        id:"b_decision_latency",
+        title:{en:"Decision latency", de:"Entscheidungsverzug", tr:"Karar gecikmesi"},
+        text:{
+          en:"How slow are decisions relative to operational tempo?",
+          de:"Wie langsam sind Entscheidungen im Verhältnis zum Tempo?",
+          tr:"Kararlar iş temposuna göre ne kadar yavaş?"
+        },
+        ex:{
+          en:["0: “Decisions match the speed of the business.”","10: “Waiting kills momentum; approvals block.”"],
+          de:["0: „Entscheidungen passen zum Business-Tempo.“","10: „Warten killt Momentum; Freigaben blocken.“"],
+          tr:["0: “Kararlar iş hızına uygundur.”","10: “Bekleme ivmeyi öldürür; onay bloklar.”"]
+        }
+      },
+      {
+        id:"b_process",
+        title:{en:"Process clarity", de:"Prozessklarheit", tr:"Süreç netliği"},
+        text:{
+          en:"How documented and repeatable are key processes?",
+          de:"Wie dokumentiert & wiederholbar sind Kernprozesse?",
+          tr:"Kritik süreçler ne kadar dokümante ve tekrarlanabilir?"
+        },
+        ex:{
+          en:["0: “Clear playbooks/checklists exist.”","10: “Mostly tribal knowledge; handoffs fail.”"],
+          de:["0: „Playbooks/Checklisten vorhanden.“","10: „Wissen im Kopf; Übergaben scheitern.“"],
+          tr:["0: “Playbook/checklist var.”","10: “Bilgi kafada; devirler bozulur.”"]
+        }
+      },
+      {
+        id:"b_growth",
+        title:{en:"Growth sensitivity", de:"Wachstumssensitivität", tr:"Büyüme hassasiyeti"},
+        text:{
+          en:"If workload +20%: how close are you to a break?",
+          de:"Bei +20% Last: wie nah am Bruch?",
+          tr:"İş yükü +%20 olursa: kırılmaya ne kadar yakınsın?"
+        },
+        ex:{
+          en:["0: “We absorb it with small friction.”","10: “Quality collapses / deadlines break.”"],
+          de:["0: „Mit wenig Reibung absorbierbar.“","10: „Qualität kollabiert / Deadlines reißen.“"],
+          tr:["0: “Az sürtünmeyle absorbe ederiz.”","10: “Kalite çöker / teslimatlar kırılır.”"]
+        }
+      },
+      {
+        id:"b_accountability",
+        title:{en:"Accountability & ownership", de:"Accountability & Ownership", tr:"Sorumluluk & sahiplik"},
+        text:{
+          en:"How clear is ‘who owns what’ and consequences?",
+          de:"Wie klar ist „wer besitzt was“ inkl. Konsequenzen?",
+          tr:"‘Kim neye sahip’ ve sonuçlar ne kadar net?"
+        },
+        ex:{
+          en:["0: “Each area has an owner; outcomes are measured.”","10: “No owner; blame games; unclear metrics.”"],
+          de:["0: „Owner je Bereich; Outcome messbar.“","10: „Kein Owner; Schuldspiele; unklare Metriken.“"],
+          tr:["0: “Her alanın sahibi var; sonuç ölçülür.”","10: “Sahip yok; suçlama; metrik belirsiz.”"]
+        }
+      }
+    ];
+
+    const QUESTIONS = (mode === "business") ? BUSINESS_QUESTIONS : PRIVATE_QUESTIONS;
+
+    // ===== Storage =====
+    const STORAGE_KEY = "mdg_dx_v4";
+    function loadState(){
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch { return {}; }
+    }
+    function saveState(partial){
+      const prev = loadState();
+      const next = { ...prev, ...partial, ts: Date.now(), mode, goal, lang };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      updateProgress();
+    }
+
+    // ===== Render questions =====
+    function renderQuestions(){
+      const state = loadState();
+      const wrap = $("#questions");
+      wrap.innerHTML = "";
+
+      QUESTIONS.forEach(q => {
+        const v = typeof state[q.id] === "number" ? state[q.id] : 0;
+
+        const div = document.createElement("div");
+        div.className = "q";
+        div.innerHTML = `
+          <div class="q-title">${escapeHtml(q.title[lang] || q.title.en)}</div>
+          <div style="opacity:.9; margin-bottom:8px;">${escapeHtml(q.text[lang] || q.text.en)}</div>
+          <div class="q-ex">
+            <span class="exline">${escapeHtml((q.ex[lang] || q.ex.en)[0])}</span>
+            <span class="exline">${escapeHtml((q.ex[lang] || q.ex.en)[1])}</span>
+          </div>
+          <div class="q-sliderRow">
+            <input class="q-slider" type="range" min="0" max="10" step="1" value="${v}" data-q="${q.id}">
+            <div class="q-val" id="val_${q.id}">${v}/10</div>
+          </div>
+        `;
+        wrap.appendChild(div);
       });
 
-      // ======= Scoring (local quick result) =======
-      function quickScore(){
-        const a = Number($("#q1").value); // decision monop
-        const b = Number($("#q2").value); // load
-        const c = Number($("#q3").value); // growth
-        const d = Number($("#q4").value); // power mismatch
-        const e = Number($("#q5").value); // energy/errors
-
-        const scores = { D:a, L:b, G:c, M:d, EF:e };
-        return scores;
-      }
-
-      function classify(scores){
-        const entries = Object.entries(scores).map(([k,v]) => ({k, v:Number(v)}));
-        entries.sort((x,y)=> y.v - x.v);
-        const primary = entries[0];
-        const secondary = entries[1];
-
-        const growth = scores.G;
-        const ADG_trigger = (scores.G >= 6) || (scores.D >= 7) || (scores.L >= 7) || (scores.M >= 7);
-        const EF_red = scores.EF >= 7;
-
-        let path = "IDG";
-        let pathWhy = "";
-        if (ADG_trigger && EF_red) { path = "IDG → ADG"; pathWhy = "Stabilisieren (Energie/Fehler), danach Architektur-Umbau."; }
-        else if (ADG_trigger) { path = "ADG"; pathWhy = "Umbau erforderlich: Struktur muss Last/Wachstum/Mismatch tragen."; }
-        else if (EF_red) { path = "IDG"; pathWhy = "Stabilisierung zuerst (Energie/Fehler), dann neu bewerten."; }
-        else { path = "IDG"; pathWhy = "Stabilisierung reicht vermutlich; Umbau optional je nach Ziel."; }
-
-        return { primary, secondary, path, pathWhy, growth };
-      }
-
-      function labelType(k){
-        const L = lang();
-        const map = {
-          D:{ de:["Entscheidungsmonopol","Zu viel hängt an einer Person, ohne klare Delegation/Vertretung."],
-              tr:["Karar tekeli","Fazla şey tek kişiye bağlı, devir/vekâlet net değil."],
-              en:["Decision monopoly","Too much depends on one person; delegation/backup is unclear."]},
-          L:{ de:["Lastasymmetrie","Zu viel Last auf wenigen Rollen → Engpass & Ausfallrisiko."],
-              tr:["Yük asimetrisi","Yük birkaç rolde yoğun → darboğaz ve kopma riski."],
-              en:["Load asymmetry","Load concentrates on few roles → bottleneck & failure risk."]},
-          G:{ de:["Wachstum ohne Struktur","Mehr Last/Komplexität kippt sofort Qualität oder Tempo."],
-              tr:["Yapısız büyüme","Daha fazla yük/karmaşıklık kaliteyi veya hızı hemen düşürür."],
-              en:["Growth without structure","More load/complexity quickly flips quality or speed."]},
-          M:{ de:["Macht–Verantwortungs-Mismatch","Wer entscheidet, trägt nicht sauber Risiko/Konsequenz."],
-              tr:["Güç–sorumluluk uyumsuzluğu","Karar veren risk/sonucu net taşımıyor."],
-              en:["Power–responsibility mismatch","Decision power is not coupled to risk/consequences."]},
-          EF:{ de:["Energie/Fehlerintegration","Stress steigt, Fehler wiederholen sich, Lernen fehlt."],
-               tr:["Enerji/hata entegrasyonu","Stres artıyor, hatalar tekrarlanıyor, öğrenme yok."],
-               en:["Energy/error integration","Stress rises, errors repeat, learning is missing."]},
-        };
-        const it = map[k] || null;
-        if (!it) return { title:"—", why:"—" };
-        const [title, why] = it[L] || it.de;
-        return { title, why };
-      }
-
-      function buildMoves(scores, classif){
-        const now = [];
-        const week = [];
-
-        // EF first
-        if (scores.EF >= 7){
-          now.push(t("moves.now") === "3 Moves jetzt" ? "48h: keine irreversiblen Entscheidungen (Fehler-Puffer)." : "48h: irreversible karar yok (hata tamponu).");
-          now.push("Top-3 Prioritäten, Rest pausieren (Last senken).");
-          now.push("Täglicher 10-Min Review: Frühindikatoren + Stop-Liste.");
-          week.push("Fixer Rhythmus: Schlaf/Erholung + Messpunkt (0–10 täglich).");
-          week.push("Fehlerlog: 1 Root Cause / Woche, ohne Schuldzuweisung.");
-          week.push("Entscheidungsregeln für Low-Energy-Zeiten definieren.");
-        }
-
-        const pk = classif.primary.k;
-
-        if (pk === "D"){
-          now.push("Decision Triage: nur 3 Entscheidungen/Woche zentral – Rest delegieren.");
-          now.push("A/B/C-Klassen: kritisch/strategisch/operativ definieren.");
-          week.push("Delegationsmatrix + Stellvertretung für kritische Entscheidungen.");
-          week.push("Entscheidungslog (Owner, Grund, Review-Datum).");
-          week.push("Eskalationspfad in 3 Stufen (klar, kurz).");
-        }
-        if (pk === "L"){
-          now.push("Engpass benennen + 2 Aufgaben sofort abgeben.");
-          now.push("Backup für Kernaufgaben festlegen (SPOF-Schutz).");
-          week.push("3 Kernprozesse als Checklisten dokumentieren.");
-          week.push("20% Last umschichten (konkret: wer übernimmt was).");
-          week.push("Kapazitätsgrenze: was ab heute nicht mehr angenommen wird.");
-        }
-        if (pk === "G"){
-          now.push("Wachstum drosseln: keine neue Komplexität bis Struktur nachzieht.");
-          now.push("Schnittstellen reduzieren: 1–2 Übergabepunkte definieren.");
-          week.push("Koordinationsrhythmus (Weekly) + klarer Output pro Meeting.");
-          week.push("Komplexitätsbudget (Tabu-Liste) definieren.");
-          week.push("Skalierungsregel: Wachstum nur bei erfüllten Strukturkriterien.");
-        }
-        if (pk === "M"){
-          now.push("Mismatch sichtbar: Entscheidung vs Risiko vs Info vs Konsequenz auflisten.");
-          now.push("Owner + Konsequenz koppeln (eine Person, ein Ergebnis).");
-          week.push("Rollenrechte dokumentieren (entscheidet/führt aus/prüft).");
-          week.push("Accountability-Kennzahl je Rolle definieren.");
-          week.push("Delegation + Eskalation (kurz) festlegen.");
-        }
-        if (pk === "EF"){
-          now.push("Belastung/Regeneration messen: 0–10 täglich + Trend.");
-          now.push("Fehler ohne Sanktion: 1 Kanal/Format definieren.");
-          week.push("Weekly Review + Root Cause fix einführen.");
-          week.push("Lessons Learned: 3 Bullet Points/Woche.");
-          week.push("Schutzregel: keine Entscheidungen im Energieminimum.");
-        }
-
-        const dedupe = (arr)=> Array.from(new Set(arr)).filter(Boolean);
-        const take3 = (arr)=> dedupe(arr).slice(0,3);
-        return { now: take3(now), week: take3(week) };
-      }
-
-      // ======= SVG VIZ =======
-      function renderRadarSVG(scores){
-        // scores 0..10
-        const dims = [
-          {k:"D", label: (lang()==="tr"?"Karar":"Decision"), v:scores.D},
-          {k:"L", label: (lang()==="tr"?"Yük":"Load"), v:scores.L},
-          {k:"G", label: (lang()==="tr"?"Büyüme":"Growth"), v:scores.G},
-          {k:"M", label: (lang()==="tr"?"Güç":"Power"), v:scores.M},
-          {k:"EF",label: (lang()==="tr"?"Enerji":"Energy"), v:scores.EF},
-        ];
-
-        const W = 360, H = 300;
-        const cx = 180, cy = 150;
-        const r = 110;
-
-        const rings = [0.25,0.5,0.75,1.0];
-
-        const pts = dims.map((d, i) => {
-          const ang = (-Math.PI/2) + (i * (2*Math.PI/dims.length));
-          const rr = (d.v/10) * r;
-          return { x: cx + Math.cos(ang)*rr, y: cy + Math.sin(ang)*rr };
+      $$('input[type="range"][data-q]').forEach(r => {
+        r.addEventListener("input", () => {
+          const id = r.dataset.q;
+          const val = Number(r.value);
+          $("#val_" + id).textContent = `${val}/10`;
+          saveState({ [id]: val });
         });
-
-        const poly = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-
-        const axes = dims.map((d,i)=>{
-          const ang = (-Math.PI/2) + (i * (2*Math.PI/dims.length));
-          const x = cx + Math.cos(ang)*r;
-          const y = cy + Math.sin(ang)*r;
-          const lx = cx + Math.cos(ang)*(r+22);
-          const ly = cy + Math.sin(ang)*(r+22);
-          return { x, y, lx, ly, label:d.label };
-        });
-
-        const svg =
-`<svg viewBox="0 0 ${W} ${H}" width="100%" height="300" role="img" aria-label="Radar">
-  <defs>
-    <linearGradient id="g1" x1="0" x2="1">
-      <stop offset="0" stop-color="rgba(110,231,183,.85)"/>
-      <stop offset="1" stop-color="rgba(96,165,250,.85)"/>
-    </linearGradient>
-  </defs>
-
-  <rect x="0" y="0" width="${W}" height="${H}" rx="18" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.08)"/>
-
-  ${rings.map(fr=>{
-      const rr = r*fr;
-      // regular polygon ring
-      const ringPts = dims.map((d,i)=>{
-        const ang = (-Math.PI/2) + (i * (2*Math.PI/dims.length));
-        const x = cx + Math.cos(ang)*rr;
-        const y = cy + Math.sin(ang)*rr;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      }).join(" ");
-      return `<polygon points="${ringPts}" fill="none" stroke="rgba(255,255,255,.08)" stroke-dasharray="${fr<1? "3 5":"0"}"/>`;
-    }).join("\n")}
-
-  ${axes.map(a=> `<line x1="${cx}" y1="${cy}" x2="${a.x.toFixed(1)}" y2="${a.y.toFixed(1)}" stroke="rgba(255,255,255,.10)"/>`).join("\n")}
-
-  <polygon points="${poly}" fill="url(#g1)" opacity="0.26" stroke="rgba(110,231,183,.75)" stroke-width="2"/>
-  ${pts.map(p=> `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.8" fill="rgba(234,240,255,.95)" opacity=".9"/>`).join("\n")}
-
-  ${axes.map(a => `
-    <text x="${a.lx.toFixed(1)}" y="${a.ly.toFixed(1)}" fill="rgba(234,240,255,.75)"
-          font-size="12" font-weight="700" text-anchor="middle" dominant-baseline="middle">${esc(a.label)}</text>
-  `).join("\n")}
-</svg>`;
-        $("#radar_mount").innerHTML = svg;
-      }
-
-      function renderBarsSVG(scores){
-        const items = [
-          {k:"D", t: labelType("D").title, v:scores.D},
-          {k:"L", t: labelType("L").title, v:scores.L},
-          {k:"G", t: labelType("G").title, v:scores.G},
-          {k:"M", t: labelType("M").title, v:scores.M},
-          {k:"EF",t: labelType("EF").title, v:scores.EF},
-        ].sort((a,b)=> b.v - a.v);
-
-        const W=520, rowH=42, H= items.length*rowH + 30;
-        const x0=170, barW=300;
-
-        const svgRows = items.map((it, idx)=>{
-          const y = 20 + idx*rowH;
-          const w = Math.round((it.v/10)*barW);
-          const danger = it.v >= 8;
-          const stroke = danger ? "rgba(248,113,113,.55)" : "rgba(110,231,183,.35)";
-          const fill = danger ? "rgba(248,113,113,.18)" : "rgba(110,231,183,.16)";
-          return `
-            <text x="20" y="${y+14}" fill="rgba(234,240,255,.80)" font-size="12" font-weight="800">${esc(it.t)}</text>
-            <rect x="${x0}" y="${y}" width="${barW}" height="18" rx="9" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)"></rect>
-            <rect x="${x0}" y="${y}" width="${w}" height="18" rx="9" fill="${fill}" stroke="${stroke}"></rect>
-            <text x="${x0+barW+12}" y="${y+14}" fill="rgba(234,240,255,.72)" font-size="12" font-weight="900">${it.v}/10</text>
-          `;
-        }).join("\n");
-
-        const svg =
-`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Tensions">
-  <rect x="0" y="0" width="${W}" height="${H}" rx="18" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.08)"/>
-  ${svgRows}
-</svg>`;
-        $("#bars_mount").innerHTML = svg;
-      }
-
-      window.__MDG_VIZ__ = {
-        rerender(){
-          if (lastScores) {
-            renderRadarSVG(lastScores);
-            renderBarsSVG(lastScores);
-          }
-        }
-      };
-
-      // ======= Render result =======
-      function renderResult(scores){
-        lastScores = scores;
-        const c = classify(scores);
-        lastResult = c;
-
-        const p = labelType(c.primary.k);
-        $("#r_primary").textContent = p.title;
-        $("#r_primary_why").textContent = p.why;
-
-        $("#r_path").textContent = c.path;
-        $("#r_path_why").textContent = c.pathWhy;
-
-        $("#r_sub").textContent = `Mode: ${mode} · Intent: ${intent}`;
-
-        // moves
-        const mv = buildMoves(scores, c);
-        $("#moves_now").innerHTML = mv.now.map(x => `<li>${esc(x)}</li>`).join("");
-        $("#moves_week").innerHTML = mv.week.map(x => `<li>${esc(x)}</li>`).join("");
-
-        // viz
-        renderRadarSVG(scores);
-        renderBarsSVG(scores);
-      }
-
-      // ======= Calculate =======
-      $("#calc").addEventListener("click", () => {
-        const s = quickScore();
-        renderResult(s);
-        showStep(4);
-
-        // After quick result: ask worker for 1 precision question (optional)
-        requestPrecisionQuestion().catch(()=>{});
       });
 
-      $("#recalc").addEventListener("click", () => showStep(3));
+      updateProgress();
+    }
 
-      // ======= Precision question (worker) =======
-      async function requestPrecisionQuestion(){
-        $("#prec_block").style.display = "none";
-        precision = { q:null, hint:null };
+    function updateProgress(){
+      const state = loadState();
+      const answered = QUESTIONS.filter(q => typeof state[q.id] === "number" && state[q.id] !== 0).length;
+      const total = QUESTIONS.length;
+      const pct = total ? Math.round((answered / total) * 100) : 0;
+      $("#progressPct").textContent = pct + "%";
+    }
 
-        const token = localStorage.getItem(K.K_TOKEN) || null;
-        const payload = {
-          mode,
-          lang: lang(),
-          intent,
-          context_sentence: ($("#dx_context").value || "").trim(),
-          quick_scores: lastScores,
-          token
-        };
+    // ===== Reset =====
+    $("#reset").addEventListener("click", () => {
+      if (!confirm("Reset this diagnosis?")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      $("#oneLiner").value = "";
+      setGoal("stabilize");
+      $("#followupBox").style.display = "none";
+      $("#resultBox").style.display = "none";
+      $("#resultText").textContent = "";
+      $("#statusLine").textContent = "Status: —";
+      renderQuestions();
+    });
 
-        const res = await fetch(`${API_BASE}/api/gpt/precision`, {
-          method:"POST",
-          headers: {
-            "Content-Type":"application/json",
-            ...(token ? {"Authorization": `Bearer ${token}`} : {})
+    // ===== Follow-up (adaptive 1 question) =====
+    function buildFollowupQuestion(state){
+      // Simple heuristic: pick the highest slider dimension and ask a clarifier
+      let top = { id:null, v:-1 };
+      QUESTIONS.forEach(q => {
+        const v = Number(state[q.id] ?? 0);
+        if (v > top.v) top = { id:q.id, v };
+      });
+
+      if (!top.id || top.v < 6) {
+        // ask about time horizon if no strong signal
+        return {
+          q: {
+            en:"What is your time horizon for change?",
+            de:"Wie ist dein Zeithorizont für Veränderung?",
+            tr:"Değişim için zaman ufkun nedir?"
           },
+          choices: [
+            { key:"h1", en:"24–72 hours", de:"24–72 Stunden", tr:"24–72 saat" },
+            { key:"h2", en:"2–4 weeks", de:"2–4 Wochen", tr:"2–4 hafta" },
+            { key:"h3", en:"2–3 months", de:"2–3 Monate", tr:"2–3 ay" },
+          ]
+        };
+      }
+
+      // mapping from top driver to a clarifying question
+      const map = {
+        q_load: {
+          q:{ en:"Where does overload mainly come from?", de:"Woher kommt die Überlast hauptsächlich?", tr:"Aşırı yükün ana kaynağı nedir?" },
+          choices:[
+            {key:"o1", en:"Too many tasks", de:"Zu viele Aufgaben", tr:"Çok fazla iş"},
+            {key:"o2", en:"Too many decisions", de:"Zu viele Entscheidungen", tr:"Çok fazla karar"},
+            {key:"o3", en:"Unclear priorities", de:"Unklare Prioritäten", tr:"Belirsiz öncelikler"},
+          ]
+        },
+        q_decisions: {
+          q:{ en:"What blocks decisions most?", de:"Was blockiert Entscheidungen am stärksten?", tr:"Kararları en çok ne bloke ediyor?" },
+          choices:[
+            {key:"d1", en:"Fear of mistakes", de:"Fehlerangst", tr:"Hata korkusu"},
+            {key:"d2", en:"One person must approve", de:"Eine Person muss freigeben", tr:"Tek kişi onaylıyor"},
+            {key:"d3", en:"No clear owner", de:"Kein Owner", tr:"Sahip yok"},
+          ]
+        },
+        q_trust: {
+          q:{ en:"What happens after a mistake?", de:"Was passiert nach einem Fehler?", tr:"Hata sonrası ne oluyor?" },
+          choices:[
+            {key:"t1", en:"We learn and improve", de:"Wir lernen & verbessern", tr:"Öğrenir ve iyileştiririz"},
+            {key:"t2", en:"We hide or excuse", de:"Wir verstecken/reden raus", tr:"Gizler/mazeret üretiriz"},
+            {key:"t3", en:"Blame and punishment", de:"Schuld & Bestrafung", tr:"Suçlama ve ceza"},
+          ]
+        },
+        q_conflict: {
+          q:{ en:"What is the conflict mostly about?", de:"Worum geht der Konflikt meist?", tr:"Çatışma çoğunlukla ne hakkında?" },
+          choices:[
+            {key:"c1", en:"Values / respect", de:"Werte/Respekt", tr:"Değerler/saygı"},
+            {key:"c2", en:"Responsibilities", de:"Verantwortung", tr:"Sorumluluk"},
+            {key:"c3", en:"Resources / time", de:"Ressourcen/Zeit", tr:"Kaynak/zaman"},
+          ]
+        },
+        q_energy: {
+          q:{ en:"What is your strongest recovery lever?", de:"Was ist dein stärkster Regenerationshebel?", tr:"En güçlü toparlanma kaldıraçın nedir?" },
+          choices:[
+            {key:"e1", en:"Sleep schedule", de:"Schlafrhythmus", tr:"Uyku düzeni"},
+            {key:"e2", en:"Load reduction", de:"Last reduzieren", tr:"Yük azaltma"},
+            {key:"e3", en:"Boundaries", de:"Grenzen", tr:"Sınırlar"},
+          ]
+        },
+        b_bottleneck: {
+          q:{ en:"Which area is the strongest bottleneck?", de:"Wo ist der stärkste Engpass?", tr:"En güçlü darboğaz nerede?" },
+          choices:[
+            {key:"b1", en:"Approvals", de:"Freigaben", tr:"Onaylar"},
+            {key:"b2", en:"Operations execution", de:"Operative Umsetzung", tr:"Operasyon yürütme"},
+            {key:"b3", en:"Client delivery", de:"Kundenauslieferung", tr:"Müşteri teslimatı"},
+          ]
+        },
+        b_decision_latency: {
+          q:{ en:"What is the main decision choke point?", de:"Wo ist der Haupt-Entscheidungsengpass?", tr:"Ana karar boğazı nerede?" },
+          choices:[
+            {key:"x1", en:"Founder/CEO", de:"Founder/CEO", tr:"Kurucu/CEO"},
+            {key:"x2", en:"Leadership team", de:"Führungsteam", tr:"Yönetim ekibi"},
+            {key:"x3", en:"Cross-team coordination", de:"Team-übergreifend", tr:"Ekipler arası"},
+          ]
+        },
+        b_process: {
+          q:{ en:"Where do handoffs fail most?", de:"Wo scheitern Übergaben am meisten?", tr:"Devirler en çok nerede bozuluyor?" },
+          choices:[
+            {key:"p1", en:"Sales → Delivery", de:"Sales → Delivery", tr:"Satış → Teslimat"},
+            {key:"p2", en:"Product → Engineering", de:"Produkt → Engineering", tr:"Ürün → Mühendislik"},
+            {key:"p3", en:"Ops → Support", de:"Ops → Support", tr:"Operasyon → Destek"},
+          ]
+        },
+        b_growth: {
+          q:{ en:"What breaks first under +20% load?", de:"Was bricht zuerst bei +20% Last?", tr:"+%20 yükte ilk ne kırılır?" },
+          choices:[
+            {key:"g1", en:"Quality", de:"Qualität", tr:"Kalite"},
+            {key:"g2", en:"Speed", de:"Geschwindigkeit", tr:"Hız"},
+            {key:"g3", en:"Team morale", de:"Moral", tr:"Moral"},
+          ]
+        },
+        b_accountability: {
+          q:{ en:"Where is ownership least clear?", de:"Wo ist Ownership am unklarsten?", tr:"Sahiplik en belirsiz nerede?" },
+          choices:[
+            {key:"a1", en:"Priorities", de:"Prioritäten", tr:"Öncelikler"},
+            {key:"a2", en:"KPIs/metrics", de:"KPIs/Metriken", tr:"KPI/metrikler"},
+            {key:"a3", en:"Decision rights", de:"Entscheidungsrechte", tr:"Karar yetkileri"},
+          ]
+        }
+      };
+
+      return map[top.id] || map.q_decisions;
+    }
+
+    function renderFollowup(fu){
+      $("#followupQ").textContent = fu.q[lang] || fu.q.en;
+      const choices = $("#followupChoices");
+      choices.innerHTML = "";
+      fu.choices.forEach(c => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "dx-btn";
+        b.textContent = c[lang] || c.en;
+        b.addEventListener("click", () => {
+          saveState({ followup: c.key });
+          // mark selection UI
+          $$("#followupChoices .dx-btn").forEach(x => x.classList.remove("primary"));
+          b.classList.add("primary");
+        });
+        choices.appendChild(b);
+      });
+      $("#followupBox").style.display = "block";
+    }
+
+    // ===== Run diagnosis =====
+    async function run(){
+      // Token check only for business
+      if (mode === "business" && !localStorage.getItem("mdg_token")) {
+        showTokenModal();
+        return;
+      }
+
+      const state = loadState();
+      const oneLiner = ($("#oneLiner").value || "").trim();
+      if (oneLiner.length < 6) {
+        alert(lang === "de" ? "Bitte 1 Satz eingeben." : (lang === "tr" ? "Lütfen 1 cümle yaz." : "Please write one sentence."));
+        return;
+      }
+
+      // Build followup if not present
+      if (!state.followup) {
+        const fu = buildFollowupQuestion(state);
+        renderFollowup(fu);
+        $("#statusLine").textContent = "Status: " + (lang==="de" ? "Bitte Klärungsfrage auswählen." : (lang==="tr" ? "Lütfen netleştirme seç." : "Please choose the clarification."));
+        $("#resultBox").style.display = "none";
+        return;
+      }
+
+      // Prepare payload for worker
+      const answers = QUESTIONS.map(q => ({
+        id: q.id,
+        value: Number(state[q.id] ?? 0),
+        title: q.title.en,
+        prompt: q.text.en
+      }));
+
+      const payload = {
+        mode,
+        lang,
+        goal,
+        one_liner: oneLiner,
+        followup: state.followup,
+        answers,
+        // include token only for business requests
+        token: mode === "business" ? localStorage.getItem("mdg_token") : null,
+        meta: {
+          ts: new Date().toISOString(),
+          userAgent: navigator.userAgent
+        }
+      };
+
+      $("#statusLine").textContent = "Status: " + (lang==="de" ? "Analysiere …" : (lang==="tr" ? "Analiz …" : "Analyzing …"));
+      $("#resultBox").style.display = "block";
+      $("#resultText").textContent = "";
+
+      try{
+        // You will implement this endpoint in your worker:
+        // POST /api/ai/diagnose  -> returns { followup_question?, assessment_text, executive_report_prompt? ... }
+        const res = await fetch(`${API_BASE}/api/ai/diagnose`, {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
           body: JSON.stringify(payload)
         });
 
-        const data = await res.json().catch(()=> ({}));
-        if (!res.ok) return;
+        const data = await res.json().catch(()=>({}));
+        if (!res.ok) throw new Error(data?.error || "Request failed");
 
-        if (data && data.question) {
-          precision.q = data.question;
-          precision.hint = data.hint || "";
-          $("#prec_q").textContent = data.question;
-          $("#prec_hint").textContent = data.hint || "";
-          $("#prec_a").value = "";
-          $("#prec_block").style.display = "block";
-        }
+        // Show result
+        $("#resultText").textContent = data.assessment_text || JSON.stringify(data, null, 2);
+        $("#statusLine").textContent = "Status: " + (lang==="de" ? "Fertig." : (lang==="tr" ? "Bitti." : "Done."));
+
+        // store last AI output for report generation
+        window.__MDG_LAST_AI__ = data;
+
+      }catch(e){
+        $("#statusLine").textContent = "Status: " + (lang==="de" ? "Fehler: " : "Error: ") + (e?.message || String(e));
       }
+    }
 
-      $("#prec_skip").addEventListener("click", () => {
-        $("#prec_block").style.display = "none";
-      });
+    $("#run").addEventListener("click", run);
 
-      $("#prec_apply").addEventListener("click", async () => {
-        const ans = ($("#prec_a").value || "").trim();
-        $("#prec_block").style.display = "none";
-        if (!ans) return;
-        // Store it in memory for report call
-        precision.answer = ans;
-      });
+    // ===== Executive report =====
+    $("#execReport").addEventListener("click", async () => {
+      if (mode === "business" && !localStorage.getItem("mdg_token")) { showTokenModal(); return; }
 
-      // ======= Executive report (worker gpt-4o) =======
-      $("#exec").addEventListener("click", async () => {
-        $("#report_block").style.display = "block";
-        $("#rep_status").textContent = "…";
-        $("#rep_html").innerHTML = "";
+      const state = loadState();
+      const oneLiner = ($("#oneLiner").value || "").trim();
+      if (!oneLiner) return;
 
-        const token = localStorage.getItem(K.K_TOKEN) || null;
+      $("#statusLine").textContent = "Status: " + (lang==="de" ? "Report wird erstellt …" : (lang==="tr" ? "Rapor hazırlanıyor …" : "Creating report …"));
 
+      try{
         const payload = {
-          mode,
-          lang: lang(),
-          intent,
-          context_sentence: ($("#dx_context").value || "").trim(),
-          quick_scores: lastScores,
-          classification: lastResult,
-          precision_question: precision.q,
-          precision_answer: precision.answer || null,
-          // You can later add more structured answers here.
+          mode, lang, goal,
+          one_liner: oneLiner,
+          followup: state.followup || null,
+          answers: QUESTIONS.map(q => ({ id:q.id, value:Number(state[q.id] ?? 0) })),
+          token: mode === "business" ? localStorage.getItem("mdg_token") : null,
+          last_ai: window.__MDG_LAST_AI__ || null
         };
 
-        try {
-          const res = await fetch(`${API_BASE}/api/gpt/diagnose`, {
-            method:"POST",
-            headers: {
-              "Content-Type":"application/json",
-              ...(token ? {"Authorization": `Bearer ${token}`} : {})
-            },
-            body: JSON.stringify(payload)
-          });
-          const data = await res.json().catch(()=> ({}));
-          if (!res.ok) throw new Error(data?.error || "report_failed");
+        // You will implement this endpoint in your worker:
+        // POST /api/ai/executive-report -> returns { report_markdown }
+        const res = await fetch(`${API_BASE}/api/ai/executive-report`, {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify(payload)
+        });
 
-          // Render markdown-ish to HTML (safe-ish minimal)
-          const html = mdLiteToHtml(String(data.report_markdown || ""));
-          $("#rep_status").textContent = data.status || "OK";
-          $("#rep_html").innerHTML = html;
+        const data = await res.json().catch(()=>({}));
+        if (!res.ok) throw new Error(data?.error || "Report failed");
 
-          // if worker returns refined scores, rerender
-          if (data.refined_scores) {
-            renderResult(data.refined_scores);
-          }
-        } catch (e) {
-          $("#rep_status").textContent = "Fehler: " + (e?.message || String(e));
-        }
-      });
+        $("#resultText").textContent = data.report_markdown || data.report || JSON.stringify(data, null, 2);
+        $("#statusLine").textContent = "Status: " + (lang==="de" ? "Report fertig." : (lang==="tr" ? "Rapor hazır." : "Report ready."));
 
-      function mdLiteToHtml(md){
-        // Minimal markdown renderer: headings, bullets, paragraphs.
-        const lines = md.split(/\r?\n/);
-        const out = [];
-        let inUl = false;
-
-        const closeUl = () => { if (inUl) { out.push("</ul>"); inUl=false; } };
-
-        for (const raw of lines){
-          const line = raw.trim();
-          if (!line){
-            closeUl();
-            continue;
-          }
-          if (line.startsWith("### ")){
-            closeUl();
-            out.push(`<h3>${esc(line.slice(4))}</h3>`);
-            continue;
-          }
-          if (line.startsWith("## ")){
-            closeUl();
-            out.push(`<h2>${esc(line.slice(3))}</h2>`);
-            continue;
-          }
-          if (line.startsWith("# ")){
-            closeUl();
-            out.push(`<h1>${esc(line.slice(2))}</h1>`);
-            continue;
-          }
-          if (line.startsWith("- ")){
-            if (!inUl){ out.push("<ul>"); inUl=true; }
-            out.push(`<li>${esc(line.slice(2))}</li>`);
-            continue;
-          }
-          closeUl();
-          out.push(`<p>${esc(line)}</p>`);
-        }
-        closeUl();
-        return out.join("\n");
+      }catch(e){
+        $("#statusLine").textContent = "Status: " + (lang==="de" ? "Fehler: " : "Error: ") + (e?.message || String(e));
       }
+    });
 
-      // init
-      applyLang();
-      showStep(1);
-    })();
+    $("#copyReport").addEventListener("click", async () => {
+      const txt = $("#resultText").textContent || "";
+      if (!txt) return;
+      try { await navigator.clipboard.writeText(txt); $("#statusLine").textContent = "Status: copied."; }
+      catch { $("#statusLine").textContent = "Status: copy failed."; }
+    });
+
+    // ===== Autosave one-liner =====
+    $("#oneLiner").addEventListener("input", () => saveState({ oneLiner: $("#oneLiner").value }));
+
+    // Restore one-liner
+    const st = loadState();
+    if (st.oneLiner) $("#oneLiner").value = st.oneLiner;
+
+    renderQuestions();
+
+    // Utility
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
   </script>
 </body>
 </html>
