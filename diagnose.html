@@ -66,16 +66,6 @@
           </p>
         </div>
         
-        function getClientId() {
-          const key = "mdg_client_id";
-          let id = localStorage.getItem(key);
-          if (!id) {
-        id = crypto.randomUUID();
-        localStorage.setItem(key, id);
-      }
-        return id;
-      }
-
         <!-- Top controls -->
         <div class="dx-top">
           <div class="card">
@@ -618,6 +608,16 @@
       const $ = (s, r=document) => r.querySelector(s);
       const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
+      function getClientId() {
+        const key = "mdg_client_id";
+        let id = localStorage.getItem(key);
+        if (!id) {
+          id = crypto.randomUUID();
+          localStorage.setItem(key, id);
+        }
+        return id;
+      }
+
       // --- Minimal CSS extension for diagnose (keeps your main style.css untouched) ---
       const style = document.createElement("style");
       style.textContent = `
@@ -1093,18 +1093,18 @@
         save();
 
         // Store last result for export
-        window.__MDG_LAST__ = {scores, classif, meta:{
-          context: $("#dx_context").value,
-          depth: $("#dx_depth").value,
-          name: $("#dx_name").value.trim(),
-          role: $("#M_role").value,
-          ts: new Date().toISOString()
-        }};
-      }
-      meta: {
-        ...,
-        client_id: getClientId(),
-      }
+        window.__MDG_LAST__ = {
+          scores,
+          classif,
+          meta: {
+            context: $("#dx_context").value,
+            depth: $("#dx_depth").value,
+            name: $("#dx_name").value.trim(),
+            role: $("#M_role").value,
+            ts: new Date().toISOString(),
+            client_id: getClientId(),
+          }
+        };
 
       // ---- Server save (anonymous) ----
       const API_BASE = "https://api.mdg-indikation.de";
