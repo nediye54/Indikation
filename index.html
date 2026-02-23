@@ -1,497 +1,66 @@
-<!-- index.html -->
-<!doctype html>
-<html lang="de">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MDG v2 – Primärinstabilität erkennen</title>
-  <meta name="description" content="MDG v2 identifiziert den ersten strukturellen Kipppunkt unter Last und zeigt klar: IDG (Stabilisierung) oder ADG (Architektur-Umbau)." />
-  <link rel="stylesheet" href="./style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MDG Strategic Diagnostic</title>
+<link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-  <!-- Skip link -->
-  <a class="skip-link" href="#main">Zum Inhalt springen</a>
 
-  <!-- Header -->
-  <header class="header" id="top">
-    <div class="container header__inner">
-      <a class="brand" href="#top" aria-label="MDG v2 Start">
-        <span class="brand__mark" aria-hidden="true">MDG</span>
-        <span class="brand__text">v2</span>
-      </a>
+<div class="container">
 
-      <nav class="nav" aria-label="Hauptnavigation">
-        <a class="nav__link" href="#modell" data-i18n="nav.model">Modell</a>
-        <a class="nav__link" href="#diagnose" data-i18n="nav.diagnosis">Diagnose</a>
-        <a class="nav__link" href="#ergebnisse" data-i18n="nav.results">Ergebnisse</a>
-        <a class="nav__link" href="#massnahmen" data-i18n="nav.actions">Maßnahmen</a>
-        <a class="nav__link" href="#export" data-i18n="nav.export">Export</a>
-      </nav>
+  <h1>Strategic Instability Diagnostic</h1>
+  <p class="subtitle">
+    Identify structural risk before it compounds.  
+    Designed for founders, CEOs, and leadership teams.
+  </p>
 
-      <div class="header__actions">
-        <div class="lang" role="group" aria-label="Sprache">
-          <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
-          <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
-          <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
-        </div>
+  <div class="card">
+    <h2>How It Works</h2>
+    <p>
+      We analyze five structural dimensions:
+    </p>
+    <ul>
+      <li>Decision Architecture</li>
+      <li>Load Distribution</li>
+      <li>Growth Sensitivity</li>
+      <li>Power–Responsibility Alignment</li>
+      <li>Energy & Error Integration</li>
+    </ul>
+    <p>
+      The system identifies your primary structural instability and strategic path.
+    </p>
+  </div>
 
-        <a class="btn btn--primary" href="#start" data-i18n="cta.start">Diagnose starten</a>
-      </div>
+  <div class="card">
+    <h2>Diagnostic Depth</h2>
 
-      <button class="burger" type="button" aria-label="Menü öffnen" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-    
-    <a href="verlauf.html">Verlauf</a>
+    <label>
+      <input type="radio" name="depth" value="quick" checked />
+      Quick (5 minutes)
+    </label>
 
-    <!-- Mobile drawer -->
-    <div class="drawer" hidden>
-      <div class="drawer__content">
-        <a class="drawer__link" href="#modell" data-i18n="nav.model">Modell</a>
-        <a class="drawer__link" href="#diagnose" data-i18n="nav.diagnosis">Diagnose</a>
-        <a class="drawer__link" href="#ergebnisse" data-i18n="nav.results">Ergebnisse</a>
-        <a class="drawer__link" href="#massnahmen" data-i18n="nav.actions">Maßnahmen</a>
-        <a class="drawer__link" href="#export" data-i18n="nav.export">Export</a>
-        <div class="drawer__sep"></div>
-        <a class="btn btn--primary btn--full" href="#start" data-i18n="cta.start">Diagnose starten</a>
-      </div>
-    </div>
-  </header>
+    <label>
+      <input type="radio" name="depth" value="precise" />
+      Precise (10–15 minutes)
+    </label>
 
-  <main id="main">
-    <!-- Hero -->
-    <section class="hero" id="start">
-      <div class="container hero__grid">
-        <div class="hero__copy">
-          <h1 class="h1" data-i18n="hero.h1">Primärinstabilität erkennen. Stabilisieren oder umbauen.</h1>
-          <p class="lead" data-i18n="hero.lead">
-            MDG v2 identifiziert den ersten strukturellen Kipppunkt unter realer oder zukünftiger Last – und zeigt klar:
-            <strong>IDG (Stabilisierung)</strong> oder <strong>ADG (Architektur-Umbau)</strong>.
-          </p>
+    <button id="startBtn" class="primary">
+      Start Diagnosis
+    </button>
 
-          <div class="toggles" role="group" aria-label="Kontext und Tiefe">
-            <div class="toggle">
-              <span class="toggle__label" data-i18n="toggle.context">Kontext</span>
-              <div class="seg" role="tablist" aria-label="Kontext wählen">
-                <button class="seg__btn is-active" type="button" data-toggle="context" data-value="private" role="tab" aria-selected="true" data-i18n="toggle.private">Privat</button>
-                <button class="seg__btn" type="button" data-toggle="context" data-value="business" role="tab" aria-selected="false" data-i18n="toggle.business">Business</button>
-              </div>
-            </div>
+  </div>
 
-            <div class="toggle">
-              <span class="toggle__label" data-i18n="toggle.depth">Tiefe</span>
-              <div class="seg" role="tablist" aria-label="Tiefe wählen">
-                <button class="seg__btn is-active" type="button" data-toggle="depth" data-value="quick" role="tab" aria-selected="true" data-i18n="toggle.quick">Schnell (3–5 Min)</button>
-                <button class="seg__btn" type="button" data-toggle="depth" data-value="precise" role="tab" aria-selected="false" data-i18n="toggle.precise">Präzise (10–15 Min)</button>
-              </div>
-            </div>
-          </div>
+</div>
 
-          <div class="hero__cta">
-            <a class="btn btn--primary" href="#diagnose" data-i18n="cta.start">Diagnose starten</a>
-            <button class="btn btn--ghost" type="button" data-open-modal="explainer" data-i18n="cta.how">Wie funktioniert das?</button>
-          </div>
+<script>
+document.getElementById("startBtn").onclick = () => {
+  const depth = document.querySelector("input[name=depth]:checked").value;
+  localStorage.setItem("mdg_depth", depth);
+  window.location.href = "diagnose.html";
+};
+</script>
 
-          <p class="micro" data-i18n="hero.micro">
-            Keine Psychologie. Keine Stimmung. Struktur. Verstärkung. Entscheidung.
-          </p>
-        </div>
-
-        <!-- Demo preview card -->
-        <aside class="demo" aria-label="Beispiel-Ergebnis">
-          <div class="card card--demo">
-            <div class="card__eyebrow" data-i18n="demo.label">Beispiel-Ergebnis</div>
-            <div class="card__title" data-i18n="demo.type">Dominanter Typ: Entscheidungsmonopol</div>
-
-            <div class="kv">
-              <div class="kv__row">
-                <span class="kv__k" data-i18n="demo.growth">Wachstumssensitivität</span>
-                <span class="kv__v pill pill--warn" data-i18n="demo.growthValue">Nichtlinear</span>
-              </div>
-              <div class="kv__row">
-                <span class="kv__k" data-i18n="demo.reco">Empfehlung</span>
-                <span class="kv__v pill pill--danger" data-i18n="demo.recoValue">ADG erforderlich</span>
-              </div>
-            </div>
-
-            <div class="list">
-              <div class="list__h" data-i18n="demo.next">3 Moves jetzt</div>
-              <ul>
-                <li data-i18n="demo.m1">Entscheidungs-Freeze für irreversibles (48h)</li>
-                <li data-i18n="demo.m2">Decision Triage: nur Top-3 Hebel entscheiden</li>
-                <li data-i18n="demo.m3">Delegations-Notfall: B/C-Entscheidungen freigeben</li>
-              </ul>
-            </div>
-
-            <a class="card__link" href="#massnahmen" data-i18n="demo.link">Zu Maßnahmen →</a>
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <!-- 7-step flow -->
-    <section class="section" id="modell">
-      <div class="container">
-        <div class="section__head">
-          <h2 class="h2" data-i18n="flow.h2">Strukturelle Diagnose in 7 Schritten</h2>
-          <p class="sub" data-i18n="flow.sub">Schnell im Einstieg. Präzise in der Tiefe. Klar im Ergebnis.</p>
-        </div>
-
-        <ol class="steps" aria-label="Diagnose-Flow">
-          <li class="steps__item"><span class="steps__n">1</span><span class="steps__t" data-i18n="flow.s1">Kontext definieren</span></li>
-          <li class="steps__item"><span class="steps__n">2</span><span class="steps__t" data-i18n="flow.s2">Quick-Scan</span></li>
-          <li class="steps__item"><span class="steps__n">3</span><span class="steps__t" data-i18n="flow.s3">5 Diagnose-Module</span></li>
-          <li class="steps__item"><span class="steps__n">4</span><span class="steps__t" data-i18n="flow.s4">Belastungssimulation</span></li>
-          <li class="steps__item"><span class="steps__n">5</span><span class="steps__t" data-i18n="flow.s5">Primärinstabilität bestimmen</span></li>
-          <li class="steps__item"><span class="steps__n">6</span><span class="steps__t" data-i18n="flow.s6">IDG oder ADG ableiten</span></li>
-          <li class="steps__item"><span class="steps__n">7</span><span class="steps__t" data-i18n="flow.s7">Export & Verlauf</span></li>
-        </ol>
-
-        <div class="callout">
-          <p class="callout__text" data-i18n="flow.tagline">Keine Psychologie. Keine Stimmung. Struktur. Verstärkung. Entscheidung.</p>
-          <a class="btn btn--primary" href="#diagnose" data-i18n="cta.startNow">Jetzt starten</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Modules -->
-    <section class="section" id="diagnose">
-      <div class="container">
-        <div class="section__head">
-          <h2 class="h2" data-i18n="modules.h2">Tiefendiagnose in 5 Modulen</h2>
-          <p class="sub" data-i18n="modules.sub">Module sind getrennt, aber integriert: Dichte, Verteilung, Verstärkung, Kopplung, Institutionalisierung.</p>
-        </div>
-
-        <div class="grid grid--cards" role="list">
-          <article class="card" role="listitem">
-            <h3 class="h3" data-i18n="modules.m1.t">Entscheidungsarchitektur</h3>
-            <p class="p" data-i18n="modules.m1.d">Dichte · Irreversibilität · Delegation · Redundanz</p>
-            <a class="card__link" href="#" data-open-modal="m1" data-i18n="modules.example">Beispiel ansehen →</a>
-          </article>
-
-          <article class="card" role="listitem">
-            <h3 class="h3" data-i18n="modules.m2.t">Lastverteilung</h3>
-            <p class="p" data-i18n="modules.m2.d">Asymmetrie · Engpass · Single Point of Failure</p>
-            <a class="card__link" href="#" data-open-modal="m2" data-i18n="modules.example">Beispiel ansehen →</a>
-          </article>
-
-          <article class="card" role="listitem">
-            <h3 class="h3" data-i18n="modules.m3.t">Wachstumsverstärkungstest</h3>
-            <p class="p" data-i18n="modules.m3.d">+20% Last · +50% Komplexität · Ausfall Schlüsselrolle</p>
-            <a class="card__link" href="#" data-open-modal="m3" data-i18n="modules.example">Beispiel ansehen →</a>
-          </article>
-
-          <article class="card" role="listitem">
-            <h3 class="h3" data-i18n="modules.m4.t">Macht–Verantwortung</h3>
-            <p class="p" data-i18n="modules.m4.d">Entscheidung · Risiko · Information · Konsequenz</p>
-            <a class="card__link" href="#" data-open-modal="m4" data-i18n="modules.example">Beispiel ansehen →</a>
-          </article>
-
-          <article class="card" role="listitem">
-            <h3 class="h3" data-i18n="modules.m5.t">Energie & Fehlerintegration</h3>
-            <p class="p" data-i18n="modules.m5.d">Belastung · Regeneration · Feedback · Lernsystem</p>
-            <a class="card__link" href="#" data-open-modal="m5" data-i18n="modules.example">Beispiel ansehen →</a>
-          </article>
-        </div>
-
-        <div class="section__cta">
-          <a class="btn btn--primary" href="#ergebnisse" data-i18n="cta.preview">Outputs ansehen</a>
-          <a class="btn btn--ghost" href="#start" data-i18n="cta.backTop">Zurück nach oben</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Types -->
-    <section class="section" id="ergebnisse">
-      <div class="container">
-        <div class="section__head">
-          <h2 class="h2" data-i18n="types.h2">Ergebnis ist kein Wert – Ergebnis ist ein Typ.</h2>
-          <p class="sub" data-i18n="types.sub">MDG zeigt dominant + sekundär + Wachstumssensitivität + Handlungspfad.</p>
-        </div>
-
-        <div class="grid grid--types">
-          <div class="type"><h3 class="h3" data-i18n="types.t1">Entscheidungsmonopol</h3></div>
-          <div class="type"><h3 class="h3" data-i18n="types.t2">Lastasymmetrie</h3></div>
-          <div class="type"><h3 class="h3" data-i18n="types.t3">Wachstum ohne Struktur</h3></div>
-          <div class="type"><h3 class="h3" data-i18n="types.t4">Macht–Verantwortungs-Mismatch</h3></div>
-          <div class="type"><h3 class="h3" data-i18n="types.t5">Energieentkopplung</h3></div>
-          <div class="type"><h3 class="h3" data-i18n="types.t6">Fehlerintegrationsdefizit</h3></div>
-          <div class="type"><h3 class="h3" data-i18n="types.t7">Nicht-Institutionalisierung</h3></div>
-        </div>
-
-        <!-- Output preview tabs (static demo) -->
-        <div class="tabs" aria-label="Output Vorschau">
-          <div class="tabs__bar" role="tablist">
-            <button class="tabs__tab is-active" type="button" role="tab" aria-selected="true" data-tab="prim" data-i18n="preview.tab1">Primärinstabilität</button>
-            <button class="tabs__tab" type="button" role="tab" aria-selected="false" data-tab="map" data-i18n="preview.tab2">Strukturkarte</button>
-          </div>
-
-          <div class="tabs__panel is-active" data-panel="prim" role="tabpanel">
-            <div class="preview">
-              <div class="preview__left">
-                <div class="badge" data-i18n="preview.dom">Dominanter Typ</div>
-                <div class="preview__title" data-i18n="preview.domValue">Entscheidungsmonopol</div>
-                <p class="p" data-i18n="preview.why">Warum: hohe Zentralisierung, hohe Irreversibilität, fehlende Stellvertretung.</p>
-                <p class="p" data-i18n="preview.sequence"><strong>Sequenz:</strong> Entscheidungsstau → Fehlerquote → Energieabfall</p>
-              </div>
-              <div class="preview__right">
-                <div class="badge" data-i18n="preview.growth">Wachstumstest</div>
-                <p class="p" data-i18n="preview.growthValue">Bruch bei +20% Last. Empfehlung: ADG.</p>
-                <div class="mini-list">
-                  <div class="mini-list__h" data-i18n="preview.moves">3 Moves jetzt</div>
-                  <ul>
-                    <li data-i18n="preview.pm1">Entscheidungs-Freeze (48h)</li>
-                    <li data-i18n="preview.pm2">Triage: Top-3 Hebel</li>
-                    <li data-i18n="preview.pm3">Delegation B/C freigeben</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="tabs__panel" data-panel="map" role="tabpanel">
-            <div class="preview">
-              <div class="preview__left">
-                <div class="badge" data-i18n="map.radar">Radar (Demo)</div>
-                <div class="fake-chart" aria-hidden="true"></div>
-                <p class="micro" data-i18n="map.note">Demo-Ansicht: Radar + Modulbalken + Mismatch Top-3.</p>
-              </div>
-              <div class="preview__right">
-                <div class="bars">
-                  <div class="bar"><span data-i18n="map.d">Entscheidungsarchitektur</span><i style="width:78%"></i></div>
-                  <div class="bar"><span data-i18n="map.l">Lastverteilung</span><i style="width:64%"></i></div>
-                  <div class="bar"><span data-i18n="map.g">Wachstumsverstärkung</span><i style="width:82%"></i></div>
-                  <div class="bar"><span data-i18n="map.m">Macht–Verantwortung</span><i style="width:49%"></i></div>
-                  <div class="bar"><span data-i18n="map.e">Energie/Fehler</span><i style="width:58%"></i></div>
-                </div>
-                <div class="pill-row">
-                  <span class="pill pill--warn" data-i18n="map.spof">Single Point of Failure: möglich</span>
-                  <span class="pill pill--muted" data-i18n="map.mis">Mismatch Top-3: Info / Risiko / Entscheidung</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- Actions -->
-    <section class="section" id="massnahmen">
-      <div class="container">
-        <div class="section__head">
-          <h2 class="h2" data-i18n="actions.h2">Zwei Wege. Eine Entscheidung.</h2>
-          <p class="sub" data-i18n="actions.sub">IDG stabilisiert. ADG baut um. Beides folgt aus derselben Diagnose.</p>
-        </div>
-
-        <div class="split">
-          <article class="panel">
-            <h3 class="h3" data-i18n="actions.idg.t">IDG – Stabilisierung</h3>
-            <p class="p" data-i18n="actions.idg.d">Kurzfristige Entlastung. Schutzmechanismen. Frühindikatoren kontrollieren.</p>
-            <ul class="ticks">
-              <li data-i18n="actions.idg.b1">3 Moves jetzt</li>
-              <li data-i18n="actions.idg.b2">3 Moves diese Woche</li>
-              <li data-i18n="actions.idg.b3">Stop-Liste</li>
-              <li data-i18n="actions.idg.b4">Messpunkte</li>
-            </ul>
-          </article>
-
-          <article class="panel panel--accent">
-            <h3 class="h3" data-i18n="actions.adg.t">ADG – Architektur</h3>
-            <p class="p" data-i18n="actions.adg.d">Struktureller Umbau. Rollen klären. Last verteilen. Institutionalisieren.</p>
-            <ul class="ticks">
-              <li data-i18n="actions.adg.b1">Architekturentscheidungen</li>
-              <li data-i18n="actions.adg.b2">3-Phasen-Roadmap</li>
-              <li data-i18n="actions.adg.b3">Institutionalisierung</li>
-              <li data-i18n="actions.adg.b4">Wachstumskriterien</li>
-            </ul>
-          </article>
-        </div>
-
-        <div class="section__cta">
-          <a class="btn btn--primary" href="#diagnose" data-i18n="cta.start">Diagnose starten</a>
-          <button class="btn btn--ghost" type="button" data-open-modal="pdf" data-i18n="cta.pdf">Beispiel-PDF ansehen</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Export / Trust -->
-    <section class="section" id="export">
-      <div class="container">
-        <div class="section__head">
-          <h2 class="h2" data-i18n="export.h2">Export & Verlauf</h2>
-          <p class="sub" data-i18n="export.sub">Ergebnis speichern, vergleichen, als PDF exportieren – optional in Pro.</p>
-        </div>
-
-        <div class="grid grid--cards">
-          <article class="card">
-            <h3 class="h3" data-i18n="export.c1.t">PDF-Export</h3>
-            <p class="p" data-i18n="export.c1.d">Ergebnis + Maßnahmen in einem klaren Report.</p>
-          </article>
-          <article class="card">
-            <h3 class="h3" data-i18n="export.c2.t">Verlauf</h3>
-            <p class="p" data-i18n="export.c2.d">Diagnosen vergleichen und Trend erkennen.</p>
-          </article>
-          <article class="card">
-            <h3 class="h3" data-i18n="export.c3.t">Sharing</h3>
-            <p class="p" data-i18n="export.c3.d">Optional: Link teilen (Demo / anonymisiert).</p>
-          </article>
-        </div>
-
-        <div class="legal">
-          <h3 class="h3" data-i18n="legal.h3">Was es ist – und was nicht</h3>
-          <p class="p" data-i18n="legal.p1">MDG ist ein strukturelles Analysemodell.</p>
-          <p class="p" data-i18n="legal.p2">Es ersetzt keine medizinische, therapeutische, rechtliche oder finanzielle Beratung. Die Ergebnisse dienen der Entscheidungsunterstützung.</p>
-          <p class="micro" data-i18n="legal.p3">Datenschutz und Haftungshinweise findest du im Footer.</p>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container footer__grid">
-      <div>
-        <div class="brand brand--footer">
-          <span class="brand__mark" aria-hidden="true">MDG</span>
-          <span class="brand__text">v2</span>
-        </div>
-        <p class="micro" data-i18n="footer.tag">Strukturdiagnose für Stabilisierung und Umbau.</p>
-      </div>
-
-      <div class="footer__links">
-        <a href="#modell" data-i18n="nav.model">Modell</a>
-        <a href="#diagnose" data-i18n="nav.diagnosis">Diagnose</a>
-        <a href="#ergebnisse" data-i18n="nav.results">Ergebnisse</a>
-        <a href="#massnahmen" data-i18n="nav.actions">Maßnahmen</a>
-        <a href="#export" data-i18n="nav.export">Export</a>
-      </div>
-
-      <div class="footer__legal">
-        <a href="/impressum.html" rel="nofollow">Impressum</a>
-        <a href="/datenschutz.html" rel="nofollow">Datenschutz</a>
-        <a href="/haftung.html" rel="nofollow">Haftung</a>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Modals -->
-  <dialog class="modal" id="modal-explainer" aria-labelledby="explainer-title">
-    <div class="modal__inner">
-      <div class="modal__head">
-        <h3 class="h3" id="explainer-title" data-i18n="modal.explainer.t">Wie MDG v2 funktioniert</h3>
-        <button class="icon-btn" type="button" data-close-modal aria-label="Schließen">✕</button>
-      </div>
-      <div class="modal__body">
-        <p class="p" data-i18n="modal.explainer.p1">Primärinstabilität ist der erste strukturelle Bruch unter Verstärkung – nicht der niedrigste Wert im Radar.</p>
-        <ol class="mini-steps">
-          <li data-i18n="modal.explainer.l1">Quick-Scan: Eingangssignal, kein Urteil.</li>
-          <li data-i18n="modal.explainer.l2">5 Module: Entscheidungen, Last, Wachstum, Kopplung, Institutionalisierung.</li>
-          <li data-i18n="modal.explainer.l3">Simulation: Wo bricht es zuerst bei +Last / +Komplexität / Ausfall?</li>
-          <li data-i18n="modal.explainer.l4">Ergebnis: Typ (dominant + sekundär) + Wachstumssensitivität.</li>
-          <li data-i18n="modal.explainer.l5">Pfad: IDG (Stabilisierung) oder ADG (Umbau).</li>
-        </ol>
-      </div>
-      <div class="modal__foot">
-        <a class="btn btn--primary" href="#diagnose" data-close-modal data-i18n="cta.start">Diagnose starten</a>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="modal" id="modal-pdf" aria-labelledby="pdf-title">
-    <div class="modal__inner">
-      <div class="modal__head">
-        <h3 class="h3" id="pdf-title" data-i18n="modal.pdf.t">Beispiel-PDF (Demo)</h3>
-        <button class="icon-btn" type="button" data-close-modal aria-label="Schließen">✕</button>
-      </div>
-      <div class="modal__body">
-        <p class="p" data-i18n="modal.pdf.p">Hier würdest du ein Demo-PDF verlinken oder ein Bild der ersten Seite zeigen.</p>
-        <div class="fake-pdf" aria-hidden="true"></div>
-      </div>
-      <div class="modal__foot">
-        <button class="btn btn--ghost" type="button" data-close-modal data-i18n="cta.close">Schließen</button>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- Module demo modals (placeholders) -->
-  <dialog class="modal" id="modal-m1" aria-labelledby="m1-title">
-    <div class="modal__inner">
-      <div class="modal__head">
-        <h3 class="h3" id="m1-title" data-i18n="modal.m1.t">Modul: Entscheidungsarchitektur</h3>
-        <button class="icon-btn" type="button" data-close-modal aria-label="Schließen">✕</button>
-      </div>
-      <div class="modal__body">
-        <p class="p" data-i18n="modal.m1.p">Misst Dichte, Irreversibilität, Delegation und Redundanz. Ergebnis: Entscheidungsstress und Engpasshinweise.</p>
-      </div>
-      <div class="modal__foot">
-        <button class="btn btn--ghost" type="button" data-close-modal data-i18n="cta.close">Schließen</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="modal" id="modal-m2" aria-labelledby="m2-title">
-    <div class="modal__inner">
-      <div class="modal__head">
-        <h3 class="h3" id="m2-title" data-i18n="modal.m2.t">Modul: Lastverteilung</h3>
-        <button class="icon-btn" type="button" data-close-modal aria-label="Schließen">✕</button>
-      </div>
-      <div class="modal__body">
-        <p class="p" data-i18n="modal.m2.p">Erkennt Asymmetrien, Single Points of Failure und Engpassfrequenzen – unabhängig von Stimmung.</p>
-      </div>
-      <div class="modal__foot">
-        <button class="btn btn--ghost" type="button" data-close-modal data-i18n="cta.close">Schließen</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="modal" id="modal-m3" aria-labelledby="m3-title">
-    <div class="modal__inner">
-      <div class="modal__head">
-        <h3 class="h3" id="m3-title" data-i18n="modal.m3.t">Modul: Wachstumsverstärkungstest</h3>
-        <button class="icon-btn" type="button" data-close-modal aria-label="Schließen">✕</button>
-      </div>
-      <div class="modal__body">
-        <p class="p" data-i18n="modal.m3.p">Simuliert Verstärkung: +20% Last, +50% Komplexität, Ausfall Schlüsselrolle. Identifiziert den ersten Bruch.</p>
-      </div>
-      <div class="modal__foot">
-        <button class="btn btn--ghost" type="button" data-close-modal data-i18n="cta.close">Schließen</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="modal" id="modal-m4" aria-labelledby="m4-title">
-    <div class="modal__inner">
-      <div class="modal__head">
-        <h3 class="h3" id="m4-title" data-i18n="modal.m4.t">Modul: Macht–Verantwortung</h3>
-        <button class="icon-btn" type="button" data-close-modal aria-label="Schließen">✕</button>
-      </div>
-      <div class="modal__body">
-        <p class="p" data-i18n="modal.m4.p">Misst Kopplung zwischen Entscheidung, Risiko, Information und Konsequenz. Ergebnis: Mismatch-Heatmap.</p>
-      </div>
-      <div class="modal__foot">
-        <button class="btn btn--ghost" type="button" data-close-modal data-i18n="cta.close">Schließen</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="modal" id="modal-m5" aria-labelledby="m5-title">
-    <div class="modal__inner">
-      <div class="modal__head">
-        <h3 class="h3" id="m5-title" data-i18n="modal.m5.t">Modul: Energie & Fehlerintegration</h3>
-        <button class="icon-btn" type="button" data-close-modal aria-label="Schließen">✕</button>
-      </div>
-      <div class="modal__body">
-        <p class="p" data-i18n="modal.m5.p">Erkennt Energieentkopplung sowie fehlende Lern- und Feedbackzyklen. Ergebnis: Frühindikatoren + Strukturtrigger.</p>
-      </div>
-      <div class="modal__foot">
-        <button class="btn btn--ghost" type="button" data-close-modal data-i18n="cta.close">Schließen</button>
-      </div>
-    </div>
-  </dialog>
-
-  <script src="./script.js" defer></script>
 </body>
 </html>
