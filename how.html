@@ -3,18 +3,28 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>How MDG works</title>
-  <meta name="description" content="So funktioniert MDG: von Quick-Scan zu Entscheidungssicherheit und Architektur-Plan." />
+  <title>How it works – MDG</title>
+  <meta name="description" content="Wie MDG funktioniert: In wenigen Minuten zur Entscheidungssicherheit – Quick Scan, Präzisionsfragen, Output, Executive Report." />
   <link rel="stylesheet" href="./style.css" />
   <style>
     .page{ max-width: 980px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
     .grid{ display:grid; gap:1rem; }
-    .steps{ display:grid; gap:.9rem; }
-    .step{ padding: 1rem; border:1px solid rgba(255,255,255,.10); border-radius: var(--radius2,18px); background: rgba(255,255,255,.02); }
-    .step h3{ margin:0 0 .35rem; }
-    .mini{ color: var(--muted,#aab); font-size:.95rem; line-height:1.45; }
-    .two{ display:grid; grid-template-columns: 1fr 1fr; gap:1rem; }
-    @media (max-width: 900px){ .two{ grid-template-columns:1fr; } }
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:1rem; }
+    @media (max-width: 900px){ .row{ grid-template-columns:1fr; } }
+    .box{ padding: 1rem; border:1px solid rgba(255,255,255,.10); border-radius: var(--radius2,18px); background: rgba(255,255,255,.02); }
+    .box h3{ margin:0 0 .35rem; }
+    .mini{ color: var(--muted,#aab); font-size:.95rem; line-height:1.55; }
+    .steps{ display:grid; gap:.75rem; margin-top:.5rem; }
+    .step{ display:flex; gap:.75rem; align-items:flex-start; }
+    .n{
+      width: 2rem; height: 2rem; border-radius: 999px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 950; border:1px solid rgba(255,255,255,.12);
+      background: rgba(110,231,183,.10);
+    }
+    .ctaRow{ display:flex; gap:.75rem; flex-wrap:wrap; }
+    .hint{ padding:.85rem 1rem; border:1px solid rgba(255,255,255,.10); border-radius: var(--radius2,18px); background: rgba(255,255,255,.03); }
+    .kpi{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.4rem; }
   </style>
 </head>
 
@@ -60,73 +70,117 @@
 <main class="page">
   <div class="section__head">
     <h1 class="h2" data-i18n="how.title">How it works</h1>
-    <p class="sub" data-i18n="how.sub">MDG transforms a vague situation into decision-security: what is unstable, why, and what architecture fixes it.</p>
+    <p class="sub" data-i18n="how.sub">
+      MDG führt dich in wenigen Minuten von „diffus“ zu „entscheidbar“ – mit klarer Struktur statt Raten.
+    </p>
   </div>
 
   <div class="grid">
     <div class="card">
-      <h2 class="h3" data-i18n="how.promise">What you get in minutes</h2>
-      <div class="two">
-        <div class="step">
-          <h3 class="h3" data-i18n="how.out1.t">A clear diagnosis</h3>
-          <p class="mini" data-i18n="how.out1.b">Primary instability + causal chain + the first leverage point that reduces uncertainty.</p>
-        </div>
-        <div class="step">
-          <h3 class="h3" data-i18n="how.out2.t">A concrete action architecture</h3>
-          <p class="mini" data-i18n="how.out2.b">Immediate stabilization moves + rebuild plan that prevents recurrence.</p>
-        </div>
-      </div>
-    </div>
+      <h2 class="h3" data-i18n="how.flowTitle">The flow</h2>
 
-    <div class="card">
-      <h2 class="h3" data-i18n="how.stepsTitle">Process</h2>
       <div class="steps">
         <div class="step">
-          <h3 class="h3" data-i18n="how.s1.t">1) One sentence</h3>
-          <p class="mini" data-i18n="how.s1.b">You describe the situation in one sentence. MDG uses it as the anchor for meaning and scope.</p>
+          <div class="n">1</div>
+          <div>
+            <div class="h3" style="margin:0;" data-i18n="how.s1.t">One sentence</div>
+            <div class="mini" data-i18n="how.s1.b">
+              Beschreibe das Muster + die Konsequenz in einem Satz. Das ist der „Case Header“.
+            </div>
+          </div>
         </div>
+
         <div class="step">
-          <h3 class="h3" data-i18n="how.s2.t">2) Decide intent</h3>
-          <p class="mini" data-i18n="how.s2.b">Stabilize = reduce tension fast. Rebuild = change structure so the same pattern cannot return.</p>
+          <div class="n">2</div>
+          <div>
+            <div class="h3" style="margin:0;" data-i18n="how.s2.t">Goal</div>
+            <div class="mini" data-i18n="how.s2.b">
+              Du wählst: Stabilisieren (Spannung senken) oder Umbauen (Architektur ändern).
+            </div>
+          </div>
         </div>
+
         <div class="step">
-          <h3 class="h3" data-i18n="how.s3.t">3) Quick-scan</h3>
-          <p class="mini" data-i18n="how.s3.b">A few high-leverage axes (load, decisions, energy/error, growth/complexity, power-responsibility) create a structural fingerprint.</p>
+          <div class="n">3</div>
+          <div>
+            <div class="h3" style="margin:0;" data-i18n="how.s3.t">Quick Scan (sliders)</div>
+            <div class="mini" data-i18n="how.s3.b">
+              5 Slider messen Last, Entscheidungen, Energie/Fehler, Wachstum/Komplexität, Macht-Verantwortung.
+            </div>
+          </div>
         </div>
+
         <div class="step">
-          <h3 class="h3" data-i18n="how.s4.t">4) Precision questions</h3>
-          <p class="mini" data-i18n="how.s4.b">MDG asks only what increases precision. Each question is designed to reduce ambiguity, not to collect “more text”.</p>
+          <div class="n">4</div>
+          <div>
+            <div class="h3" style="margin:0;" data-i18n="how.s4.t">Precision questions</div>
+            <div class="mini" data-i18n="how.s4.b">
+              Wenige Folgefragen reduzieren Mehrdeutigkeit. Jede Frage hat 2 Beispiele, damit Antworten sauber werden.
+            </div>
+          </div>
         </div>
+
         <div class="step">
-          <h3 class="h3" data-i18n="how.s5.t">5) Output</h3>
-          <p class="mini" data-i18n="how.s5.b">You receive a concise assessment. If you generate the Executive Report, you get a premium, operational plan.</p>
+          <div class="n">5</div>
+          <div>
+            <div class="h3" style="margin:0;" data-i18n="how.s5.t">Strategic output</div>
+            <div class="mini" data-i18n="how.s5.b">
+              Primärinstabilität, Spannungen, Risiko, Pfad (IDG/ADG) plus eine Klärungsfrage.
+            </div>
+            <div class="kpi">
+              <span class="pill pill--muted" data-i18n="how.k1">Primary Instability</span>
+              <span class="pill pill--muted" data-i18n="how.k2">Path</span>
+              <span class="pill pill--muted" data-i18n="how.k3">Risk</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="n">6</div>
+          <div>
+            <div class="h3" style="margin:0;" data-i18n="how.s6.t">Executive Report</div>
+            <div class="mini" data-i18n="how.s6.b">
+              Aus dem Output wird ein umsetzbarer Plan: Indikatoren, Maßnahmen, Architektur-Upgrade, Risiken, 30-60-90.
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <h2 class="h3" data-i18n="how.modesTitle">Private vs Business</h2>
-      <div class="two">
-        <div class="step">
-          <h3 class="h3" data-i18n="how.p.t">Private</h3>
-          <p class="mini" data-i18n="how.p.b">Language, examples and instructions are tailored to personal systems (roles, relationships, daily life, self-management).</p>
+      <h2 class="h3" data-i18n="how.principlesTitle">Design principles</h2>
+      <div class="row">
+        <div class="box">
+          <h3 class="h3" data-i18n="how.p1.t">No fluff</h3>
+          <p class="mini" data-i18n="how.p1.b">Kurze, dichte Aussagen. Keine Motivationsphrasen. Keine generischen Tipps.</p>
         </div>
-        <div class="step">
-          <h3 class="h3" data-i18n="how.b.t">Business</h3>
-          <p class="mini" data-i18n="how.b.b">Business-token unlocks a separate question set and Executive Output (roles, cadence, KPIs, decision rights, operating model).</p>
+        <div class="box">
+          <h3 class="h3" data-i18n="how.p2.t">Operational</h3>
+          <p class="mini" data-i18n="how.p2.b">Konkrete Moves, Reihenfolge, Signale. So, dass man morgen handeln kann.</p>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:1rem;">
+        <div class="box">
+          <h3 class="h3" data-i18n="how.p3.t">Separate modes</h3>
+          <p class="mini" data-i18n="how.p3.b">Private und Business verwenden unterschiedliche Fragen/Beispiele, damit Logik sauber bleibt.</p>
+        </div>
+        <div class="box">
+          <h3 class="h3" data-i18n="how.p4.t">Clarify to confirm</h3>
+          <p class="mini" data-i18n="how.p4.b">Eine starke Klärungsfrage validiert Annahmen und schärft die Diagnose sofort.</p>
         </div>
       </div>
     </div>
 
-    <div class="card">
-      <h2 class="h3" data-i18n="how.privacyTitle">Privacy & data</h2>
-      <p class="mini" data-i18n="how.privacyB">
-        Inputs are sent to the API only to generate the assessment/report. Do not include secrets or names you don’t want processed.
-      </p>
+    <div class="hint">
+      <div class="h3" style="margin:0;" data-i18n="how.tipTitle">Tip for best results</div>
+      <div class="mini" data-i18n="how.tipBody">
+        Antworte so konkret wie möglich (Beobachtung statt Interpretation). Wenn du unsicher bist: wähle die realistischste Option.
+      </div>
     </div>
 
-    <div class="dx-actions">
-      <a class="btn btn--primary" href="./index.html" data-i18n="how.cta">Start now</a>
+    <div class="ctaRow">
+      <a class="btn btn--primary" href="./index.html" data-i18n="how.cta">Start diagnosis</a>
       <a class="btn btn--ghost" href="#top" data-i18n="how.top">Back to top</a>
     </div>
   </div>
@@ -154,7 +208,6 @@
   const $ = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
-  // burger
   const burger = $(".burger");
   const drawer = $(".drawer");
   if (burger && drawer) {
@@ -169,61 +222,67 @@
     de: {
       "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ","cta.backHome":"Zur Homepage",
       "how.title":"Wie es funktioniert",
-      "how.sub":"MDG macht aus einem vagen Problem Entscheidungssicherheit: was instabil ist, warum, und welche Architektur es löst.",
-      "how.promise":"Was du in Minuten erhältst",
-      "how.out1.t":"Eine klare Diagnose","how.out1.b":"Primärinstabilität + Kausalkette + erster Hebel zur Reduktion von Unsicherheit.",
-      "how.out2.t":"Eine konkrete Handlungsarchitektur","how.out2.b":"Sofortmaßnahmen + Umbauplan, der Wiederholung verhindert.",
-      "how.stepsTitle":"Ablauf",
-      "how.s1.t":"1) Ein Satz","how.s1.b":"Du beschreibst die Lage in einem Satz – als Anker für Bedeutung und Scope.",
-      "how.s2.t":"2) Intent","how.s2.b":"Stabilisieren = Spannung schnell senken. Umbauen = Struktur so ändern, dass das Muster nicht zurückkommt.",
-      "how.s3.t":"3) Quick-Scan","how.s3.b":"Wenige Achsen erzeugen einen strukturellen Fingerprint (Last, Entscheidungen, Energie/Fehler, Wachstum, Macht-Verantwortung).",
-      "how.s4.t":"4) Präzisionsfragen","how.s4.b":"Nur Fragen, die Präzision erhöhen – nicht „mehr Text“ sammeln.",
-      "how.s5.t":"5) Output","how.s5.b":"Du bekommst ein kompaktes Assessment. Der Executive Report liefert einen premium operativen Plan.",
-      "how.modesTitle":"Privat vs Business",
-      "how.p.t":"Privat","how.p.b":"Sprache, Beispiele und Anweisungen sind auf persönliche Systeme zugeschnitten.",
-      "how.b.t":"Business","how.b.b":"Business-Token schaltet eigenes Fragen-Set + Executive Output frei (Rollen, Rhythmus, KPIs, Decision Rights).",
-      "how.privacyTitle":"Datenschutz","how.privacyB":"Inputs werden nur zur Generierung von Assessment/Report an die API gesendet. Keine Geheimnisse/Namen, die du nicht verarbeiten willst.",
-      "how.cta":"Jetzt starten","how.top":"Nach oben",
+      "how.sub":"MDG führt dich in wenigen Minuten von „diffus“ zu „entscheidbar“ – mit klarer Struktur statt Raten.",
+      "how.flowTitle":"Der Flow",
+      "how.s1.t":"Ein Satz","how.s1.b":"Beschreibe das Muster + die Konsequenz in einem Satz. Das ist der „Case Header“.",
+      "how.s2.t":"Ziel","how.s2.b":"Du wählst: Stabilisieren (Spannung senken) oder Umbauen (Architektur ändern).",
+      "how.s3.t":"Quick Scan (Slider)","how.s3.b":"5 Slider messen Last, Entscheidungen, Energie/Fehler, Wachstum/Komplexität, Macht-Verantwortung.",
+      "how.s4.t":"Präzisionsfragen","how.s4.b":"Wenige Folgefragen reduzieren Mehrdeutigkeit. Jede Frage hat 2 Beispiele, damit Antworten sauber werden.",
+      "how.s5.t":"Strategischer Output","how.s5.b":"Primärinstabilität, Spannungen, Risiko, Pfad (IDG/ADG) plus eine Klärungsfrage.",
+      "how.k1":"Primärinstabilität","how.k2":"Pfad","how.k3":"Risiko",
+      "how.s6.t":"Executive Report","how.s6.b":"Aus dem Output wird ein umsetzbarer Plan: Indikatoren, Maßnahmen, Architektur-Upgrade, Risiken, 30-60-90.",
+      "how.principlesTitle":"Design-Prinzipien",
+      "how.p1.t":"Kein Fluff","how.p1.b":"Kurze, dichte Aussagen. Keine Motivationsphrasen. Keine generischen Tipps.",
+      "how.p2.t":"Operational","how.p2.b":"Konkrete Moves, Reihenfolge, Signale. So, dass man morgen handeln kann.",
+      "how.p3.t":"Getrennte Modi","how.p3.b":"Private und Business nutzen unterschiedliche Fragen/Beispiele, damit Logik sauber bleibt.",
+      "how.p4.t":"Klärung zur Validierung","how.p4.b":"Eine starke Klärungsfrage validiert Annahmen und schärft die Diagnose sofort.",
+      "how.tipTitle":"Tipp für beste Ergebnisse",
+      "how.tipBody":"Antworte so konkret wie möglich (Beobachtung statt Interpretation). Wenn du unsicher bist: wähle die realistischste Option.",
+      "how.cta":"Diagnose starten","how.top":"Nach oben",
       "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau."
     },
     tr: {
       "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS","cta.backHome":"Anasayfa",
       "how.title":"Nasıl çalışır",
-      "how.sub":"MDG belirsizliği karar güvenine çevirir: ne instabil, neden ve hangi mimari çözer.",
-      "how.promise":"Dakikalar içinde ne alırsın",
-      "how.out1.t":"Net teşhis","how.out1.b":"Ana instabilite + nedensellik + belirsizliği azaltan ilk kaldıraç.",
-      "how.out2.t":"Somut eylem mimarisi","how.out2.b":"Hızlı stabilizasyon + tekrarını engelleyen yeniden kurulum planı.",
-      "how.stepsTitle":"Süreç",
-      "how.s1.t":"1) Tek cümle","how.s1.b":"Durumu tek cümleyle anlatırsın; anlam ve kapsam için ankordur.",
-      "how.s2.t":"2) Niyet","how.s2.b":"Stabilize = gerilimi hızlı düşür. Yeniden kur = yapıyı değiştir, desen geri gelmesin.",
-      "how.s3.t":"3) Hızlı tarama","how.s3.b":"Az eksenle yapısal parmak izi (yük, kararlar, enerji/hata, büyüme, güç-sorumluluk).",
-      "how.s4.t":"4) Kesinleştirme soruları","how.s4.b":"Sadece kesinliği artıran sorular – “daha çok metin” değil.",
-      "how.s5.t":"5) Çıktı","how.s5.b":"Kısa assessment + Executive Report ile premium operasyon planı.",
-      "how.modesTitle":"Özel vs Business",
-      "how.p.t":"Özel","how.p.b":"Dil ve örnekler kişisel sistemlere göre uyarlanır.",
-      "how.b.t":"Business","how.b.b":"Business token ayrı soru seti + Executive Output açar (roller, ritim, KPI, karar hakları).",
-      "how.privacyTitle":"Gizlilik","how.privacyB":"Veriler sadece rapor üretimi için API’ye gönderilir. İstemediğin gizli bilgileri yazma.",
-      "how.cta":"Şimdi başla","how.top":"Yukarı",
+      "how.sub":"MDG seni birkaç dakikada “bulanık”tan “karar verilebilir”e taşır—tahmin yerine net yapı.",
+      "how.flowTitle":"Akış",
+      "how.s1.t":"Tek cümle","how.s1.b":"Desen + sonucu tek cümlede yaz. Bu “case header”dır.",
+      "how.s2.t":"Hedef","how.s2.b":"Seç: Stabilize (gerilimi düşür) veya Yeniden kur (mimariyi değiştir).",
+      "how.s3.t":"Hızlı tarama (slider)","how.s3.b":"5 slider: yük, kararlar, enerji/hata, büyüme/karmaşıklık, güç-sorumluluk.",
+      "how.s4.t":"Kesinleştirme soruları","how.s4.b":"Az sayıda takip sorusu belirsizliği azaltır. Her soruda 2 örnek vardır.",
+      "how.s5.t":"Stratejik çıktı","how.s5.b":"Ana instabilite, gerilimler, risk, yol (IDG/ADG) ve 1 netleştirme sorusu.",
+      "how.k1":"Ana instabilite","how.k2":"Yol","how.k3":"Risk",
+      "how.s6.t":"Executive Report","how.s6.b":"Çıktıdan uygulanabilir plan: göstergeler, adımlar, mimari upgrade, riskler, 30-60-90.",
+      "how.principlesTitle":"Tasarım ilkeleri",
+      "how.p1.t":"Boş laf yok","how.p1.b":"Kısa ve yoğun. Motivasyon klişesi yok. Genel nasihat yok.",
+      "how.p2.t":"Operasyonel","how.p2.b":"Somut adımlar, sıra, sinyaller. Yarın uygulanabilir.",
+      "how.p3.t":"Ayrı modlar","how.p3.b":"Özel ve Business farklı soru/örnek kullanır—mantık temiz kalır.",
+      "how.p4.t":"Doğrulamak için netleştir","how.p4.b":"Tek güçlü soru varsayımları test eder ve teşhisi keskinleştirir.",
+      "how.tipTitle":"En iyi sonuç için",
+      "how.tipBody":"Mümkün olduğunca somut cevap ver (yorum değil gözlem). Emin değilsen en gerçekçi seçeneği seç.",
+      "how.cta":"Analizi başlat","how.top":"Yukarı",
       "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi."
     },
     en: {
       "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
       "how.title":"How it works",
-      "how.sub":"MDG turns a vague situation into decision-security: what is unstable, why, and what architecture fixes it.",
-      "how.promise":"What you get in minutes",
-      "how.out1.t":"A clear diagnosis","how.out1.b":"Primary instability + causal chain + the first leverage point that reduces uncertainty.",
-      "how.out2.t":"A concrete action architecture","how.out2.b":"Immediate stabilization moves + rebuild plan that prevents recurrence.",
-      "how.stepsTitle":"Process",
-      "how.s1.t":"1) One sentence","how.s1.b":"You describe the situation in one sentence. It’s the anchor for meaning and scope.",
-      "how.s2.t":"2) Intent","how.s2.b":"Stabilize = reduce tension fast. Rebuild = change structure so the pattern can’t return.",
-      "how.s3.t":"3) Quick-scan","how.s3.b":"A few axes create a structural fingerprint (load, decisions, energy/error, growth, power-responsibility).",
-      "how.s4.t":"4) Precision questions","how.s4.b":"Only questions that increase precision—not “more text”.",
-      "how.s5.t":"5) Output","how.s5.b":"Concise assessment. Executive Report adds a premium operational plan.",
-      "how.modesTitle":"Private vs Business",
-      "how.p.t":"Private","how.p.b":"Language and examples tailored to personal systems.",
-      "how.b.t":"Business","how.b.b":"Business token unlocks a separate question set + Executive Output (roles, cadence, KPIs, decision rights).",
-      "how.privacyTitle":"Privacy & data","how.privacyB":"Inputs are sent only to generate the assessment/report. Don’t include secrets or unwanted names.",
-      "how.cta":"Start now","how.top":"Back to top",
+      "how.sub":"MDG moves you from “fuzzy” to “decidable” in minutes—structure instead of guessing.",
+      "how.flowTitle":"The flow",
+      "how.s1.t":"One sentence","how.s1.b":"Write the pattern + the consequence in one sentence. This is the case header.",
+      "how.s2.t":"Goal","how.s2.b":"Choose: Stabilize (reduce tension) or Rebuild (change architecture).",
+      "how.s3.t":"Quick Scan (sliders)","how.s3.b":"5 sliders measure load, decisions, energy/error handling, growth/complexity, power-responsibility.",
+      "how.s4.t":"Precision questions","how.s4.b":"A few follow-ups reduce ambiguity. Each question includes 2 examples for clean answers.",
+      "how.s5.t":"Strategic output","how.s5.b":"Primary instability, tensions, risk, path (IDG/ADG) plus one clarifying question.",
+      "how.k1":"Primary instability","how.k2":"Path","how.k3":"Risk",
+      "how.s6.t":"Executive Report","how.s6.b":"Turns output into an executable plan: indicators, moves, architecture upgrade, risks, 30-60-90.",
+      "how.principlesTitle":"Design principles",
+      "how.p1.t":"No fluff","how.p1.b":"Short, high-density statements. No motivation phrases. No generic tips.",
+      "how.p2.t":"Operational","how.p2.b":"Concrete moves, order, signals—so you can act tomorrow.",
+      "how.p3.t":"Separate modes","how.p3.b":"Private and Business use different questions/examples to keep logic clean.",
+      "how.p4.t":"Clarify to confirm","how.p4.b":"One strong clarifying question validates assumptions and sharpens the diagnosis.",
+      "how.tipTitle":"Tip for best results",
+      "how.tipBody":"Answer as concretely as possible (observation over interpretation). If unsure, pick the most realistic option.",
+      "how.cta":"Start diagnosis","how.top":"Back to top",
       "footer.tag":"Structure diagnosis for stabilization and rebuild."
     }
   };
