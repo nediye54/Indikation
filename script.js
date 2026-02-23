@@ -424,3 +424,203 @@
   window.MDG.storage = { K_LANG, K_MODE, K_TOKEN };
   window.MDG.i18n = { applyLang, currentLang };
 })();
+/* =========================
+   MDG Precision Engine v1
+   - Deterministic SSI + thresholds
+   - Primary/Secondary drivers (rule-based)
+   - Business vs Private weighting
+   ========================= */
+
+(function () {
+  const MDG = (window.MDG = window.MDG || {});
+  MDG.engine = MDG.engine || {};
+
+  // --- helpers ---
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const round = (n) => Math.round(n);
+  const num = (x, d = 0) => {
+    const v = Number(x);
+    return Number.isFinite(v) ? v : d;
+  };
+
+  // Convert any input scale to 0..100 severity (higher = worse)
+  // If UI already uses 0..100, keep.
+  function to100(v) {
+    const n = num(v, 0);
+    return clamp(n, 0, 100);
+  }
+
+  function band(ssi) {
+    // You can tune these thresholds later (after coach feedback)
+    if (ssi >= 75) return { key: "red", label: "Critical", color: "red" };
+    if (ssi >= 55) return { key: "amber", label: "Elevated", color: "amber" };
+    if (ssi >= 35) return { key: "yellow", label: "Watch", color: "yellow" };
+    return { key: "green", label: "Stable", color: "green" };
+  }
+
+  // Deterministic driver map (dimension keys you can extend over time)
+  // Each driver is derived from a set of question ids (answers array)
+  // IMPORTANT: this is robust: missing answers just reduce confidence.
+  const DRIVER_SETS = {
+    // shared
+    decision: ["D3", "D4", "D5", "D6", "D7", "D1", "D2"],
+    load: ["L1", "L2", "L3", "L4", "L6", "L7", "L5"],
+    growth: ["G1", "G2", "G3", "G4", "G5"],
+    power: ["M1", "M2", "M3", "M4", "M5", "M6", "M7"],
+    energy: ["E1", "E2", "E3", "E4", "E5", "F1", "F2", "F3", "F4", "F5"],
+  };
+
+  // Mode-specific weights (tune later)
+  // - Private: energy + load are slightly stronger
+  // - Business: decision + power + growth are stronger
+  const WEIGHTS = {
+    private: { decision: 0.22, load: 0.24, growth: 0.18, power: 0.14, energy: 0.22 },
+    business: { decision: 0.26, load: 0.20, growth: 0.22, power: 0.20, energy: 0.12 },
+  };
+
+  function mean(values) {
+    const xs = values.filter((v) => Number.isFinite(v));
+    if (!xs.length) return null;
+    return xs.reduce((a, b) => a + b, 0) / xs.length;
+  }
+
+  // Pull value by id from normalized answers list:
+  // answersNormalized: [{id, value_100, raw_value, title}]
+  function getById(map, id) {
+    return map[id] ? map[id].value_100 : null;
+  }
+
+  // Driver score = mean of the underlying question severities
+  function driverScore(answerMap, ids) {
+    const vals = ids.map((id) => getById(answerMap, id)).filter((v) => Number.isFinite(v));
+    return mean(vals);
+  }
+
+  // Confidence = coverage (how many ids answered)
+  function coverage(answerMap, ids) {
+    const answered = ids.filter((id) => Number.isFinite(getById(answerMap, id))).length;
+    return ids.length ? answered / ids.length : 0;
+  }
+
+  function labelPrimary(key, mode) {
+    // labels should be stable and "instrument" tone
+    // mode can influence phrasing slightly
+    const base = {
+      decision: mode === "business" ? "Decision Architecture Breakdown" : "Decision Bottleneck",
+      load: mode === "business" ? "Load Concentration & Bottlenecks" : "Load Imbalance (SPOF risk)",
+      growth: mode === "business" ? "Scaling Without Structure" : "Growth/Complexity Overshoot",
+      power: mode === "business" ? "Authority–Accountability Mismatch" : "Power–Responsibility Mismatch",
+      energy: mode === "business" ? "Execution Energy & Learning Deficit" : "Energy / Error Integration Collapse",
+    };
+    return base[key] || "Primary Instability";
+  }
+
+  function decisionRule(primaryKey, ssi, mode) {
+    // Deterministic rule set (simple and strict)
+    // You can tune later with coach feedback.
+    if (ssi >= 75) {
+      return mode === "business"
+        ? "If SSI ≥ 75, freeze new commitments and run an IDG stabilization sprint (48h) before any restructuring."
+        : "If SSI ≥ 75, stop escalation, stabilize for 48h, then reassess before major decisions.";
+    }
+    if (primaryKey === "decision") {
+      return mode === "business"
+        ? "If decision score is top driver, implement decision classes A/B/C + delegation rules within 7 days."
+        : "If decisions bottleneck, define A/B/C decision classes + a backup decision owner within 7 days.";
+    }
+    if (primaryKey === "load") {
+      return mode === "business"
+        ? "If load concentration is top driver, offload ≥20% from the bottleneck role within 14 days."
+        : "If load is imbalanced, shift ≥20% load away from the bottleneck within 14 days.";
+    }
+    if (primaryKey === "growth") {
+      return "If growth sensitivity is high, cap complexity until structure catches up (cadence + interfaces).";
+    }
+    if (primaryKey === "power") {
+      return "If authority/accountability mismatch is high, align decision rights + risk ownership + metrics.";
+    }
+    return "If SSI rises week-over-week, reduce scope and increase review cadence immediately.";
+  }
+
+  /**
+   * Public API:
+   * compute(meta, answersNormalized) -> deterministic assessment object
+   *
+   * meta: { mode: "private"|"business", goal: "stabilize"|"rebuild" }
+   * answersNormalized: [{id, value_100, raw_value, title}]
+   */
+  MDG.engine.compute = function compute(meta, answersNormalized) {
+    const mode = (meta?.mode === "business") ? "business" : "private";
+
+    // Build map for fast access
+    const answerMap = Object.create(null);
+    for (const a of Array.isArray(answersNormalized) ? answersNormalized : []) {
+      if (!a || !a.id) continue;
+      answerMap[String(a.id)] = {
+        value_100: to100(a.value_100),
+        raw_value: a.raw_value,
+        title: a.title || "",
+      };
+    }
+
+    // Driver scores
+    const drivers = {};
+    const cov = {};
+    for (const [k, ids] of Object.entries(DRIVER_SETS)) {
+      drivers[k] = driverScore(answerMap, ids); // may be null
+      cov[k] = coverage(answerMap, ids);
+    }
+
+    // Weighted SSI
+    const w = WEIGHTS[mode];
+    let sum = 0;
+    let sw = 0;
+    for (const k of Object.keys(w)) {
+      const v = drivers[k];
+      if (Number.isFinite(v)) {
+        sum += v * w[k];
+        sw += w[k];
+      }
+    }
+    const ssi = sw > 0 ? (sum / sw) : 0;
+    const ssiRounded = round(ssi);
+
+    // Rank drivers (primary/secondary)
+    const ranked = Object.entries(drivers)
+      .filter(([, v]) => Number.isFinite(v))
+      .sort((a, b) => b[1] - a[1]);
+
+    const primaryKey = ranked[0]?.[0] || "decision";
+    const secondaryKey = ranked[1]?.[0] || null;
+
+    // SPOF flag heuristic: high load or high decision centralization
+    const spof = (num(drivers.load, 0) >= 70) || (num(drivers.decision, 0) >= 70);
+
+    // Path recommendation deterministic (strict)
+    // - If red or growth/decision/load extremely high => IDG → ADG
+    // - else depending on goal
+    const b = band(ssiRounded);
+    let path = "IDG";
+    if (b.key === "red") path = "IDG → ADG";
+    else if (num(drivers.growth, 0) >= 65 || num(drivers.decision, 0) >= 70 || num(drivers.load, 0) >= 70) path = "ADG";
+    else path = (meta?.goal === "rebuild") ? "IDG → ADG" : "IDG";
+
+    return {
+      v: 1,
+      mode,
+      ssi: ssiRounded,
+      band: b, // {key,label,color}
+      drivers: Object.fromEntries(
+        Object.entries(drivers).map(([k, v]) => [k, Number.isFinite(v) ? round(v) : null])
+      ),
+      coverage: Object.fromEntries(Object.entries(cov).map(([k, v]) => [k, round(v * 100)])), // %
+      primary: { key: primaryKey, label: labelPrimary(primaryKey, mode), score: round(num(drivers[primaryKey], 0)) },
+      secondary: secondaryKey
+        ? { key: secondaryKey, label: labelPrimary(secondaryKey, mode), score: round(num(drivers[secondaryKey], 0)) }
+        : null,
+      flags: { spof: !!spof },
+      recommended_path: path,
+      decision_rule: decisionRule(primaryKey, ssiRounded, mode),
+    };
+  };
+})();
