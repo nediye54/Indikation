@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>How MDG works</title>
+  <meta name="description" content="So funktioniert MDG: von Quick-Scan zu Entscheidungssicherheit und Architektur-Plan." />
+  <link rel="stylesheet" href="./style.css" />
+  <style>
+    .page{ max-width: 980px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+    .grid{ display:grid; gap:1rem; }
+    .steps{ display:grid; gap:.9rem; }
+    .step{ padding: 1rem; border:1px solid rgba(255,255,255,.10); border-radius: var(--radius2,18px); background: rgba(255,255,255,.02); }
+    .step h3{ margin:0 0 .35rem; }
+    .mini{ color: var(--muted,#aab); font-size:.95rem; line-height:1.45; }
+    .two{ display:grid; grid-template-columns: 1fr 1fr; gap:1rem; }
+    @media (max-width: 900px){ .two{ grid-template-columns:1fr; } }
+  </style>
+</head>
+
+<body>
+<header class="header" id="top">
+  <div class="container header__inner">
+    <a class="brand" href="./index.html" aria-label="Home">
+      <span class="brand__mark" aria-hidden="true">MDG</span>
+      <span class="brand__text">v4</span>
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      <a class="nav__link" href="./how.html" data-i18n="nav.how">How it works</a>
+      <a class="nav__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
+      <a class="nav__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
+    </nav>
+
+    <div class="header__actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
+        <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
+        <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="btn btn--ghost" href="./index.html" data-i18n="cta.backHome">Home</a>
+    </div>
+
+    <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="drawer" hidden>
+    <div class="drawer__content">
+      <a class="drawer__link" href="./how.html" data-i18n="nav.how">How it works</a>
+      <a class="drawer__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
+      <a class="drawer__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
+      <div class="drawer__sep"></div>
+      <a class="btn btn--ghost btn--full" href="./index.html" data-i18n="cta.backHome">Home</a>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="section__head">
+    <h1 class="h2" data-i18n="how.title">How it works</h1>
+    <p class="sub" data-i18n="how.sub">MDG transforms a vague situation into decision-security: what is unstable, why, and what architecture fixes it.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2 class="h3" data-i18n="how.promise">What you get in minutes</h2>
+      <div class="two">
+        <div class="step">
+          <h3 class="h3" data-i18n="how.out1.t">A clear diagnosis</h3>
+          <p class="mini" data-i18n="how.out1.b">Primary instability + causal chain + the first leverage point that reduces uncertainty.</p>
+        </div>
+        <div class="step">
+          <h3 class="h3" data-i18n="how.out2.t">A concrete action architecture</h3>
+          <p class="mini" data-i18n="how.out2.b">Immediate stabilization moves + rebuild plan that prevents recurrence.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="h3" data-i18n="how.stepsTitle">Process</h2>
+      <div class="steps">
+        <div class="step">
+          <h3 class="h3" data-i18n="how.s1.t">1) One sentence</h3>
+          <p class="mini" data-i18n="how.s1.b">You describe the situation in one sentence. MDG uses it as the anchor for meaning and scope.</p>
+        </div>
+        <div class="step">
+          <h3 class="h3" data-i18n="how.s2.t">2) Decide intent</h3>
+          <p class="mini" data-i18n="how.s2.b">Stabilize = reduce tension fast. Rebuild = change structure so the same pattern cannot return.</p>
+        </div>
+        <div class="step">
+          <h3 class="h3" data-i18n="how.s3.t">3) Quick-scan</h3>
+          <p class="mini" data-i18n="how.s3.b">A few high-leverage axes (load, decisions, energy/error, growth/complexity, power-responsibility) create a structural fingerprint.</p>
+        </div>
+        <div class="step">
+          <h3 class="h3" data-i18n="how.s4.t">4) Precision questions</h3>
+          <p class="mini" data-i18n="how.s4.b">MDG asks only what increases precision. Each question is designed to reduce ambiguity, not to collect “more text”.</p>
+        </div>
+        <div class="step">
+          <h3 class="h3" data-i18n="how.s5.t">5) Output</h3>
+          <p class="mini" data-i18n="how.s5.b">You receive a concise assessment. If you generate the Executive Report, you get a premium, operational plan.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="h3" data-i18n="how.modesTitle">Private vs Business</h2>
+      <div class="two">
+        <div class="step">
+          <h3 class="h3" data-i18n="how.p.t">Private</h3>
+          <p class="mini" data-i18n="how.p.b">Language, examples and instructions are tailored to personal systems (roles, relationships, daily life, self-management).</p>
+        </div>
+        <div class="step">
+          <h3 class="h3" data-i18n="how.b.t">Business</h3>
+          <p class="mini" data-i18n="how.b.b">Business-token unlocks a separate question set and Executive Output (roles, cadence, KPIs, decision rights, operating model).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="h3" data-i18n="how.privacyTitle">Privacy & data</h2>
+      <p class="mini" data-i18n="how.privacyB">
+        Inputs are sent to the API only to generate the assessment/report. Do not include secrets or names you don’t want processed.
+      </p>
+    </div>
+
+    <div class="dx-actions">
+      <a class="btn btn--primary" href="./index.html" data-i18n="how.cta">Start now</a>
+      <a class="btn btn--ghost" href="#top" data-i18n="how.top">Back to top</a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <div class="brand brand--footer">
+        <span class="brand__mark" aria-hidden="true">MDG</span>
+        <span class="brand__text">v4</span>
+      </div>
+      <p class="micro" data-i18n="footer.tag">Structure diagnosis for stabilization and rebuild.</p>
+    </div>
+    <div class="footer__legal">
+      <a href="./impressum.html" rel="nofollow">Impressum</a>
+      <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+      <a href="./kontakt.html" rel="nofollow">Kontakt</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  // burger
+  const burger = $(".burger");
+  const drawer = $(".drawer");
+  if (burger && drawer) {
+    burger.addEventListener("click", () => {
+      const open = !drawer.hasAttribute("hidden");
+      if (open) { drawer.setAttribute("hidden",""); burger.setAttribute("aria-expanded","false"); }
+      else { drawer.removeAttribute("hidden"); burger.setAttribute("aria-expanded","true"); }
+    });
+  }
+
+  const dict = {
+    de: {
+      "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ","cta.backHome":"Zur Homepage",
+      "how.title":"Wie es funktioniert",
+      "how.sub":"MDG macht aus einem vagen Problem Entscheidungssicherheit: was instabil ist, warum, und welche Architektur es löst.",
+      "how.promise":"Was du in Minuten erhältst",
+      "how.out1.t":"Eine klare Diagnose","how.out1.b":"Primärinstabilität + Kausalkette + erster Hebel zur Reduktion von Unsicherheit.",
+      "how.out2.t":"Eine konkrete Handlungsarchitektur","how.out2.b":"Sofortmaßnahmen + Umbauplan, der Wiederholung verhindert.",
+      "how.stepsTitle":"Ablauf",
+      "how.s1.t":"1) Ein Satz","how.s1.b":"Du beschreibst die Lage in einem Satz – als Anker für Bedeutung und Scope.",
+      "how.s2.t":"2) Intent","how.s2.b":"Stabilisieren = Spannung schnell senken. Umbauen = Struktur so ändern, dass das Muster nicht zurückkommt.",
+      "how.s3.t":"3) Quick-Scan","how.s3.b":"Wenige Achsen erzeugen einen strukturellen Fingerprint (Last, Entscheidungen, Energie/Fehler, Wachstum, Macht-Verantwortung).",
+      "how.s4.t":"4) Präzisionsfragen","how.s4.b":"Nur Fragen, die Präzision erhöhen – nicht „mehr Text“ sammeln.",
+      "how.s5.t":"5) Output","how.s5.b":"Du bekommst ein kompaktes Assessment. Der Executive Report liefert einen premium operativen Plan.",
+      "how.modesTitle":"Privat vs Business",
+      "how.p.t":"Privat","how.p.b":"Sprache, Beispiele und Anweisungen sind auf persönliche Systeme zugeschnitten.",
+      "how.b.t":"Business","how.b.b":"Business-Token schaltet eigenes Fragen-Set + Executive Output frei (Rollen, Rhythmus, KPIs, Decision Rights).",
+      "how.privacyTitle":"Datenschutz","how.privacyB":"Inputs werden nur zur Generierung von Assessment/Report an die API gesendet. Keine Geheimnisse/Namen, die du nicht verarbeiten willst.",
+      "how.cta":"Jetzt starten","how.top":"Nach oben",
+      "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau."
+    },
+    tr: {
+      "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS","cta.backHome":"Anasayfa",
+      "how.title":"Nasıl çalışır",
+      "how.sub":"MDG belirsizliği karar güvenine çevirir: ne instabil, neden ve hangi mimari çözer.",
+      "how.promise":"Dakikalar içinde ne alırsın",
+      "how.out1.t":"Net teşhis","how.out1.b":"Ana instabilite + nedensellik + belirsizliği azaltan ilk kaldıraç.",
+      "how.out2.t":"Somut eylem mimarisi","how.out2.b":"Hızlı stabilizasyon + tekrarını engelleyen yeniden kurulum planı.",
+      "how.stepsTitle":"Süreç",
+      "how.s1.t":"1) Tek cümle","how.s1.b":"Durumu tek cümleyle anlatırsın; anlam ve kapsam için ankordur.",
+      "how.s2.t":"2) Niyet","how.s2.b":"Stabilize = gerilimi hızlı düşür. Yeniden kur = yapıyı değiştir, desen geri gelmesin.",
+      "how.s3.t":"3) Hızlı tarama","how.s3.b":"Az eksenle yapısal parmak izi (yük, kararlar, enerji/hata, büyüme, güç-sorumluluk).",
+      "how.s4.t":"4) Kesinleştirme soruları","how.s4.b":"Sadece kesinliği artıran sorular – “daha çok metin” değil.",
+      "how.s5.t":"5) Çıktı","how.s5.b":"Kısa assessment + Executive Report ile premium operasyon planı.",
+      "how.modesTitle":"Özel vs Business",
+      "how.p.t":"Özel","how.p.b":"Dil ve örnekler kişisel sistemlere göre uyarlanır.",
+      "how.b.t":"Business","how.b.b":"Business token ayrı soru seti + Executive Output açar (roller, ritim, KPI, karar hakları).",
+      "how.privacyTitle":"Gizlilik","how.privacyB":"Veriler sadece rapor üretimi için API’ye gönderilir. İstemediğin gizli bilgileri yazma.",
+      "how.cta":"Şimdi başla","how.top":"Yukarı",
+      "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi."
+    },
+    en: {
+      "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
+      "how.title":"How it works",
+      "how.sub":"MDG turns a vague situation into decision-security: what is unstable, why, and what architecture fixes it.",
+      "how.promise":"What you get in minutes",
+      "how.out1.t":"A clear diagnosis","how.out1.b":"Primary instability + causal chain + the first leverage point that reduces uncertainty.",
+      "how.out2.t":"A concrete action architecture","how.out2.b":"Immediate stabilization moves + rebuild plan that prevents recurrence.",
+      "how.stepsTitle":"Process",
+      "how.s1.t":"1) One sentence","how.s1.b":"You describe the situation in one sentence. It’s the anchor for meaning and scope.",
+      "how.s2.t":"2) Intent","how.s2.b":"Stabilize = reduce tension fast. Rebuild = change structure so the pattern can’t return.",
+      "how.s3.t":"3) Quick-scan","how.s3.b":"A few axes create a structural fingerprint (load, decisions, energy/error, growth, power-responsibility).",
+      "how.s4.t":"4) Precision questions","how.s4.b":"Only questions that increase precision—not “more text”.",
+      "how.s5.t":"5) Output","how.s5.b":"Concise assessment. Executive Report adds a premium operational plan.",
+      "how.modesTitle":"Private vs Business",
+      "how.p.t":"Private","how.p.b":"Language and examples tailored to personal systems.",
+      "how.b.t":"Business","how.b.b":"Business token unlocks a separate question set + Executive Output (roles, cadence, KPIs, decision rights).",
+      "how.privacyTitle":"Privacy & data","how.privacyB":"Inputs are sent only to generate the assessment/report. Don’t include secrets or unwanted names.",
+      "how.cta":"Start now","how.top":"Back to top",
+      "footer.tag":"Structure diagnosis for stabilization and rebuild."
+    }
+  };
+
+  function applyLang(lang){
+    if(!dict[lang]) lang="de";
+    document.documentElement.lang = lang;
+    $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang===lang)));
+    $$("[data-i18n]").forEach(el => {
+      const k = el.dataset.i18n;
+      if (dict[lang][k]) el.textContent = dict[lang][k];
+    });
+  }
+
+  $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => applyLang(btn.dataset.lang)));
+  applyLang("de");
+})();
+</script>
+</body>
+</html>
