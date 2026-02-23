@@ -73,3 +73,59 @@ function showFollowups(data){
     });
   };
 }
+document.getElementById("generateReportBtn").onclick = async () => {
+
+  const assessment = JSON.parse(
+    document.getElementById("resultOutput").textContent
+  );
+
+  const res = await fetch(`${API}/api/ai/report`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assessment })
+  });
+
+  const report = await res.json();
+
+  renderExecutiveReport(report);
+};
+
+function renderExecutiveReport(report){
+
+  const container = document.getElementById("reportContainer");
+  container.style.display = "block";
+  document.getElementById("downloadPdfBtn").style.display = "inline-block";
+
+  container.innerHTML = `
+    <div class="report">
+      <h1>Executive Strategic Report</h1>
+
+      <h2>Executive Summary</h2>
+      <p>${report.executive_summary}</p>
+
+      <h2>Structural Root Cause</h2>
+      <p>${report.structural_root_cause}</p>
+
+      <h2>Risk Amplification Dynamic</h2>
+      <p>${report.risk_amplification_dynamic}</p>
+
+      <h2>Strategic Positioning</h2>
+      <p>${report.strategic_positioning}</p>
+
+      <h2>30-60-90 Day Plan</h2>
+      <h3>30 Days</h3>
+      <p>${report.thirty_sixty_ninety_plan["30_days"]}</p>
+      <h3>60 Days</h3>
+      <p>${report.thirty_sixty_ninety_plan["60_days"]}</p>
+      <h3>90 Days</h3>
+      <p>${report.thirty_sixty_ninety_plan["90_days"]}</p>
+
+      <h2>CEO Memo</h2>
+      <p>${report.ceo_memo}</p>
+    </div>
+  `;
+}
+
+document.getElementById("downloadPdfBtn").onclick = () => {
+  window.print();
+};
