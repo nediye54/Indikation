@@ -263,11 +263,10 @@
     const modeParam = (params.get("mode") || "").toLowerCase();
     const storedMode = (sessionStorage.getItem("mdg_mode") || "").toLowerCase();
     const businessOk = sessionStorage.getItem("mdg_business_ok") === "1";
-    const businessToken = (sessionStorage.getItem("mdg_business_token") || "").trim();
+    const businessToken = sessionStorage.getItem("mdg_business_token");
 
     const wantsBusiness = (modeParam === "business") || (storedMode === "business");
     const mode = (wantsBusiness && businessOk) ? "business" : "private";
-    const businessToken = sessionStorage.getItem("mdg_business_token") || " ";
 
     $("#modeBadge").textContent = mode === "business" ? "Business" : "Private";
     if (mode === "business") $("#tokenBadge").style.display = "";
