@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Executive Memorandum – MDG</title>
+  <meta name="description" content="Board-ready executive memorandum." />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body class="reportBody">
+  <div class="shell reportShell">
+    <header class="reportTop">
+      <div class="reportTop__left">
+        <div class="reportMark">MDG</div>
+        <div class="reportSub">Executive Memorandum</div>
+      </div>
+      <div class="reportTop__right">
+        <a class="btn btn--ghost" href="./diagnose.html">Back to Diagnose</a>
+        <button class="btn btn--primary" id="btn_pdf">Download PDF</button>
+      </div>
+    </header>
+
+    <main class="reportMain">
+      <section class="reportHeader">
+        <h1 class="reportTitle">Structural Diagnostic Memorandum</h1>
+        <div class="reportMeta">
+          <div><span class="metaKey">Label</span> <span id="r_label">–</span></div>
+          <div><span class="metaKey">Context</span> <span id="r_context">–</span></div>
+          <div><span class="metaKey">Created</span> <span id="r_created">–</span></div>
+          <div><span class="metaKey">SSI</span> <span id="r_ssi">–</span></div>
+          <div><span class="metaKey">Confidence</span> <span id="r_conf">–</span></div>
+        </div>
+      </section>
+
+      <section class="reportGrid">
+        <article class="memoCard">
+          <h2>Executive Summary</h2>
+          <p id="m_exec">–</p>
+        </article>
+        <article class="memoCard">
+          <h2>Primary Structural Instability</h2>
+          <p id="m_primary">–</p>
+          <div class="hrLight"></div>
+          <h3>Root Cause Chain</h3>
+          <p id="m_root">–</p>
+        </article>
+      </section>
+
+      <section class="reportGrid">
+        <article class="memoCard">
+          <h2>Amplification Dynamics</h2>
+          <p id="m_amp">–</p>
+          <div class="hrLight"></div>
+          <h3>Nonlinearity</h3>
+          <p id="m_nonlin">–</p>
+        </article>
+
+        <article class="memoCard">
+          <h2>Decision Tree</h2>
+          <div id="m_tree" class="tree"></div>
+        </article>
+      </section>
+
+      <section class="reportGrid">
+        <article class="memoCard">
+          <h2>30–60–90 Outline</h2>
+          <h3>0–30 Days</h3>
+          <p id="m_30">–</p>
+          <h3>31–60 Days</h3>
+          <p id="m_60">–</p>
+          <h3>61–90 Days</h3>
+          <p id="m_90">–</p>
+        </article>
+
+        <article class="memoCard">
+          <h2>CEO Memo</h2>
+          <p id="m_ceo">–</p>
+        </article>
+      </section>
+
+      <section class="reportGrid">
+        <article class="memoCard">
+          <h2>Charts (for record)</h2>
+          <div class="grid2">
+            <div>
+              <div class="metaKey">Radar</div>
+              <svg id="r_svg_radar" class="svgBox svgBox--light" viewBox="0 0 320 260"></svg>
+            </div>
+            <div>
+              <div class="metaKey">Amplification curve</div>
+              <svg id="r_svg_curve" class="svgBox svgBox--light" viewBox="0 0 320 260"></svg>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="reportFooter">
+      <span>MDG • Boutique Intelligence • Board-ready memo (EN)</span>
+    </footer>
+  </div>
+
+  <script src="./script.js" defer></script>
+  <script defer>
+    window.__MDG_REPORT_PAGE__ = true;
+  </script>
+</body>
+</html>
