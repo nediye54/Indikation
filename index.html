@@ -1,107 +1,91 @@
-<!doctype html>
-<html lang="de">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MDG – Boutique Intelligence Diagnostic</title>
-  <meta name="description" content="Boutique-grade structural diagnosis for leadership systems." />
-  <link rel="stylesheet" href="./style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MDG – Decision Clarity</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="shell">
-    <header class="topbar">
-      <a class="brand" href="./index.html" aria-label="MDG Home">
-        <span class="brand__mark">MDG</span>
-        <span class="brand__sub">Boutique Intelligence</span>
-      </a>
-      <nav class="topnav">
-        <a class="topnav__link" href="./diagnose.html">Diagnose</a>
-        <a class="topnav__link" href="./verlauf.html">Verlauf</a>
-      </nav>
-    </header>
 
-    <main class="grid2">
-      <section class="card card--hero">
-        <h1 class="h1">Structural Instability Diagnostic</h1>
-        <p class="lead">
-          A compact, leadership-grade instrument to detect the primary structural instability
-          before it compounds through growth, load, and decision pressure.
-        </p>
+<header class="topbar">
+  <div class="logo">MDG</div>
+  <div class="lang-switch">
+    <button data-lang="en">EN</button>
+    <button data-lang="de">DE</button>
+    <button data-lang="tr">TR</button>
+  </div>
+</header>
 
-        <div class="hr"></div>
+<section class="hero">
+  <h1 data-i18n="hero.headline">
+    Decision clarity in minutes.
+  </h1>
+  <p data-i18n="hero.sub">
+    A structural diagnostic system for early instability detection and resilient decision architecture.
+  </p>
 
-        <h2 class="h2">What you will get</h2>
-        <ul class="bullets">
-          <li><b>Structural Severity Index (SSI)</b> and confidence rating</li>
-          <li><b>Primary instability</b>, root cause chain, amplification dynamics</li>
-          <li><b>Decision triggers</b> and a 30–60–90 outline</li>
-          <li>A separate <b>Executive Memorandum</b> (report.html) optimized for PDF</li>
-        </ul>
+  <div class="cta-row">
+    <a href="diagnose.html?mode=private" class="btn-primary" data-i18n="hero.private">
+      Assess now
+    </a>
 
-        <div class="note">
-          This tool is built for business contexts by default (no “private” mode).
-        </div>
+    <a href="https://YOUR_LEMONSQUEEZY_CHECKOUT_URL"
+       class="btn-secondary"
+       data-i18n="hero.business">
+      For companies (Token required)
+    </a>
+  </div>
+</section>
 
-        <!-- Button #1 -->
-        <div class="ctaRow">
-          <button class="btn btn--primary" id="startBtn">Diagnose starten</button>
-          <a class="btn btn--ghost" href="./verlauf.html">Verlauf öffnen</a>
-        </div>
-      </section>
-
-      <aside class="card">
-        <h2 class="h2">Depth</h2>
-        <p class="muted">
-          Quick is crisp. Precise increases resolution (better follow-ups, tighter memo).
-        </p>
-
-        <div class="choice">
-          <label class="radio">
-            <input type="radio" name="depth" value="quick" checked />
-            <span>
-              <b>Quick</b>
-              <span class="muted">~5 minutes</span>
-            </span>
-          </label>
-
-          <label class="radio">
-            <input type="radio" name="depth" value="precise" />
-            <span>
-              <b>Precise</b>
-              <span class="muted">~10–15 minutes</span>
-            </span>
-          </label>
-        </div>
-
-        <div class="hr"></div>
-
-        <h2 class="h2">How it works</h2>
-        <p class="muted">
-          You score five dimensions on simple sliders. The engine computes SSI, then GPT-4o
-          refines the diagnosis with 2–3 targeted follow-ups. Report is generated in English.
-        </p>
-
-        <!-- Button #2 (max 3 total) -->
-        <button class="btn btn--primary btn--full" id="startBtn2">Diagnose starten</button>
-      </aside>
-    </main>
-
-    <footer class="footer">
-      <div class="footer__row">
-        <span class="muted">MDG • Boutique Intelligence</span>
-        <span class="muted">Report language: English</span>
-      </div>
-    </footer>
+<section class="features">
+  <div class="card">
+    <h3 data-i18n="features.primary.title">Primary instability</h3>
+    <p data-i18n="features.primary.text">
+      Identify the structural root cause precisely.
+    </p>
   </div>
 
-  <script>
-    function start() {
-      const depth = document.querySelector('input[name="depth"]:checked')?.value || "quick";
-      localStorage.setItem("mdg_depth", depth);
-      location.href = "./diagnose.html";
-    }
-    document.getElementById("startBtn")?.addEventListener("click", start);
-    document.getElementById("startBtn2")?.addEventListener("click", start);
-  </script>
+  <div class="card">
+    <h3 data-i18n="features.secondary.title">Secondary tensions</h3>
+    <p data-i18n="features.secondary.text">
+      Understand what amplifies the problem.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 data-i18n="features.path.title">Strategic path</h3>
+    <p data-i18n="features.path.text">
+      Stabilize or rebuild – based on signals.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 data-i18n="features.moves.title">Immediate moves</h3>
+    <p data-i18n="features.moves.text">
+      Concrete actions for the next 48 hours.
+    </p>
+  </div>
+</section>
+
+<section class="how">
+  <h2 data-i18n="how.title">How it works</h2>
+  <ol>
+    <li data-i18n="how.step1">Describe the situation.</li>
+    <li data-i18n="how.step2">Choose your intent.</li>
+    <li data-i18n="how.step3">Complete the structured scan.</li>
+    <li data-i18n="how.step4">Receive your diagnosis.</li>
+  </ol>
+</section>
+
+<footer class="footer">
+  <p>MDG – Structural Diagnostic System</p>
+</footer>
+
+<script src="script.js"></script>
+<script>
+initLanding();
+</script>
+
 </body>
 </html>
