@@ -7,7 +7,6 @@
   <meta name="description" content="In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen." />
   <link rel="stylesheet" href="./style.css" />
   <style>
-    /* minimal page-only tweaks (keeps v2 look via style.css) */
     .dx-wrap{ max-width: 1120px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
     .dx-top{ display:grid; grid-template-columns: 1.1fr .9fr; gap:1rem; align-items:start; }
     .dx-actions{ display:flex; gap:.65rem; flex-wrap:wrap; align-items:center; }
@@ -35,9 +34,7 @@
     .dx-reportBox h3{ margin:0 0 .6rem; }
     .dx-badges{ display:flex; gap:.5rem; flex-wrap:wrap; }
     .dx-note{ font-size:.9rem; color: var(--muted, #aab); }
-    @media (max-width: 980px){
-      .dx-top{ grid-template-columns: 1fr; }
-    }
+    @media (max-width: 980px){ .dx-top{ grid-template-columns: 1fr; } }
   </style>
 </head>
 
@@ -179,9 +176,10 @@
 
             <div class="dx-questions" id="questions"></div>
 
-            <div class="dx-actions" style="margin-top:.6rem;">
-              <button class="btn btn--primary" type="button" id="execBtn" data-i18n="dx.execBtn">Generate Executive Report</button>
-              <button class="btn btn--ghost" type="button" id="copyExecBtn" disabled data-i18n="dx.copy">Copy</button>
+            <!-- ✅ Buttons exist AND match JS -->
+            <div class="dx-actions" style="margin-top: .9rem;">
+              <button class="btn btn--primary" type="button" id="runBtn" data-i18n="dx.run">Run assessment</button>
+              <button class="btn btn--ghost" type="button" id="resetBtn" data-i18n="dx.reset">Reset</button>
               <button class="btn btn--ghost" type="button" id="pdfBtn">Premium PDF</button>
               <span class="micro" id="statusLine">—</span>
             </div>
@@ -210,10 +208,13 @@
             <div class="dx-reportBox">
               <h3 class="h3" style="margin-top:0;" data-i18n="dx.execTitle">Executive Report (Premium)</h3>
               <p class="dx-note" id="execHint"></p>
+
+              <!-- ✅ exec/copy only once -->
               <div class="dx-actions" style="margin-top:.6rem;">
                 <button class="btn btn--primary" type="button" id="execBtn" data-i18n="dx.execBtn">Generate Executive Report</button>
                 <button class="btn btn--ghost" type="button" id="copyExecBtn" disabled data-i18n="dx.copy">Copy</button>
               </div>
+
               <div class="dx-report" id="reportContainer" style="display:none;">
                 <pre id="execText" class="micro" style="margin: .8rem 0 0;">—</pre>
               </div>
@@ -248,16 +249,15 @@
   <script>
   (() => {
     const API_BASE = "https://api.mdg-indikation.de";
-
     const $ = (s, r=document) => r.querySelector(s);
     const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
-    // ---- Drawer (burger) ----
+    // Drawer
     const burger = $(".burger");
     const drawer = $(".drawer");
     if (burger && drawer) {
       burger.addEventListener("click", () => {
-        const open = drawer.hasAttribute("hidden") ? false : true;
+        const open = !drawer.hasAttribute("hidden");
         if (open) {
           drawer.setAttribute("hidden", "");
           burger.setAttribute("aria-expanded", "false");
@@ -268,20 +268,15 @@
       });
     }
 
-    // ---- Mode & token (robust) ----
+    // Mode & token
     const params = new URLSearchParams(location.search);
     const modeParam = (params.get("mode") || "").toLowerCase();
-
-    // tolerate both sessionStorage + localStorage
     const ss = window.sessionStorage;
     const ls = window.localStorage;
 
     const storedMode = ((ss.getItem("mdg_mode") || ls.getItem("mdg_mode") || "")).toLowerCase();
-
-    // ok-flag may be in sessionStorage (preferred) or localStorage (fallback)
     const businessOk = (ss.getItem("mdg_business_ok") === "1") || (ls.getItem("mdg_business_ok") === "1");
 
-    // token can be stored under mdg_business_token (preferred) or mdg_token (fallback)
     const tokenStored =
       (ss.getItem("mdg_business_token") || ls.getItem("mdg_business_token") || ls.getItem("mdg_token") || "").trim();
 
@@ -291,112 +286,49 @@
     $("#modeBadge").textContent = (mode === "business") ? "Business" : "Private";
     if (mode === "business") $("#tokenBadge").style.display = "";
 
-    // ---- i18n (minimal keys here; enough for this page) ----
+    // i18n (short)
     const dict = {
       de: {
-        "nav.how":"Wie es funktioniert",
-        "nav.why":"Warum MDG",
-        "nav.faq":"FAQ",
-        "cta.backHome":"Zur Homepage",
-
-        "dx.title":"Diagnose",
-        "dx.sub":"In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen.",
-        "dx.contextTitle":"1) Kontext",
-        "dx.mode":"Modus",
-        "dx.goal":"Ziel",
-        "dx.goal.stabilize":"Stabilisieren (Spannung schnell senken)",
-        "dx.goal.rebuild":"Umbauen (Architektur verändern)",
-        "dx.oneliner":"Beschreibe die Situation in einem Satz",
-        "dx.scanTitle":"2) Quick Scan (Slider)",
-        "dx.moreTitle":"3) Präzisionsfragen (adaptiv)",
-        "dx.moreHint":"Beantworte die Folgefragen. Sie erhöhen die Präzision. Jede Frage hat 2 Beispiele.",
-        "dx.run":"Diagnose starten",
-        "dx.reset":"Zurücksetzen",
-
-        "dx.outputTitle":"Output",
-        "dx.outputHint":"Du erhältst: Primärinstabilität, warum sie entsteht, Sofortmaßnahmen und Umbaupfad.",
-        "dx.assessmentTitle":"Strategisches Assessment",
-        "dx.execTitle":"Executive Report (Premium)",
-        "dx.execBtn":"Executive Report erzeugen",
-        "dx.copy":"Kopieren",
+        "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ","cta.backHome":"Zur Homepage",
+        "dx.title":"Diagnose","dx.sub":"In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen.",
+        "dx.contextTitle":"1) Kontext","dx.mode":"Modus","dx.goal":"Ziel",
+        "dx.goal.stabilize":"Stabilisieren (Spannung schnell senken)","dx.goal.rebuild":"Umbauen (Architektur verändern)",
+        "dx.oneliner":"Beschreibe die Situation in einem Satz","dx.scanTitle":"2) Quick Scan (Slider)",
+        "dx.moreTitle":"3) Präzisionsfragen (adaptiv)","dx.moreHint":"Beantworte die Folgefragen. Sie erhöhen die Präzision. Jede Frage hat 2 Beispiele.",
+        "dx.run":"Diagnose starten","dx.reset":"Zurücksetzen",
+        "dx.outputTitle":"Output","dx.outputHint":"Du erhältst: Primärinstabilität, warum sie entsteht, Sofortmaßnahmen und Umbaupfad.",
+        "dx.assessmentTitle":"Strategisches Assessment","dx.execTitle":"Executive Report (Premium)","dx.execBtn":"Executive Report erzeugen","dx.copy":"Kopieren",
         "dx.privacy":"Datenschutz: Inputs werden via API nur zur Generierung von Assessment/Report verarbeitet.",
         "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau.",
-
-        "q.load.title":"Last & Engpässe",
-        "q.decisions.title":"Entscheidungsarchitektur",
-        "q.energy.title":"Energie & Fehlerkultur",
-        "q.growth.title":"Wachstumsdruck / Komplexität",
-        "q.power.title":"Macht–Verantwortung (Alignment)",
+        "q.load.title":"Last & Engpässe","q.decisions.title":"Entscheidungsarchitektur","q.energy.title":"Energie & Fehlerkultur","q.growth.title":"Wachstumsdruck / Komplexität","q.power.title":"Macht–Verantwortung (Alignment)"
       },
       tr: {
-        "nav.how":"Nasıl çalışır",
-        "nav.why":"Neden MDG",
-        "nav.faq":"SSS",
-        "cta.backHome":"Anasayfa",
-
-        "dx.title":"Analiz",
-        "dx.sub":"Birkaç dakika içinde karar güveni: istikrarsızlığı erken gör, nedeni doğru teşhis et, mimari kur.",
-        "dx.contextTitle":"1) Bağlam",
-        "dx.mode":"Mod",
-        "dx.goal":"Hedef",
-        "dx.goal.stabilize":"Stabilize et (gerilimi hızlı düşür)",
-        "dx.goal.rebuild":"Yeniden kur (mimariyi değiştir)",
-        "dx.oneliner":"Durumu tek cümleyle anlat",
-        "dx.scanTitle":"2) Hızlı tarama (Slider)",
-        "dx.moreTitle":"3) Kesinleştirme soruları",
-        "dx.moreHint":"Takip sorularını yanıtla. Kesinliği artırır. Her soruda 2 örnek var.",
-        "dx.run":"Başlat",
-        "dx.reset":"Sıfırla",
-
-        "dx.outputTitle":"Çıktı",
-        "dx.outputHint":"Alacağın: ana instabilite, nedenleri, hemen yapılacaklar ve dönüşüm yolu.",
-        "dx.assessmentTitle":"Stratejik değerlendirme",
-        "dx.execTitle":"Yönetici Raporu (Premium)",
-        "dx.execBtn":"Yönetici raporu üret",
-        "dx.copy":"Kopyala",
+        "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS","cta.backHome":"Anasayfa",
+        "dx.title":"Analiz","dx.sub":"Birkaç dakika içinde karar güveni: istikrarsızlığı erken gör, nedeni doğru teşhis et, mimari kur.",
+        "dx.contextTitle":"1) Bağlam","dx.mode":"Mod","dx.goal":"Hedef",
+        "dx.goal.stabilize":"Stabilize et (gerilimi hızlı düşür)","dx.goal.rebuild":"Yeniden kur (mimariyi değiştir)",
+        "dx.oneliner":"Durumu tek cümleyle anlat","dx.scanTitle":"2) Hızlı tarama (Slider)",
+        "dx.moreTitle":"3) Kesinleştirme soruları","dx.moreHint":"Takip sorularını yanıtla. Kesinliği artırır. Her soruda 2 örnek var.",
+        "dx.run":"Başlat","dx.reset":"Sıfırla",
+        "dx.outputTitle":"Çıktı","dx.outputHint":"Alacağın: ana instabilite, nedenleri, hemen yapılacaklar ve dönüşüm yolu.",
+        "dx.assessmentTitle":"Stratejik değerlendirme","dx.execTitle":"Yönetici Raporu (Premium)","dx.execBtn":"Yönetici raporu üret","dx.copy":"Kopyala",
         "dx.privacy":"Gizlilik: Veriler yalnızca rapor üretimi için API üzerinden işlenir.",
         "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
-
-        "q.load.title":"Yük & darboğazlar",
-        "q.decisions.title":"Karar mimarisi",
-        "q.energy.title":"Enerji & hata kültürü",
-        "q.growth.title":"Büyüme baskısı / karmaşıklık",
-        "q.power.title":"Güç–sorumluluk uyumu",
+        "q.load.title":"Yük & darboğazlar","q.decisions.title":"Karar mimarisi","q.energy.title":"Enerji & hata kültürü","q.growth.title":"Büyüme baskısı / karmaşıklık","q.power.title":"Güç–sorumluluk uyumu"
       },
       en: {
-        "nav.how":"How it works",
-        "nav.why":"Why MDG",
-        "nav.faq":"FAQ",
-        "cta.backHome":"Home",
-
-        "dx.title":"Diagnosis",
-        "dx.sub":"In a few minutes to decision-confidence: detect instability early, diagnose precisely, build architecture.",
-        "dx.contextTitle":"1) Context",
-        "dx.mode":"Mode",
-        "dx.goal":"Goal",
-        "dx.goal.stabilize":"Stabilize (reduce tension fast)",
-        "dx.goal.rebuild":"Rebuild (change architecture)",
-        "dx.oneliner":"Describe the situation in one sentence",
-        "dx.scanTitle":"2) Quick Scan (sliders)",
-        "dx.moreTitle":"3) Precision Questions (adaptive)",
-        "dx.moreHint":"Answer the follow-up questions. They increase precision. Each question includes 2 examples.",
-        "dx.run":"Run assessment",
-        "dx.reset":"Reset",
-
-        "dx.outputTitle":"Output",
-        "dx.outputHint":"You will get: primary instability, why it happens, what to do now, and what to rebuild.",
-        "dx.assessmentTitle":"Strategic Assessment",
-        "dx.execTitle":"Executive Report (Premium)",
-        "dx.execBtn":"Generate Executive Report",
-        "dx.copy":"Copy",
+        "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
+        "dx.title":"Diagnosis","dx.sub":"In a few minutes to decision-confidence: detect instability early, diagnose precisely, build architecture.",
+        "dx.contextTitle":"1) Context","dx.mode":"Mode","dx.goal":"Goal",
+        "dx.goal.stabilize":"Stabilize (reduce tension fast)","dx.goal.rebuild":"Rebuild (change architecture)",
+        "dx.oneliner":"Describe the situation in one sentence","dx.scanTitle":"2) Quick Scan (sliders)",
+        "dx.moreTitle":"3) Precision Questions (adaptive)","dx.moreHint":"Answer the follow-up questions. They increase precision. Each question includes 2 examples.",
+        "dx.run":"Run assessment","dx.reset":"Reset",
+        "dx.outputTitle":"Output","dx.outputHint":"You will get: primary instability, why it happens, what to do now, and what to rebuild.",
+        "dx.assessmentTitle":"Strategic Assessment","dx.execTitle":"Executive Report (Premium)","dx.execBtn":"Generate Executive Report","dx.copy":"Copy",
         "dx.privacy":"Privacy: inputs are processed via API only to generate the assessment/report.",
         "footer.tag":"Structure diagnosis for stabilization and rebuild.",
-
-        "q.load.title":"Load & bottlenecks",
-        "q.decisions.title":"Decision architecture",
-        "q.energy.title":"Energy & error handling",
-        "q.growth.title":"Growth pressure / complexity",
-        "q.power.title":"Power–responsibility alignment",
+        "q.load.title":"Load & bottlenecks","q.decisions.title":"Decision architecture","q.energy.title":"Energy & error handling","q.growth.title":"Growth pressure / complexity","q.power.title":"Power–responsibility alignment"
       }
     };
 
@@ -414,135 +346,49 @@
         const v = dict[lang][k];
         if (v) el.textContent = v;
       });
+      renderHints(lang);
       renderExamples(lang);
       renderAdaptiveQuestions(lang);
-      renderHints(lang);
     }
-
     $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => applyLang(btn.dataset.lang)));
+
+    function renderHints(lang){
+      const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
+      $("#statusLine").textContent = t("Status: bereit","Durum: hazır","Status: ready");
+      $("#execText").textContent = "—";
+      $("#resultText").textContent = "—";
+      $("#copyExecBtn").disabled = true;
+      $("#reportContainer").style.display = "none";
+    }
 
     function renderExamples(lang){
       const business = (mode === "business");
       const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
 
-      if (wantsBusiness && !businessOk) {
-        $("#modeHint").innerHTML = t(
-          "Business-Zugang nicht aktiv. Bitte Token über die Landingpage bestätigen.",
-          "Business erişimi aktif değil. Lütfen token’ı ana sayfada doğrula.",
-          "Business access not active. Please verify token on the landing page."
-        );
-      } else {
-        $("#modeHint").innerHTML = business
-          ? t(
-              "Business-Modus: Fragen & Beispiele sind auf Unternehmen, Führung, Teams und Verantwortung zugeschnitten.",
-              "Business modu: Sorular ve örnekler şirket, liderlik, ekip ve sorumluluk için özelleştirildi.",
-              "Business mode: questions and examples are tailored to companies, leadership, teams, and accountability."
-            )
-          : t(
-              "Privat-Modus: Fokus auf persönliche Systeme, Beziehungen, Alltag, Rollen & Belastung.",
-              "Özel mod: kişisel sistemler, ilişkiler, günlük hayat, roller ve yük odağı.",
-              "Private mode: focus on personal systems, relationships, daily life, roles and load."
-            );
-      }
+      $("#modeHint").innerHTML = (wantsBusiness && !businessOk)
+        ? t("Business-Zugang nicht aktiv. Bitte Token über die Landingpage bestätigen.","Business erişimi aktif değil. Token’ı ana sayfada doğrula.","Business access not active. Verify token on landing page.")
+        : (business
+            ? t("Business-Modus: Fragen & Beispiele sind auf Unternehmen zugeschnitten.","Business modu: şirket odaklı.","Business mode: company-focused.")
+            : t("Privat-Modus: Fokus auf persönliche Systeme.","Özel mod: kişisel odak.","Private mode: personal focus.")
+          );
 
       $("#goalHelp").innerHTML = t(
-        "<b>Stabilisieren</b> = Sofortmaßnahmen gegen Spannung. <b>Umbauen</b> = strukturelle Änderungen, die zukünftige Brüche verhindern.",
-        "<b>Stabilize</b> = gerilimi hızlı düşür. <b>Yeniden kur</b> = gelecekteki kırılmaları önleyecek yapısal değişim.",
-        "<b>Stabilize</b> = immediate moves to reduce tension. <b>Rebuild</b> = structural changes to prevent future breaks."
+        "<b>Stabilisieren</b> = Sofortmaßnahmen. <b>Umbauen</b> = Strukturänderungen.",
+        "<b>Stabilize</b> = hızlı rahatlat. <b>Yeniden kur</b> = yapı değiştir.",
+        "<b>Stabilize</b> = immediate moves. <b>Rebuild</b> = structural changes."
       );
 
       $("#oneLinerHelp").innerHTML = business
-        ? t(
-            "Beispiel 1: <b>„Unsere Entscheidungen dauern zu lange und hängen an 1 Person.“</b><br>Beispiel 2: <b>„Team A und B blockieren sich, Qualität fällt.“</b>",
-            "Örnek 1: <b>“Kararlar çok uzun sürüyor ve 1 kişiye bağlı.”</b><br>Örnek 2: <b>“Takım A ve B birbirini kilitliyor, kalite düşüyor.”</b>",
-            "Example 1: <b>“Decisions take too long and depend on one person.”</b><br>Example 2: <b>“Team A and B block each other, quality drops.”</b>"
-          )
-        : t(
-            "Beispiel 1: <b>„Ich prokrastiniere und verliere Kontrolle über meinen Alltag.“</b><br>Beispiel 2: <b>„Wir haben wiederkehrende Konflikte und nichts ändert sich.“</b>",
-            "Örnek 1: <b>“Erteleme yapıyorum ve günlük hayat kontrolüm kayıyor.”</b><br>Örnek 2: <b>“Tekrarlayan çatışmalar var ve hiçbir şey değişmiyor.”</b>",
-            "Example 1: <b>“I procrastinate and lose control over my daily life.”</b><br>Example 2: <b>“We have recurring conflicts and nothing changes.”</b>"
-          );
-
-      $("#exLoad").innerHTML = business
-        ? t(
-          "0 = verteilt, kein Engpass. 6 = 1–2 Rollen sind Dauer-Engpass.<div class='dx-example'><div class='ex'>„Sales hängt an mir, ohne mich kein Abschluss.“</div><div class='ex'>„Ops ist 120% ausgelastet, alle warten.“</div></div>",
-          "0 = darboğaz yok. 6 = 1–2 rol sürekli darboğaz.<div class='dx-example'><div class='ex'>“Satış bende; ben olmadan kapanış yok.”</div><div class='ex'>“Operasyon %120 dolu; herkes bekliyor.”</div></div>",
-          "0 = no bottleneck. 6 = 1–2 roles are permanent bottlenecks.<div class='dx-example'><div class='ex'>“Sales depends on me; without me no close.”</div><div class='ex'>“Ops at 120%; everyone is waiting.”</div></div>"
-        )
-        : t(
-          "0 = gleichmäßig tragbar. 6 = alles hängt an dir/1 Person.<div class='dx-example'><div class='ex'>„Wenn ich 2 Tage ausfalle, bricht alles.“</div><div class='ex'>„Ich mache 90% allein, niemand übernimmt.“</div></div>",
-          "0 = dengeli. 6 = her şey sana/1 kişiye bağlı.<div class='dx-example'><div class='ex'>“2 gün yok olsam her şey çöker.”</div><div class='ex'>“%90’ını ben yapıyorum, kimse devralmıyor.”</div></div>",
-          "0 = evenly manageable. 6 = everything depends on you/one person.<div class='dx-example'><div class='ex'>“If I’m out for 2 days, everything breaks.”</div><div class='dx-example'><div class='ex'>“I do 90% alone; nobody takes over.”</div></div>"
-        );
-
-      $("#exDecisions").innerHTML = business
-        ? t(
-          "0 = klar & schnell. 6 = unklar, langsam, politisch.<div class='dx-example'><div class='ex'>„Keiner weiß wer entscheiden darf.“</div><div class='ex'>„3 Wochen diskutieren, dann passiert nichts.“</div></div>",
-          "0 = net & hızlı. 6 = belirsiz, yavaş, politik.<div class='dx-example'><div class='ex'>“Kim karar verir belli değil.”</div><div class='ex'>“3 hafta tartışıp sonra hiçbir şey yapmıyoruz.”</div></div>",
-          "0 = clear & fast. 6 = unclear, slow, political.<div class='dx-example'><div class='ex'>“No one knows who can decide.”</div><div class='ex'>“We debate for 3 weeks, then nothing happens.”</div></div>"
-        )
-        : t(
-          "0 = klar entscheiden & umsetzen. 6 = Chaos/Endlosschleife.<div class='dx-example'><div class='ex'>„Ich ändere ständig die Richtung.“</div><div class='ex'>„Wir drehen uns im Kreis und eskalieren.“</div></div>",
-          "0 = net karar + uygulama. 6 = kaos / kısır döngü.<div class='dx-example'><div class='ex'>“Sürekli yön değiştiriyorum.”</div><div class='ex'>“Kısır döngüdeyiz ve büyüyor.”</div></div>",
-          "0 = clear decisions + execution. 6 = chaos / infinite loop.<div class='dx-example'><div class='ex'>“I constantly change direction.”</div><div class='ex'>“We go in circles and escalate.”</div></div>"
-        );
-
-      $("#exEnergy").innerHTML = business
-        ? t(
-          "0 = stabiler Rhythmus, Fehler werden genutzt. 6 = Überlastung, Fehler eskalieren.<div class='dx-example'><div class='ex'>„Fehler werden versteckt, niemand lernt.“</div><div class='ex'>„Dauerfeuer, keine Regeneration.“</div></div>",
-          "0 = ritim iyi. 6 = aşırı yük, hatalar büyür.<div class='dx-example'><div class='ex'>“Hatalar saklanıyor, kimse öğrenmiyor.”</div><div class='ex'>“Sürekli yoğun; toparlanma yok.”</div></div>",
-          "0 = stable rhythm. 6 = overload, errors escalate.<div class='dx-example'><div class='ex'>“Errors are hidden; nobody learns.”</div><div class='ex'>“Constant fire; no recovery.”</div></div>"
-        )
-        : t(
-          "0 = Energie & Feedback. 6 = Limit, Fehler häufen sich.<div class='dx-example'><div class='ex'>„Ich schlafe schlecht und bin gereizt.“</div><div class='ex'>„Ich wiederhole dieselben Fehler.“</div></div>",
-          "0 = enerji var. 6 = limit, hata artıyor.<div class='dx-example'><div class='ex'>“Kötü uyuyorum, çabuk sinirleniyorum.”</div><div class='ex'>“Aynı hataları tekrar ediyorum.”</div></div>",
-          "0 = energy + feedback. 6 = at the limit, errors pile up.<div class='dx-example'><div class='ex'>“I sleep badly and get irritated.”</div><div class='ex'>“I keep repeating the same mistakes.”</div></div>"
-        );
-
-      $("#exGrowth").innerHTML = business
-        ? t(
-          "0 = Wachstum kontrolliert. 6 = Komplexität > Struktur.<div class='dx-example'><div class='ex'>„Neue Projekte rein, aber Prozesse fehlen.“</div><div class='ex'>„Koordination frisst Output.“</div></div>",
-          "0 = kontrollü büyüme. 6 = karmaşıklık > yapı.<div class='dx-example'><div class='ex'>“Yeni projeler var ama süreç yok.”</div><div class='ex'>“Koordinasyon çıktıyı yiyor.”</div></div>",
-          "0 = controlled growth. 6 = complexity > structure.<div class='dx-example'><div class='ex'>“New projects, but no processes.”</div><div class='ex'>“Coordination eats output.”</div></div>"
-        )
-        : t(
-          "0 = wenig Komplexität. 6 = zu viele Themen, Überblick weg.<div class='dx-example'><div class='ex'>„Ich fange 10 Dinge an, nichts wird fertig.“</div><div class='ex'>„Alles wird gleichzeitig wichtiger.“</div></div>",
-          "0 = düşük karmaşıklık. 6 = çok konu, kontrol kayıyor.<div class='dx-example'><div class='ex'>“10 şeye başlıyorum, bitmiyor.”</div><div class='ex'>“Her şey aynı anda acil.”</div></div>",
-          "0 = low complexity. 6 = too many topics, you lose overview.<div class='dx-example'><div class='ex'>“I start 10 things, finish none.”</div><div class='ex'>“Everything becomes urgent at once.”</div></div>"
-        );
-
-      $("#exPower").innerHTML = business
-        ? t(
-          "0 = Verantwortung + Befugnis passen. 6 = Misalignment.<div class='dx-example'><div class='ex'>„Owner trägt KPI, darf nicht entscheiden.“</div><div class='ex'>„Entscheider trägt keine Konsequenz.“</div></div>",
-          "0 = uyumlu. 6 = kopuk.<div class='dx-example'><div class='ex'>“KPI bende ama karar yetkisi yok.”</div><div class='ex'>“Karar veren sonucu taşımıyor.”</div></div>",
-          "0 = aligned. 6 = misalignment.<div class='dx-example'><div class='ex'>“Owner has KPI but can’t decide.”</div><div class='ex'>“Decider bears no consequence.”</div></div>"
-        )
-        : t(
-          "0 = Einfluss = Konsequenz. 6 = du trägst ohne Einfluss (oder umgekehrt).<div class='dx-example'><div class='ex'>„Ich muss liefern, aber andere blockieren.“</div><div class='ex'>„Ich entscheide, spüre aber keine Folgen.“</div></div>",
-          "0 = etki = sonuç. 6 = etki yokken sonuç taşıma.<div class='dx-example'><div class='ex'>“Teslim bende ama başkası engelliyor.”</div><div class='ex'>“Karar veriyorum ama sonuç yaşamıyorum.”</div></div>",
-          "0 = influence = consequence. 6 = you bear without influence (or vice versa).<div class='dx-example'><div class='ex'>“I must deliver but others block.”</div><div class='ex'>“I decide but feel no consequences.”</div></div>"
-        );
+        ? t("Beispiel: <b>„Entscheidungen hängen an 1 Person.“</b>","Örnek: <b>“Kararlar 1 kişiye bağlı.”</b>","Example: <b>“Decisions depend on one person.”</b>")
+        : t("Beispiel: <b>„Ich verliere Kontrolle über meinen Alltag.“</b>","Örnek: <b>“Günlük hayat kontrolüm kayıyor.”</b>","Example: <b>“I lose control of my daily life.”</b>");
 
       $("#execHint").textContent = business
-        ? t(
-          "Business-Report: Diagnose + Architektur-Entscheidungen + Operating Model + Rollen + Rhythmus + KPIs + 30-60-90.",
-          "Business raporu: teşhis + mimari kararlar + işletim modeli + roller + ritim + KPI + 30-60-90.",
-          "Business report: diagnosis + architecture decisions + operating model + roles + cadence + KPIs + 30-60-90."
-        )
-        : t(
-          "Privat-Report: Ursachenlogik, Spannungsdynamik, klare Prioritäten, konkrete Moves, Stabilisieren vs Umbauen.",
-          "Özel rapor: neden mantığı, gerilim dinamiği, net öncelikler, somut adımlar.",
-          "Private report: causal logic, tension dynamics, clear priorities, concrete moves."
-        );
+        ? t("Business-Report: Rollen, Operating Model, KPIs, 30-60-90.","Business: roller, KPI, 30-60-90.","Business: roles, KPIs, 30-60-90.")
+        : t("Privat-Report: Logik, Prioritäten, konkrete Moves.","Özel: mantık, öncelik, adım.","Private: logic, priorities, moves.");
     }
 
     function escapeHtml(s){
-      return String(s)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+      return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
     }
 
     function renderAdaptiveQuestions(lang){
@@ -550,295 +396,27 @@
       const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
 
       const qs = business ? [
-        {
-          id:"b_q1",
-          title: t("Wo entsteht aktuell die größte Verzögerung?","En büyük gecikme nerede?","Where is the biggest delay?"),
-          help: t("Wähle die passendste Option.","En uygunu seç.","Pick the best match."),
-          options: [
-            {v:"decisions", label:t("Entscheidungen (Freigaben/Eskalation)","Kararlar (onay/eskalasyon)","Decisions (approvals/escalation)")},
-            {v:"handoff", label:t("Übergaben (Team->Team)","Devir (takım->takım)","Handoffs (team->team)")},
-            {v:"quality", label:t("Qualität (Rework/Bugs)","Kalite (rework/bug)","Quality (rework/bugs)")},
-            {v:"capacity", label:t("Kapazität (Leute/Skills)","Kapasite (kişi/skill)","Capacity (people/skills)")},
+        { id:"b_q1", title:t("Wo entsteht die größte Verzögerung?","En büyük gecikme nerede?","Where is the biggest delay?"),
+          options:[
+            {v:"decisions",label:t("Entscheidungen","Kararlar","Decisions")},
+            {v:"handoff",label:t("Übergaben","Devir","Handoffs")},
+            {v:"quality",label:t("Qualität/Rework","Kalite","Quality")},
+            {v:"capacity",label:t("Kapazität","Kapasite","Capacity")},
           ],
-          ex: [
-            t("Beispiel: „Freigaben brauchen immer den CEO.“","Örnek: “Onaylar hep CEO’da.”","Example: “Approvals always need the CEO.”"),
-            t("Beispiel: „Team A wartet ständig auf Team B.“","Örnek: “Takım A hep Takım B’yi bekliyor.”","Example: “Team A constantly waits for Team B.”")
-          ]
-        },
-        {
-          id:"b_q2",
-          title: t("Was passiert, wenn die Schlüsselrolle 2 Wochen ausfällt?","Kritik rol 2 hafta yoksa?","If the key role is out for 2 weeks?"),
-          help: t("Wähle realistisch.","Gerçekçi seç.","Choose realistically."),
-          options: [
-            {v:"fine", label:t("Läuft weiter (kleine Reibung)","Devam eder (küçük sürtünme)","Continues (minor friction)")},
-            {v:"slow", label:t("Wird deutlich langsamer","Belirgin yavaşlar","Gets clearly slower")},
-            {v:"break", label:t("Bricht (Stop in Lieferung/Entscheid)","Kırılır (teslim/karar durur)","Breaks (delivery/decisions stop)")},
-          ],
-          ex: [
-            t("Beispiel: „Pipeline steht, nur 1 Person kann schließen.“","Örnek: “Pipeline durur; 1 kişi kapatır.”","Example: “Pipeline stops; only one person can close.”"),
-            t("Beispiel: „Wissen ist nur im Chat.“","Örnek: “Bilgi sadece chat’te.”","Example: “Knowledge only lives in chat.”")
-          ]
-        },
-        {
-          id:"b_q3",
-          title: t("Wie klar sind Rollen & Zuständigkeiten?","Roller/sorumluluk ne kadar net?","How clear are roles & ownership?"),
-          help: t("Wähle die passendste Option.","En uygunu seç.","Pick what’s most true."),
-          options: [
-            {v:"clear", label:t("Sehr klar (Owner, KPI, Entscheidung)","Çok net (owner, KPI, karar)","Very clear (owner, KPI, decision)")},
-            {v:"mixed", label:t("Teilweise klar (Grauzonen)","Kısmen net (gri alan)","Partially clear (grey zones)")},
-            {v:"unclear", label:t("Unklar (Konflikte/Eskalation)","Belirsiz (çatışma/eskalasyon)","Unclear (conflict/escalation)")},
-          ],
-          ex: [
-            t("Beispiel: „Owner trägt KPI, Entscheidung liegt woanders.“","Örnek: “KPI bende, karar başka yerde.”","Example: “Owner has KPI, decision is elsewhere.”"),
-            t("Beispiel: „Zwei Teams denken beide, sie sind verantwortlich.“","Örnek: “İki takım da ‘bizde’ diyor.”","Example: “Two teams both think they own it.”")
-          ]
+          ex:[t("„Freigaben brauchen immer den CEO.“","“Onaylar CEO’da.”","“Approvals always need the CEO.”"),
+              t("„Team A wartet auf Team B.“","“A, B’yi bekliyor.”","“Team A waits for Team B.”")]
         }
       ] : [
-        {
-          id:"p_q1",
-          title: t("Was ist der Haupt-Auslöser der Spannung?","Gerilimin ana tetikleyicisi?","Main trigger of the tension?"),
-          help: t("Wähle die beste Option.","En iyisini seç.","Pick the best option."),
-          options: [
-            {v:"time", label:t("Zeitdruck / zu viele Dinge","Zaman baskısı / çok şey","Time pressure / too many things")},
-            {v:"conflict", label:t("Konflikte / wiederkehrender Streit","Çatışma / tekrar eden konu","Conflict / recurring issue")},
-            {v:"uncertainty", label:t("Unklarheit / Entscheidungen schieben","Belirsizlik / erteleme","Uncertainty / delayed decisions")},
-            {v:"energy", label:t("Erschöpfung / wenig Regeneration","Yorgunluk / az toparlanma","Exhaustion / low recovery")},
+        { id:"p_q1", title:t("Was ist der Haupt-Auslöser?","Ana tetikleyici?","Main trigger?"),
+          options:[
+            {v:"time",label:t("Zeitdruck","Zaman baskısı","Time pressure")},
+            {v:"conflict",label:t("Konflikt","Çatışma","Conflict")},
+            {v:"uncertainty",label:t("Unklarheit","Belirsizlik","Uncertainty")},
+            {v:"energy",label:t("Energie","Enerji","Energy")},
           ],
-          ex: [
-            t("Beispiel: „Ich schiebe Entscheidungen, dann staut sich alles.“","Örnek: “Kararı erteliyorum, her şey birikiyor.”","Example: “I delay decisions, then everything piles up.”"),
-            t("Beispiel: „Kleine Themen kippen sofort in Streit.“","Örnek: “Küçük şeyler hemen kavgaya döner.”","Example: “Small topics escalate into conflict.”")
-          ]
-        },
-        {
-          id:"p_q2",
-          title: t("Wie stark hängt das System an 1 Person?","Sistem 1 kişiye ne kadar bağlı?","How much does the system depend on one person?"),
-          help: t("Wähle realistisch.","Gerçekçi seç.","Choose realistically."),
-          options: [
-            {v:"low", label:t("Kaum (ersetzbar)","Az (değiştirilebilir)","Low (replaceable)")},
-            {v:"medium", label:t("Teilweise (mit Aufwand)","Orta (eforla)","Medium (with effort)")},
-            {v:"high", label:t("Sehr stark (fällt aus = bricht)","Çok (yoksa kırılır)","High (out = break)")},
-          ],
-          ex: [
-            t("Beispiel: „Wenn ich weg bin, bleibt alles liegen.“","Örnek: “Ben yokken her şey durur.”","Example: “When I’m away, everything stalls.”"),
-            t("Beispiel: „Andere können übernehmen, wenn es dokumentiert ist.“","Örnek: “Dokümanteyse başkası devralır.”","Example: “Others can take over if documented.”")
-          ]
-        },
-        {
-          id:"p_q3",
-          title: t("Wie gut werden Fehler genutzt (statt versteckt)?","Hatalar öğrenmeye dönüyor mu?","How well are errors used (instead of hidden)?"),
-          help: t("Wähle die beste Option.","En uygunu seç.","Pick the best option."),
-          options: [
-            {v:"good", label:t("Gut (lernen, anpassen)","İyi (öğrenme, uyum)","Good (learn, adapt)")},
-            {v:"mixed", label:t("Gemischt","Karışık","Mixed")},
-            {v:"bad", label:t("Schlecht (Schuld, Wiederholung)","Kötü (suçlama, tekrar)","Bad (blame, repeats)")},
-          ],
-          ex: [
-            t("Beispiel: „Wir sprechen offen und ändern die Ursache.“","Örnek: “Açık konuşup kökü değiştiriyoruz.”","Example: “We talk openly and change the root cause.”"),
-            t("Beispiel: „Fehler werden vertuscht, dann passiert es wieder.“","Örnek: “Hata saklanır, tekrar eder.”","Example: “Errors get hidden, then repeat.”")
-          ]
+          ex:[t("„Ich schiebe Entscheidungen.“","“Kararı erteliyorum.”","“I delay decisions.”"),
+              t("„Kleine Themen eskalieren.“","“Küçük şeyler büyür.”","“Small topics escalate.”")]
         }
       ];
 
-      const root = $("#questions");
-      root.innerHTML = "";
-      qs.forEach(q => {
-        const wrap = document.createElement("div");
-        wrap.className = "dx-q";
-        wrap.innerHTML = `
-          <div class="dx-qtitle">${escapeHtml(q.title)}</div>
-          <div class="dx-help">${q.help ? escapeHtml(q.help) : ""}</div>
-          <div class="dx-actions" style="margin-top:.55rem;">
-            ${q.options.map(o => `
-              <label class="pill pill--muted" style="cursor:pointer;">
-                <input type="radio" name="${q.id}" value="${o.v}" style="margin-right:.4rem; accent-color: rgba(110,231,183,.9);" />
-                ${escapeHtml(o.label)}
-              </label>
-            `).join("")}
-          </div>
-          <div class="dx-example">
-            <div class="ex">${q.ex[0]}</div>
-            <div class="ex">${q.ex[1]}</div>
-          </div>
-        `;
-        root.appendChild(wrap);
-      });
-    }
-
-    function renderHints(lang){
-      const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
-      $("#statusLine").textContent = t("Status: bereit", "Durum: hazır", "Status: ready");
-      $("#execText").textContent = "—";
-      $("#resultText").textContent = "—";
-      $("#copyExecBtn").disabled = true;
-      $("#reportContainer").style.display = "none";
-    }
-
-    function syncSliders(){
-      const pairs = [["sLoad","vLoad"],["sDecisions","vDecisions"],["sEnergy","vEnergy"],["sGrowth","vGrowth"],["sPower","vPower"]];
-      pairs.forEach(([sid, vid]) => {
-        const s = document.getElementById(sid);
-        const v = document.getElementById(vid);
-        if (s && v) v.textContent = s.value;
-      });
-    }
-    $$('input[type="range"]').forEach(r => r.addEventListener("input", syncSliders));
-
-    function readRadios(){
-      const out = {};
-      $$('input[type="radio"]:checked').forEach(r => { out[r.name] = r.value; });
-      return out;
-    }
-
-    // payload matches your worker:
-    // - problem, intent, answers, mode, token, lang
-    function buildPayload(){
-      const oneLiner = ($("#oneLiner").value || "").trim();
-      const intent = $("#goalSelect").value;
-
-      const quick_scan = {
-        load: Number($("#sLoad").value),
-        decisions: Number($("#sDecisions").value),
-        energy: Number($("#sEnergy").value),
-        growth: Number($("#sGrowth").value),
-        power: Number($("#sPower").value),
-      };
-
-      return {
-        version: "v4",
-        mode,
-        token: (mode === "business") ? tokenStored : undefined,
-        lang: getLang(),
-        problem: oneLiner,
-        intent,
-        answers: {
-          quick_scan,
-          radios: readRadios()
-        },
-        meta: { ts: new Date().toISOString(), ua: navigator.userAgent }
-      };
-    }
-
-    async function postJson(path, body){
-      const res = await fetch(`${API_BASE}${path}`, {
-        method: "POST",
-        headers: { "Content-Type":"application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || `Request failed (${res.status})`);
-      return data;
-    }
-
-    let LAST_ASSESSMENT = null;
-
-    async function runAssessment(){
-      const lang = getLang();
-      const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
-
-      const payload = buildPayload();
-
-      if (!payload.problem) {
-        alert(t("Bitte beschreibe die Situation in einem Satz.", "Lütfen durumu tek cümleyle yaz.", "Please describe the situation in one sentence."));
-        return;
-      }
-      if (mode === "business" && !payload.token) {
-        alert(t("Business-Token fehlt. Bitte über die Landingpage erneut einsteigen.", "Business token eksik. Lütfen ana sayfadan tekrar gir.", "Business token missing. Please re-enter via landing page."));
-        return;
-      }
-
-      $("#statusLine").textContent = t("Status: läuft …", "Durum: çalışıyor …", "Status: running …");
-      $("#resultText").textContent = "—";
-      $("#copyExecBtn").disabled = true;
-      $("#reportContainer").style.display = "none";
-      $("#execText").textContent = "—";
-
-      try{
-        const data = await postJson("/api/assess", payload);
-        LAST_ASSESSMENT = data;
-
-        const text = data.assessment_text || JSON.stringify(data, null, 2);
-        $("#resultText").textContent = text;
-
-        $("#kpiPrimary").textContent = "Primary: " + (data.primary || "—");
-        $("#kpiPath").textContent = "Path: " + (data.path || "—");
-        $("#kpiRisk").textContent = "Risk: " + (data.risk || "—");
-
-        $("#statusLine").textContent = t("Status: fertig", "Durum: bitti", "Status: done");
-      } catch(e){
-        $("#statusLine").textContent = t("Status: Fehler – ", "Durum: Hata – ", "Status: Error – ") + (e?.message || String(e));
-      }
-    }
-
-    async function runExecutiveReport(){
-      const lang = getLang();
-      const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
-
-      if (!LAST_ASSESSMENT) {
-        alert(t("Bitte zuerst die Diagnose starten.", "Önce değerlendirmeyi çalıştır.", "Run the assessment first."));
-        return;
-      }
-
-      $("#statusLine").textContent = t("Status: Report wird erstellt …", "Durum: Rapor oluşturuluyor …", "Status: generating report …");
-      $("#execText").textContent = "—";
-      $("#copyExecBtn").disabled = true;
-      $("#reportContainer").style.display = "none";
-
-      try{
-        const payload = buildPayload();
-        payload.assessment = LAST_ASSESSMENT;
-
-        const data = await postJson("/api/report", payload);
-
-        const text = data.report_markdown || JSON.stringify(data, null, 2);
-        $("#execText").textContent = text;
-
-        $("#reportContainer").style.display = "";
-        $("#copyExecBtn").disabled = false;
-
-        $("#statusLine").textContent = t("Status: Report fertig", "Durum: Rapor hazır", "Status: report ready");
-      } catch(e){
-        $("#statusLine").textContent = t("Status: Fehler – ", "Durum: Hata – ", "Status: Error – ") + (e?.message || String(e));
-      }
-    }
-
-    function resetAll(){
-      $("#oneLiner").value = "";
-      $("#goalSelect").value = "stabilize";
-      ["sLoad","sDecisions","sEnergy","sGrowth","sPower"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = "2";
-      });
-      $$('input[type="radio"]').forEach(r => r.checked = false);
-      LAST_ASSESSMENT = null;
-      $("#resultText").textContent = "—";
-      $("#execText").textContent = "—";
-      $("#reportContainer").style.display = "none";
-      $("#copyExecBtn").disabled = true;
-      $("#kpiPrimary").textContent = "Primary: —";
-      $("#kpiPath").textContent = "Path: —";
-      $("#kpiRisk").textContent = "Risk: —";
-      syncSliders();
-      renderHints(getLang());
-    }
-
-    $("#copyExecBtn").addEventListener("click", async () => {
-      const txt = $("#execText").textContent || "";
-      if (!txt || txt === "—") return;
-      try { await navigator.clipboard.writeText(txt); } catch {}
-    });
-
-    $("#runBtn").addEventListener("click", runAssessment);
-    $("#execBtn").addEventListener("click", runExecutiveReport);
-    $("#resetBtn").addEventListener("click", () => {
-      const lang = getLang();
-      const ok = confirm(lang==="de" ? "Wirklich zurücksetzen?" : (lang==="tr" ? "Sıfırlansın mı?" : "Reset?"));
-      if (ok) resetAll();
-    });
-
-    // ---- Init ----
-    syncSliders();
-    applyLang("de");
-  })();
-  </script>
-</body>
-</html>
+      const
