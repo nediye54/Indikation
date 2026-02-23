@@ -1,685 +1,426 @@
-/* style.css — MDG V4 (Drop 4A) */
-/* Premium dark consulting UI + print-ready report base */
+// script.js — MDG V4 (Drop 4B)
+// Shared: burger/drawer, i18n, mode routing, business token modal.
+// Keep this file used by index.html + diagnose.html + verlauf.html.
 
-:root{
-  --bg:#070A12;
-  --bg2:#0B1020;
-  --card:rgba(255,255,255,.04);
-  --card2:rgba(255,255,255,.06);
-  --line:rgba(255,255,255,.10);
-  --line2:rgba(255,255,255,.16);
+(() => {
+  "use strict";
 
-  --text:#EAF0FF;
-  --muted:rgba(234,240,255,.72);
-  --muted2:rgba(234,240,255,.55);
+  // If you already use api.mdg-indikation.de, keep it consistent:
+  const API_BASE = "https://api.mdg-indikation.de";
 
-  --accent:#6EE7B7;
-  --accent2:#60A5FA;
-  --warn:#FBBF24;
-  --bad:#FB7185;
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-  --shadow: 0 14px 50px rgba(0,0,0,.55);
-  --shadow2: 0 10px 26px rgba(0,0,0,.38);
+  // -------- Storage keys --------
+  const K_LANG = "mdg_lang";
+  const K_MODE = "mdg_mode";       // "private" | "business"
+  const K_TOKEN = "mdg_token";     // business token
 
-  --r1:16px;
-  --r2:22px;
+  // -------- i18n dictionary (Landing keys) --------
+  // Diagnose page has its own dict in diagnose.html later (Drop 5).
+  const I18N = {
+    de: {
+      "nav.how":"Wie es funktioniert",
+      "nav.why":"Warum MDG",
+      "nav.faq":"FAQ",
 
-  --max:1120px;
+      "hero.pill1":"In wenigen Minuten zur Entscheidungssicherheit",
+      "hero.pill2":"IDG · ADG · MDG",
+      "hero.h1":"Instabilität früh erkennen. Ursache präzise diagnostizieren. Architektur bauen – bevor es bricht.",
+      "hero.lead":"MDG, IDG und ADG geben dir ein strukturelles Instrumentarium, um Spannungen sichtbar zu machen und tragfähige Entscheidungen zu treffen – privat oder im Unternehmen.",
+      "hero.note":"Privat: sofort starten. Business: Token erforderlich (eigene Fragen & Output für Entscheider).",
 
-  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial, "Noto Sans", "Liberation Sans", sans-serif;
-  --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
-}
+      "cta.private":"Jetzt ermitteln (privat)",
+      "cta.business":"Für Unternehmen (Token)",
 
-*{ box-sizing:border-box; }
-html,body{ height:100%; }
-body{
-  margin:0;
-  background:
-    radial-gradient(1200px 600px at 20% -10%, rgba(96,165,250,.14), transparent 60%),
-    radial-gradient(1000px 520px at 85% 10%, rgba(110,231,183,.10), transparent 65%),
-    radial-gradient(900px 520px at 35% 110%, rgba(251,113,133,.08), transparent 60%),
-    linear-gradient(180deg, var(--bg), var(--bg2) 65%, var(--bg));
-  color:var(--text);
-  font-family:var(--sans);
-  letter-spacing:.2px;
-}
+      "hero.panelTitle":"So läuft es ab",
+      "hero.step1k":"1 Satz Kontext",
+      "hero.step1t":"Worum geht es?",
+      "hero.step2k":"Ziel wählen",
+      "hero.step2t":"Stabilisieren oder Umbauen?",
+      "hero.step3k":"Quick Scan",
+      "hero.step3t":"Ebenenanalyse + Frühindikatoren",
+      "hero.step4k":"Ergebnis",
+      "hero.step4t":"Radar, Spannungen, klare Schritte",
+      "hero.step5k":"Deep Dive",
+      "hero.step5t":"Executive Report (Premium)",
+      "hero.m1k":"Dauer",
+      "hero.m1v":"3–10 Min",
+      "hero.m2k":"Output",
+      "hero.m2v":"Entscheidungspfad + Maßnahmen",
 
-a{ color:inherit; text-decoration:none; }
-a:hover{ text-decoration:none; }
+      "how.h2":"Wie es funktioniert",
+      "how.sub":"Du beschreibst dein Thema in einem Satz – wir führen dich dann streng und präzise zur Diagnose.",
+      "how.c1t":"1) Kontext",
+      "how.c1p":"Ein Satz, keine Story. Wir brauchen die Struktur, nicht die Details.",
+      "how.c1ex":"Beispiel: „Wir liefern zu spät und streiten ständig über Prioritäten.“",
+      "how.c2t":"2) Ziel",
+      "how.c2p":"Stabilisieren = Belastung reduzieren & Kontrolle zurückholen. Umbauen = Architektur neu bauen.",
+      "how.c2ex":"Beispiel: Stabilisieren zuerst, dann Umbau planen.",
+      "how.c3t":"3) Ergebnis",
+      "how.c3p":"Radar & Spannungen zeigen Primärinstabilität – plus konkrete nächste Schritte.",
+      "how.c3ex":"Beispiel: „Entscheidungsmonopol“ + „Lastasymmetrie“ → IDG → ADG.",
 
-.container{
-  width:min(var(--max), calc(100% - 48px));
-  margin:0 auto;
-}
+      "why.h2":"Warum MDG",
+      "why.sub":"Die meisten Systeme brechen nicht an „zu wenig Stärke“, sondern an falscher Lastverteilung und schlechter Entscheidungsarchitektur.",
+      "why.a1t":"Struktur statt Bauchgefühl",
+      "why.a1p":"Du bekommst ein klares Modell, das Spannung, Engpässe und Verstärkung sichtbar macht.",
+      "why.a2t":"Entscheidungssicherheit",
+      "why.a2p":"Nicht nur Diagnose – sondern ein Pfad: Stabilisieren (IDG) oder Umbauen (ADG) mit konkreten Moves.",
 
-.micro{ font-size:.86rem; color:var(--muted2); line-height:1.35; }
-.sub{ color:var(--muted); line-height:1.6; font-size:1.05rem; max-width:70ch; }
+      "faq.h2":"FAQ",
+      "faq.sub":"Kurz & klar.",
+      "faq.q1":"Was ist der Unterschied zwischen Privat und Business?",
+      "faq.a1":"Business nutzt eigene Fragen (Führung, Verantwortung, Risiko, Skalierung) und liefert Executive Output.",
+      "faq.q2":"Muss ich viele Fragen beantworten?",
+      "faq.a2":"So viele wie nötig für Präzision. Du kannst jederzeit abbrechen und später fortsetzen.",
+      "faq.q3":"Wird etwas gespeichert?",
+      "faq.a3":"Standard: lokal im Browser. Business kann optional anonym Server-Saves nutzen (wenn aktiviert).",
 
-h1,h2,h3{ margin:0; }
-.h1{
-  font-family:var(--serif);
-  font-weight:800;
-  letter-spacing:.2px;
-  font-size:clamp(2.2rem, 4vw, 3.2rem);
-  line-height:1.05;
-}
-.h2{
-  font-family:var(--serif);
-  font-weight:800;
-  font-size:clamp(1.6rem, 3vw, 2.2rem);
-  line-height:1.1;
-}
-.h3{
-  font-family:var(--sans);
-  font-weight:900;
-  font-size:1.05rem;
-  letter-spacing:.4px;
-  text-transform:uppercase;
-  color:rgba(234,240,255,.85);
-}
+      "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau.",
+      "footer.gotoDx":"Zur Diagnose",
 
-.badge{
-  display:inline-flex;
-  align-items:center;
-  gap:.45rem;
-  padding:.35rem .7rem;
-  border-radius:999px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.03);
-  color:rgba(234,240,255,.86);
-  font-family:var(--mono);
-  font-size:.78rem;
-}
+      "token.pill":"Business Zugang",
+      "token.h3":"Token eingeben",
+      "token.p":"Unternehmen erhalten ein eigenes Fragen-Set und Executive Output. Bitte Token eingeben.",
+      "token.label":"Token",
+      "token.submit":"Weiter",
+      "token.cancel":"Abbrechen",
+      "token.ok":"Token akzeptiert. Starte …",
+      "token.bad":"Token ungültig. Bitte prüfen.",
+      "token.err":"Fehler beim Prüfen. Bitte erneut versuchen.",
+      "token.need":"Bitte Token eingeben."
+    },
 
-.hr{
-  border:0;
-  height:1px;
-  background:linear-gradient(90deg, transparent, var(--line2), transparent);
-  margin:22px 0;
-}
+    tr: {
+      "nav.how":"Nasıl çalışır",
+      "nav.why":"Neden MDG",
+      "nav.faq":"SSS",
 
-/* Topbar */
-.topbar{
-  position:sticky;
-  top:0;
-  z-index:50;
-  backdrop-filter: blur(14px);
-  background:rgba(7,10,18,.62);
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-.topbar .inner{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:14px 0;
-}
-.logo{
-  display:flex;
-  align-items:center;
-  gap:.65rem;
-  font-weight:950;
-  letter-spacing:.8px;
-}
-.logo__mark{
-  width:40px; height:40px;
-  border-radius:14px;
-  display:grid;
-  place-items:center;
-  border:1px solid rgba(255,255,255,.14);
-  background:
-    radial-gradient(80% 120% at 20% 0%, rgba(110,231,183,.22), transparent 60%),
-    radial-gradient(90% 120% at 80% 20%, rgba(96,165,250,.18), transparent 60%),
-    rgba(255,255,255,.03);
-  box-shadow: var(--shadow2);
-}
-.logo__text{
-  display:flex;
-  flex-direction:column;
-  line-height:1.0;
-}
-.logo__text span:nth-child(1){ font-size:1.05rem; }
-.logo__text span:nth-child(2){ font-family:var(--mono); font-size:.78rem; color:var(--muted2); margin-top:2px; }
+      "hero.pill1":"Dakikalar içinde karar netliği",
+      "hero.pill2":"IDG · ADG · MDG",
+      "hero.h1":"İstikrarsızlığı erken gör. Nedeni kesin teşhis et. Kırılmadan önce mimari kur.",
+      "hero.lead":"MDG, IDG ve ADG; gerilimleri görünür kılan ve sağlam kararlar almanı sağlayan yapısal bir araç setidir — özel hayat veya iş için.",
+      "hero.note":"Özel: hemen başla. Kurumsal: Token gerekir (yöneticiler için ayrı sorular ve çıktı).",
 
-.lang-switch{
-  display:flex; gap:.45rem; flex-wrap:wrap;
-}
-.chip{
-  appearance:none;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(255,255,255,.03);
-  color:rgba(234,240,255,.85);
-  padding:.46rem .7rem;
-  border-radius:999px;
-  font-weight:900;
-  font-size:.85rem;
-  cursor:pointer;
-}
-.chip:hover{ border-color:rgba(255,255,255,.22); background:rgba(255,255,255,.05); }
-.chip[aria-pressed="true"]{
-  border-color:rgba(110,231,183,.42);
-  box-shadow:0 0 0 3px rgba(110,231,183,.12);
-}
+      "cta.private":"Şimdi analiz et (özel)",
+      "cta.business":"Şirketler için (Token)",
 
-/* Buttons */
-.btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:.55rem;
-  padding:.9rem 1.05rem;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(255,255,255,.03);
-  color:rgba(234,240,255,.92);
-  font-weight:950;
-  letter-spacing:.3px;
-  cursor:pointer;
-  transition:transform .06s ease, border-color .15s ease, background .15s ease;
-}
-.btn:hover{ border-color:rgba(255,255,255,.22); background:rgba(255,255,255,.05); }
-.btn:active{ transform:translateY(1px); }
+      "hero.panelTitle":"Akış",
+      "hero.step1k":"1 cümle bağlam",
+      "hero.step1t":"Konu nedir?",
+      "hero.step2k":"Hedef",
+      "hero.step2t":"Stabilize mi, yeniden kurulum mu?",
+      "hero.step3k":"Hızlı tarama",
+      "hero.step3t":"Katman analizi + erken göstergeler",
+      "hero.step4k":"Sonuç",
+      "hero.step4t":"Radar, gerilimler, net adımlar",
+      "hero.step5k":"Derin analiz",
+      "hero.step5t":"Executive Report (Premium)",
+      "hero.m1k":"Süre",
+      "hero.m1v":"3–10 dk",
+      "hero.m2k":"Çıktı",
+      "hero.m2v":"Karar yolu + aksiyonlar",
 
-.btn--primary{
-  border-color:rgba(110,231,183,.34);
-  background:
-    radial-gradient(110% 120% at 20% 0%, rgba(110,231,183,.22), transparent 55%),
-    rgba(110,231,183,.08);
-}
-.btn--primary:hover{ border-color:rgba(110,231,183,.58); background:rgba(110,231,183,.11); }
-.btn--secondary{
-  border-color:rgba(96,165,250,.34);
-  background:
-    radial-gradient(110% 120% at 20% 0%, rgba(96,165,250,.22), transparent 55%),
-    rgba(96,165,250,.08);
-}
-.btn--secondary:hover{ border-color:rgba(96,165,250,.58); background:rgba(96,165,250,.11); }
-.btn[disabled], .btn[aria-disabled="true"]{
-  opacity:.55;
-  cursor:not-allowed;
-}
+      "how.h2":"Nasıl çalışır",
+      "how.sub":"Konuyu bir cümleyle yaz — sonra seni sıkı ve net bir teşhise götürüyoruz.",
+      "how.c1t":"1) Bağlam",
+      "how.c1p":"Bir cümle, hikâye değil. Detay değil yapı gerekir.",
+      "how.c1ex":"Örnek: “Geç teslim ediyoruz ve önceliklerde sürekli tartışıyoruz.”",
+      "how.c2t":"2) Hedef",
+      "how.c2p":"Stabilize = yükü azalt & kontrolü geri al. Yeniden kurulum = mimariyi yeniden tasarla.",
+      "how.c2ex":"Örnek: önce stabilize, sonra yeniden kurulum planı.",
+      "how.c3t":"3) Sonuç",
+      "how.c3p":"Radar ve gerilimler birincil instabiliteyi gösterir — ayrıca net sonraki adımlar verir.",
+      "how.c3ex":"Örnek: “Karar tekeli” + “Yük asimetrisi” → IDG → ADG.",
 
-/* Sections */
-.section{
-  padding:64px 0;
-}
-.hero{
-  padding:76px 0 42px;
-}
-.hero__grid{
-  display:grid;
-  grid-template-columns: 1.1fr .9fr;
-  gap:26px;
-  align-items:start;
-}
-.hero__panel{
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  border-radius:var(--r2);
-  padding:22px;
-  box-shadow: var(--shadow);
-}
-.hero__cta{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-  margin-top:18px;
-}
-.hero__notes{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:14px;
-}
+      "why.h2":"Neden MDG",
+      "why.sub":"Çoğu sistem “güç eksikliği” yüzünden değil, yanlış yük dağılımı ve zayıf karar mimarisi yüzünden kırılır.",
+      "why.a1t":"İçgüdü değil yapı",
+      "why.a1p":"Gerilimleri, darboğazları ve büyüme etkisini görünür kılan net bir model.",
+      "why.a2t":"Karar netliği",
+      "why.a2p":"Sadece teşhis değil — yol: Stabilize (IDG) veya Yeniden Kur (ADG) + net aksiyonlar.",
 
-.kpi{
-  display:grid;
-  grid-template-columns: repeat(2, minmax(0,1fr));
-  gap:12px;
-  margin-top:16px;
-}
-.kpi .tile{
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  border-radius:18px;
-  padding:14px 14px 12px;
-}
-.tile .label{
-  font-family:var(--mono);
-  font-size:.76rem;
-  color:var(--muted2);
-  letter-spacing:.4px;
-}
-.tile .value{
-  font-weight:950;
-  font-size:1.1rem;
-  margin-top:6px;
-}
+      "faq.h2":"SSS",
+      "faq.sub":"Kısa ve net.",
+      "faq.q1":"Özel ve Kurumsal arasındaki fark nedir?",
+      "faq.a1":"Kurumsal sürüm; liderlik, sorumluluk, risk, ölçekleme gibi ayrı sorular ve executive çıktı verir.",
+      "faq.q2":"Çok soru yanıtlamam gerekir mi?",
+      "faq.a2":"Kesinlik için gerektiği kadar. İstediğinde durdurup sonra devam edebilirsin.",
+      "faq.q3":"Veri kaydediliyor mu?",
+      "faq.a3":"Varsayılan: tarayıcıda yerel. Kurumsal sürüm opsiyonel anonim sunucu kaydı kullanabilir.",
 
-/* Cards grid */
-.grid{
-  display:grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap:14px;
-}
-.card{
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  border-radius:var(--r2);
-  padding:18px;
-  box-shadow: var(--shadow2);
-}
-.card p{ margin:.55rem 0 0; color:var(--muted); line-height:1.55; }
+      "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
+      "footer.gotoDx":"Teşhise git",
 
-/* How */
-.steps{
-  display:grid;
-  grid-template-columns: repeat(4, minmax(0,1fr));
-  gap:14px;
-}
-.step{
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  border-radius:var(--r2);
-  padding:16px;
-}
-.step .n{
-  font-family:var(--mono);
-  font-weight:900;
-  color:rgba(110,231,183,.9);
-  font-size:.92rem;
-}
-.step .t{
-  margin-top:10px;
-  color:var(--muted);
-  line-height:1.5;
-}
+      "token.pill":"Kurumsal erişim",
+      "token.h3":"Token gir",
+      "token.p":"Şirketler için ayrı soru seti ve executive çıktı. Lütfen token girin.",
+      "token.label":"Token",
+      "token.submit":"Devam",
+      "token.cancel":"İptal",
+      "token.ok":"Token kabul edildi. Başlatılıyor …",
+      "token.bad":"Token geçersiz. Lütfen kontrol edin.",
+      "token.err":"Kontrol hatası. Lütfen tekrar deneyin.",
+      "token.need":"Lütfen token girin."
+    },
 
-/* Compare */
-.compare{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:14px;
-}
-.compare .card ul{
-  margin:10px 0 0 18px;
-  color:var(--muted);
-}
-.compare .card li{ margin:6px 0; }
+    en: {
+      "nav.how":"How it works",
+      "nav.why":"Why MDG",
+      "nav.faq":"FAQ",
 
-/* FAQ */
-.faq{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:14px;
-}
-details{
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  border-radius:var(--r2);
-  padding:14px 16px;
-}
-summary{
-  cursor:pointer;
-  font-weight:950;
-  list-style:none;
-}
-summary::-webkit-details-marker{ display:none; }
-details p{ margin:10px 0 0; color:var(--muted); line-height:1.6; }
+      "hero.pill1":"Decision confidence in minutes",
+      "hero.pill2":"IDG · ADG · MDG",
+      "hero.h1":"Detect instability early. Diagnose the cause precisely. Build architecture — before it breaks.",
+      "hero.lead":"MDG, IDG and ADG provide a structural toolkit to make tensions visible and enable durable decisions — for personal life or business.",
+      "hero.note":"Private: start instantly. Business: token required (separate questions & executive output).",
 
-/* Footer */
-.footer{
-  padding:44px 0 58px;
-  border-top:1px solid rgba(255,255,255,.08);
-  background:rgba(0,0,0,.18);
-}
-.footer__grid{
-  display:grid;
-  grid-template-columns: 1.2fr 1fr 1fr;
-  gap:16px;
-}
-.footer a{ color:rgba(234,240,255,.82); }
-.footer a:hover{ color:rgba(234,240,255,.96); }
+      "cta.private":"Assess now (private)",
+      "cta.business":"For business (token)",
 
-/* Diagnose Wizard */
-.wizard{
-  padding:34px 0 70px;
-}
-.wizard__shell{
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  border-radius:var(--r2);
-  box-shadow: var(--shadow);
-  overflow:hidden;
-}
-.wizard__head{
-  padding:18px 20px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  flex-wrap:wrap;
-}
-.wizard__head .title{
-  font-family:var(--mono);
-  color:rgba(234,240,255,.84);
-  font-weight:900;
-  letter-spacing:.5px;
-  font-size:.9rem;
-}
-.wizard__head .right{
-  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-}
-.progress{
-  display:flex; align-items:center; gap:10px;
-}
-.progress__bar{
-  width:180px;
-  height:10px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  overflow:hidden;
-}
-.progress__bar i{
-  display:block;
-  height:100%;
-  width:0%;
-  background:rgba(110,231,183,.22);
-}
-.progress__pct{
-  font-family:var(--mono);
-  color:var(--muted2);
-  font-size:.8rem;
-}
+      "hero.panelTitle":"The flow",
+      "hero.step1k":"One-sentence context",
+      "hero.step1t":"What is this about?",
+      "hero.step2k":"Choose intent",
+      "hero.step2t":"Stabilize or redesign?",
+      "hero.step3k":"Quick scan",
+      "hero.step3t":"Layer analysis + early indicators",
+      "hero.step4k":"Result",
+      "hero.step4t":"Radar, tensions, clear steps",
+      "hero.step5k":"Deep dive",
+      "hero.step5t":"Executive Report (Premium)",
+      "hero.m1k":"Time",
+      "hero.m1v":"3–10 min",
+      "hero.m2k":"Output",
+      "hero.m2v":"Decision path + actions",
 
-.wizard__body{
-  padding:22px 20px 18px;
-}
-.wizard__actions{
-  padding:16px 20px 20px;
-  border-top:1px solid rgba(255,255,255,.08);
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  flex-wrap:wrap;
-}
-.field{
-  margin-top:14px;
-}
-.label{
-  display:block;
-  font-weight:950;
-  color:rgba(234,240,255,.86);
-  margin-bottom:8px;
-}
-.hint{
-  margin-top:6px;
-  color:var(--muted2);
-  line-height:1.45;
-  font-size:.92rem;
-}
-.textarea{
-  width:100%;
-  min-height:120px;
-  resize:vertical;
-  padding:14px 14px;
-  border-radius:16px;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(0,0,0,.22);
-  color:var(--text);
-  outline:none;
-}
-.textarea:focus{
-  border-color:rgba(110,231,183,.44);
-  box-shadow:0 0 0 3px rgba(110,231,183,.12);
-}
+      "how.h2":"How it works",
+      "how.sub":"Describe your case in one sentence — we then guide you strictly to a precise diagnosis.",
+      "how.c1t":"1) Context",
+      "how.c1p":"One sentence, no story. We need structure, not details.",
+      "how.c1ex":"Example: “We deliver late and keep fighting about priorities.”",
+      "how.c2t":"2) Intent",
+      "how.c2p":"Stabilize = reduce load & regain control. Redesign = rebuild the architecture.",
+      "how.c2ex":"Example: stabilize first, then plan redesign.",
+      "how.c3t":"3) Result",
+      "how.c3p":"Radar & tensions reveal the primary instability — plus concrete next steps.",
+      "how.c3ex":"Example: “Decision monopoly” + “load asymmetry” → IDG → ADG.",
 
-/* Choice cards */
-.choice-grid{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:14px;
-  margin-top:10px;
-}
-.choice{
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  border-radius:var(--r2);
-  padding:16px;
-  cursor:pointer;
-  transition:border-color .15s ease, background .15s ease, transform .06s ease;
-}
-.choice:hover{ border-color:rgba(255,255,255,.18); background:rgba(255,255,255,.05); }
-.choice:active{ transform:translateY(1px); }
-.choice[aria-selected="true"]{
-  border-color:rgba(110,231,183,.48);
-  background:rgba(110,231,183,.10);
-  box-shadow:0 0 0 3px rgba(110,231,183,.10);
-}
-.choice .t{ font-weight:950; }
-.choice .ex{ margin-top:8px; color:var(--muted); line-height:1.5; font-size:.95rem; }
-.choice .ex .mono{ font-family:var(--mono); color:rgba(234,240,255,.78); font-size:.83rem; }
+      "why.h2":"Why MDG",
+      "why.sub":"Most systems don’t break from “lack of strength”, but from wrong load distribution and weak decision architecture.",
+      "why.a1t":"Structure over gut-feel",
+      "why.a1p":"A clear model that makes tensions, bottlenecks and amplification visible.",
+      "why.a2t":"Decision confidence",
+      "why.a2p":"Not only diagnosis — a path: stabilize (IDG) or redesign (ADG) with concrete moves.",
 
-.chips{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:12px;
-}
-.chips .chip{
-  padding:.6rem .9rem;
-  border-radius:999px;
-}
+      "faq.h2":"FAQ",
+      "faq.sub":"Short & clear.",
+      "faq.q1":"What’s the difference between private and business?",
+      "faq.a1":"Business uses a dedicated question set (leadership, responsibility, risk, scaling) and produces executive-grade output.",
+      "faq.q2":"Do I have to answer many questions?",
+      "faq.a2":"As many as needed for precision. You can stop anytime and continue later.",
+      "faq.q3":"Is anything stored?",
+      "faq.a3":"Default: locally in your browser. Business can optionally enable anonymous server saves.",
 
-/* Sliders */
-.slider{
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  border-radius:var(--r2);
-  padding:14px 14px 12px;
-  margin-top:12px;
-}
-.slider__top{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:10px;
-  flex-wrap:wrap;
-}
-.slider__name{
-  font-weight:950;
-}
-.slider__val{
-  font-family:var(--mono);
-  color:rgba(234,240,255,.78);
-  font-weight:900;
-  font-size:.85rem;
-}
-.slider__ex{
-  margin-top:8px;
-  color:var(--muted2);
-  line-height:1.45;
-  font-size:.92rem;
-}
-.range{
-  width:100%;
-  margin-top:10px;
-}
-.range input[type="range"]{ width:100%; }
-.range__meta{
-  display:flex;
-  justify-content:space-between;
-  color:var(--muted2);
-  font-family:var(--mono);
-  font-size:.78rem;
-  margin-top:6px;
-}
+      "footer.tag":"Structural diagnosis for stabilization and redesign.",
+      "footer.gotoDx":"Go to diagnosis",
 
-/* Adaptive Q */
-.adapt{
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  border-radius:var(--r2);
-  padding:18px;
-}
-.adapt .q{
-  font-weight:950;
-  font-size:1.08rem;
-  line-height:1.35;
-}
-.adapt .examples{
-  margin-top:10px;
-  display:grid;
-  gap:8px;
-}
-.example{
-  border:1px dashed rgba(255,255,255,.14);
-  border-radius:16px;
-  padding:10px 12px;
-  background:rgba(0,0,0,.18);
-  color:rgba(234,240,255,.82);
-}
-.example .tag{
-  font-family:var(--mono);
-  font-size:.75rem;
-  color:rgba(110,231,183,.85);
-  margin-bottom:4px;
-}
-.options{
-  display:grid;
-  grid-template-columns: 1fr;
-  gap:10px;
-  margin-top:12px;
-}
-.opt{
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:16px;
-  padding:12px 12px;
-  background:rgba(255,255,255,.03);
-  cursor:pointer;
-  transition:border-color .15s ease, background .15s ease, transform .06s ease;
-}
-.opt:hover{ border-color:rgba(255,255,255,.18); background:rgba(255,255,255,.05); }
-.opt:active{ transform:translateY(1px); }
-.opt[aria-selected="true"]{
-  border-color:rgba(96,165,250,.55);
-  background:rgba(96,165,250,.10);
-  box-shadow:0 0 0 3px rgba(96,165,250,.10);
-}
+      "token.pill":"Business access",
+      "token.h3":"Enter token",
+      "token.p":"Business gets a dedicated question set and executive output. Please enter your token.",
+      "token.label":"Token",
+      "token.submit":"Continue",
+      "token.cancel":"Cancel",
+      "token.ok":"Token accepted. Starting …",
+      "token.bad":"Invalid token. Please check.",
+      "token.err":"Verification error. Please try again.",
+      "token.need":"Please enter a token."
+    }
+  };
 
-/* Result */
-.result{
-  display:grid;
-  gap:14px;
-}
-.kpi-row{
-  display:grid;
-  grid-template-columns: repeat(4, minmax(0,1fr));
-  gap:12px;
-}
-.kpi-row .tile{
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  border-radius:18px;
-  padding:12px 14px 12px;
-}
-.tile .k{ font-family:var(--mono); color:var(--muted2); font-size:.76rem; }
-.tile .v{ margin-top:6px; font-weight:950; font-size:1.05rem; }
-
-.chart-grid{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:14px;
-}
-.chart{
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  border-radius:var(--r2);
-  padding:16px;
-  overflow:hidden;
-}
-.chart .caption{
-  margin-top:10px;
-  color:var(--muted2);
-  font-size:.92rem;
-  line-height:1.45;
-}
-
-/* Bars */
-.bars{
-  display:grid;
-  gap:10px;
-  margin-top:10px;
-}
-.bar{
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:16px;
-  padding:10px 12px;
-  background:rgba(0,0,0,.16);
-}
-.bar__top{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  align-items:center;
-}
-.bar__name{ font-weight:950; }
-.bar__val{ font-family:var(--mono); color:rgba(234,240,255,.78); font-size:.85rem; font-weight:900; }
-.bar__track{
-  margin-top:8px;
-  height:10px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.03);
-  overflow:hidden;
-}
-.bar__track i{
-  display:block;
-  height:100%;
-  width:0%;
-  background:rgba(110,231,183,.20);
-}
-.bar__why{ margin-top:8px; color:var(--muted2); line-height:1.45; font-size:.92rem; }
-
-/* Lists */
-.list{
-  margin:10px 0 0 18px;
-  color:var(--muted);
-  line-height:1.55;
-}
-.list li{ margin:6px 0; }
-
-/* Responsive */
-@media (max-width: 980px){
-  .hero__grid{ grid-template-columns: 1fr; }
-  .grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .steps{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .compare{ grid-template-columns: 1fr; }
-  .faq{ grid-template-columns: 1fr; }
-  .kpi-row{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .chart-grid{ grid-template-columns: 1fr; }
-  .footer__grid{ grid-template-columns: 1fr; }
-}
-@media (max-width: 560px){
-  .grid{ grid-template-columns: 1fr; }
-  .steps{ grid-template-columns: 1fr; }
-  .choice-grid{ grid-template-columns: 1fr; }
-  .progress__bar{ width:140px; }
-}
-
-/* Print base (for report.html later; safe to keep here) */
-@media print{
-  body{
-    background:#fff !important;
-    color:#111 !important;
+  // -------- Basic UI helpers --------
+  function currentLang() {
+    return localStorage.getItem(K_LANG) || "de";
   }
-  .topbar, .wizard__actions, .lang-switch{ display:none !important; }
-  .wizard__shell, .card, .chart, .tile, .bar, .slider, .adapt{
-    box-shadow:none !important;
-    background:#fff !important;
-    border-color:#ddd !important;
+
+  function applyLang(lang) {
+    if (!I18N[lang]) lang = "de";
+    localStorage.setItem(K_LANG, lang);
+    document.documentElement.lang = lang;
+
+    $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+
+    $$("[data-i18n]").forEach(el => {
+      const key = el.dataset.i18n;
+      const val = I18N[lang]?.[key];
+      if (!val) return;
+      // Keep elements with nested children safe (don’t overwrite complex nodes)
+      if (el.children && el.children.length) return;
+      el.textContent = val;
+    });
   }
-  .micro, .sub, .hint, .bar__why{ color:#333 !important; }
-}
+
+  function wireLangButtons() {
+    $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => applyLang(btn.dataset.lang)));
+    applyLang(currentLang());
+  }
+
+  // -------- Burger / Drawer --------
+  function wireBurger() {
+    const burger = $(".burger");
+    const drawer = $(".drawer");
+    if (!burger || !drawer) return;
+
+    const open = () => {
+      drawer.hidden = false;
+      burger.setAttribute("aria-expanded", "true");
+      document.body.classList.add("no-scroll");
+    };
+    const close = () => {
+      drawer.hidden = true;
+      burger.setAttribute("aria-expanded", "false");
+      document.body.classList.remove("no-scroll");
+    };
+
+    burger.addEventListener("click", () => {
+      const expanded = burger.getAttribute("aria-expanded") === "true";
+      expanded ? close() : open();
+    });
+
+    // close on click outside drawer content (if backdrop exists in your CSS). If not, ignore.
+    drawer.addEventListener("click", (e) => {
+      const content = drawer.querySelector(".drawer__content");
+      if (!content) return;
+      if (!content.contains(e.target)) close();
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") close();
+    });
+  }
+
+  // -------- Modal (Token) --------
+  function modalOpen(id) {
+    const m = document.getElementById(id);
+    if (!m) return;
+    m.hidden = false;
+    document.body.classList.add("no-scroll");
+  }
+  function modalClose(id) {
+    const m = document.getElementById(id);
+    if (!m) return;
+    m.hidden = true;
+    document.body.classList.remove("no-scroll");
+  }
+
+  function wireModal() {
+    const m = $("#token_modal");
+    if (!m) return;
+
+    m.addEventListener("click", (e) => {
+      const t = e.target;
+      if (t && (t.hasAttribute("data-modal-close") || t.closest("[data-modal-close]"))) {
+        modalClose("token_modal");
+      }
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") modalClose("token_modal");
+    });
+  }
+
+  // -------- Token verify (calls worker) --------
+  async function verifyToken(token) {
+    // endpoint will be implemented in worker (Drop 5/6). For now: will fail gracefully.
+    const res = await fetch(`${API_BASE}/api/token/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: data?.error || "verify_failed" };
+    return { ok: true, data };
+  }
+
+  function langT(key) {
+    const l = currentLang();
+    return I18N[l]?.[key] || I18N.de[key] || key;
+  }
+
+  function setModeAndGo(mode) {
+    localStorage.setItem(K_MODE, mode);
+    // pass mode via query too (helps diagnose.html bootstrap)
+    location.href = `./diagnose.html?mode=${encodeURIComponent(mode)}`;
+  }
+
+  function wireCTAs() {
+    const btnsPrivate = ["#cta_private","#cta_private_panel","#cta_private_drawer","#cta_private_bottom"]
+      .map(s => $(s)).filter(Boolean);
+
+    const btnsBusiness = ["#cta_business","#cta_business_drawer","#cta_business_bottom"]
+      .map(s => $(s)).filter(Boolean);
+
+    btnsPrivate.forEach(b => b.addEventListener("click", () => {
+      localStorage.removeItem(K_TOKEN);
+      setModeAndGo("private");
+    }));
+
+    btnsBusiness.forEach(b => b.addEventListener("click", () => {
+      modalOpen("token_modal");
+      setTimeout(() => $("#token_input")?.focus(), 50);
+    }));
+
+    // modal submit
+    const submit = $("#token_submit");
+    const input = $("#token_input");
+    const status = $("#token_status");
+
+    if (submit && input) {
+      submit.addEventListener("click", async () => {
+        const token = (input.value || "").trim();
+        if (!token) {
+          if (status) status.textContent = langT("token.need");
+          return;
+        }
+        if (status) status.textContent = "…";
+
+        try {
+          const out = await verifyToken(token);
+          if (!out.ok) {
+            if (status) status.textContent = langT("token.bad");
+            return;
+          }
+          localStorage.setItem(K_TOKEN, token);
+          if (status) status.textContent = langT("token.ok");
+          setTimeout(() => {
+            modalClose("token_modal");
+            setModeAndGo("business");
+          }, 350);
+        } catch {
+          if (status) status.textContent = langT("token.err");
+        }
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") submit.click();
+      });
+    }
+  }
+
+  // -------- Init --------
+  function init() {
+    wireLangButtons();
+    wireBurger();
+    wireModal();
+    wireCTAs();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+
+  // Expose minimal shared constants for other pages (diagnose/verlauf)
+  window.MDG = window.MDG || {};
+  window.MDG.API_BASE = API_BASE;
+  window.MDG.storage = { K_LANG, K_MODE, K_TOKEN };
+  window.MDG.i18n = { applyLang, currentLang };
+})();
