@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FAQ – MDG</title>
+  <meta name="description" content="FAQ: Token, Business vs Private, Datenschutz, Output, Grenzen von MDG." />
+  <link rel="stylesheet" href="./style.css" />
+  <style>
+    .page{ max-width: 980px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+    .grid{ display:grid; gap:1rem; }
+    details{ padding: 1rem; border:1px solid rgba(255,255,255,.10); border-radius: var(--radius2,18px); background: rgba(255,255,255,.02); }
+    summary{ cursor:pointer; font-weight: 900; }
+    details[open] summary{ margin-bottom:.6rem; }
+    .mini{ color: var(--muted,#aab); font-size:.95rem; line-height:1.5; }
+    .ctaRow{ display:flex; gap:.75rem; flex-wrap:wrap; }
+  </style>
+</head>
+
+<body>
+<header class="header" id="top">
+  <div class="container header__inner">
+    <a class="brand" href="./index.html" aria-label="Home">
+      <span class="brand__mark" aria-hidden="true">MDG</span>
+      <span class="brand__text">v4</span>
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      <a class="nav__link" href="./how.html" data-i18n="nav.how">How it works</a>
+      <a class="nav__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
+      <a class="nav__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
+    </nav>
+
+    <div class="header__actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
+        <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
+        <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="btn btn--ghost" href="./index.html" data-i18n="cta.backHome">Home</a>
+    </div>
+
+    <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="drawer" hidden>
+    <div class="drawer__content">
+      <a class="drawer__link" href="./how.html" data-i18n="nav.how">How it works</a>
+      <a class="drawer__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
+      <a class="drawer__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
+      <div class="drawer__sep"></div>
+      <a class="btn btn--ghost btn--full" href="./index.html" data-i18n="cta.backHome">Home</a>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="section__head">
+    <h1 class="h2" data-i18n="faq.title">FAQ</h1>
+    <p class="sub" data-i18n="faq.sub">Short answers to the most common questions.</p>
+  </div>
+
+  <div class="grid">
+    <details>
+      <summary data-i18n="faq.q1">What is the difference between Private and Business?</summary>
+      <div class="mini" data-i18n="faq.a1">
+        Private is tuned for personal systems (roles, routines, relationships). Business unlocks a separate question set and Executive Output for organizations (decision rights, roles, cadence, KPIs).
+      </div>
+    </details>
+
+    <details>
+      <summary data-i18n="faq.q2">How does the Business token work?</summary>
+      <div class="mini" data-i18n="faq.a2">
+        You verify your token on the landing page. The browser stores a short “ok” flag and the token locally, then opens Diagnose in Business mode. The server verifies the token again for each Business request.
+      </div>
+    </details>
+
+    <details>
+      <summary data-i18n="faq.q3">Do you store my inputs?</summary>
+      <div class="mini" data-i18n="faq.a3">
+        The API processes inputs to generate the assessment/report. If you later add “save/share”, it should be explicit and opt-in. Avoid secrets and unwanted names.
+      </div>
+    </details>
+
+    <details>
+      <summary data-i18n="faq.q4">What exactly do I get as output?</summary>
+      <div class="mini" data-i18n="faq.a4">
+        Assessment: primary instability, key tensions, risk, and a short path. Executive Report: a structured plan (stabilize/rebuild), indicators, and a concrete operating architecture.
+      </div>
+    </details>
+
+    <details>
+      <summary data-i18n="faq.q5">Can MDG be wrong?</summary>
+      <div class="mini" data-i18n="faq.a5">
+        Yes. It is a decision-support instrument. The “clarifying question” is designed to validate assumptions quickly and tighten the diagnosis.
+      </div>
+    </details>
+
+    <details>
+      <summary data-i18n="faq.q6">What should I write in the one-sentence problem?</summary>
+      <div class="mini" data-i18n="faq.a6">
+        Write one observable pattern and one consequence (delay, conflict, quality drop, overload). Keep it concrete; avoid biographies.
+      </div>
+    </details>
+
+    <details>
+      <summary data-i18n="faq.q7">Which language will the report use?</summary>
+      <div class="mini" data-i18n="faq.a7">
+        The output language follows the page language (DE/TR/EN). You can switch anytime before running the assessment/report.
+      </div>
+    </details>
+
+    <div class="card">
+      <h2 class="h3" data-i18n="faq.nextTitle">Next step</h2>
+      <p class="mini" data-i18n="faq.nextSub">If you want, start with a short diagnosis and generate the Executive Report after the first output.</p>
+      <div class="ctaRow">
+        <a class="btn btn--primary" href="./index.html" data-i18n="faq.cta">Start now</a>
+        <a class="btn btn--ghost" href="#top" data-i18n="faq.top">Back to top</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <div class="brand brand--footer">
+        <span class="brand__mark" aria-hidden="true">MDG</span>
+        <span class="brand__text">v4</span>
+      </div>
+      <p class="micro" data-i18n="footer.tag">Structure diagnosis for stabilization and rebuild.</p>
+    </div>
+    <div class="footer__legal">
+      <a href="./impressum.html" rel="nofollow">Impressum</a>
+      <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+      <a href="./kontakt.html" rel="nofollow">Kontakt</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  const burger = $(".burger");
+  const drawer = $(".drawer");
+  if (burger && drawer) {
+    burger.addEventListener("click", () => {
+      const open = !drawer.hasAttribute("hidden");
+      if (open) { drawer.setAttribute("hidden",""); burger.setAttribute("aria-expanded","false"); }
+      else { drawer.removeAttribute("hidden"); burger.setAttribute("aria-expanded","true"); }
+    });
+  }
+
+  const dict = {
+    de: {
+      "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ","cta.backHome":"Zur Homepage",
+      "faq.title":"FAQ","faq.sub":"Kurze Antworten auf die häufigsten Fragen.",
+      "faq.q1":"Was ist der Unterschied zwischen Privat und Business?",
+      "faq.a1":"Privat ist auf persönliche Systeme getuned (Rollen, Routinen, Beziehungen). Business schaltet ein eigenes Fragen-Set und Executive Output für Organisationen frei (Decision Rights, Rollen, Rhythmus, KPIs).",
+      "faq.q2":"Wie funktioniert der Business-Token?",
+      "faq.a2":"Du verifizierst den Token auf der Landingpage. Der Browser speichert eine kurze „ok“-Marke und den Token lokal und öffnet Diagnose im Business-Modus. Der Server verifiziert den Token bei jeder Business-Anfrage erneut.",
+      "faq.q3":"Speichert ihr meine Inputs?",
+      "faq.a3":"Die API verarbeitet Inputs zur Generierung von Assessment/Report. Wenn du später „Save/Share“ ergänzt, sollte es explizit und opt-in sein. Keine Secrets und keine unerwünschten Namen eingeben.",
+      "faq.q4":"Was bekomme ich als Output?",
+      "faq.a4":"Assessment: Primärinstabilität, zentrale Spannungen, Risk, kurzer Pfad. Executive Report: strukturierter Plan (stabilize/rebuild), Indikatoren und konkrete Architektur.",
+      "faq.q5":"Kann MDG falsch liegen?",
+      "faq.a5":"Ja. Es ist ein Entscheidungsinstrument. Die „Clarifying question“ ist dafür da, Annahmen schnell zu validieren und die Diagnose zu schärfen.",
+      "faq.q6":"Was schreibe ich in den 1-Satz?",
+      "faq.a6":"Ein beobachtbares Muster + eine Konsequenz (Delay, Konflikt, Qualitätsabfall, Überlastung). Konkret bleiben, keine Biografien.",
+      "faq.q7":"Welche Sprache nutzt der Report?",
+      "faq.a7":"Die Output-Sprache folgt der Seiten-Sprache (DE/TR/EN). Du kannst vor dem Start jederzeit umstellen.",
+      "faq.nextTitle":"Nächster Schritt",
+      "faq.nextSub":"Wenn du willst: starte mit einer kurzen Diagnose und generiere danach den Executive Report.",
+      "faq.cta":"Jetzt starten","faq.top":"Nach oben",
+      "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau."
+    },
+    tr: {
+      "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS","cta.backHome":"Anasayfa",
+      "faq.title":"SSS","faq.sub":"En sık sorulan sorulara kısa cevaplar.",
+      "faq.q1":"Özel ve Business farkı nedir?",
+      "faq.a1":"Özel: kişisel sistemlere göre ayarlı (roller, rutinler, ilişkiler). Business: organizasyonlar için ayrı soru seti + Executive Output (karar hakları, roller, ritim, KPI).",
+      "faq.q2":"Business token nasıl çalışır?",
+      "faq.a2":"Token’ı ana sayfada doğrularsın. Tarayıcı kısa bir “ok” işareti ve token’ı yerelde tutar, sonra Diagnose’u Business modunda açar. Sunucu her Business isteğinde token’ı tekrar doğrular.",
+      "faq.q3":"Verilerimi saklıyor musunuz?",
+      "faq.a3":"API verileri rapor üretmek için işler. Sonradan “save/share” eklenirse açık ve opt-in olmalı. Gizli bilgi ve istemediğin isimleri yazma.",
+      "faq.q4":"Çıktı olarak ne alırım?",
+      "faq.a4":"Assessment: ana instabilite, temel gerilimler, risk ve kısa yol. Executive Report: stabilize/rebuild planı, göstergeler ve somut mimari.",
+      "faq.q5":"MDG yanlış olabilir mi?",
+      "faq.a5":"Evet. Bu bir karar destek aracıdır. “Clarifying question” varsayımları hızlı doğrulamak için vardır.",
+      "faq.q6":"Tek cümleye ne yazmalıyım?",
+      "faq.a6":"Gözlenen desen + sonuç (gecikme, çatışma, kalite düşüşü, aşırı yük). Somut yaz; biyografi yazma.",
+      "faq.q7":"Rapor hangi dili kullanır?",
+      "faq.a7":"Çıktı dili sayfa dilini takip eder (DE/TR/EN). Başlatmadan önce değiştirebilirsin.",
+      "faq.nextTitle":"Sonraki adım",
+      "faq.nextSub":"İstersen: kısa teşhisle başla, sonra Executive Report üret.",
+      "faq.cta":"Şimdi başla","faq.top":"Yukarı",
+      "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi."
+    },
+    en: {
+      "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
+      "faq.title":"FAQ","faq.sub":"Short answers to the most common questions.",
+      "faq.q1":"What is the difference between Private and Business?",
+      "faq.a1":"Private is tuned for personal systems. Business unlocks a separate question set and Executive Output for organizations (decision rights, roles, cadence, KPIs).",
+      "faq.q2":"How does the Business token work?",
+      "faq.a2":"Verify token on the landing page. The browser stores a short ok-flag and the token locally and opens Diagnose in Business mode. The server verifies the token again for each Business request.",
+      "faq.q3":"Do you store my inputs?",
+      "faq.a3":"The API processes inputs to generate the report. If you later add save/share, it should be explicit and opt-in. Avoid secrets and unwanted names.",
+      "faq.q4":"What exactly do I get as output?",
+      "faq.a4":"Assessment: primary instability, key tensions, risk, and a short path. Executive Report: a structured stabilize/rebuild plan, indicators, and concrete architecture.",
+      "faq.q5":"Can MDG be wrong?",
+      "faq.a5":"Yes. It is a decision-support instrument. The clarifying question is designed to validate assumptions quickly and tighten the diagnosis.",
+      "faq.q6":"What should I write in the one-sentence problem?",
+      "faq.a6":"One observable pattern plus one consequence (delay, conflict, quality drop, overload). Keep it concrete; avoid biographies.",
+      "faq.q7":"Which language will the report use?",
+      "faq.a7":"Output language follows the page language (DE/TR/EN). You can switch anytime before running the assessment/report.",
+      "faq.nextTitle":"Next step",
+      "faq.nextSub":"If you want, start with a short diagnosis and generate the Executive Report after the first output.",
+      "faq.cta":"Start now","faq.top":"Back to top",
+      "footer.tag":"Structure diagnosis for stabilization and rebuild."
+    }
+  };
+
+  function applyLang(lang){
+    if(!dict[lang]) lang="de";
+    document.documentElement.lang = lang;
+    $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang===lang)));
+    $$("[data-i18n]").forEach(el => {
+      const k = el.dataset.i18n;
+      if (dict[lang][k]) el.textContent = dict[lang][k];
+    });
+  }
+
+  $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => applyLang(btn.dataset.lang)));
+  applyLang("de");
+})();
+</script>
+</body>
+</html>
