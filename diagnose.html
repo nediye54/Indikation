@@ -254,6 +254,7 @@
       <div class="footer__legal">
         <a href="./impressum.html" rel="nofollow">Impressum</a>
         <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+        <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
         <a href="./kontakt.html" rel="nofollow">Kontakt</a>
       </div>
     </div>
@@ -286,16 +287,11 @@
     const params = new URLSearchParams(location.search);
     const modeParam = (params.get("mode") || "").toLowerCase();
 
-    // tolerate both sessionStorage + localStorage
     const ss = window.sessionStorage;
     const ls = window.localStorage;
 
     const storedMode = ((ss.getItem("mdg_mode") || ls.getItem("mdg_mode") || "")).toLowerCase();
-
-    // ok-flag may be in sessionStorage (preferred) or localStorage (fallback)
     const businessOk = (ss.getItem("mdg_business_ok") === "1") || (ls.getItem("mdg_business_ok") === "1");
-
-    // token can be stored under mdg_business_token (preferred) or mdg_token (fallback)
     const tokenStored =
       (ss.getItem("mdg_business_token") || ls.getItem("mdg_business_token") || ls.getItem("mdg_token") || "").trim();
 
@@ -305,7 +301,7 @@
     $("#modeBadge").textContent = (mode === "business") ? "Business" : "Private";
     if (mode === "business") $("#tokenBadge").style.display = "";
 
-    // ---- i18n (minimal keys here; enough for this page) ----
+    // ---- i18n ----
     const dict = {
       de: {
         "nav.how":"Wie es funktioniert",
@@ -508,7 +504,7 @@
           "0 = stable rhythm. 6 = overload, errors escalate.<div class='dx-example'><div class='ex'>“Errors are hidden; nobody learns.”</div><div class='ex'>“Constant fire; no recovery.”</div></div>"
         )
         : t(
-          "0 = Energie & Feedback. 6 = Limit, Fehler häufen sich.<div class='dx-example'><div class='ex'>„Ich schlafe schlecht und bin gereizt.“</div><div class='ex'>„Ich wiederhole dieselben Fehler.“</div></div>",
+          "0 = Energie & Feedback. 6 = Limit, Fehler häufen sich.<div class='dx-example'><div class='ex'>„Ich schlafe schlecht und bin gereizt.“</div><div class='dx-example'><div class='ex'>„Ich wiederhole dieselben Fehler.“</div></div>",
           "0 = enerji var. 6 = limit, hata artıyor.<div class='dx-example'><div class='ex'>“Kötü uyuyorum, çabuk sinirleniyorum.”</div><div class='ex'>“Aynı hataları tekrar ediyorum.”</div></div>",
           "0 = energy + feedback. 6 = at the limit, errors pile up.<div class='dx-example'><div class='ex'>“I sleep badly and get irritated.”</div><div class='ex'>“I keep repeating the same mistakes.”</div></div>"
         );
@@ -705,7 +701,7 @@
       return out;
     }
 
-    // payload matches your worker:
+    // payload matches worker:
     // - problem, intent, answers, mode, token, lang
     function buildPayload(){
       const oneLiner = ($("#oneLiner").value || "").trim();
@@ -745,7 +741,21 @@
       return data;
     }
 
+    async function postForBytes(path, body){
+      const res = await fetch(`${API_BASE}${path}`, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error((txt && txt.slice(0,160)) || `Request failed (${res.status})`);
+      }
+      return res;
+    }
+
     let LAST_ASSESSMENT = null;
+    let LAST_REPORT_MD = "";
     let LAST_TREE_SVG = "";
 
     async function runAssessment(){
@@ -770,6 +780,9 @@
       $("#reportContainer").style.display = "none";
       $("#treeContainer").style.display = "none";
       $("#treeSvgWrap").innerHTML = "";
+
+      LAST_ASSESSMENT = null;
+      LAST_REPORT_MD = "";
       LAST_TREE_SVG = "";
 
       try{
@@ -810,8 +823,9 @@
         const data = await postJson("/api/report", payload);
 
         const text = data.report_markdown || JSON.stringify(data, null, 2);
-        $("#execText").textContent = text;
+        LAST_REPORT_MD = (data.report_markdown || "");
 
+        $("#execText").textContent = text;
         $("#reportContainer").style.display = "";
         $("#copyExecBtn").disabled = false;
 
@@ -821,14 +835,7 @@
       }
     }
 
-    // ---------- Drop 2b: Premium Tree (SVG) ----------
-    function safeText(s){
-      return String(s ?? "").replace(/[<>&]/g, (m) => ({ "<":"&lt;", ">":"&gt;", "&":"&amp;" }[m]));
-    }
-
-    // Robust: accept several possible shapes
-    // - data.tree_svg OR data.svg OR data.tree?.svg
-    // - data.tree_nodes (we can synthesize a simple tree)
+    // ---------- Premium Tree (SVG) ----------
     function extractTreeSvg(data){
       const raw =
         (data && (data.tree_svg || data.svg || data.tree?.svg || data.tree?.tree_svg)) || "";
@@ -836,48 +843,12 @@
       return "";
     }
 
-    // minimal SVG synth if API doesn't return SVG
-    function synthTreeSvgFromReport(markdownText){
-      const title = "MDG — Executive Tree";
-      const lines = String(markdownText || "")
-        .split("\n")
-        .map(s => s.trim())
-        .filter(Boolean)
-        .slice(0, 18);
-
-      const W = 980, H = 520;
-      const pad = 28;
-      const lineH = 22;
-
-      const items = lines.length ? lines : ["No tree payload returned by API.", "Update worker to return tree_svg."];
-      const textBlock = items.map((l,i) =>
-        `<text x="${pad}" y="${pad + 44 + i*lineH}" font-size="16" fill="rgba(255,255,255,.92)">${safeText(l)}</text>`
-      ).join("");
-
-      return `
-<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0" stop-color="rgba(255,255,255,.06)"/>
-      <stop offset="1" stop-color="rgba(255,255,255,.02)"/>
-    </linearGradient>
-  </defs>
-  <rect x="0" y="0" width="${W}" height="${H}" rx="18" fill="url(#bg)" stroke="rgba(255,255,255,.10)"/>
-  <text x="${pad}" y="${pad+18}" font-size="18" font-weight="800" fill="rgba(255,255,255,.95)">${safeText(title)}</text>
-  <text x="${pad}" y="${pad+40}" font-size="13" fill="rgba(255,255,255,.70)">Fallback render (API did not return tree_svg)</text>
-  ${textBlock}
-</svg>`.trim();
-    }
-
     function renderTreeSvg(svg){
       if (!svg) return;
       LAST_TREE_SVG = svg;
-
-      // inject safely: only allow <svg...> payload (already checked)
       $("#treeSvgWrap").innerHTML = svg;
       const el = $("#treeSvgWrap").querySelector("svg");
       if (el) el.classList.add("dx-treeSvg");
-
       $("#treeContainer").style.display = "";
     }
 
@@ -893,8 +864,7 @@
     }
 
     function downloadText(text, filename, mime="text/plain;charset=utf-8"){
-      const blob = new Blob([text], { type: mime });
-      downloadBlob(blob, filename);
+      downloadBlob(new Blob([text], { type: mime }), filename);
     }
 
     async function runPremiumSvg(){
@@ -909,27 +879,15 @@
       $("#statusLine").textContent = t("Status: Tree wird erstellt …", "Durum: Tree hazırlanıyor …", "Status: generating tree …");
 
       try{
-        // Preferred: ask API for tree
         const payload = buildPayload();
         payload.assessment = LAST_ASSESSMENT;
 
-        // Try: /api/tree, else fallback to /api/report and synth
-        let data = null;
-        try {
-          data = await postJson("/api/tree", payload);
-        } catch {
-          data = await postJson("/api/report", payload);
-        }
+        const data = await postJson("/api/tree", payload);
+        const svg = extractTreeSvg(data);
 
-        let svg = extractTreeSvg(data);
-        if (!svg) {
-          const reportText = data?.report_markdown || $("#execText").textContent || "";
-          svg = synthTreeSvgFromReport(reportText);
-        }
+        if (!svg) throw new Error("API returned no svg.");
 
         renderTreeSvg(svg);
-
-        // download
         downloadText(svg, "mdg-premium-tree.svg", "image/svg+xml;charset=utf-8");
 
         $("#statusLine").textContent = t("Status: SVG fertig", "Durum: SVG hazır", "Status: SVG ready");
@@ -938,9 +896,7 @@
       }
     }
 
-    // ---------- Drop 2b: Premium PDF ----------
-    // We generate a simple PDF on the client without external libs:
-    // - We'll call your worker /api/pdf if available, else create a minimal "pseudo-pdf" fallback message.
+    // ---------- Premium PDF (server bytes) ----------
     async function runPremiumPdf(){
       const lang = getLang();
       const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
@@ -949,8 +905,9 @@
         alert(t("Bitte zuerst die Diagnose starten.", "Önce değerlendirmeyi çalıştır.", "Run the assessment first."));
         return;
       }
-      if (mode === "business" && !tokenStored) {
-        alert(t("Business-Token fehlt.", "Business token eksik.", "Business token missing."));
+      if (!LAST_REPORT_MD) {
+        // PDF requires report_markdown for your worker
+        alert(t("Bitte zuerst den Executive Report erzeugen.", "Önce yönetici raporu üret.", "Generate the Executive Report first."));
         return;
       }
 
@@ -959,37 +916,28 @@
       try{
         const payload = buildPayload();
         payload.assessment = LAST_ASSESSMENT;
+        payload.report_markdown = LAST_REPORT_MD;   // <-- critical for /api/pdf
+        payload.assessment_text = LAST_ASSESSMENT?.assessment_text || ""; // optional, helps pdf header
 
-        // First choice: let API return a PDF (base64 or direct bytes)
-        const res = await fetch(`${API_BASE}/api/pdf`, {
-          method: "POST",
-          headers: { "Content-Type":"application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) {
-          // Fallback: tell user API missing
-          const txt = await res.text().catch(() => "");
-          throw new Error((txt && txt.slice(0,140)) || `PDF endpoint failed (${res.status})`);
-        }
-
-        // Try to detect if response is JSON with base64 or raw PDF bytes
+        const res = await postForBytes("/api/pdf", payload);
         const ct = (res.headers.get("content-type") || "").toLowerCase();
 
-        if (ct.includes("application/json")) {
+        if (ct.includes("application/pdf")) {
+          const buf = await res.arrayBuffer();
+          downloadBlob(new Blob([buf], { type: "application/pdf" }), "mdg-premium-report.pdf");
+        } else if (ct.includes("application/json")) {
+          // just in case you ever return base64
           const data = await res.json().catch(() => ({}));
           const b64 = data?.pdf_base64 || data?.base64 || "";
-          if (!b64) throw new Error("PDF JSON received but no pdf_base64.");
+          if (!b64) throw new Error("PDF JSON received but no base64.");
           const bin = atob(b64);
           const bytes = new Uint8Array(bin.length);
           for (let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
-          const blob = new Blob([bytes], { type: "application/pdf" });
-          downloadBlob(blob, "mdg-premium-report.pdf");
+          downloadBlob(new Blob([bytes], { type: "application/pdf" }), "mdg-premium-report.pdf");
         } else {
-          // assume raw pdf bytes
+          // fallback: treat as bytes anyway
           const buf = await res.arrayBuffer();
-          const blob = new Blob([buf], { type: "application/pdf" });
-          downloadBlob(blob, "mdg-premium-report.pdf");
+          downloadBlob(new Blob([buf], { type: "application/pdf" }), "mdg-premium-report.pdf");
         }
 
         $("#statusLine").textContent = t("Status: PDF fertig", "Durum: PDF hazır", "Status: PDF ready");
@@ -998,7 +946,6 @@
       }
     }
 
-    // ---------- Misc ----------
     function resetAll(){
       $("#oneLiner").value = "";
       $("#goalSelect").value = "stabilize";
@@ -1009,6 +956,7 @@
       $$('input[type="radio"]').forEach(r => r.checked = false);
 
       LAST_ASSESSMENT = null;
+      LAST_REPORT_MD = "";
       LAST_TREE_SVG = "";
 
       $("#resultText").textContent = "—";
@@ -1026,14 +974,12 @@
       renderHints(getLang());
     }
 
-    // Copy
     $("#copyExecBtn").addEventListener("click", async () => {
       const txt = $("#execText").textContent || "";
       if (!txt || txt === "—") return;
       try { await navigator.clipboard.writeText(txt); } catch {}
     });
 
-    // Buttons
     $("#runBtn").addEventListener("click", runAssessment);
     $("#execBtn").addEventListener("click", runExecutiveReport);
     $("#svgBtn").addEventListener("click", runPremiumSvg);
