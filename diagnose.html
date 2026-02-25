@@ -1,3 +1,4 @@
+<!-- diagnose.html — Teil 1/5 -->
 <!doctype html>
 <html lang="de">
 <head>
@@ -7,6 +8,8 @@
   <meta name="description" content="In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen." />
   <link rel="stylesheet" href="./style.css" />
   <style>
+    :root{ --dxHeaderPad:84px; }
+    main{ padding-top: var(--dxHeaderPad); }
     .dx-wrap{ max-width:1120px; margin:0 auto; padding:1.25rem 1rem 3rem; }
     .dx-top{ display:grid; grid-template-columns:1.1fr .9fr; gap:1rem; align-items:start; }
     .dx-actions{ display:flex; gap:.65rem; flex-wrap:wrap; align-items:center; }
@@ -15,7 +18,7 @@
     .dx-grid{ display:grid; grid-template-columns:1fr; gap:.75rem; margin-top:.6rem; }
     .dx-field{ display:grid; gap:.35rem; }
     .dx-label{ font-weight:800; color:var(--muted,#aab); }
-    .dx-help{ font-size:.9rem; color:var(--muted,#aab); line-height:1.35; }
+    .dx-help{ font-size:.92rem; color:var(--muted,#aab); line-height:1.35; }
     .dx-help b{ color:var(--text,#fff); }
     .dx-rangeRow{ display:grid; grid-template-columns:1fr auto; gap:.7rem; align-items:center; }
     .dx-rangeVal{ font-weight:900; min-width:2.2rem; text-align:right; }
@@ -32,7 +35,6 @@
     .dx-reportGrid{ display:grid; grid-template-columns:1fr; gap:1rem; }
     .dx-reportBox{ padding:1rem; border:1px solid rgba(255,255,255,.10); border-radius:var(--radius2,18px); background:rgba(255,255,255,.02); }
     .dx-reportBox h3{ margin:0 0 .6rem; }
-    .dx-badges{ display:flex; gap:.5rem; flex-wrap:wrap; }
     .dx-note{ font-size:.9rem; color:var(--muted,#aab); }
     .dx-treeSvg{ width:100%; height:auto; display:block; border-radius:14px; }
     .dx-treeSvg text{ font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; }
@@ -42,7 +44,18 @@
     .dx-star{ width:34px; height:34px; border-radius:10px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.03); display:grid; place-items:center; cursor:pointer; user-select:none; }
     .dx-star[aria-pressed="true"]{ border-color:rgba(110,231,183,.65); box-shadow:0 0 0 2px rgba(110,231,183,.15) inset; }
     .dx-ta{ width:100%; min-height:90px; resize:vertical; padding:.75rem .85rem; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.18); color:var(--text,#fff); }
-    @media (max-width:980px){ .dx-top{ grid-template-columns:1fr; } }
+
+    /* Header fix (no overlap) */
+    .header__inner{ gap:.75rem; }
+    .header__actions{ display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; justify-content:flex-end; }
+    .lang{ display:flex; gap:.35rem; align-items:center; }
+    .lang .chip{ padding:.35rem .55rem; line-height:1; min-width:40px; }
+    @media (max-width:980px){
+      .dx-top{ grid-template-columns:1fr; }
+      .nav{ display:none; }
+      .header__actions{ gap:.45rem; }
+      .lang .chip{ min-width:38px; }
+    }
   </style>
 </head>
 
@@ -56,8 +69,8 @@
       </a>
 
       <nav class="nav" aria-label="Main">
-        <a class="nav__link" href="./how.html" data-i18n="nav.how">How it works</a>
-        <a class="nav__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
+        <a class="nav__link" href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
+        <a class="nav__link" href="./why.html" data-i18n="nav.why">Warum MDG</a>
         <a class="nav__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
       </nav>
 
@@ -67,7 +80,7 @@
           <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
           <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
         </div>
-        <a class="btn btn--ghost" href="./index.html" data-i18n="cta.backHome">Home</a>
+        <a class="btn btn--ghost" href="./index.html" data-i18n="cta.backHome">Zur Homepage</a>
       </div>
 
       <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
@@ -77,11 +90,16 @@
 
     <div class="drawer" hidden>
       <div class="drawer__content">
-        <a class="drawer__link" href="./how.html" data-i18n="nav.how">How it works</a>
-        <a class="drawer__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
+        <a class="drawer__link" href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
+        <a class="drawer__link" href="./why.html" data-i18n="nav.why">Warum MDG</a>
         <a class="drawer__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
         <div class="drawer__sep"></div>
-        <a class="btn btn--ghost btn--full" href="./index.html" data-i18n="cta.backHome">Home</a>
+        <div class="lang" style="margin:.2rem 0 .6rem;" role="group" aria-label="Language">
+          <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
+          <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
+          <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <a class="btn btn--ghost btn--full" href="./index.html" data-i18n="cta.backHome">Zur Homepage</a>
       </div>
     </div>
   </header>
@@ -89,18 +107,18 @@
   <main id="main">
     <div class="dx-wrap">
       <div class="section__head">
-        <h1 class="h2" data-i18n="dx.title">Diagnosis</h1>
-        <p class="sub" data-i18n="dx.sub">In a few minutes to decision-confidence: detect instability early, diagnose precisely, build architecture.</p>
+        <h1 class="h2" data-i18n="dx.title">Diagnose</h1>
+        <p class="sub" data-i18n="dx.sub">In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen.</p>
       </div>
 
       <div class="dx-top">
         <div class="card">
-          <h2 class="h3" data-i18n="dx.contextTitle">1) Context</h2>
+          <h2 class="h3" data-i18n="dx.contextTitle">1) Kontext</h2>
 
           <div class="dx-grid">
             <div class="dx-field">
-              <div class="dx-label" data-i18n="dx.mode">Mode</div>
-              <div class="dx-badges">
+              <div class="dx-label" data-i18n="dx.mode">Modus</div>
+              <div class="dx-kpi">
                 <span class="pill pill--muted" id="modeBadge">—</span>
                 <span class="pill pill--muted" id="tokenBadge" style="display:none;">Token: ✓</span>
               </div>
@@ -108,25 +126,26 @@
             </div>
 
             <div class="dx-field">
-              <label class="dx-label" for="goalSelect" data-i18n="dx.goal">Goal</label>
+              <label class="dx-label" for="goalSelect" data-i18n="dx.goal">Ziel</label>
               <select class="dx-input" id="goalSelect">
-                <option value="stabilize" data-i18n="dx.goal.stabilize">Stabilize (reduce tension fast)</option>
-                <option value="rebuild" data-i18n="dx.goal.rebuild">Rebuild (change architecture)</option>
+                <option value="stabilize" data-i18n="dx.goal.stabilize">Stabilisieren (Spannung schnell senken)</option>
+                <option value="rebuild" data-i18n="dx.goal.rebuild">Umbauen (Architektur verändern)</option>
               </select>
               <div class="dx-help" id="goalHelp"></div>
             </div>
 
             <div class="dx-field">
-              <label class="dx-label" for="oneLiner" data-i18n="dx.oneliner">Describe the situation in one sentence</label>
+              <label class="dx-label" for="oneLiner" data-i18n="dx.oneliner">Beschreibe die Situation in einem Satz</label>
               <input class="dx-input" id="oneLiner" type="text" maxlength="160" placeholder="…" />
               <div class="dx-help" id="oneLinerHelp"></div>
             </div>
 
             <div class="dx-divider"></div>
 
-            <h2 class="h3" style="margin:0;" data-i18n="dx.scanTitle">2) Quick Scan (sliders)</h2>
+            <h2 class="h3" style="margin:0;" data-i18n="dx.scanTitle">2) Quick Scan (Slider)</h2>
+
             <div class="dx-field">
-              <div class="dx-qtitle" data-i18n="q.load.title">Load & bottlenecks</div>
+              <div class="dx-qtitle" data-i18n="q.load.title">Last & Engpässe</div>
               <div class="dx-help" id="exLoad"></div>
               <div class="dx-rangeRow">
                 <input id="sLoad" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
@@ -134,8 +153,9 @@
               </div>
             </div>
 
+<!-- diagnose.html — Teil 2/5 -->
             <div class="dx-field">
-              <div class="dx-qtitle" data-i18n="q.decisions.title">Decision architecture</div>
+              <div class="dx-qtitle" data-i18n="q.decisions.title">Entscheidungsarchitektur</div>
               <div class="dx-help" id="exDecisions"></div>
               <div class="dx-rangeRow">
                 <input id="sDecisions" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
@@ -144,7 +164,7 @@
             </div>
 
             <div class="dx-field">
-              <div class="dx-qtitle" data-i18n="q.energy.title">Energy & error handling</div>
+              <div class="dx-qtitle" data-i18n="q.energy.title">Energie & Fehlerkultur</div>
               <div class="dx-help" id="exEnergy"></div>
               <div class="dx-rangeRow">
                 <input id="sEnergy" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
@@ -153,7 +173,7 @@
             </div>
 
             <div class="dx-field">
-              <div class="dx-qtitle" data-i18n="q.growth.title">Growth pressure / complexity</div>
+              <div class="dx-qtitle" data-i18n="q.growth.title">Wachstumsdruck / Komplexität</div>
               <div class="dx-help" id="exGrowth"></div>
               <div class="dx-rangeRow">
                 <input id="sGrowth" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
@@ -162,7 +182,7 @@
             </div>
 
             <div class="dx-field">
-              <div class="dx-qtitle" data-i18n="q.power.title">Power–responsibility alignment</div>
+              <div class="dx-qtitle" data-i18n="q.power.title">Macht–Verantwortung (Alignment)</div>
               <div class="dx-help" id="exPower"></div>
               <div class="dx-rangeRow">
                 <input id="sPower" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
@@ -172,12 +192,12 @@
 
             <div class="dx-divider"></div>
 
-            <h2 class="h3" style="margin:0;" data-i18n="dx.moreTitle">3) Precision Questions (adaptive)</h2>
+            <h2 class="h3" style="margin:0;" data-i18n="dx.moreTitle">3) Präzisionsfragen (adaptiv)</h2>
             <div class="dx-questions" id="questions"></div>
 
             <div class="dx-actions" style="margin-top:.9rem;">
-              <button class="btn btn--primary" type="button" id="runBtn" data-i18n="dx.run">Run assessment</button>
-              <button class="btn btn--ghost" type="button" id="resetBtn" data-i18n="dx.reset">Reset</button>
+              <button class="btn btn--primary" type="button" id="runBtn" data-i18n="dx.run">Diagnose starten</button>
+              <button class="btn btn--ghost" type="button" id="resetBtn" data-i18n="dx.reset">Zurücksetzen</button>
               <span class="micro" id="statusLine">—</span>
             </div>
 
@@ -190,12 +210,12 @@
         </div>
 
         <div class="card dx-output">
-          <h2 class="h3" data-i18n="dx.outputTitle">Strategic Output</h2>
-          <p class="micro" data-i18n="dx.outputHint">You will get: primary instability, why it happens, what to do now, and what to rebuild.</p>
+          <h2 class="h3" data-i18n="dx.outputTitle">Output</h2>
+          <p class="micro" data-i18n="dx.outputHint">Du erhältst: Primärinstabilität, warum sie entsteht, Sofortmaßnahmen und Umbaupfad.</p>
 
           <div class="dx-reportGrid">
             <div class="dx-reportBox">
-              <h3 class="h3" style="margin-top:0;" data-i18n="dx.assessmentTitle">Assessment</h3>
+              <h3 class="h3" style="margin-top:0;" data-i18n="dx.assessmentTitle">Strategisches Assessment</h3>
               <pre id="resultText" class="micro" style="margin:0;">—</pre>
             </div>
 
@@ -204,8 +224,8 @@
               <p class="dx-note" id="execHint"></p>
 
               <div class="dx-actions" style="margin-top:.6rem;">
-                <button class="btn btn--primary" type="button" id="execBtn" data-i18n="dx.execBtn">Generate Executive Report</button>
-                <button class="btn btn--ghost" type="button" id="copyExecBtn" disabled data-i18n="dx.copy">Copy</button>
+                <button class="btn btn--primary" type="button" id="execBtn" data-i18n="dx.execBtn">Executive Report erzeugen</button>
+                <button class="btn btn--ghost" type="button" id="copyExecBtn" disabled data-i18n="dx.copy">Kopieren</button>
                 <button class="btn btn--ghost" type="button" id="svgBtn">SVG</button>
                 <button class="btn btn--ghost" type="button" id="pdfBtn">PDF</button>
               </div>
@@ -239,7 +259,7 @@
                 </div>
 
                 <div class="dx-actions" style="margin-top:.6rem;">
-                  <button class="btn btn--primary" type="button" id="fbSendBtn" disabled data-i18n="fb.send">Send</button>
+                  <button class="btn btn--primary" type="button" id="fbSendBtn" disabled data-i18n="fb.send">Senden</button>
                   <span class="micro" id="fbStatus">—</span>
                 </div>
               </div>
@@ -247,7 +267,7 @@
             </div>
           </div>
 
-          <p class="micro" style="margin-top:1rem; opacity:.85;" data-i18n="dx.privacy">Privacy: inputs are processed via API only to generate the assessment/report.</p>
+          <p class="micro" style="margin-top:1rem; opacity:.85;" data-i18n="dx.privacy">Datenschutz: Inputs werden via API nur zur Generierung von Assessment/Report verarbeitet.</p>
         </div>
       </div>
     </div>
@@ -259,7 +279,7 @@
         <div class="brand brand--footer">
           <span class="brand__mark" aria-hidden="true">MDG</span>
         </div>
-        <p class="micro" data-i18n="footer.tag">Structure diagnosis for stabilization and rebuild.</p>
+        <p class="micro" data-i18n="footer.tag">Strukturdiagnose für Stabilisierung und Umbau.</p>
       </div>
       <div class="footer__legal">
         <a href="./impressum.html" rel="nofollow">Impressum</a>
@@ -269,11 +289,15 @@
     </div>
   </footer>
 
+<!-- diagnose.html — Teil 3/5 -->
   <script>
   (() => {
     const API_BASE = "https://api.mdg-indikation.de";
     const $ = (s, r=document) => r.querySelector(s);
     const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+    const ls = window.localStorage;
+    const ss = window.sessionStorage;
+
     const burger = $(".burger");
     const drawer = $(".drawer");
     if (burger && drawer) {
@@ -284,26 +308,19 @@
       });
     }
 
-    const ss = window.sessionStorage;
-    const ls = window.localStorage;
+    // dynamic header padding (prevents headline overlap)
+    const header = document.querySelector("header.header");
+    const setHeaderPad = () => {
+      const h = header ? Math.ceil(header.getBoundingClientRect().height) : 84;
+      document.documentElement.style.setProperty("--dxHeaderPad", Math.max(72, h + 12) + "px");
+    };
+    setHeaderPad();
+    window.addEventListener("resize", setHeaderPad);
 
-    function uuid(){
-      const a = crypto.getRandomValues(new Uint8Array(16));
-      a[6] = (a[6] & 0x0f) | 0x40;
-      a[8] = (a[8] & 0x3f) | 0x80;
-      const h = [...a].map(b => b.toString(16).padStart(2,"0")).join("");
-      return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`;
-    }
-
-    function getClientId(){
-      let id = ls.getItem("mdg_client_id");
-      if (!id || id.length < 16) { id = uuid(); ls.setItem("mdg_client_id", id); }
-      return id;
-    }
-
+    // MODE & TOKEN STATE
     const params = new URLSearchParams(location.search);
     const modeParam = (params.get("mode") || "").toLowerCase();
-    const storedMode = ((ss.getItem("mdg_mode") || ls.getItem("mdg_mode") || "")).toLowerCase();
+    const storedMode = (ss.getItem("mdg_mode") || ls.getItem("mdg_mode") || "").toLowerCase();
     const businessOk = (ss.getItem("mdg_business_ok") === "1") || (ls.getItem("mdg_business_ok") === "1");
     const tokenStored = (ss.getItem("mdg_business_token") || ls.getItem("mdg_business_token") || ls.getItem("mdg_token") || "").trim();
     const wantsBusiness = (modeParam === "business") || (storedMode === "business");
@@ -312,6 +329,7 @@
     $("#modeBadge").textContent = (mode === "business") ? "Business" : "Private";
     if (mode === "business") $("#tokenBadge").style.display = "";
 
+    // i18n dictionary
     const dict = {
       de: {
         "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ","cta.backHome":"Zur Homepage",
@@ -328,19 +346,19 @@
       tr: {
         "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS","cta.backHome":"Anasayfa",
         "dx.title":"Analiz","dx.sub":"Birkaç dakika içinde karar güveni: istikrarsızlığı erken gör, nedeni doğru teşhis et, mimari kur.",
-        "dx.contextTitle":"1) Bağlam","dx.mode":"Mod","dx.goal":"Hedef","dx.goal.stabilize":"Stabilize et","dx.goal.rebuild":"Yeniden kur",
+        "dx.contextTitle":"1) Bağlam","dx.mode":"Mod","dx.goal":"Hedef","dx.goal.stabilize":"Stabilize et (gerilimi hızlı düşür)","dx.goal.rebuild":"Yeniden kur (mimariyi değiştir)",
         "dx.oneliner":"Durumu tek cümleyle anlat","dx.scanTitle":"2) Hızlı tarama (Slider)","dx.moreTitle":"3) Kesinleştirme soruları",
         "dx.run":"Başlat","dx.reset":"Sıfırla",
         "dx.outputTitle":"Çıktı","dx.outputHint":"Alacağın: ana instabilite, nedenleri, hemen yapılacaklar ve dönüşüm yolu.",
         "dx.assessmentTitle":"Stratejik değerlendirme","dx.execTitle":"Yönetici Raporu","dx.execBtn":"Rapor üret","dx.copy":"Kopyala","dx.treeTitle":"Ağaç",
-        "dx.privacy":"Gizlilik: Veriler yalnızca rapor üretimi için API üzerinden işlenir.","footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
+        "dx.privacy":"Gizlilik: veriler yalnızca rapor üretimi için API üzerinden işlenir.","footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
         "q.load.title":"Yük & darboğazlar","q.decisions.title":"Karar mimarisi","q.energy.title":"Enerji & hata kültürü","q.growth.title":"Büyüme baskısı / karmaşıklık","q.power.title":"Güç–sorumluluk uyumu",
         "fb.title":"Geri bildirim","fb.send":"Gönder"
       },
       en: {
         "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
         "dx.title":"Diagnosis","dx.sub":"In a few minutes to decision-confidence: detect instability early, diagnose precisely, build architecture.",
-        "dx.contextTitle":"1) Context","dx.mode":"Mode","dx.goal":"Goal","dx.goal.stabilize":"Stabilize","dx.goal.rebuild":"Rebuild",
+        "dx.contextTitle":"1) Context","dx.mode":"Mode","dx.goal":"Goal","dx.goal.stabilize":"Stabilize (reduce tension fast)","dx.goal.rebuild":"Rebuild (change architecture)",
         "dx.oneliner":"Describe the situation in one sentence","dx.scanTitle":"2) Quick Scan (sliders)","dx.moreTitle":"3) Precision Questions (adaptive)",
         "dx.run":"Run assessment","dx.reset":"Reset",
         "dx.outputTitle":"Output","dx.outputHint":"You will get: primary instability, why it happens, what to do now, and what to rebuild.",
@@ -351,31 +369,29 @@
       }
     };
 
-    function getLang(){
+    const t = (lang, de, tr, en) => (lang==="de"?de:(lang==="tr"?tr:en));
+    const getLang = () => {
       const pressed = $$("[data-lang]").find(b => b.getAttribute("aria-pressed") === "true");
-      return pressed?.dataset.lang || "de";
-    }
+      return pressed?.dataset.lang || (ls.getItem("mdg_lang") || "de");
+    };
 
     function applyLang(lang){
-      if(!dict[lang]) lang = "en";
+      if(!dict[lang]) lang = "de";
       document.documentElement.lang = lang;
+      ls.setItem("mdg_lang", lang);
       $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
       $$("[data-i18n]").forEach(el => {
         const k = el.dataset.i18n;
         const v = dict[lang][k];
         if (v) el.textContent = v;
       });
-      renderExamples(lang);
+      renderStaticCopy(lang);
       renderAdaptiveQuestions(lang);
-      renderHints(lang);
-      renderFeedbackCopy(lang);
     }
 
     $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => applyLang(btn.dataset.lang)));
 
-    function t(lang, de, tr, en){ return (lang==="de"?de:(lang==="tr"?tr:en)); }
-
-    function renderExamples(lang){
+    function renderStaticCopy(lang){
       const business = (mode === "business");
 
       if (wantsBusiness && !businessOk) {
@@ -418,62 +434,62 @@
 
       $("#exLoad").innerHTML = business
         ? t(lang,
-          "0 = verteilt. 6 = 1–2 Rollen sind Dauer-Engpass.<div class='dx-example'><div class='ex'>„Ops ist 120% ausgelastet.“</div></div>",
-          "0 = dağıtılmış. 6 = 1–2 rol sürekli darboğaz.<div class='dx-example'><div class='ex'>“Operasyon %120 dolu.”</div></div>",
-          "0 = distributed. 6 = 1–2 roles are permanent bottlenecks.<div class='dx-example'><div class='ex'>“Ops at 120%.”</div></div>"
+          "0 = verteilt. 6 = 1–2 Rollen sind Dauer-Engpass.<div class='dx-example'><div class='ex'>„Ops ist 120% ausgelastet.“</div><div class='ex'>„Sales hängt an mir, ohne mich kein Abschluss.“</div></div>",
+          "0 = dağıtılmış. 6 = 1–2 rol sürekli darboğaz.<div class='dx-example'><div class='ex'>“Operasyon %120 dolu.”</div><div class='ex'>“Satış bende, ben yokken kapanış yok.”</div></div>",
+          "0 = distributed. 6 = 1–2 roles are permanent bottlenecks.<div class='dx-example'><div class='ex'>“Ops at 120%.”</div><div class='ex'>“Sales depends on me.”</div></div>"
         )
         : t(lang,
-          "0 = tragbar. 6 = alles hängt an dir.<div class='dx-example'><div class='ex'>„Ohne mich bricht alles.“</div></div>",
-          "0 = dengeli. 6 = her şey sana bağlı.<div class='dx-example'><div class='ex'>“Ben yokken her şey çöker.”</div></div>",
-          "0 = manageable. 6 = everything depends on you.<div class='dx-example'><div class='ex'>“Without me it breaks.”</div></div>"
+          "0 = tragbar. 6 = alles hängt an dir.<div class='dx-example'><div class='ex'>„Ohne mich bricht alles.“</div><div class='ex'>„Ich halte alle Fäden.“</div></div>",
+          "0 = dengeli. 6 = her şey sana bağlı.<div class='dx-example'><div class='ex'>“Ben yokken her şey çöker.”</div><div class='ex'>“Her şeyi ben tutuyorum.”</div></div>",
+          "0 = manageable. 6 = everything depends on you.<div class='dx-example'><div class='ex'>“Without me it breaks.”</div><div class='ex'>“I hold all threads.”</div></div>"
         );
 
       $("#exDecisions").innerHTML = business
         ? t(lang,
-          "0 = klar & schnell. 6 = unklar, langsam, politisch.<div class='dx-example'><div class='ex'>„Keiner weiß wer entscheidet.“</div></div>",
-          "0 = net & hızlı. 6 = belirsiz, yavaş, politik.<div class='dx-example'><div class='ex'>“Kim karar verir belli değil.”</div></div>",
-          "0 = clear & fast. 6 = unclear, slow, political.<div class='dx-example'><div class='ex'>“No one knows who decides.”</div></div>"
+          "0 = klar & schnell. 6 = unklar, langsam, politisch.<div class='dx-example'><div class='ex'>„Keiner weiß wer entscheidet.“</div><div class='ex'>„3 Wochen diskutieren, dann passiert nichts.“</div></div>",
+          "0 = net & hızlı. 6 = belirsiz, yavaş, politik.<div class='dx-example'><div class='ex'>“Kim karar verir belli değil.”</div><div class='ex'>“3 hafta konuşuluyor, sonuç yok.”</div></div>",
+          "0 = clear & fast. 6 = unclear, slow, political.<div class='dx-example'><div class='ex'>“No one knows who decides.”</div><div class='ex'>“Weeks of debate, no action.”</div></div>"
         )
         : t(lang,
-          "0 = klar umsetzen. 6 = Chaos/Endlosschleife.<div class='dx-example'><div class='ex'>„Wir drehen uns im Kreis.“</div></div>",
-          "0 = net uygulama. 6 = kaos/kısır döngü.<div class='dx-example'><div class='ex'>“Kısır döngü.”</div></div>",
-          "0 = execute clearly. 6 = chaos/loop.<div class='dx-example'><div class='ex'>“We go in circles.”</div></div>"
+          "0 = klar umsetzen. 6 = Chaos/Endlosschleife.<div class='dx-example'><div class='ex'>„Wir drehen uns im Kreis.“</div><div class='ex'>„Niemand übernimmt.“</div></div>",
+          "0 = net uygulama. 6 = kaos/kısır döngü.<div class='dx-example'><div class='ex'>“Kısır döngü.”</div><div class='ex'>“Kimse sahiplenmiyor.”</div></div>",
+          "0 = execute clearly. 6 = chaos/loop.<div class='dx-example'><div class='ex'>“We go in circles.”</div><div class='ex'>“No one owns it.”</div></div>"
         );
 
       $("#exEnergy").innerHTML = business
         ? t(lang,
-          "0 = Rhythmus ok. 6 = Überlastung, Fehler eskalieren.<div class='dx-example'><div class='ex'>„Keine Regeneration.“</div></div>",
-          "0 = ritim iyi. 6 = aşırı yük, hatalar büyür.<div class='dx-example'><div class='ex'>“Toparlanma yok.”</div></div>",
-          "0 = rhythm ok. 6 = overload, errors escalate.<div class='dx-example'><div class='ex'>“No recovery.”</div></div>"
+          "0 = Rhythmus ok. 6 = Überlastung, Fehler eskalieren.<div class='dx-example'><div class='ex'>„Keine Regeneration.“</div><div class='ex'>„Fehler werden versteckt.“</div></div>",
+          "0 = ritim iyi. 6 = aşırı yük, hatalar büyür.<div class='dx-example'><div class='ex'>“Toparlanma yok.”</div><div class='ex'>“Hatalar saklanıyor.”</div></div>",
+          "0 = rhythm ok. 6 = overload, errors escalate.<div class='dx-example'><div class='ex'>“No recovery.”</div><div class='ex'>“Errors are hidden.”</div></div>"
         )
         : t(lang,
-          "0 = Energie ok. 6 = Limit, Fehler häufen sich.<div class='dx-example'><div class='ex'>„Ich wiederhole Fehler.“</div></div>",
-          "0 = enerji var. 6 = limit, hata artıyor.<div class='dx-example'><div class='ex'>“Aynı hata.”</div></div>",
-          "0 = energy ok. 6 = at the limit, errors pile up.<div class='dx-example'><div class='ex'>“Repeating mistakes.”</div></div>"
+          "0 = Energie ok. 6 = Limit, Fehler häufen sich.<div class='dx-example'><div class='ex'>„Ich wiederhole Fehler.“</div><div class='ex'>„Dauerfeuer, keine Pause.“</div></div>",
+          "0 = enerji var. 6 = limit, hata artıyor.<div class='dx-example'><div class='ex'>“Aynı hata.”</div><div class='ex'>“Sürekli baskı, mola yok.”</div></div>",
+          "0 = energy ok. 6 = at the limit, errors pile up.<div class='dx-example'><div class='ex'>“Repeating mistakes.”</div><div class='ex'>“No breaks.”</div></div>"
         );
 
       $("#exGrowth").innerHTML = business
         ? t(lang,
-          "0 = kontrolliert. 6 = Komplexität > Struktur.<div class='dx-example'><div class='ex'>„Koordination frisst Output.“</div></div>",
-          "0 = kontrollü. 6 = karmaşıklık > yapı.<div class='dx-example'><div class='ex'>“Koordinasyon çıktıyı yiyor.”</div></div>",
-          "0 = controlled. 6 = complexity > structure.<div class='dx-example'><div class='ex'>“Coordination eats output.”</div></div>"
+          "0 = kontrolliert. 6 = Komplexität > Struktur.<div class='dx-example'><div class='ex'>„Koordination frisst Output.“</div><div class='ex'>„Zu viele Produkte parallel.“</div></div>",
+          "0 = kontrollü. 6 = karmaşıklık > yapı.<div class='dx-example'><div class='ex'>“Koordinasyon çıktıyı yiyor.”</div><div class='ex'>“Çok ürün paralel.”</div></div>",
+          "0 = controlled. 6 = complexity > structure.<div class='dx-example'><div class='ex'>“Coordination eats output.”</div><div class='ex'>“Too many products.”</div></div>"
         )
         : t(lang,
-          "0 = übersichtlich. 6 = zu viele Themen.<div class='dx-example'><div class='ex'>„Alles ist gleichzeitig wichtig.“</div></div>",
-          "0 = net. 6 = çok konu.<div class='dx-example'><div class='ex'>“Her şey acil.”</div></div>",
-          "0 = clear. 6 = too many topics.<div class='dx-example'><div class='ex'>“Everything is urgent.”</div></div>"
+          "0 = übersichtlich. 6 = zu viele Themen.<div class='dx-example'><div class='ex'>„Alles ist gleichzeitig wichtig.“</div><div class='ex'>„Ich springe ständig.“</div></div>",
+          "0 = net. 6 = çok konu.<div class='dx-example'><div class='ex'>“Her şey acil.”</div><div class='ex'>“Sürekli konu değişiyor.”</div></div>",
+          "0 = clear. 6 = too many topics.<div class='dx-example'><div class='ex'>“Everything is urgent.”</div><div class='ex'>“I keep switching.”</div></div>"
         );
 
       $("#exPower").innerHTML = business
         ? t(lang,
-          "0 = aligned. 6 = Misalignment.<div class='dx-example'><div class='ex'>„KPI ohne Entscheidung.“</div></div>",
-          "0 = uyumlu. 6 = kopuk.<div class='dx-example'><div class='ex'>“KPI var, yetki yok.”</div></div>",
-          "0 = aligned. 6 = misalignment.<div class='dx-example'><div class='ex'>“KPI without authority.”</div></div>"
+          "0 = aligned. 6 = Misalignment.<div class='dx-example'><div class='ex'>„KPI ohne Entscheidung.“</div><div class='ex'>„Verantwortung ohne Mandat.“</div></div>",
+          "0 = uyumlu. 6 = kopuk.<div class='dx-example'><div class='ex'>“KPI var, yetki yok.”</div><div class='ex'>“Sorumluluk var, mandat yok.”</div></div>",
+          "0 = aligned. 6 = misalignment.<div class='dx-example'><div class='ex'>“KPI without authority.”</div><div class='ex'>“Responsibility without mandate.”</div></div>"
         )
         : t(lang,
-          "0 = Einfluss = Konsequenz. 6 = du trägst ohne Einfluss.<div class='dx-example'><div class='ex'>„Ich muss liefern, andere blockieren.“</div></div>",
-          "0 = etki = sonuç. 6 = etki yokken sonuç.<div class='dx-example'><div class='ex'>“Teslim bende, engel başkası.”</div></div>",
-          "0 = influence = consequence. 6 = you bear without influence.<div class='dx-example'><div class='ex'>“I must deliver, others block.”</div></div>"
+          "0 = Einfluss = Konsequenz. 6 = du trägst ohne Einfluss.<div class='dx-example'><div class='ex'>„Ich muss liefern, andere blockieren.“</div><div class='ex'>„Ich trage Folgen ohne Stimme.“</div></div>",
+          "0 = etki = sonuç. 6 = etki yokken sonuç.<div class='dx-example'><div class='ex'>“Teslim bende, engel başkası.”</div><div class='ex'>“Söz yok, sonuç var.”</div></div>",
+          "0 = influence = consequence. 6 = you bear without influence.<div class='dx-example'><div class='ex'>“I must deliver, others block.”</div><div class='dx-example'><div class='ex'>“Consequences without voice.”</div></div>"
         );
 
       $("#execHint").textContent = business
@@ -487,54 +503,154 @@
           "Özel: neden mantığı, net öncelikler, somut adımlar.",
           "Private: causal logic, clear priorities, concrete moves."
         );
+
+      $("#fbHint").textContent = t(lang,
+        "1–2 Klicks genügen. Was war gut, was fehlt?",
+        "1–2 tık yeter. Ne iyiydi, ne eksik?",
+        "1–2 clicks are enough. What was good, what is missing?"
+      );
     }
 
-    function escapeHtml(s){
-      return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+<!-- diagnose.html — Teil 4/5 -->
+    function buildAdaptiveQuestionSet(lang){
+      const business = (mode === "business");
+      return business ? [
+        {
+          id:"delay",
+          title: t(lang,"Wo entsteht aktuell die größte Verzögerung?","En büyük gecikme nerede?","Where is the biggest delay?"),
+          options: [
+            { k:"decisions",  label:t(lang,"Entscheidungen (Freigaben/Eskalation)","Kararlar (onay/eskalasyon)","Decisions (approvals/escalation)") },
+            { k:"handoff",    label:t(lang,"Übergaben (Team → Team)","Devir (ekip → ekip)","Handoffs (team → team)") },
+            { k:"quality",    label:t(lang,"Qualität (Rework/Bugs)","Kalite (yeniden iş/hata)","Quality (rework/bugs)") },
+            { k:"capacity",   label:t(lang,"Kapazität (Leute/Skills)","Kapasite (insan/skill)","Capacity (people/skills)") }
+          ],
+          examples: [
+            t(lang,"„Freigaben brauchen immer den CEO.“","“Onay hep CEO’da.”","“Approvals always need the CEO.”"),
+            t(lang,"„Team A wartet ständig auf Team B.“","“Ekip A hep Ekip B’yi bekliyor.”","“Team A constantly waits for Team B.”")
+          ]
+        },
+        {
+          id:"owner",
+          title: t(lang,"Wie klar sind Rollen & Zuständigkeiten?","Rolller ve sorumluluklar ne kadar net?","How clear are roles & accountability?"),
+          options: [
+            { k:"clear",   label:t(lang,"Sehr klar (Owner, KPI, Entscheidung)","Çok net (owner, KPI, karar)","Very clear (owner, KPI, decision)") },
+            { k:"partial", label:t(lang,"Teilweise klar (Grauzonen)","Kısmen net (gri alanlar)","Partly clear (gray zones)") },
+            { k:"unclear", label:t(lang,"Unklar (Konflikte/Eskalation)","Belirsiz (çatışma/eskalasyon)","Unclear (conflict/escalation)") }
+          ],
+          examples: [
+            t(lang,"„Owner trägt KPI, Entscheidung liegt woanders.“","“KPI sende, karar başka yerde.”","“Owner has KPI, decision sits elsewhere.”"),
+            t(lang,"„Zwei Teams denken beide, sie sind verantwortlich.“","“İki ekip de sorumlu sanıyor.”","“Two teams both think they own it.”")
+          ]
+        }
+      ] : [
+        {
+          id:"drag",
+          title: t(lang,"Was zieht dich aktuell am stärksten runter?","Seni en çok aşağı çeken nedir?","What drags you down the most?"),
+          options: [
+            { k:"overload", label:t(lang,"Überlastung / zu viel gleichzeitig","Aşırı yük / aynı anda çok şey","Overload / too much at once") },
+            { k:"conflict", label:t(lang,"Konflikte / Spannungen mit Personen","Çatışma / kişilerle gerilim","Conflict / tension with people") },
+            { k:"avoid",    label:t(lang,"Vermeidung / Prokrastination","Kaçınma / erteleme","Avoidance / procrastination") },
+            { k:"chaos",    label:t(lang,"Chaos / keine Struktur im Alltag","Kaos / günlük yapısızlık","Chaos / no daily structure") }
+          ],
+          examples: [
+            t(lang,"„Ich verschiebe das Wesentliche.“","“Asıl şeyi erteliyorum.”","“I keep postponing the important thing.”"),
+            t(lang,"„Ich reagiere nur noch.“","“Sadece tepki veriyorum.”","“I only react.”")
+          ]
+        },
+        {
+          id:"support",
+          title: t(lang,"Wer hat Einfluss – und wer trägt die Last?","Kim etkili – kim yükü taşıyor?","Who has influence vs who carries the load?"),
+          options: [
+            { k:"aligned",  label:t(lang,"Passt zusammen","Uyumlu","Aligned") },
+            { k:"mixed",    label:t(lang,"Teilweise verdreht","Kısmen ters","Partly misaligned") },
+            { k:"broken",   label:t(lang,"Stark verdreht","Çok ters","Strongly misaligned") }
+          ],
+          examples: [
+            t(lang,"„Ich trage Folgen, andere entscheiden.“","“Sonuç bende, karar başkasında.”","“I bear consequences, others decide.”"),
+            t(lang,"„Ich muss liefern, ohne Mandat.“","“Yetkim yok ama teslim bende.”","“I must deliver without mandate.”")
+          ]
+        }
+      ];
     }
-    
-    const API_BASE = "https://api.mdg-indikation.de";
-    const $ = (s, r=document) => r.querySelector(s);
-    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
-    const ls = window.localStorage;
-    const ss = window.sessionStorage;
+    function renderAdaptiveQuestions(lang){
+      const host = $("#questions");
+      host.innerHTML = "";
+      const qs = buildAdaptiveQuestionSet(lang);
+      qs.forEach(q => {
+        const wrap = document.createElement("div");
+        wrap.className = "dx-q";
+        wrap.innerHTML = `
+          <div class="dx-qtitle">${q.title}</div>
+          <div class="dx-actions" role="group" aria-label="${q.id}">
+            ${q.options.map((o,i)=>`
+              <label class="pill pill--muted" style="cursor:pointer;">
+                <input type="radio" name="q_${q.id}" value="${o.k}" ${i===0?"checked":""} style="margin-right:.35rem;">
+                ${o.label}
+              </label>
+            `).join("")}
+          </div>
+          <div class="dx-example">
+            <div class="ex">${q.examples[0]}</div>
+            <div class="ex">${q.examples[1]}</div>
+          </div>
+        `;
+        host.appendChild(wrap);
+      });
+    }
 
-    /* ===========================
-       MODE & TOKEN STATE
-    ============================ */
-
-    const params = new URLSearchParams(location.search);
-    const modeParam = (params.get("mode") || "").toLowerCase();
-    const storedMode = ((ss.getItem("mdg_mode") || ls.getItem("mdg_mode") || "")).toLowerCase();
-    const businessOk = (ss.getItem("mdg_business_ok") === "1") || (ls.getItem("mdg_business_ok") === "1");
-    const tokenStored = (ss.getItem("mdg_business_token") || ls.getItem("mdg_business_token") || "").trim();
-
-    const wantsBusiness = (modeParam === "business") || (storedMode === "business");
-    const mode = (wantsBusiness && businessOk) ? "business" : "private";
-
-    $("#modeBadge").textContent = (mode === "business") ? "Business" : "Private";
-    if (mode === "business") $("#tokenBadge").style.display = "";
-
-    /* ===========================
-       SLIDER LIVE VALUES
-    ============================ */
-
-    const sliders = ["Load","Decisions","Energy","Growth","Power"];
-    sliders.forEach(key => {
-      const s = $("#s" + key);
-      const v = $("#v" + key);
+    // sliders live values
+    ["Load","Decisions","Energy","Growth","Power"].forEach(key => {
+      const s = $("#s" + key), v = $("#v" + key);
       if (!s || !v) return;
       v.textContent = s.value;
       s.addEventListener("input", () => v.textContent = s.value);
     });
 
-    /* ===========================
-       RUN ASSESSMENT
-    ============================ */
+    function collectAdaptiveAnswers(){
+      const out = {};
+      $$("#questions .dx-q").forEach(qEl => {
+        const name = qEl.querySelector("input[type=radio]")?.name;
+        if (!name) return;
+        const checked = qEl.querySelector(`input[name="${name}"]:checked`);
+        out[name] = checked ? checked.value : "";
+      });
+      return out;
+    }
 
+    function setStatus(s){ $("#statusLine").textContent = s; }
+
+    function resetAll(){
+      $("#oneLiner").value = "";
+      ["Load","Decisions","Energy","Growth","Power"].forEach(k => {
+        const s = $("#s"+k), v = $("#v"+k);
+        if (s && v){ s.value = 2; v.textContent = "2"; }
+      });
+      $("#resultText").textContent = "—";
+      $("#execText").textContent = "—";
+      $("#kpiPrimary").textContent = "—";
+      $("#kpiPath").textContent = "—";
+      $("#kpiRisk").textContent = "—";
+      $("#reportContainer").style.display = "none";
+      $("#treeContainer").style.display = "none";
+      $("#feedbackBox").style.display = "none";
+      $("#copyExecBtn").disabled = true;
+      $("#fbVal").textContent = "—";
+      $("#fbText").value = "";
+      $("#fbStatus").textContent = "—";
+      $("#fbSendBtn").disabled = true;
+      $$("#fbStars .dx-star").forEach(b => b.setAttribute("aria-pressed","false"));
+      window.__lastAssessment = null;
+      window.__lastReport = "";
+      setStatus("—");
+      renderAdaptiveQuestions(getLang());
+    }
+
+    $("#resetBtn").addEventListener("click", resetAll);
+
+    // RUN ASSESSMENT
     $("#runBtn").addEventListener("click", async () => {
-      $("#statusLine").textContent = "…";
+      setStatus("…");
       $("#resultText").textContent = "…";
       $("#kpiPrimary").textContent = "—";
       $("#kpiPath").textContent = "—";
@@ -542,20 +658,23 @@
       $("#treeContainer").style.display = "none";
       $("#reportContainer").style.display = "none";
       $("#feedbackBox").style.display = "none";
+      $("#copyExecBtn").disabled = true;
 
+      const lang = document.documentElement.lang || "de";
       const payload = {
         mode,
         token: tokenStored || undefined,
         problem: $("#oneLiner").value.trim(),
         intent: $("#goalSelect").value,
-        lang: document.documentElement.lang || "de",
+        lang,
         quick_scan: {
           load: Number($("#sLoad").value),
           decisions: Number($("#sDecisions").value),
           energy: Number($("#sEnergy").value),
           growth: Number($("#sGrowth").value),
           power: Number($("#sPower").value)
-        }
+        },
+        answers: collectAdaptiveAnswers()
       };
 
       try {
@@ -564,29 +683,27 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-
-        if (!res.ok) throw new Error("Assessment failed");
-
+        if (!res.ok) {
+          const txt = await res.text().catch(()=> "");
+          throw new Error(txt || "Assessment failed");
+        }
         const data = await res.json();
-
         $("#resultText").textContent = data.assessment_text || "—";
         $("#kpiPrimary").textContent = data.primary || "—";
         $("#kpiPath").textContent = data.path || "—";
         $("#kpiRisk").textContent = data.risk || "—";
-
         window.__lastAssessment = data;
-        $("#statusLine").textContent = "✓";
-
+        setStatus("✓");
       } catch (err) {
-        $("#statusLine").textContent = "Error";
-        $("#resultText").textContent = "Server error.";
+        setStatus("Error");
+        $("#resultText").textContent = (document.documentElement.lang === "de")
+          ? "Serverfehler."
+          : (document.documentElement.lang === "tr" ? "Sunucu hatası." : "Server error.");
       }
     });
 
-    /* ===========================
-       EXECUTIVE REPORT
-    ============================ */
-
+<!-- diagnose.html — Teil 5/5 -->
+    // EXECUTIVE REPORT
     $("#execBtn").addEventListener("click", async () => {
       if (!window.__lastAssessment) return;
 
@@ -594,138 +711,154 @@
       $("#reportContainer").style.display = "block";
       $("#treeContainer").style.display = "none";
       $("#feedbackBox").style.display = "none";
+      $("#fbStatus").textContent = "—";
 
       try {
+        const lang = document.documentElement.lang || "de";
         const res = await fetch(API_BASE + "/api/report", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             mode,
             token: tokenStored || undefined,
-            lang: document.documentElement.lang || "de",
+            lang,
             problem: $("#oneLiner").value.trim(),
             intent: $("#goalSelect").value,
-            answers: window.__lastAssessment
+            quick_scan: {
+              load: Number($("#sLoad").value),
+              decisions: Number($("#sDecisions").value),
+              energy: Number($("#sEnergy").value),
+              growth: Number($("#sGrowth").value),
+              power: Number($("#sPower").value)
+            },
+            answers: collectAdaptiveAnswers(),
+            assessment: window.__lastAssessment.assessment_text || ""
           })
         });
-
-        if (!res.ok) throw new Error("Report failed");
-
+        if (!res.ok) {
+          const txt = await res.text().catch(()=> "");
+          throw new Error(txt || "Report failed");
+        }
         const data = await res.json();
-        $("#execText").textContent = data.report_markdown || "";
-        $("#copyExecBtn").disabled = false;
-
-        window.__lastReport = data.report_markdown || "";
-
+        const md = data.report_markdown || "";
+        $("#execText").textContent = md || "—";
+        $("#copyExecBtn").disabled = !md;
+        window.__lastReport = md;
         $("#feedbackBox").style.display = "block";
-
       } catch (err) {
-        $("#execText").textContent = "Server error.";
+        $("#execText").textContent = (document.documentElement.lang === "de")
+          ? "Serverfehler."
+          : (document.documentElement.lang === "tr" ? "Sunucu hatası." : "Server error.");
       }
     });
 
-    /* ===========================
-       COPY
-    ============================ */
-
     $("#copyExecBtn").addEventListener("click", async () => {
       if (!window.__lastReport) return;
-      await navigator.clipboard.writeText(window.__lastReport);
+      try { await navigator.clipboard.writeText(window.__lastReport); } catch {}
     });
 
-    /* ===========================
-       SVG TREE
-    ============================ */
-
+    // SVG TREE
     $("#svgBtn").addEventListener("click", async () => {
       if (!window.__lastAssessment) return;
-
-      const res = await fetch(API_BASE + "/api/tree", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode,
-          token: tokenStored || undefined,
-          lang: document.documentElement.lang || "de",
-          assessment: window.__lastAssessment
-        })
-      });
-
-      if (!res.ok) return;
-
-      const data = await res.json();
-      $("#treeSvgWrap").innerHTML = data.tree_svg || "";
-      $("#treeContainer").style.display = "block";
+      try {
+        const lang = document.documentElement.lang || "de";
+        const res = await fetch(API_BASE + "/api/tree", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode,
+            token: tokenStored || undefined,
+            lang,
+            assessment: window.__lastAssessment
+          })
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        $("#treeSvgWrap").innerHTML = data.tree_svg || "";
+        $("#treeContainer").style.display = "block";
+      } catch {}
     });
 
-    /* ===========================
-       PDF
-    ============================ */
-
+    // PDF
     $("#pdfBtn").addEventListener("click", async () => {
       if (!window.__lastReport) return;
-
-      const res = await fetch(API_BASE + "/api/pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode,
-          token: tokenStored || undefined,
-          report_markdown: window.__lastReport
-        })
-      });
-
-      if (!res.ok) return;
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "mdg-report.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
+      try {
+        const res = await fetch(API_BASE + "/api/pdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode,
+            token: tokenStored || undefined,
+            report_markdown: window.__lastReport,
+            lang: document.documentElement.lang || "de"
+          })
+        });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "mdg-report.pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      } catch {}
     });
 
-    /* ===========================
-       FEEDBACK
-    ============================ */
-
+    // FEEDBACK
     let rating = 0;
-
     $$("#fbStars .dx-star").forEach(btn => {
       btn.addEventListener("click", () => {
         rating = Number(btn.dataset.v);
         $$("#fbStars .dx-star").forEach(b =>
-          b.setAttribute("aria-pressed", b.dataset.v == rating ? "true" : "false")
+          b.setAttribute("aria-pressed", String(b.dataset.v == rating))
         );
         $("#fbVal").textContent = rating + "/5";
-        $("#fbSendBtn").disabled = false;
+        $("#fbSendBtn").disabled = rating <= 0;
       });
     });
 
     $("#fbSendBtn").addEventListener("click", async () => {
       const text = $("#fbText").value.trim();
-
-      const res = await fetch(API_BASE + "/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rating,
-          text,
-          page: "diagnose",
-          mode,
-          lang: document.documentElement.lang || "de"
-        })
-      });
-
-      if (res.ok) {
-        $("#fbStatus").textContent = "✓";
-        $("#fbSendBtn").disabled = true;
-      } else {
+      $("#fbStatus").textContent = "…";
+      try {
+        const res = await fetch(API_BASE + "/api/feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rating,
+            text,
+            page: "diagnose",
+            mode,
+            lang: document.documentElement.lang || "de",
+            client_id: (ls.getItem("mdg_client_id") || "")
+          })
+        });
+        if (res.ok) {
+          $("#fbStatus").textContent = "✓";
+          $("#fbSendBtn").disabled = true;
+        } else {
+          $("#fbStatus").textContent = "Error";
+        }
+      } catch {
         $("#fbStatus").textContent = "Error";
       }
     });
 
+    // client id (optional)
+    if (!ls.getItem("mdg_client_id")) {
+      try {
+        const a = crypto.getRandomValues(new Uint8Array(16));
+        a[6] = (a[6] & 0x0f) | 0x40;
+        a[8] = (a[8] & 0x3f) | 0x80;
+        const h = [...a].map(b => b.toString(16).padStart(2,"0")).join("");
+        ls.setItem("mdg_client_id", `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`);
+      } catch {}
+    }
+
+    // init language + content
+    applyLang(getLang());
   })();
   </script>
 </body>
