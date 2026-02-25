@@ -4,367 +4,298 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MDG – In wenigen Minuten zur Entscheidungssicherheit</title>
-  <meta name="description" content="Instabilität früh erkennen. Ursache präzise diagnostizieren. Tragfähige Architektur bauen – bevor es bricht." />
+  <meta name="description" content="Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen." />
   <link rel="stylesheet" href="./style.css" />
+  <style>
+    /* ultra-clean landing tweaks only */
+    .hero__actions{ display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; margin-top:1.2rem; }
+    .modal[hidden]{ display:none !important; }
+    .modal{ position:fixed; inset:0; z-index:50; display:grid; place-items:center; background:rgba(0,0,0,.55); padding:1rem; }
+    .modal__card{ width:min(560px, 100%); border-radius:18px; border:1px solid rgba(255,255,255,.12); background:rgba(10,14,22,.92); backdrop-filter: blur(10px); padding:1rem; }
+    .modal__top{ display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; }
+    .modal__tag{ display:inline-flex; align-items:center; gap:.4rem; padding:.2rem .55rem; border-radius:999px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.04); font-size:.85rem; opacity:.9; }
+    .modal__x{ width:38px; height:38px; border-radius:999px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.04); color:inherit; cursor:pointer; display:grid; place-items:center; }
+    .modal__grid{ display:grid; gap:.65rem; margin-top:.85rem; }
+    .modal__label{ font-weight:800; opacity:.9; }
+    .modal__row{ display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin-top:.8rem; }
+    .header__actions{ display:flex; align-items:center; gap:.6rem; flex-wrap:nowrap; }
+    .lang{ display:flex; gap:.35rem; align-items:center; }
+    .lang .chip{ padding:.35rem .55rem; }
+    @media (max-width: 860px){
+      .header__actions{ gap:.45rem; }
+      .lang{ gap:.25rem; }
+    }
+  </style>
 </head>
 
 <body>
+  <a class="skip-link" href="#main">Skip</a>
 
-<header class="header">
-  <div class="container header__inner">
-    <div class="brand">
-      <span class="brand__mark">MDG</span>
-      <span>v4</span>
+  <header class="header" id="top">
+    <div class="container header__inner">
+      <a class="brand" href="./index.html" aria-label="Home">
+        <span class="brand__mark" aria-hidden="true">MDG</span>
+      </a>
+
+      <nav class="nav" aria-label="Main">
+        <a class="nav__link" href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
+        <a class="nav__link" href="./why.html" data-i18n="nav.why">Warum MDG</a>
+        <a class="nav__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
+      </nav>
+
+      <div class="header__actions">
+        <div class="lang" role="group" aria-label="Language">
+          <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
+          <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
+          <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+
+      <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
 
-    <nav class="nav">
-      <a class="nav__link" href="#how">Wie es funktioniert</a>
-      <a class="nav__link" href="#why">Warum MDG</a>
-      <a class="nav__link" href="#faq">FAQ</a>
-    </nav>
-  </div>
-</header>
-
-<section class="section section--hero">
-  <div class="container hero">
-
-    <div>
-      <h1 class="h1">
-        Instabilität früh erkennen.<br>
-        Ursache präzise diagnostizieren.<br>
-        Architektur bauen, bevor es bricht.
-      </h1>
-
-      <p class="lead">
-        MDG, IDG und ADG geben dir ein strukturelles Instrumentarium,
-        um Spannungen sichtbar zu machen und tragfähige Entscheidungen zu treffen.
-      </p>
-
-      <div class="hero__cta">
-        <button id="cta_private" class="btn btn--primary">
-          Jetzt ermitteln (privat)
-        </button>
-
-        <button id="cta_business" class="btn btn--ghost">
-          Für Unternehmen
-        </button>
-      </div>
-
-      <p class="micro" style="margin-top:14px;">
-        Privat: sofort starten. Business: Token erforderlich.
-      </p>
-    </div>
-
-  </div>
-</section>
-
-<!-- ============================= -->
-<!-- HOW IT WORKS -->
-<!-- ============================= -->
-<section id="how" class="section">
-  <div class="container">
-    <div class="section__head">
-      <h2 class="h2">Wie es funktioniert</h2>
-      <p class="sub">
-        MDG macht aus diffusen Situationen ein entscheidungsreifes Strukturbild – schnell genug für den Alltag,
-        präzise genug für Verantwortung.
-      </p>
-    </div>
-
-    <div class="grid">
-      <div class="card">
-        <h3 class="h3">Schritt 1 — Situation definieren</h3>
-        <p class="micro">
-          Ein Satz genügt. Das System verankert sich an „was passiert“ statt an langen Erzählungen.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3 class="h3">Schritt 2 — Ziel wählen</h3>
-        <p class="micro">
-          Stabilisieren = Spannung sofort senken. Umbauen = Struktur verändern, damit Bruch sich nicht wiederholt.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3 class="h3">Schritt 3 — Quick Scan</h3>
-        <p class="micro">
-          Wenige Signale zeigen die Architektur: Last, Entscheidungen, Energie/Fehlerintegration, Wachstum, Macht–Verantwortung.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3 class="h3">Schritt 4 — Präzisionsfragen</h3>
-        <p class="micro">
-          Adaptive Folgefragen reduzieren Mehrdeutigkeit und erhöhen Präzision — Output wird handlungsfähig, nicht generisch.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3 class="h3">Schritt 5 — Output</h3>
-        <p class="micro">
-          Du erhältst Primärinstabilität, Ursachenlogik, Frühindikatoren, Sofortmaßnahmen und Umbaupfad.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3 class="h3">Schritt 6 — Executive Report (Premium)</h3>
-        <p class="micro">
-          Verdichtete „Partner-Note“: Entscheidungen, Operating Rhythm, Rollen, Constraints und ein 30–60–90 Plan.
-        </p>
+    <div class="drawer" hidden>
+      <div class="drawer__content">
+        <a class="drawer__link" href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
+        <a class="drawer__link" href="./why.html" data-i18n="nav.why">Warum MDG</a>
+        <a class="drawer__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
       </div>
     </div>
-  </div>
-</section>
+  </header>
 
-<!-- ============================= -->
-<!-- WHY MDG -->
-<!-- ============================= -->
-<section id="why" class="section">
-  <div class="container">
-    <div class="section__head">
-      <h2 class="h2">Warum MDG</h2>
-      <p class="sub">
-        Systeme scheitern selten an mangelnder Stärke — sie scheitern an falscher Architektur.
-      </p>
-    </div>
+  <main id="main">
+    <section class="hero">
+      <div class="container hero__inner">
+        <div class="hero__copy">
+          <h1 class="h1" data-i18n="hero.title">Instabilität früh erkennen. Ursache präzise diagnostizieren. Architektur bauen.</h1>
+          <p class="sub" data-i18n="hero.sub">MDG, IDG und ADG machen Spannungen sichtbar – und liefern klare Schritte: Stabilisieren oder Umbauen.</p>
 
-    <div class="grid">
-      <div class="card">
-        <h3 class="h3">Architektur statt Symptome</h3>
-        <p class="micro">
-          MDG „motiviert“ nicht. Es diagnostiziert Struktur: wo Last kippt, wo Entscheidungen hängen, wo Wachstum Fragilität verstärkt.
-        </p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="./diagnose.html?mode=private" id="btnPrivate" data-i18n="cta.private">Jetzt ermitteln (privat)</a>
+            <button class="btn btn--ghost" type="button" id="btnBusiness" data-i18n="cta.business">Für Unternehmen</button>
+          </div>
+
+          <p class="micro" style="margin-top:.7rem; opacity:.85;" data-i18n="hero.note">
+            Privat: sofort starten. Business: Token erforderlich.
+          </p>
+        </div>
       </div>
+    </section>
+  </main>
 
-      <div class="card">
-        <h3 class="h3">Entscheidungssicherheit in Minuten</h3>
-        <p class="micro">
-          Ziel ist nicht ein langer Text — sondern eine klare Entscheidung: was jetzt stabilisieren, was als nächstes umbauen.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3 class="h3">Frühindikatoren</h3>
-        <p class="micro">
-          Du erhältst messbare Signale, ob das System besser wird — bevor die nächste Krise dich dazu zwingt.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3 class="h3">Business ≠ Privat</h3>
-        <p class="micro">
-          Business ist nicht „Privat mit anderen Worten“. Business-Modus arbeitet mit Governance, Rollen, Taktung, KPIs, Operating Model.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3 class="h3">Praktisch statt theoretisch</h3>
-        <p class="micro">
-          Output ist zum Nutzen gebaut: Schritte, Reihenfolge, Ownership, Trade-offs — nicht abstrakte Philosophie.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================= -->
-<!-- FAQ -->
-<!-- ============================= -->
-<section id="faq" class="section">
-  <div class="container">
-    <div class="section__head">
-      <h2 class="h2">FAQ</h2>
-    </div>
-
-    <div class="faq">
-      <details class="card">
-        <summary class="h3">Ist das Therapie, Coaching oder Consulting?</summary>
-        <p class="micro">
-          Keines davon. MDG ist ein strukturelles Diagnose-Instrument: es identifiziert Instabilitäten und liefert entscheidungsreife Maßnahmen.
-        </p>
-      </details>
-
-      <details class="card">
-        <summary class="h3">Was bekomme ich konkret?</summary>
-        <p class="micro">
-          Primärinstabilität, Ursachenlogik, Frühindikatoren, Sofortmaßnahmen und Umbaupfad. Premium ergänzt den Executive Report.
-        </p>
-      </details>
-
-      <details class="card">
-        <summary class="h3">Warum Folgefragen?</summary>
-        <p class="micro">
-          Präzision entsteht durch Constraints. Folgefragen reduzieren Mehrdeutigkeit und verhindern generische Antworten.
-        </p>
-      </details>
-
-      <details class="card">
-        <summary class="h3">Was ist der Unterschied Business vs Privat?</summary>
-        <p class="micro">
-          Business nutzt Managementlogik: Entscheidungsrechte, Governance, Operating Rhythm, Rollen/Ownership, Anreize und messbare Outcomes.
-        </p>
-      </details>
-
-      <details class="card">
-        <summary class="h3">Brauche ich einen Token?</summary>
-        <p class="micro">
-          Privat startet sofort. Business ist token-basiert, weil es ein separates Fragen-Set und Executive Output enthält.
-        </p>
-      </details>
-
-      <details class="card">
-        <summary class="h3">Wie wird Datenschutz gehandhabt?</summary>
-        <p class="micro">
-          Inputs werden über API verarbeitet, um Assessment/Report zu generieren. Kein Marketing-Profiling. Keine unnötige Speicherung.
-        </p>
-      </details>
-    </div>
-  </div>
-</section>
-
-<!-- ============================= -->
-<!-- BUSINESS MODAL -->
-<!-- ============================= -->
-
-<div id="business_overlay"></div>
-
-<div id="business_modal" class="modal">
-  <div class="modal__card">
-
-    <div class="modal__head">
+  <footer class="footer">
+    <div class="container footer__grid">
       <div>
-        <div class="pill pill--muted">Business Zugang</div>
-        <h3 style="margin-top:10px;">Token eingeben</h3>
+        <div class="brand brand--footer">
+          <span class="brand__mark" aria-hidden="true">MDG</span>
+        </div>
+        <p class="micro" data-i18n="footer.tag">Strukturdiagnose für Stabilisierung und Umbau.</p>
+      </div>
+      <div class="footer__legal">
+        <a href="./impressum.html" rel="nofollow">Impressum</a>
+        <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+        <a href="./kontakt.html" rel="nofollow">Kontakt</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Business Token Modal (opens ONLY after button click) -->
+  <div class="modal" id="bizModal" hidden>
+    <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="bizTitle">
+      <div class="modal__top">
+        <div>
+          <div class="modal__tag" data-i18n="biz.tag">Business Zugang</div>
+          <h2 class="h3" id="bizTitle" style="margin:.45rem 0 0;" data-i18n="biz.title">Token eingeben</h2>
+        </div>
+        <button class="modal__x" type="button" id="bizClose" aria-label="Close">×</button>
       </div>
 
-      <button id="business_close" class="btn btn--ghost">✕</button>
+      <p class="micro" style="margin:.75rem 0 0; opacity:.9;" data-i18n="biz.text">
+        Unternehmen erhalten ein eigenes Fragen-Set und Executive Output. Bitte Token eingeben.
+      </p>
+
+      <div class="modal__grid">
+        <div>
+          <div class="modal__label" data-i18n="biz.label">Token</div>
+          <input class="dx-input" id="bizToken" type="text" placeholder="MDG-XXXX-XXXX" autocomplete="off" />
+        </div>
+
+        <div class="modal__row">
+          <button class="btn btn--primary" type="button" id="bizGo" data-i18n="biz.next">Weiter</button>
+          <button class="btn btn--ghost" type="button" id="bizCancel" data-i18n="biz.cancel">Abbrechen</button>
+          <span class="micro" id="bizStatus" style="opacity:.85;"></span>
+        </div>
+      </div>
     </div>
-
-    <p class="p">
-      Unternehmen erhalten ein eigenes Fragen-Set
-      und Executive Output. Bitte Token eingeben.
-    </p>
-
-    <label class="dx-label">Token</label>
-    <input id="business_token" class="dx-input" placeholder="MDG-XXXX-XXXX" />
-
-    <div style="display:flex; gap:10px; margin-top:20px;">
-      <button id="business_submit" class="btn btn--primary">Weiter</button>
-      <button id="business_cancel" class="btn btn--ghost">Abbrechen</button>
-    </div>
-
   </div>
-</div>
 
-<!-- ============================= -->
-<!-- SCRIPT -->
-<!-- ============================= -->
+  <script>
+  (() => {
+    const API_BASE = "https://api.mdg-indikation.de";
+    const $ = (s, r=document) => r.querySelector(s);
+    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
-<script>
-(() => {
-
-  const API_BASE = "https://api.mdg-indikation.de";
-
-  // ✅ Diagnose.html expects:
-  // sessionStorage.setItem("mdg_business_ok","1")
-  // sessionStorage.setItem("mdg_business_token", "<TOKEN>")
-  const K_BUSINESS_OK    = "mdg_business_ok";
-  const K_BUSINESS_TOKEN = "mdg_business_token";
-
-  const modal   = document.getElementById("business_modal");
-  const overlay = document.getElementById("business_overlay");
-
-  const openBtn    = document.getElementById("cta_business");
-  const privateBtn = document.getElementById("cta_private");
-
-  const closeBtn   = document.getElementById("business_close");
-  const cancelBtn  = document.getElementById("business_cancel");
-  const submitBtn  = document.getElementById("business_submit");
-  const tokenInput = document.getElementById("business_token");
-
-  function openModal(){
-    modal.style.display = "flex";
-    overlay.style.display = "block";
-    tokenInput.focus();
-  }
-
-  function closeModal(){
-    modal.style.display = "none";
-    overlay.style.display = "none";
-  }
-
-  // ---------- PRIVATE FLOW ----------
-  privateBtn.addEventListener("click", (e)=>{
-    e.preventDefault();
-
-    // ✅ Clear business session to avoid “sticky business”
-    sessionStorage.removeItem(K_BUSINESS_OK);
-    sessionStorage.removeItem(K_BUSINESS_TOKEN);
-
-    window.location.href = "diagnose.html?mode=private";
-  });
-
-  // ---------- BUSINESS FLOW ----------
-  openBtn.addEventListener("click", (e)=>{
-    e.preventDefault();
-    openModal();
-  });
-
-  // ---------- CLOSE OPTIONS ----------
-  closeBtn.addEventListener("click", closeModal);
-  cancelBtn.addEventListener("click", closeModal);
-  overlay.addEventListener("click", closeModal);
-
-  document.addEventListener("keydown",(e)=>{
-    if(e.key === "Escape") closeModal();
-  });
-
-  // ---------- SUBMIT TOKEN ----------
-  async function verifyBusinessTokenAndGo(){
-    const token = (tokenInput.value || "").trim();
-    if(!token){
-      alert("Bitte Token eingeben.");
-      return;
+    const burger = $(".burger");
+    const drawer = $(".drawer");
+    if (burger && drawer) {
+      burger.addEventListener("click", () => {
+        const open = !drawer.hasAttribute("hidden");
+        if (open) { drawer.setAttribute("hidden",""); burger.setAttribute("aria-expanded","false"); }
+        else { drawer.removeAttribute("hidden"); burger.setAttribute("aria-expanded","true"); }
+      });
     }
 
-    try{
-      const res = await fetch(API_BASE + "/api/token/verify",{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
+    const dict = {
+      de: {
+        "nav.how":"Wie es funktioniert",
+        "nav.why":"Warum MDG",
+        "nav.faq":"FAQ",
+        "hero.title":"Instabilität früh erkennen. Ursache präzise diagnostizieren. Architektur bauen.",
+        "hero.sub":"MDG, IDG und ADG machen Spannungen sichtbar – und liefern klare Schritte: Stabilisieren oder Umbauen.",
+        "cta.private":"Jetzt ermitteln (privat)",
+        "cta.business":"Für Unternehmen",
+        "hero.note":"Privat: sofort starten. Business: Token erforderlich.",
+        "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau.",
+        "biz.tag":"Business Zugang",
+        "biz.title":"Token eingeben",
+        "biz.text":"Unternehmen erhalten ein eigenes Fragen-Set und Executive Output. Bitte Token eingeben.",
+        "biz.label":"Token",
+        "biz.next":"Weiter",
+        "biz.cancel":"Abbrechen",
+        "biz.errEmpty":"Bitte Token eingeben.",
+        "biz.errInvalid":"Token ungültig.",
+        "biz.ok":"Token ok. Weiter …"
+      },
+      tr: {
+        "nav.how":"Nasıl çalışır",
+        "nav.why":"Neden MDG",
+        "nav.faq":"SSS",
+        "hero.title":"İstikrarsızlığı erken gör. Nedeni doğru teşhis et. Mimari kur.",
+        "hero.sub":"MDG/IDG/ADG gerilimi görünür kılar ve net adımlar verir: stabilize et veya yeniden kur.",
+        "cta.private":"Hemen başla (özel)",
+        "cta.business":"Şirketler için",
+        "hero.note":"Özel: hemen başla. Business: token gerekli.",
+        "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
+        "biz.tag":"Business erişim",
+        "biz.title":"Token gir",
+        "biz.text":"Şirketler için ayrı soru seti ve yönetici çıktısı. Token giriniz.",
+        "biz.label":"Token",
+        "biz.next":"Devam",
+        "biz.cancel":"İptal",
+        "biz.errEmpty":"Token giriniz.",
+        "biz.errInvalid":"Token geçersiz.",
+        "biz.ok":"Token tamam. Devam …"
+      },
+      en: {
+        "nav.how":"How it works",
+        "nav.why":"Why MDG",
+        "nav.faq":"FAQ",
+        "hero.title":"Detect instability early. Diagnose precisely. Build architecture.",
+        "hero.sub":"MDG/IDG/ADG make tension visible and give clear steps: stabilize or rebuild.",
+        "cta.private":"Start now (private)",
+        "cta.business":"For companies",
+        "hero.note":"Private: start instantly. Business: token required.",
+        "footer.tag":"Structure diagnosis for stabilization and rebuild.",
+        "biz.tag":"Business access",
+        "biz.title":"Enter token",
+        "biz.text":"Companies get a dedicated question set and executive output. Please enter token.",
+        "biz.label":"Token",
+        "biz.next":"Continue",
+        "biz.cancel":"Cancel",
+        "biz.errEmpty":"Please enter a token.",
+        "biz.errInvalid":"Invalid token.",
+        "biz.ok":"Token ok. Continuing …"
+      }
+    };
+
+    function setLang(lang){
+      if(!dict[lang]) lang="de";
+      localStorage.setItem("mdg_lang", lang);
+      document.documentElement.lang = lang;
+      $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+      $$("[data-i18n]").forEach(el => {
+        const k = el.dataset.i18n;
+        const v = dict[lang][k];
+        if (v) el.textContent = v;
+      });
+    }
+
+    $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => setLang(btn.dataset.lang)));
+    setLang(localStorage.getItem("mdg_lang") || "de");
+
+    const modal = $("#bizModal");
+    const openBtn = $("#btnBusiness");
+    const closeBtn = $("#bizClose");
+    const cancelBtn = $("#bizCancel");
+    const goBtn = $("#bizGo");
+    const tokenInp = $("#bizToken");
+    const status = $("#bizStatus");
+
+    function t(k){
+      const lang = localStorage.getItem("mdg_lang") || "de";
+      return (dict[lang] && dict[lang][k]) || (dict.de[k] || k);
+    }
+
+    function openModal(){
+      status.textContent = "";
+      tokenInp.value = (sessionStorage.getItem("mdg_business_token") || localStorage.getItem("mdg_business_token") || "").trim();
+      modal.removeAttribute("hidden");
+      setTimeout(() => tokenInp.focus(), 60);
+    }
+    function closeModal(){
+      modal.setAttribute("hidden","");
+      status.textContent = "";
+    }
+
+    openBtn.addEventListener("click", openModal);
+    closeBtn.addEventListener("click", closeModal);
+    cancelBtn.addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+
+    async function verifyToken(token){
+      const res = await fetch(`${API_BASE}/api/token/verify`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
         body: JSON.stringify({ token })
       });
-
       const data = await res.json().catch(() => ({}));
+      if (!res.ok) return { ok:false, error: data?.error || "invalid" };
+      return { ok: Boolean(data?.ok) };
+    }
 
-      if(!res.ok || !data?.ok){
-        alert("Token ungültig.");
+    goBtn.addEventListener("click", async () => {
+      const token = (tokenInp.value || "").trim();
+      if(!token){
+        status.textContent = t("biz.errEmpty");
         return;
       }
+      status.textContent = "…";
+      const r = await verifyToken(token);
+      if(!r.ok){
+        status.textContent = t("biz.errInvalid");
+        sessionStorage.setItem("mdg_business_ok","0");
+        return;
+      }
+      status.textContent = t("biz.ok");
 
-      // ✅ Persist business session + token for diagnose.html
-      sessionStorage.setItem(K_BUSINESS_OK, "1");
-      sessionStorage.setItem(K_BUSINESS_TOKEN, token);
+      sessionStorage.setItem("mdg_mode","business");
+      sessionStorage.setItem("mdg_business_ok","1");
+      sessionStorage.setItem("mdg_business_token", token);
+      localStorage.setItem("mdg_mode","business");
+      localStorage.setItem("mdg_business_ok","1");
+      localStorage.setItem("mdg_business_token", token);
 
-      closeModal();
+      const lang = localStorage.getItem("mdg_lang") || "de";
+      window.location.href = `./diagnose.html?mode=business&lang=${encodeURIComponent(lang)}`;
+    });
 
-      // ✅ Go to business diagnose
-      window.location.href = "diagnose.html?mode=business";
-
-    }catch(err){
-      alert("Serverfehler.");
-    }
-  }
-
-  submitBtn.addEventListener("click", verifyBusinessTokenAndGo);
-
-  // Enter submits as well
-  tokenInput.addEventListener("keydown", (e)=>{
-    if(e.key === "Enter") verifyBusinessTokenAndGo();
-  });
-
-})();
-</script>
-
+    tokenInp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") goBtn.click();
+      if (e.key === "Escape") closeModal();
+    });
+  })();
+  </script>
 </body>
 </html>
