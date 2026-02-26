@@ -606,3 +606,29 @@ textarea:focus{
     grid-template-columns:1fr;
   }
 }
+/* ===== Diagnose/Header mobile cleanup (desktop stays unchanged) ===== */
+@media (max-width: 560px){
+  .header__inner{
+    gap: .6rem;
+  }
+
+  .header__actions{
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .4rem;
+  }
+
+  .lang{
+    gap: .25rem;
+  }
+  .lang .chip{
+    padding: .28rem .45rem;
+    font-size: .85rem;
+  }
+
+  .header__actions .btn{
+    padding: 8px 12px;
+    font-size: .85rem;
+    white-space: nowrap;
+  }
+}
