@@ -911,71 +911,30 @@
     }
 
     function initFeedbackUI(){
-
-    function initFeedbackUI(){
       const k = dict[getLang()] || dict.en;
-
-      // optional hint element may not exist in this HTML version
-      const hintEl = document.getElementById("fbHint");
-      if (hintEl) hintEl.textContent = k["fb.q3hint"] || "";
-
-      // use the EXISTING IDs in this file
-      const elHelpful = document.getElementById("fbHelpful");
-      const elMissing = document.getElementById("fbMissing");
-      const elScore   = document.getElementById("fbScore");
-      const sendBtn   = document.getElementById("fbSendBtn");
-      const statusEl  = document.getElementById("fbStatus");
-
-      if (elHelpful) elHelpful.value = "";
-      if (elMissing) elMissing.value = "";
-      if (elScore)   elScore.value   = "8";
-
-      if (sendBtn) sendBtn.disabled = true;
-      if (statusEl) statusEl.textContent = "—";
-
-      // ensure listeners exist (safe if called multiple times)
-      hookFeedbackInputs();
+      $("#fbHint").textContent = k["fb.q3hint"] || "";
+      $("#fbQ1").value = "";
+      $("#fbQ2").value = "";
+      $("#fbNps").value = "";
+      $("#fbSendBtn").disabled = true;
+      $("#fbStatus").textContent = "—";
     }
 
     function feedbackReady(){
-      const elHelpful = document.getElementById("fbHelpful");
-      const elMissing = document.getElementById("fbMissing");
-      const elScore   = document.getElementById("fbScore");
-
-      const q1 = (elHelpful?.value || "").trim();
-      const q2 = (elMissing?.value || "").trim();
-      const raw = String(elScore?.value ?? "").trim();
-
-      const n = Number(raw);
-      const nOk = raw !== "" && Number.isFinite(n) && n >= 0 && n <= 10 && Number.isInteger(n);
-
-      return (q1.length >= 2) && (q2.length >= 2) && nOk;
+      const q1 = ($("#fbQ1").value || "").trim();
+      const q2 = ($("#fbQ2").value || "").trim();
+      const nps = ($("#fbNps").value || "").trim();
+      return (q1.length >= 2) && (q2.length >= 2) && (/^\d{1,2}$/.test(nps)) && (Number(nps) >= 0) && (Number(nps) <= 10);
     }
 
     function hookFeedbackInputs(){
-      const sendBtn = document.getElementById("fbSendBtn");
-      if (!sendBtn) return;
-
-      const ids = ["fbHelpful","fbMissing","fbScore"];
-
-      ids.forEach(id => {
+      ["fbQ1","fbQ2","fbNps"].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
-
-        // avoid double-binding
-        if (el.dataset.hooked === "1") return;
-        el.dataset.hooked = "1";
-
         el.addEventListener("input", () => {
-          sendBtn.disabled = !feedbackReady();
-        });
-        el.addEventListener("change", () => {
-          sendBtn.disabled = !feedbackReady();
+          $("#fbSendBtn").disabled = !feedbackReady();
         });
       });
-
-      // initialize disabled state
-      sendBtn.disabled = !feedbackReady();
     }
 
     async function sendFeedback(){
@@ -984,32 +943,26 @@
 
       if (!feedbackReady()) return;
 
-      const elHelpful = document.getElementById("fbHelpful");
-      const elMissing = document.getElementById("fbMissing");
-      const elScore   = document.getElementById("fbScore");
-      const sendBtn   = document.getElementById("fbSendBtn");
-      const statusEl  = document.getElementById("fbStatus");
-
       const payload = {
         page: "diagnose",
         mode,
         lang,
         problem: ($("#oneLiner").value || "").trim(),
-        helpful: (elHelpful?.value || "").trim(),
-        missing: (elMissing?.value || "").trim(),
-        score: Number(String(elScore?.value ?? "").trim()),
+        q1: ($("#fbQ1").value || "").trim(),
+        q2: ($("#fbQ2").value || "").trim(),
+        nps: Number(($("#fbNps").value || "").trim()),
         meta: { ts: new Date().toISOString(), ua: navigator.userAgent }
       };
 
-      if (statusEl) statusEl.textContent = "…";
-      if (sendBtn) sendBtn.disabled = true;
+      $("#fbStatus").textContent = "…";
+      $("#fbSendBtn").disabled = true;
 
       try{
         await postJson("/api/feedback", payload);
-        if (statusEl) statusEl.textContent = "✓";
+        $("#fbStatus").textContent = "✓";
       } catch(e){
-        if (statusEl) statusEl.textContent = t("Fehler", "Hata", "Error");
-        if (sendBtn) sendBtn.disabled = false;
+        $("#fbStatus").textContent = t("Fehler", "Hata", "Error");
+        $("#fbSendBtn").disabled = false;
       }
     }
 
@@ -1189,114 +1142,6 @@
         console.error("Init error:", e);
       }
     });
-
-  })();
-  </script>
-</body>
-</html>
-
-    /* ===== Feedback (fixed to existing IDs) ===== */
-
-    function initFeedbackUI(){
-      const box = document.getElementById("feedbackBox");
-      if (!box) return;
-
-      $("#fbHelpful").value = "";
-      $("#fbMissing").value = "";
-      $("#fbScore").value = "8";
-      $("#fbSendBtn").disabled = true;
-      $("#fbStatus").textContent = "—";
-    }
-
-    function feedbackReady(){
-      const q1 = ($("#fbHelpful").value || "").trim();
-      const q2 = ($("#fbMissing").value || "").trim();
-      const npsRaw = String(($("#fbScore").value ?? "")).trim();
-
-      if (q1.length < 2) return false;
-      if (q2.length < 2) return false;
-
-      if (!/^\d{1,2}$/.test(npsRaw)) return false;
-      const n = Number(npsRaw);
-      if (Number.isNaN(n)) return false;
-      if (n < 0 || n > 10) return false;
-
-      return true;
-    }
-
-    function hookFeedbackInputs(){
-      ["fbHelpful","fbMissing","fbScore"].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener("input", () => {
-          $("#fbSendBtn").disabled = !feedbackReady();
-        });
-      });
-    }
-
-    async function sendFeedback(){
-      const lang = getLang();
-      const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
-
-      if (!feedbackReady()) return;
-
-      const payload = {
-        page: "diagnose",
-        mode,
-        lang,
-        problem: ($("#oneLiner").value || "").trim(),
-        helpful: ($("#fbHelpful").value || "").trim(),
-        missing: ($("#fbMissing").value || "").trim(),
-        score: Number(String($("#fbScore").value || "").trim()),
-        meta: { ts: new Date().toISOString(), ua: navigator.userAgent }
-      };
-
-      $("#fbStatus").textContent = "…";
-      $("#fbSendBtn").disabled = true;
-
-      try{
-        await postJson("/api/feedback", payload);
-        $("#fbStatus").textContent = "✓";
-      } catch(e){
-        $("#fbStatus").textContent = t("Fehler", "Hata", "Error");
-        $("#fbSendBtn").disabled = false;
-      }
-    }
-
-    /* hook feedback + send */
-    hookFeedbackInputs();
-    $("#fbSendBtn").addEventListener("click", sendFeedback);
-
-    /* ===== Remove old injected feedback system (was causing duplicates) ===== */
-    /* (intentionally deleted: injectFeedbackBox + feedbackStyle + DOMContentLoaded re-init) */
-
-    /* ===== Core Event Bindings ===== */
-
-    $("#copyExecBtn").addEventListener("click", async () => {
-      const txt = $("#execText").textContent || "";
-      if (!txt || txt === "—") return;
-      try { await navigator.clipboard.writeText(txt); } catch {}
-    });
-
-    $("#runBtn").addEventListener("click", runAssessment);
-    $("#execBtn").addEventListener("click", runExecutiveReport);
-    $("#pdfBtn").addEventListener("click", runPdf);
-
-    $("#resetBtn").addEventListener("click", () => {
-      const lang = getLang();
-      const ok = confirm(
-        lang==="de" ? "Wirklich zurücksetzen?" :
-        (lang==="tr" ? "Sıfırlansın mı?" : "Reset?")
-      );
-      if (ok) resetAll();
-    });
-
-    /* ===== Initial Setup ===== */
-
-    syncSliders();
-    applyLang("de");
-    renderAdaptiveQuestions("de");
-    renderHints("de");
 
   })();
   </script>
