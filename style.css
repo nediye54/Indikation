@@ -507,3 +507,110 @@ textarea:focus{
     grid-template-columns:1fr;
   }
 }
+/* =========================================================
+   Landing Header Cleanup (Desktop: no burger, centered nav)
+   Safe: affects only header/nav/lang/burger/drawer
+   ========================================================= */
+
+/* Make header layout calm + centered */
+.header__inner{
+  gap: 18px;
+}
+
+/* Center nav on desktop */
+.nav{
+  flex: 1;
+  justify-content: center;
+}
+
+/* Right-side actions behave like a single block */
+.header__actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:nowrap;
+}
+
+/* Language group looks like one component */
+.lang{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px;
+  border:1px solid var(--stroke);
+  border-radius:999px;
+  background:rgba(255,255,255,.03);
+}
+
+/* Chips: consistent sizing */
+.chip{
+  padding:8px 10px;
+  border-radius:999px;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--muted);
+  font-weight:800;
+  line-height:1;
+}
+
+/* Active language = premium highlight */
+.chip[aria-pressed="true"]{
+  color:#000;
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));
+}
+
+/* Desktop: burger hidden (no redundancy) */
+@media (min-width: 921px){
+  .burger{ display:none !important; }
+  .drawer{ display:none !important; }
+}
+
+/* Mobile: nav hidden, burger visible */
+@media (max-width: 920px){
+  .nav{ display:none; }
+
+  .burger{
+    display:grid;
+    place-items:center;
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    border:1px solid var(--stroke);
+    background:rgba(255,255,255,.03);
+  }
+  .burger span{
+    display:block;
+    width:18px;
+    height:2px;
+    background:rgba(234,240,255,.85);
+    border-radius:2px;
+    margin:2px 0;
+  }
+
+  /* Drawer becomes the only navigation */
+  .drawer{
+    display:block;
+    border-top:1px solid var(--stroke);
+    background:rgba(5,7,12,.92);
+    backdrop-filter:blur(12px);
+  }
+  .drawer__content{
+    padding:14px 20px 18px;
+    display:grid;
+    gap:10px;
+  }
+  .drawer__link{
+    padding:12px 12px;
+    border-radius:12px;
+    border:1px solid var(--stroke);
+    background:rgba(255,255,255,.03);
+    color:var(--text);
+    font-weight:700;
+  }
+}
+
+/* Small mobile: tighten lang */
+@media (max-width: 420px){
+  .lang{ gap:4px; padding:5px; }
+  .chip{ padding:7px 8px; font-weight:800; }
+}
