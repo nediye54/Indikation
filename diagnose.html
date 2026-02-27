@@ -6,1140 +6,1111 @@
   <title>Diagnose – MDG</title>
   <meta name="description" content="In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen." />
   <link rel="stylesheet" href="./style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    /* Drop 4 UI polish (page-only) */
-    .dx-wrap{ max-width: 1120px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
 
-    /* keep 2-column layout stable (output must NOT shrink) */
-    .dx-top{
-      display:grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(380px, .9fr);
-      gap:1rem;
-      align-items:start;
+    /* ─── Font override ─── */
+    :root {
+      --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'DM Mono', 'Fira Code', ui-monospace, monospace;
+      --glow-green: rgba(110,231,183,.15);
+      --glow-blue:  rgba(96,165,250,.12);
+      --r: 18px;
     }
-    @media (max-width: 980px){
-      .dx-top{ grid-template-columns: 1fr; }
+    body { font-family: var(--font-body); }
+
+    /* ─── Page shell ─── */
+    .dx-page {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 1.75rem 1.25rem 4rem;
     }
 
-    .dx-actions{ display:flex; gap:.65rem; flex-wrap:wrap; align-items:center; }
-    .dx-kpi{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.8rem; }
-    .dx-kpi .pill{ white-space:nowrap; }
-    .dx-grid{ display:grid; grid-template-columns: 1fr; gap:.75rem; margin-top:.6rem; }
-    .dx-field{ display:grid; gap:.35rem; }
-    .dx-label{ font-weight: 800; color: var(--muted, #aab); }
-    .dx-help{ font-size:.9rem; color: var(--muted, #aab); line-height:1.35; }
-    .dx-help b{ color: var(--text, #fff); }
-    .dx-rangeRow{ display:grid; grid-template-columns: 1fr auto; gap:.7rem; align-items:center; }
-    .dx-rangeVal{ font-weight: 900; min-width: 2.2rem; text-align:right; }
-    .dx-divider{ height:1px; background: rgba(255,255,255,.08); margin: .9rem 0; }
-    .dx-questions{ display:grid; gap: 1rem; margin-top: 1rem; }
-    .dx-q{ padding-top:.9rem; border-top: 1px solid rgba(255,255,255,.08); }
-    .dx-q:first-child{ border-top: 0; padding-top: 0; }
-    .dx-qtitle{ font-weight: 950; margin-bottom:.35rem; }
+    /* ─── Hero bar ─── */
+    .dx-hero {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--stroke);
+      margin-bottom: 1.5rem;
+    }
+    .dx-hero h1 { margin: 0 0 .3rem; }
+    .dx-hero .sub { margin: 0; max-width: 580px; }
+    .dx-kpi {
+      display: flex;
+      gap: .4rem;
+      flex-wrap: wrap;
+      align-self: flex-end;
+    }
+    .dx-kpi .pill {
+      font-family: var(--font-mono);
+      font-size: .75rem;
+      white-space: nowrap;
+      transition: border-color .2s, color .2s;
+    }
+    .dx-kpi .pill.active {
+      border-color: rgba(110,231,183,.45);
+      color: #a7f3d0;
+    }
 
-    /* output: readable, stable width */
-    .dx-output{ min-width: 0; }
-    .dx-output pre{
+    /* ─── Two-column layout ─── */
+    .dx-grid {
+      display: grid;
+      grid-template-columns: minmax(0,1.15fr) minmax(360px,.85fr);
+      gap: 1.25rem;
+      align-items: start;
+    }
+    @media (max-width: 980px) { .dx-grid { grid-template-columns: 1fr; } }
+
+    /* ─── Section headers inside card ─── */
+    .dx-shead {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      margin: 0 0 .85rem;
+    }
+    .dx-snum {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.65rem;
+      height: 1.65rem;
+      border-radius: 999px;
+      border: 1px solid rgba(110,231,183,.25);
+      background: rgba(110,231,183,.08);
+      font-weight: 900;
+      font-size: .72rem;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .dx-snum.blue {
+      border-color: rgba(96,165,250,.22);
+      background: rgba(96,165,250,.08);
+      color: #93c5fd;
+    }
+    .dx-stitle { font-weight: 800; font-size: .95rem; margin: 0; }
+
+    /* ─── Field helpers ─── */
+    .dx-fields { display: grid; gap: .85rem; }
+    .dx-field  { display: grid; gap: .3rem; }
+    .dx-flabel {
+      font-size: .76rem;
+      font-weight: 900;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+    }
+    .dx-fhelp   { font-size: .86rem; color: var(--muted); line-height: 1.4; }
+    .dx-fhelp b { color: var(--text); }
+    .dx-divider { height: 1px; background: var(--stroke); margin: .2rem 0; }
+
+    /* ─── Mode tag ─── */
+    .dx-modeline { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+    .dx-modetag {
+      font-weight: 900;
+      font-size: .82rem;
+      padding: .2rem .65rem;
+      border-radius: 999px;
+      border: 1px solid rgba(110,231,183,.28);
+      background: rgba(110,231,183,.07);
+      color: #a7f3d0;
+    }
+
+    /* ─── Range sliders ─── */
+    .dx-range-row { display: grid; grid-template-columns: 1fr auto; gap: .65rem; align-items: center; }
+    .dx-range-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: .95rem;
+      min-width: 1.4rem;
+      text-align: right;
+      color: var(--primary);
+    }
+    input[type="range"].dx-range {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--bg-2);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"].dx-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 0 4px var(--glow-green);
+      transition: box-shadow .15s;
+    }
+    input[type="range"].dx-range::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 0 7px var(--glow-green);
+    }
+    input[type="range"].dx-range::-moz-range-thumb {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: none;
+      cursor: pointer;
+    }
+
+    /* ─── Adaptive questions ─── */
+    .dx-qs    { display: grid; gap: .85rem; }
+    .dx-q     { padding-top: .85rem; border-top: 1px solid rgba(255,255,255,.06); }
+    .dx-q:first-child { border-top: 0; padding-top: 0; }
+    .dx-qtitle { font-weight: 800; font-size: .88rem; line-height: 1.35; margin-bottom: .4rem; }
+    .dx-opts   { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .dx-opt {
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .3rem .7rem;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.025);
+      font-size: .79rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .dx-opt:hover {
+      border-color: rgba(110,231,183,.38);
+      background: rgba(110,231,183,.06);
+    }
+    .dx-opt input[type="radio"] {
+      accent-color: var(--primary);
+      width: 12px; height: 12px;
+    }
+
+    /* ─── Action row ─── */
+    .dx-actions { display: flex; gap: .55rem; flex-wrap: wrap; align-items: center; }
+
+    /* ─── Status ─── */
+    #statusLine {
+      font-family: var(--font-mono);
+      font-size: .78rem;
+      color: var(--muted-2);
+      transition: color .2s;
+    }
+    #statusLine.running { color: var(--warning); }
+    #statusLine.done    { color: var(--primary); }
+    #statusLine.err     { color: var(--danger); }
+
+    /* ─── Output column ─── */
+    .dx-out { min-width: 0; }
+
+    .dx-rbox {
+      padding: 1.15rem;
+      border: 1px solid var(--stroke);
+      border-radius: var(--r);
+      background: rgba(255,255,255,.025);
+      transition: border-color .2s;
+    }
+    .dx-rbox + .dx-rbox { margin-top: 1rem; }
+    .dx-rbox:focus-within { border-color: rgba(110,231,183,.22); }
+    .dx-rbox h3 { margin: 0 0 .55rem; font-size: .95rem; }
+    .dx-rbox pre {
+      font-family: var(--font-mono);
+      font-size: .78rem;
       white-space: pre-wrap;
       word-break: break-word;
       overflow: auto;
-      max-height: 46vh;
+      max-height: 42vh;
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.65;
+    }
+    .dx-rnote { font-size: .86rem; color: var(--muted); margin: 0 0 .65rem; line-height: 1.4; }
+
+    /* slide-in for report area */
+    #reportContainer { display: none; animation: dxSlide .22s ease; }
+    @keyframes dxSlide {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .dx-report{ margin-top: 1rem; }
-    .dx-reportGrid{ display:grid; grid-template-columns: 1fr; gap:1rem; }
-    .dx-reportBox{
-      padding: 1rem;
-      border:1px solid rgba(255,255,255,.10);
-      border-radius: var(--radius2, 18px);
-      background: rgba(255,255,255,.02);
+    /* ─── Feedback box ─── */
+    #feedbackBox {
+      display: none;
+      margin-top: 1rem;
+      padding: 1rem 1.1rem 1.1rem;
+      border-radius: var(--r);
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.08);
+      animation: dxSlide .2s ease;
     }
-    .dx-reportBox h3{ margin:0 0 .6rem; }
-    .dx-note{ font-size:.9rem; color: var(--muted, #aab); }
+    .dx-fb-head {
+      font-size: .72rem;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+      margin-bottom: .75rem;
+    }
+    .dx-fb-rows   { display: grid; gap: .6rem; }
+    .dx-fb-row    { display: grid; gap: .25rem; }
+    .dx-fb-label  { font-weight: 700; font-size: .8rem; color: var(--muted); }
+    .dx-fb-hint   { font-size: .73rem; color: var(--muted-2); }
+    .dx-fb-inline { display: flex; gap: .55rem; flex-wrap: wrap; align-items: center; }
+    .dx-fb-foot   { display: flex; align-items: center; gap: .7rem; margin-top: .4rem; }
+    .dx-fb-status { font-family: var(--font-mono); font-size: .78rem; color: var(--muted-2); }
 
-    /* Header cleanup: remove visual clutter + stop duplicate drawer showing */
-    .brand__text{ display:none !important; } /* removes "v4" next to MDG */
-    .drawer[hidden]{ display:none !important; }
+    /* shared textarea / number input inside feedback */
+    .dx-fb-rows textarea,
+    .dx-fb-rows input[type="number"] {
+      width: 100%;
+      padding: .58rem .72rem;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: var(--bg-2);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: .84rem;
+      resize: vertical;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .dx-fb-rows textarea:focus,
+    .dx-fb-rows input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--glow-green);
+    }
+    .dx-fb-rows input[type="number"] { max-width: 100px; resize: none; }
 
-    /* small UI cleanup */
-    .dx-modeLine{ display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
-    .dx-modeTag{ font-weight:900; }
+    /* ─── Privacy note ─── */
+    .dx-privacy {
+      font-size: .76rem;
+      color: var(--muted-2);
+      margin-top: 1rem;
+      line-height: 1.45;
+    }
 
-    /* Feedback UI */
-    .dx-feedbackGrid{ display:grid; gap:.65rem; margin-top:.8rem; }
-    .dx-fRow{ display:grid; gap:.35rem; }
-    .dx-fLabel{ font-weight:800; color: var(--muted, #aab); font-size:.95rem; }
-    .dx-fSmall{ font-size:.85rem; color: var(--muted, #aab); }
-    .dx-fSplit{ display:grid; grid-template-columns: 1fr; gap:.6rem; }
-    .dx-fInline{ display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; }
-    .dx-fStatus{ opacity:.85; }
+    /* ─── Copy button: success state ─── */
+    .btn--ok {
+      background: rgba(110,231,183,.12) !important;
+      border-color: rgba(110,231,183,.4) !important;
+      color: #a7f3d0 !important;
+    }
+
+    /* ─── Header cleanup (inherited from style.css; keep nav__link active) ─── */
+    .brand__text   { display: none !important; }
+    .drawer[hidden]{ display: none !important; }
+
+    /* ─── select + input consistent focus ring ─── */
+    .dx-input:focus, select.dx-input:focus {
+      border-color: var(--primary) !important;
+      box-shadow: 0 0 0 3px var(--glow-green) !important;
+    }
+
   </style>
 </head>
+<body>
 
-  <header class="header" id="top">
-    <div class="container header__inner">
-      <a class="brand" href="./index.html" aria-label="Home">
-        <span class="brand__mark" aria-hidden="true">MDG</span>
-        <span class="brand__text">v4</span>
-      </a>
+<!-- ══════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════ -->
+<header class="header" id="top">
+  <div class="container header__inner">
+    <a class="brand" href="./index.html" aria-label="Home">
+      <span class="brand__mark" aria-hidden="true">MDG</span>
+      <span class="brand__text">v4</span>
+    </a>
 
-      <nav class="nav" aria-label="Main">
-        <a class="nav__link" href="./how.html" data-i18n="nav.how">How it works</a>
-        <a class="nav__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
-        <a class="nav__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
-      </nav>
+    <nav class="nav" aria-label="Main">
+      <a class="nav__link" href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
+      <a class="nav__link" href="./why.html" data-i18n="nav.why">Warum MDG</a>
+      <a class="nav__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
+    </nav>
 
-      <div class="header__actions">
-        <div class="lang" role="group" aria-label="Language">
-          <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
-          <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
-          <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
+    <div class="header__actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
+        <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
+        <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="btn btn--ghost" href="./index.html" data-i18n="cta.backHome">Zur Homepage</a>
+    </div>
+
+    <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="drawer" hidden>
+    <div class="drawer__content">
+      <a class="drawer__link" href="./how.html"  data-i18n="nav.how">Wie es funktioniert</a>
+      <a class="drawer__link" href="./why.html"  data-i18n="nav.why">Warum MDG</a>
+      <a class="drawer__link" href="./faq.html"  data-i18n="nav.faq">FAQ</a>
+      <div class="drawer__sep"></div>
+      <a class="btn btn--ghost btn--full" href="./index.html" data-i18n="cta.backHome">Zur Homepage</a>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════
+     MAIN
+══════════════════════════════════════════ -->
+<main id="main">
+<div class="dx-page">
+
+  <!-- Hero -->
+  <div class="dx-hero">
+    <div>
+      <h1 class="h2" data-i18n="dx.title">Diagnose</h1>
+      <p class="sub" data-i18n="dx.sub">
+        In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen.
+      </p>
+    </div>
+    <div class="dx-kpi">
+      <span class="pill pill--muted" id="kpiPrimary">Primär: —</span>
+      <span class="pill pill--muted" id="kpiPath">Pfad: —</span>
+      <span class="pill pill--muted" id="kpiRisk">Risiko: —</span>
+    </div>
+  </div>
+
+  <!-- Two-column -->
+  <div class="dx-grid">
+
+    <!-- ══ LEFT: INPUT ══ -->
+    <div class="card">
+
+      <!-- 1) Kontext -->
+      <div class="dx-shead">
+        <span class="dx-snum">1</span>
+        <h2 class="dx-stitle" data-i18n="dx.s1">Kontext</h2>
+      </div>
+
+      <div class="dx-fields">
+
+        <!-- Mode -->
+        <div class="dx-field">
+          <div class="dx-flabel" data-i18n="dx.mode">Modus</div>
+          <div class="dx-modeline">
+            <span class="dx-modetag" id="modeText">—</span>
+            <span class="pill pill--muted" id="tokenBadge" style="display:none; font-size:.72rem;">Token ✓</span>
+          </div>
+          <div class="dx-fhelp" id="modeHint"></div>
         </div>
-        <a class="btn btn--ghost" href="./index.html" data-i18n="cta.backHome">Zur Homepage</a>
-      </div>
 
-      <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
+        <!-- Goal -->
+        <div class="dx-field">
+          <label class="dx-flabel" for="goalSelect" data-i18n="dx.goal">Ziel</label>
+          <select class="dx-input" id="goalSelect">
+            <option value="stabilize" data-i18n="dx.goal.stabilize">Stabilisieren</option>
+            <option value="rebuild"   data-i18n="dx.goal.rebuild">Umbauen</option>
+          </select>
+          <div class="dx-fhelp" id="goalHelp"></div>
+        </div>
 
-    <div class="drawer" hidden>
-      <div class="drawer__content">
-        <a class="drawer__link" href="./how.html" data-i18n="nav.how">How it works</a>
-        <a class="drawer__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
-        <a class="drawer__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
-        <div class="drawer__sep"></div>
-        <a class="btn btn--ghost btn--full" href="./index.html" data-i18n="cta.backHome">Zur Homepage</a>
-      </div>
-    </div>
-  </header>
+        <!-- One-liner -->
+        <div class="dx-field">
+          <label class="dx-flabel" for="oneLiner" data-i18n="dx.oneliner">Situation in einem Satz</label>
+          <input class="dx-input" id="oneLiner" type="text" maxlength="160" placeholder="…" autocomplete="off" />
+          <div class="dx-fhelp" id="oneLinerHelp"></div>
+        </div>
 
-  <main id="main">
-    <div class="dx-wrap">
-      <div class="section__head">
-        <h1 class="h2" data-i18n="dx.title">Diagnose</h1>
-        <p class="sub" data-i18n="dx.sub">
-          In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen.
-        </p>
-      </div>
+        <div class="dx-divider"></div>
 
-      <div class="dx-top">
-        <!-- LEFT: input -->
-        <div class="card">
-          <h2 class="h3" data-i18n="dx.contextTitle">1) Kontext</h2>
+        <!-- 2) Quick Scan -->
+        <div class="dx-shead" style="margin-bottom:.6rem;">
+          <span class="dx-snum">2</span>
+          <h2 class="dx-stitle" data-i18n="dx.s2">Quick Scan</h2>
+        </div>
 
-          <div class="dx-grid">
-            <div class="dx-field">
-              <div class="dx-label" data-i18n="dx.mode">Modus</div>
-
-              <div class="dx-modeLine">
-                <span class="dx-modeTag" id="modeText">—</span>
-                <span class="pill pill--muted" id="tokenBadge" style="display:none;">Token: ✓</span>
-              </div>
-
-              <div class="dx-help" id="modeHint"></div>
-            </div>
-
-            <div class="dx-field">
-              <label class="dx-label" for="goalSelect" data-i18n="dx.goal">Ziel</label>
-              <select class="dx-input" id="goalSelect">
-                <!-- options become short; explanation stays once in goalHelp (redundancy removed) -->
-                <option value="stabilize" data-i18n="dx.goal.stabilize">Stabilisieren (Spannung schnell senken)</option>
-                <option value="rebuild" data-i18n="dx.goal.rebuild">Umbauen (Architektur verändern)</option>
-              </select>
-              <div class="dx-help" id="goalHelp"></div>
-            </div>
-
-            <div class="dx-field">
-              <label class="dx-label" for="oneLiner" data-i18n="dx.oneliner">Beschreibe die Situation in einem Satz</label>
-              <input class="dx-input" id="oneLiner" type="text" maxlength="160" placeholder="…" />
-              <div class="dx-help" id="oneLinerHelp"></div>
-            </div>
-
-            <div class="dx-divider"></div>
-
-            <h2 class="h3" style="margin:0;" data-i18n="dx.scanTitle">2) Quick Scan (Slider)</h2>
-
-            <div class="dx-field">
-              <div class="dx-qtitle" data-i18n="q.load.title">Last & Engpässe</div>
-              <div class="dx-help" id="exLoad"></div>
-              <div class="dx-rangeRow">
-                <input id="sLoad" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
-                <div class="dx-rangeVal" id="vLoad">2</div>
-              </div>
-            </div>
-
-            <div class="dx-field">
-              <div class="dx-qtitle" data-i18n="q.decisions.title">Entscheidungsarchitektur</div>
-              <div class="dx-help" id="exDecisions"></div>
-              <div class="dx-rangeRow">
-                <input id="sDecisions" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
-                <div class="dx-rangeVal" id="vDecisions">2</div>
-              </div>
-            </div>
-
-            <div class="dx-field">
-              <div class="dx-qtitle" data-i18n="q.energy.title">Energie & Fehlerkultur</div>
-              <div class="dx-help" id="exEnergy"></div>
-              <div class="dx-rangeRow">
-                <input id="sEnergy" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
-                <div class="dx-rangeVal" id="vEnergy">2</div>
-              </div>
-            </div>
-
-            <div class="dx-field">
-              <div class="dx-qtitle" data-i18n="q.growth.title">Wachstumsdruck / Komplexität</div>
-              <div class="dx-help" id="exGrowth"></div>
-              <div class="dx-rangeRow">
-                <input id="sGrowth" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
-                <div class="dx-rangeVal" id="vGrowth">2</div>
-              </div>
-            </div>
-
-            <div class="dx-field">
-              <div class="dx-qtitle" data-i18n="q.power.title">Macht–Verantwortung (Alignment)</div>
-              <div class="dx-help" id="exPower"></div>
-              <div class="dx-rangeRow">
-                <input id="sPower" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
-                <div class="dx-rangeVal" id="vPower">2</div>
-              </div>
-            </div>
-
-            <div class="dx-divider"></div>
-
-            <h2 class="h3" style="margin:0;" data-i18n="dx.moreTitle">3) Präzisionsfragen (adaptiv)</h2>
-            <div class="dx-questions" id="questions"></div>
-
-            <div class="dx-actions" style="margin-top: .9rem;">
-              <button class="btn btn--primary" type="button" id="runBtn" data-i18n="dx.run">Diagnose starten</button>
-              <button class="btn btn--ghost" type="button" id="resetBtn" data-i18n="dx.reset">Zurücksetzen</button>
-              <span class="micro" id="statusLine">—</span>
-            </div>
-
-            <div class="dx-kpi">
-              <span class="pill pill--muted" id="kpiPrimary">Primär: —</span>
-              <span class="pill pill--muted" id="kpiPath">Pfad: —</span>
-              <span class="pill pill--muted" id="kpiRisk">Risiko: —</span>
-            </div>
+        <!-- Slider: Load -->
+        <div class="dx-field">
+          <div class="dx-flabel" data-i18n="q.load.title">Last &amp; Engpässe</div>
+          <div class="dx-fhelp" id="exLoad"></div>
+          <div class="dx-range-row">
+            <input id="sLoad" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
+            <div class="dx-range-val" id="vLoad">2</div>
           </div>
         </div>
 
-        <!-- RIGHT: output -->
-        <div class="card dx-output">
-          <h2 class="h3" data-i18n="dx.outputTitle">Output</h2>
-          <p class="micro" data-i18n="dx.outputHint">
-          </p>
+        <!-- Slider: Decisions -->
+        <div class="dx-field">
+          <div class="dx-flabel" data-i18n="q.decisions.title">Entscheidungsarchitektur</div>
+          <div class="dx-fhelp" id="exDecisions"></div>
+          <div class="dx-range-row">
+            <input id="sDecisions" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
+            <div class="dx-range-val" id="vDecisions">2</div>
+          </div>
+        </div>
 
-          <div class="dx-reportGrid">
-            <div class="dx-reportBox">
-              <h3 class="h3" style="margin-top:0;" data-i18n="dx.assessmentTitle">Strategisches Assessment</h3>
-              <pre id="resultText" class="micro" style="margin:0;">—</pre>
-            </div>
+        <!-- Slider: Energy -->
+        <div class="dx-field">
+          <div class="dx-flabel" data-i18n="q.energy.title">Energie &amp; Fehlerkultur</div>
+          <div class="dx-fhelp" id="exEnergy"></div>
+          <div class="dx-range-row">
+            <input id="sEnergy" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
+            <div class="dx-range-val" id="vEnergy">2</div>
+          </div>
+        </div>
 
-            <div class="dx-reportBox">
-              <h3 class="h3" style="margin-top:0;" data-i18n="dx.execTitle">Executive Report</h3>
-              <p class="dx-note" id="execHint"></p>
+        <!-- Slider: Growth -->
+        <div class="dx-field">
+          <div class="dx-flabel" data-i18n="q.growth.title">Wachstumsdruck / Komplexität</div>
+          <div class="dx-fhelp" id="exGrowth"></div>
+          <div class="dx-range-row">
+            <input id="sGrowth" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
+            <div class="dx-range-val" id="vGrowth">2</div>
+          </div>
+        </div>
 
-              <div class="dx-actions" style="margin-top:.6rem;">
-                <button class="btn btn--primary" type="button" id="execBtn" data-i18n="dx.execBtn">Executive Report erzeugen</button>
-                <button class="btn btn--ghost" type="button" id="copyExecBtn" disabled data-i18n="dx.copy">Kopieren</button>
-                <!-- SVG removed (function + UI) -->
-                <button class="btn btn--ghost" type="button" id="pdfBtn" data-i18n="dx.pdfBtn">PDF</button>
+        <!-- Slider: Power -->
+        <div class="dx-field">
+          <div class="dx-flabel" data-i18n="q.power.title">Macht–Verantwortung</div>
+          <div class="dx-fhelp" id="exPower"></div>
+          <div class="dx-range-row">
+            <input id="sPower" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
+            <div class="dx-range-val" id="vPower">2</div>
+          </div>
+        </div>
+
+        <div class="dx-divider"></div>
+
+        <!-- 3) Precision questions -->
+        <div class="dx-shead" style="margin-bottom:.5rem;">
+          <span class="dx-snum">3</span>
+          <h2 class="dx-stitle" data-i18n="dx.s3">Präzisionsfragen</h2>
+        </div>
+        <div class="dx-qs" id="questions"></div>
+
+        <!-- CTA row -->
+        <div class="dx-actions" style="margin-top: .8rem;">
+          <button class="btn btn--primary" type="button" id="runBtn"   data-i18n="dx.run">Diagnose starten</button>
+          <button class="btn btn--ghost"   type="button" id="resetBtn" data-i18n="dx.reset">Zurücksetzen</button>
+          <span id="statusLine" class="micro">—</span>
+        </div>
+
+      </div>
+    </div><!-- /card left -->
+
+    <!-- ══ RIGHT: OUTPUT ══ -->
+    <div class="card dx-out">
+
+      <div class="dx-shead" style="margin-bottom:.9rem;">
+        <span class="dx-snum blue">↗</span>
+        <h2 class="dx-stitle" data-i18n="dx.outTitle">Output</h2>
+      </div>
+
+      <!-- Strategic Assessment -->
+      <div class="dx-rbox">
+        <h3 data-i18n="dx.assessTitle">Strategisches Assessment</h3>
+        <pre id="resultText">—</pre>
+      </div>
+
+      <!-- Executive Report -->
+      <div class="dx-rbox">
+        <h3 data-i18n="dx.execTitle">Executive Report</h3>
+        <p class="dx-rnote" id="execHint"></p>
+
+        <div class="dx-actions">
+          <button class="btn btn--primary" type="button" id="execBtn"     data-i18n="dx.execBtn">Report erzeugen</button>
+          <button class="btn btn--ghost"   type="button" id="copyExecBtn" disabled data-i18n="dx.copy">Kopieren</button>
+          <button class="btn btn--ghost"   type="button" id="pdfBtn"      data-i18n="dx.pdf">PDF</button>
+        </div>
+
+        <!-- Report text + feedback — shown after generation -->
+        <div id="reportContainer">
+          <div class="dx-divider" style="margin:.9rem 0 .75rem;"></div>
+          <pre id="execText">—</pre>
+
+          <!-- ═══ UNIFIED FEEDBACK — single static instance, IDs: fbQ1/fbQ2/fbNps ═══ -->
+          <div id="feedbackBox">
+            <div class="dx-fb-head" data-i18n="fb.head">Feedback</div>
+            <div class="dx-fb-rows">
+
+              <div class="dx-fb-row">
+                <div class="dx-fb-label" data-i18n="fb.q1">1) Was war am hilfreichsten?</div>
+                <textarea id="fbQ1" rows="2" maxlength="220" placeholder="…"></textarea>
               </div>
 
-              <div class="dx-report" id="reportContainer" style="display:none;">
-                <pre id="execText" class="micro" style="margin: .8rem 0 0;">—</pre>
+              <div class="dx-fb-row">
+                <div class="dx-fb-label" data-i18n="fb.q2">2) Was fehlt / ist unklar?</div>
+                <textarea id="fbQ2" rows="2" maxlength="220" placeholder="…"></textarea>
+              </div>
 
-                <!-- Feedback (shown after Executive Summary / when report exists) -->
-                <div class="dx-divider" style="margin: .9rem 0;"></div>
-                <div id="feedbackBox" style="display:none;">
-                  <div class="dx-qtitle" data-i18n="fb.title">Feedback (kurz)</div>
-
-                  <div class="dx-feedbackGrid">
-                    <div class="dx-fRow">
-                      <div class="dx-fLabel" data-i18n="fb.q1">1) Was war am hilfreichsten?</div>
-                      <input class="dx-input" id="fbHelpful" type="text" maxlength="180" placeholder="…" />
-                    </div>
-
-                    <div class="dx-fRow">
-                      <div class="dx-fLabel" data-i18n="fb.q2">2) Was fehlt / ist unklar?</div>
-                      <input class="dx-input" id="fbMissing" type="text" maxlength="180" placeholder="…" />
-                    </div>
-
-                    <div class="dx-fRow">
-                      <div class="dx-fLabel" data-i18n="fb.q3">3) Bewertung (0–10)</div>
-                      <div class="dx-fInline">
-                        <input class="dx-input" id="fbScore" type="number" min="0" max="10" step="1" value="8" style="max-width:120px;" />
-                        <span class="dx-fSmall" data-i18n="fb.q3hint">0 = nicht hilfreich • 10 = extrem hilfreich</span>
-                      </div>
-                    </div>
-
-                    <div class="dx-fInline" style="margin-top:.2rem;">
-                      <button class="btn btn--primary" type="button" id="fbSendBtn" data-i18n="fb.send">Senden</button>
-                      <span class="micro dx-fStatus" id="fbStatus">—</span>
-                    </div>
-                  </div>
+              <div class="dx-fb-row">
+                <div class="dx-fb-label" data-i18n="fb.q3">3) Bewertung (0–10)</div>
+                <div class="dx-fb-inline">
+                  <input id="fbNps" type="number" min="0" max="10" step="1" placeholder="8" />
+                  <span class="dx-fb-hint" id="fbHint" data-i18n="fb.hint">0 = nicht hilfreich · 10 = extrem hilfreich</span>
                 </div>
               </div>
 
-              <!-- Tree container removed (SVG feature removed) -->
+              <div class="dx-fb-foot">
+                <button class="btn btn--primary" type="button" id="fbSendBtn" disabled data-i18n="fb.send">Senden</button>
+                <span class="dx-fb-status" id="fbStatus">—</span>
+              </div>
+
             </div>
-          </div>
+          </div><!-- /feedbackBox -->
 
-          <p class="micro" style="margin-top:1rem; opacity:.85;" data-i18n="dx.privacy">
-            Datenschutz: Inputs werden via API nur zur Generierung von Assessment/Report verarbeitet.
-          </p>
-        </div>
+        </div><!-- /reportContainer -->
+      </div><!-- /dx-rbox exec -->
+
+      <p class="dx-privacy" data-i18n="dx.privacy">
+        Inputs werden via API ausschließlich zur Generierung von Assessment und Report verarbeitet.
+      </p>
+
+    </div><!-- /card right -->
+
+  </div><!-- /dx-grid -->
+</div><!-- /dx-page -->
+</main>
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <div class="brand brand--footer">
+        <span class="brand__mark" aria-hidden="true">MDG</span>
+        <span class="brand__text">v4</span>
       </div>
+      <p class="micro" data-i18n="footer.tag">Strukturdiagnose für Stabilisierung und Umbau.</p>
     </div>
-  </main>
-
-  <footer class="footer">
-    <div class="container footer__grid">
-      <div>
-        <div class="brand brand--footer">
-          <span class="brand__mark" aria-hidden="true">MDG</span>
-          <span class="brand__text">v4</span>
-        </div>
-        <p class="micro" data-i18n="footer.tag">Strukturdiagnose für Stabilisierung und Umbau.</p>
-      </div>
-      <div class="footer__legal">
-        <a href="./impressum.html" rel="nofollow">Impressum</a>
-        <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
-        <a href="./kontakt.html" rel="nofollow">Kontakt</a>
-      </div>
+    <div class="footer__legal">
+      <a href="./impressum.html"   rel="nofollow">Impressum</a>
+      <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+      <a href="./kontakt.html"     rel="nofollow">Kontakt</a>
     </div>
-  </footer>
+  </div>
+</footer>
 
-  <script>
-  (() => {
-    const API_BASE = "https://api.mdg-indikation.de";
+<!-- ══════════════════════════════════════════
+     SCRIPT  — clean, single IIFE, no duplication
+══════════════════════════════════════════ -->
+<script>
+(() => {
+  "use strict";
 
-    const $ = (s, r=document) => r.querySelector(s);
-    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  /* ── helpers ─────────────────────────────── */
+  const $  = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+  const API = "https://api.mdg-indikation.de";
 
-    const burger = $(".burger");
-    const drawer = $(".drawer");
-    if (burger && drawer) {
-      burger.addEventListener("click", () => {
-        const open = drawer.hasAttribute("hidden") ? false : true;
-        if (open) {
-          drawer.setAttribute("hidden", "");
-          burger.setAttribute("aria-expanded", "false");
-        } else {
-          drawer.removeAttribute("hidden");
-          burger.setAttribute("aria-expanded", "true");
-        }
-      });
+  /* ── mobile drawer ───────────────────────── */
+  const burger = $(".burger"), drawer = $(".drawer");
+  if (burger && drawer) {
+    const open  = () => { drawer.hidden = false; burger.setAttribute("aria-expanded","true");  document.body.classList.add("no-scroll"); };
+    const close = () => { drawer.hidden = true;  burger.setAttribute("aria-expanded","false"); document.body.classList.remove("no-scroll"); };
+    burger.addEventListener("click", () => drawer.hidden ? open() : close());
+    drawer.addEventListener("click", e => { if (!$(".drawer__content",drawer).contains(e.target)) close(); });
+    window.addEventListener("keydown", e => { if (e.key==="Escape") close(); });
+  }
+
+  /* ── mode detection ──────────────────────── */
+  const params = new URLSearchParams(location.search);
+  const ss = sessionStorage, ls = localStorage;
+
+  const modeParam   = (params.get("mode") || "").toLowerCase();
+  const storedMode  = (ss.getItem("mdg_mode") || ls.getItem("mdg_mode") || "").toLowerCase();
+  const businessOk  = ss.getItem("mdg_business_ok")==="1" || ls.getItem("mdg_business_ok")==="1";
+  const tokenStored = (ss.getItem("mdg_business_token") || ls.getItem("mdg_business_token") || ls.getItem("mdg_token") || "").trim();
+
+  const wantBiz = modeParam==="business" || storedMode==="business";
+  const mode    = wantBiz && businessOk ? "business" : "private";
+
+  $("#modeText").textContent = mode==="business" ? "Business" : "Privat";
+  if (mode==="business") $("#tokenBadge").style.display = "";
+
+  /* ── i18n dictionary ─────────────────────── */
+  const dict = {
+    de: {
+      "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ","cta.backHome":"Zur Homepage",
+      "dx.title":"Diagnose",
+      "dx.sub":"In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen.",
+      "dx.s1":"Kontext","dx.s2":"Quick Scan","dx.s3":"Präzisionsfragen",
+      "dx.mode":"Modus","dx.goal":"Ziel","dx.goal.stabilize":"Stabilisieren","dx.goal.rebuild":"Umbauen",
+      "dx.oneliner":"Situation in einem Satz",
+      "q.load.title":"Last & Engpässe","q.decisions.title":"Entscheidungsarchitektur",
+      "q.energy.title":"Energie & Fehlerkultur","q.growth.title":"Wachstumsdruck / Komplexität",
+      "q.power.title":"Macht–Verantwortung",
+      "dx.run":"Diagnose starten","dx.reset":"Zurücksetzen",
+      "dx.outTitle":"Output","dx.assessTitle":"Strategisches Assessment",
+      "dx.execTitle":"Executive Report","dx.execBtn":"Report erzeugen","dx.copy":"Kopieren","dx.pdf":"PDF",
+      "dx.privacy":"Inputs werden via API ausschließlich zur Generierung von Assessment und Report verarbeitet.",
+      "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau.",
+      "kpi.primary":"Primär","kpi.path":"Pfad","kpi.risk":"Risiko",
+      "fb.head":"Feedback","fb.q1":"1) Was war am hilfreichsten?","fb.q2":"2) Was fehlt / ist unklar?",
+      "fb.q3":"3) Bewertung (0–10)","fb.hint":"0 = nicht hilfreich · 10 = extrem hilfreich","fb.send":"Senden"
+    },
+    tr: {
+      "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS","cta.backHome":"Anasayfa",
+      "dx.title":"Analiz",
+      "dx.sub":"Birkaç dakika içinde karar güveni: istikrarsızlığı erken gör, nedeni doğru teşhis et, mimari kur.",
+      "dx.s1":"Bağlam","dx.s2":"Hızlı tarama","dx.s3":"Kesinleştirme soruları",
+      "dx.mode":"Mod","dx.goal":"Hedef","dx.goal.stabilize":"Stabilize et","dx.goal.rebuild":"Yeniden kur",
+      "dx.oneliner":"Durumu tek cümleyle anlat",
+      "q.load.title":"Yük & darboğazlar","q.decisions.title":"Karar mimarisi",
+      "q.energy.title":"Enerji & hata kültürü","q.growth.title":"Büyüme baskısı / karmaşıklık",
+      "q.power.title":"Güç–sorumluluk uyumu",
+      "dx.run":"Başlat","dx.reset":"Sıfırla",
+      "dx.outTitle":"Çıktı","dx.assessTitle":"Stratejik değerlendirme",
+      "dx.execTitle":"Yönetici raporu","dx.execBtn":"Rapor üret","dx.copy":"Kopyala","dx.pdf":"PDF",
+      "dx.privacy":"Veriler yalnızca rapor üretimi için API üzerinden işlenir.",
+      "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
+      "kpi.primary":"Ana","kpi.path":"Yol","kpi.risk":"Risk",
+      "fb.head":"Geri bildirim","fb.q1":"1) En faydalı kısım neydi?","fb.q2":"2) Ne eksik / belirsiz?",
+      "fb.q3":"3) Puan (0–10)","fb.hint":"0 = faydasız · 10 = çok faydalı","fb.send":"Gönder"
+    },
+    en: {
+      "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
+      "dx.title":"Diagnosis",
+      "dx.sub":"In a few minutes to decision-confidence: detect instability early, diagnose precisely, build architecture.",
+      "dx.s1":"Context","dx.s2":"Quick Scan","dx.s3":"Precision Questions",
+      "dx.mode":"Mode","dx.goal":"Goal","dx.goal.stabilize":"Stabilize","dx.goal.rebuild":"Rebuild",
+      "dx.oneliner":"Describe the situation in one sentence",
+      "q.load.title":"Load & bottlenecks","q.decisions.title":"Decision architecture",
+      "q.energy.title":"Energy & error handling","q.growth.title":"Growth pressure / complexity",
+      "q.power.title":"Power–responsibility alignment",
+      "dx.run":"Run assessment","dx.reset":"Reset",
+      "dx.outTitle":"Output","dx.assessTitle":"Strategic Assessment",
+      "dx.execTitle":"Executive Report","dx.execBtn":"Generate Report","dx.copy":"Copy","dx.pdf":"PDF",
+      "dx.privacy":"Inputs are processed via API only to generate the assessment and report.",
+      "footer.tag":"Structure diagnosis for stabilization and rebuild.",
+      "kpi.primary":"Primary","kpi.path":"Path","kpi.risk":"Risk",
+      "fb.head":"Feedback","fb.q1":"1) What helped most?","fb.q2":"2) What's missing / unclear?",
+      "fb.q3":"3) Score (0–10)","fb.hint":"0 = not helpful · 10 = extremely helpful","fb.send":"Send"
     }
+  };
 
-    const params = new URLSearchParams(location.search);
-    const modeParam = (params.get("mode") || "").toLowerCase();
+  /* ── i18n helpers ────────────────────────── */
+  const getLang = () => {
+    const pressed = $$("[data-lang]").find(b => b.getAttribute("aria-pressed")==="true");
+    return pressed?.dataset.lang || ls.getItem("mdg_lang") || "de";
+  };
+  const T = (lang, de, tr, en) => lang==="tr" ? tr : lang==="en" ? en : de;
+  const esc = s => String(s)
+    .replaceAll("&","&amp;").replaceAll("<","&lt;")
+    .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 
-    const ss = window.sessionStorage;
-    const ls = window.localStorage;
+  /* ── apply language ──────────────────────── */
+  function applyLang(lang) {
+    if (!dict[lang]) lang = "de";
+    ls.setItem("mdg_lang", lang);
+    document.documentElement.lang = lang;
+    $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang===lang)));
+    $$("[data-i18n]").forEach(el => {
+      const v = dict[lang][el.dataset.i18n];
+      if (v !== undefined) el.textContent = v;
+    });
+    renderHelp(lang);
+    renderQuestions(lang);
+    if (!STATE.assessment) resetKpis(lang);
+  }
+  $$("[data-lang]").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.lang)));
 
-    const storedMode = ((ss.getItem("mdg_mode") || ls.getItem("mdg_mode") || "")).toLowerCase();
-    const businessOk = (ss.getItem("mdg_business_ok") === "1") || (ls.getItem("mdg_business_ok") === "1");
-    const tokenStored =
-      (ss.getItem("mdg_business_token") || ls.getItem("mdg_business_token") || ls.getItem("mdg_token") || "").trim();
+  /* ── help texts (mode-aware) ─────────────── */
+  function renderHelp(lang) {
+    const biz = mode==="business";
 
-    const wantsBusiness = (modeParam === "business") || (storedMode === "business");
-    const mode = (wantsBusiness && businessOk) ? "business" : "private";
+    // Mode hint
+    $("#modeHint").textContent = (wantBiz && !businessOk)
+      ? T(lang,
+          "Business-Zugang nicht aktiv – bitte Token über die Landingpage bestätigen.",
+          "Business erişimi aktif değil – lütfen token'ı ana sayfada doğrula.",
+          "Business access inactive – please verify token on the landing page.")
+      : biz
+        ? T(lang,
+            "Business: Fokus auf Unternehmen, Führung, Teams und Verantwortung.",
+            "Business: şirket, liderlik, ekip ve sorumluluk odağı.",
+            "Business: focus on companies, leadership, teams & accountability.")
+        : T(lang,
+            "Privat: Fokus auf persönliche Systeme, Beziehungen, Alltag und Belastung.",
+            "Özel: kişisel sistemler, ilişkiler, günlük hayat ve yük odağı.",
+            "Private: focus on personal systems, relationships, daily life & load.");
 
-    $("#modeText").textContent = (mode === "business") ? "Business" : "Privat";
-    if (mode === "business") $("#tokenBadge").style.display = "";
+    // Goal help
+    $("#goalHelp").innerHTML = T(lang,
+      "<b>Stabilisieren</b> = Spannung senken. <b>Umbauen</b> = Architektur ändern.",
+      "<b>Stabilize</b> = gerilimi düşür. <b>Yeniden kur</b> = mimariyi değiştir.",
+      "<b>Stabilize</b> = reduce tension. <b>Rebuild</b> = change architecture.");
 
-    const dict = {
-      de: {
-        "nav.how":"Wie es funktioniert",
-        "nav.why":"Warum MDG",
-        "nav.faq":"FAQ",
-        "cta.backHome":"Zur Homepage",
+    // One-liner examples (mode-specific)
+    $("#oneLinerHelp").innerHTML = biz
+      ? T(lang,
+          "Bsp 1: <b>„Entscheidungen dauern zu lange und hängen an einer Person."</b><br>Bsp 2: <b>„Team A und B blockieren sich, Qualität fällt."</b>",
+          "Örn 1: <b>"Kararlar çok uzun sürüyor ve bir kişiye bağlı."</b><br>Örn 2: <b>"A ve B ekibi birbirini kilitliyor, kalite düşüyor."</b>",
+          "Ex 1: <b>"Decisions take too long and depend on one person."</b><br>Ex 2: <b>"Team A and B block each other, quality drops."</b>")
+      : T(lang,
+          "Bsp 1: <b>„Ich prokrastiniere und verliere Kontrolle über meinen Alltag."</b><br>Bsp 2: <b>„Wir haben wiederkehrende Konflikte und nichts ändert sich."</b>",
+          "Örn 1: <b>"Erteleme yapıyorum ve günlük hayat kontrolüm kayıyor."</b><br>Örn 2: <b>"Tekrarlayan çatışmalar var ve hiçbir şey değişmiyor."</b>",
+          "Ex 1: <b>"I procrastinate and lose control over my daily life."</b><br>Ex 2: <b>"We have recurring conflicts and nothing changes."</b>");
 
-        "dx.title":"Diagnose",
-        "dx.sub":"In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen.",
-        "dx.contextTitle":"1) Kontext",
-        "dx.mode":"Modus",
-        "dx.goal":"Ziel",
-        "dx.goal.stabilize":"Stabilisieren",
-        "dx.goal.rebuild":"Umbauen",
-        "dx.oneliner":"Beschreibe die Situation in einem Satz",
-        "dx.scanTitle":"2) Quick Scan (Slider)",
-        "dx.moreTitle":"3) Präzisionsfragen (adaptiv)",
-        "dx.run":"Diagnose starten",
-        "dx.reset":"Zurücksetzen",
+    // Slider anchors (no examples — keep it short)
+    $("#exLoad").textContent      = T(lang,"0 = verteilt · 6 = Dauer-Engpass","0 = dağıtılmış · 6 = sürekli darboğaz","0 = distributed · 6 = permanent bottleneck");
+    $("#exDecisions").textContent = T(lang,"0 = klar & schnell · 6 = unklar & langsam","0 = net & hızlı · 6 = belirsiz & yavaş","0 = clear & fast · 6 = unclear & slow");
+    $("#exEnergy").textContent    = T(lang,"0 = stabil · 6 = am Limit","0 = stabil · 6 = limitte","0 = stable · 6 = at the limit");
+    $("#exGrowth").textContent    = T(lang,"0 = kontrolliert · 6 = Komplexität > Struktur","0 = kontrollü · 6 = karmaşıklık > yapı","0 = controlled · 6 = complexity > structure");
+    $("#exPower").textContent     = T(lang,"0 = verteilt · 6 = konzentriert","0 = uyumlu · 6 = kopuk","0 = aligned · 6 = misaligned");
 
-        "dx.outputTitle":"Output",
-        "dx.outputHint":"Du erhältst: Primärinstabilität, warum sie entsteht, Sofortmaßnahmen und Umbaupfad.",
-        "dx.assessmentTitle":"Strategisches Assessment",
-        "dx.execTitle":"Executive Report",
-        "dx.execBtn":"Executive Report erzeugen",
-        "dx.copy":"Kopieren",
-        "dx.pdfBtn":"PDF",
-        "dx.privacy":"Datenschutz: Inputs werden via API nur zur Generierung von Assessment/Report verarbeitet.",
-        "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau.",
+    // Exec hint
+    $("#execHint").textContent = biz
+      ? T(lang,
+          "Business: Diagnose + Operating Model + Rollen + Rhythmus + KPIs + 30-60-90.",
+          "Business: teşhis + işletim modeli + roller + ritim + KPI + 30-60-90.",
+          "Business: diagnosis + operating model + roles + cadence + KPIs + 30-60-90.")
+      : T(lang,
+          "Privat: Ursachenlogik, Spannungsdynamik, klare Prioritäten, konkrete Moves.",
+          "Özel: neden mantığı, gerilim dinamiği, net öncelikler, somut adımlar.",
+          "Private: causal logic, tension dynamics, clear priorities, concrete moves.");
+  }
 
-        "q.load.title":"Last & Engpässe",
-        "q.decisions.title":"Entscheidungsarchitektur",
-        "q.energy.title":"Energie & Fehlerkultur",
-        "q.growth.title":"Wachstumsdruck / Komplexität",
-        "q.power.title":"Macht–Verantwortung (Alignment)",
+  /* ── adaptive questions ──────────────────── */
+  function renderQuestions(lang) {
+    const biz = mode==="business";
+    const qs = biz ? [
+      { id:"b_q1",
+        title: T(lang,"Wo entsteht aktuell die größte Verzögerung?","En büyük gecikme nerede?","Where is the biggest delay?"),
+        opts: [
+          {v:"decisions", l:T(lang,"Entscheidungen","Kararlar","Decisions")},
+          {v:"handoff",   l:T(lang,"Übergaben","Devir","Handoffs")},
+          {v:"quality",   l:T(lang,"Qualität / Rework","Kalite / rework","Quality / rework")},
+          {v:"capacity",  l:T(lang,"Kapazität / Skills","Kapasite / skill","Capacity / skills")}
+        ]},
+      { id:"b_q2",
+        title: T(lang,"Was passiert, wenn die Schlüsselrolle zwei Wochen ausfällt?","Kritik rol iki hafta yoksa ne olur?","If the key role is out for two weeks?"),
+        opts: [
+          {v:"fine",  l:T(lang,"Läuft weiter","Devam eder","Continues")},
+          {v:"slow",  l:T(lang,"Wird langsamer","Yavaşlar","Slower")},
+          {v:"break", l:T(lang,"Bricht zusammen","Kırılır","Breaks")}
+        ]},
+      { id:"b_q3",
+        title: T(lang,"Wie klar sind Rollen & Zuständigkeiten?","Roller/sorumluluklar ne kadar net?","How clear are roles & ownership?"),
+        opts: [
+          {v:"clear",   l:T(lang,"Sehr klar","Çok net","Very clear")},
+          {v:"mixed",   l:T(lang,"Teilweise","Kısmen","Partial")},
+          {v:"unclear", l:T(lang,"Unklar","Belirsiz","Unclear")}
+        ]}
+    ] : [
+      { id:"p_q1",
+        title: T(lang,"Was ist der Haupt-Auslöser der Spannung?","Gerilimin ana tetikleyicisi nedir?","Main trigger of the tension?"),
+        opts: [
+          {v:"time",        l:T(lang,"Zeitdruck","Zaman baskısı","Time pressure")},
+          {v:"conflict",    l:T(lang,"Konflikt","Çatışma","Conflict")},
+          {v:"uncertainty", l:T(lang,"Unklarheit","Belirsizlik","Uncertainty")},
+          {v:"energy",      l:T(lang,"Erschöpfung","Yorgunluk","Exhaustion")}
+        ]},
+      { id:"p_q2",
+        title: T(lang,"Wie stark hängt das System an einer Person?","Sistem bir kişiye ne kadar bağlı?","How much does the system depend on one person?"),
+        opts: [
+          {v:"low",    l:T(lang,"Gering","Az","Low")},
+          {v:"medium", l:T(lang,"Mittel","Orta","Medium")},
+          {v:"high",   l:T(lang,"Hoch","Yüksek","High")}
+        ]},
+      { id:"p_q3",
+        title: T(lang,"Wie gut werden Fehler genutzt statt versteckt?","Hatalar öğrenmeye dönüyor mu?","How well are errors used instead of hidden?"),
+        opts: [
+          {v:"good",  l:T(lang,"Gut","İyi","Good")},
+          {v:"mixed", l:T(lang,"Gemischt","Karışık","Mixed")},
+          {v:"bad",   l:T(lang,"Schlecht","Kötü","Bad")}
+        ]}
+    ];
 
-        "kpi.primary":"Primär",
-        "kpi.path":"Pfad",
-        "kpi.risk":"Risiko",
+    const root = $("#questions");
+    root.innerHTML = "";
+    qs.forEach(q => {
+      const d = document.createElement("div");
+      d.className = "dx-q";
+      d.innerHTML = `
+        <div class="dx-qtitle">${esc(q.title)}</div>
+        <div class="dx-opts">
+          ${q.opts.map(o => `
+            <label class="dx-opt">
+              <input type="radio" name="${q.id}" value="${o.v}" />
+              ${esc(o.l)}
+            </label>`).join("")}
+        </div>`;
+      root.appendChild(d);
+    });
+  }
 
-        "fb.title":"Feedback (kurz)",
-        "fb.q1":"1) Was war am hilfreichsten?",
-        "fb.q2":"2) Was fehlt / ist unklar?",
-        "fb.q3":"3) Bewertung (0–10)",
-        "fb.q3hint":"0 = nicht hilfreich • 10 = extrem hilfreich",
-        "fb.send":"Senden"
-      },
-      tr: {
-        "nav.how":"Nasıl çalışır",
-        "nav.why":"Neden MDG",
-        "nav.faq":"SSS",
-        "cta.backHome":"Anasayfa",
+  /* ── sliders ─────────────────────────────── */
+  function syncSliders() {
+    [["sLoad","vLoad"],["sDecisions","vDecisions"],["sEnergy","vEnergy"],
+     ["sGrowth","vGrowth"],["sPower","vPower"]].forEach(([sid,vid]) => {
+      const s = document.getElementById(sid), v = document.getElementById(vid);
+      if (s && v) v.textContent = s.value;
+    });
+  }
+  $$('input[type="range"]').forEach(r => r.addEventListener("input", syncSliders));
 
-        "dx.title":"Analiz",
-        "dx.sub":"Birkaç dakika içinde karar güveni: istikrarsızlığı erken gör, nedeni doğru teşhis et, mimari kur.",
-        "dx.contextTitle":"1) Bağlam",
-        "dx.mode":"Mod",
-        "dx.goal":"Hedef",
-        "dx.goal.stabilize":"Stabilize et",
-        "dx.goal.rebuild":"Yeniden kur",
-        "dx.oneliner":"Durumu tek cümleyle anlat",
-        "dx.scanTitle":"2) Hızlı tarama (Slider)",
-        "dx.moreTitle":"3) Kesinleştirme soruları",
-        "dx.run":"Başlat",
-        "dx.reset":"Sıfırla",
-
-        "dx.outputTitle":"Çıktı",
-        "dx.outputHint":"Alacağın: ana instabilite, nedenleri, hemen yapılacaklar ve dönüşüm yolu.",
-        "dx.assessmentTitle":"Stratejik değerlendirme",
-        "dx.execTitle":"Yönetici raporu",
-        "dx.execBtn":"Rapor üret",
-        "dx.copy":"Kopyala",
-        "dx.pdfBtn":"PDF",
-        "dx.privacy":"Gizlilik: Veriler yalnızca rapor üretimi için API üzerinden işlenir.",
-        "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
-
-        "q.load.title":"Yük & darboğazlar",
-        "q.decisions.title":"Karar mimarisi",
-        "q.energy.title":"Enerji & hata kültürü",
-        "q.growth.title":"Büyüme baskısı / karmaşıklık",
-        "q.power.title":"Güç–sorumluluk uyumu",
-
-        "kpi.primary":"Ana",
-        "kpi.path":"Yol",
-        "kpi.risk":"Risk",
-
-        "fb.title":"Geri bildirim (kısa)",
-        "fb.q1":"1) En faydalı kısım neydi?",
-        "fb.q2":"2) Ne eksik / belirsiz?",
-        "fb.q3":"3) Puan (0–10)",
-        "fb.q3hint":"0 = faydasız • 10 = çok faydalı",
-        "fb.send":"Gönder"
-      },
-      en: {
-        "nav.how":"How it works",
-        "nav.why":"Why MDG",
-        "nav.faq":"FAQ",
-        "cta.backHome":"Home",
-
-        "dx.title":"Diagnosis",
-        "dx.sub":"In a few minutes to decision-confidence: detect instability early, diagnose precisely, build architecture.",
-        "dx.contextTitle":"1) Context",
-        "dx.mode":"Mode",
-        "dx.goal":"Goal",
-        "dx.goal.stabilize":"Stabilize",
-        "dx.goal.rebuild":"Rebuild",
-        "dx.oneliner":"Describe the situation in one sentence",
-        "dx.scanTitle":"2) Quick Scan (sliders)",
-        "dx.moreTitle":"3) Precision Questions (adaptive)",
-        "dx.run":"Run assessment",
-        "dx.reset":"Reset",
-
-        "dx.outputTitle":"Output",
-        "dx.outputHint":"You will get: primary instability, why it happens, what to do now, and what to rebuild.",
-        "dx.assessmentTitle":"Strategic Assessment",
-        "dx.execTitle":"Executive Report",
-        "dx.execBtn":"Generate Executive Report",
-        "dx.copy":"Copy",
-        "dx.pdfBtn":"PDF",
-        "dx.privacy":"Privacy: inputs are processed via API only to generate the assessment/report.",
-        "footer.tag":"Structure diagnosis for stabilization and rebuild.",
-
-        "q.load.title":"Load & bottlenecks",
-        "q.decisions.title":"Decision architecture",
-        "q.energy.title":"Energy & error handling",
-        "q.growth.title":"Growth pressure / complexity",
-        "q.power.title":"Power–responsibility alignment",
-
-        "kpi.primary":"Primary",
-        "kpi.path":"Path",
-        "kpi.risk":"Risk",
-
-        "fb.title":"Feedback (quick)",
-        "fb.q1":"1) What helped most?",
-        "fb.q2":"2) What’s missing / unclear?",
-        "fb.q3":"3) Score (0–10)",
-        "fb.q3hint":"0 = not helpful • 10 = extremely helpful",
-        "fb.send":"Send"
-      }
+  /* ── KPI pills ───────────────────────────── */
+  function resetKpis(lang) {
+    const k = dict[lang] || dict.de;
+    $("#kpiPrimary").textContent = k["kpi.primary"] + ": —";
+    $("#kpiPath").textContent    = k["kpi.path"]    + ": —";
+    $("#kpiRisk").textContent    = k["kpi.risk"]    + ": —";
+    [$('#kpiPrimary'),$('#kpiPath'),$('#kpiRisk')].forEach(el => el?.classList.remove("active"));
+  }
+  function setKpis(lang, data) {
+    const k = dict[lang] || dict.de;
+    const set = (id, key, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = k[key] + ": " + (val || "—");
+      if (val) el.classList.add("active"); else el.classList.remove("active");
     };
+    set("kpiPrimary","kpi.primary", data?.primary);
+    set("kpiPath",   "kpi.path",    data?.path);
+    set("kpiRisk",   "kpi.risk",    data?.risk);
+  }
 
-    function getLang(){
-      const pressed = $$("[data-lang]").find(b => b.getAttribute("aria-pressed") === "true");
-      return pressed?.dataset.lang || "de";
+  /* ── status line ─────────────────────────── */
+  function setStatus(msg, cls="") {
+    const el = $("#statusLine");
+    el.textContent = msg;
+    el.className = "micro" + (cls ? " "+cls : "");
+  }
+
+  /* ── API ─────────────────────────────────── */
+  async function postJSON(path, body) {
+    const res  = await fetch(`${API}${path}`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
+    return data;
+  }
+  function downloadBlob(blob, name) {
+    const a = document.createElement("a"), url = URL.createObjectURL(blob);
+    a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 800);
+  }
+
+  /* ── payload builder ─────────────────────── */
+  function buildPayload() {
+    const radios = {};
+    $$('input[type="radio"]:checked').forEach(r => { radios[r.name] = r.value; });
+    return {
+      version: "v4",
+      mode,
+      token:   mode==="business" ? tokenStored : undefined,
+      lang:    getLang(),
+      problem: ($("#oneLiner").value || "").trim(),
+      intent:  $("#goalSelect").value,
+      answers: {
+        quick_scan: {
+          load:      +$("#sLoad").value,
+          decisions: +$("#sDecisions").value,
+          energy:    +$("#sEnergy").value,
+          growth:    +$("#sGrowth").value,
+          power:     +$("#sPower").value,
+        },
+        radios
+      },
+      meta: { ts: new Date().toISOString(), ua: navigator.userAgent }
+    };
+  }
+
+  /* ── state ───────────────────────────────── */
+  const STATE = { assessment: null, report: "" };
+
+  /* ── run assessment ──────────────────────── */
+  async function runAssessment() {
+    const lang = getLang();
+    const payload = buildPayload();
+
+    if (!payload.problem) {
+      alert(T(lang,"Bitte beschreibe die Situation in einem Satz.","Lütfen durumu tek cümleyle yaz.","Please describe the situation in one sentence."));
+      return;
+    }
+    if (mode==="business" && !payload.token) {
+      alert(T(lang,"Business-Token fehlt – bitte über die Landingpage einsteigen.","Business token eksik.","Business token missing."));
+      return;
     }
 
-    function applyLang(lang){
-      if(!dict[lang]) lang = "en";
-      document.documentElement.lang = lang;
+    setStatus(T(lang,"läuft …","çalışıyor …","running …"), "running");
+    $("#resultText").textContent = "—";
+    $("#execText").textContent   = "—";
+    $("#copyExecBtn").disabled   = true;
+    $("#reportContainer").style.display = "none";
+    $("#feedbackBox").style.display     = "none";
+    STATE.assessment = null; STATE.report = "";
+    resetKpis(lang);
 
-      $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
-      $$("[data-i18n]").forEach(el => {
-        const k = el.dataset.i18n;
-        const v = dict[lang][k];
-        if (v) el.textContent = v;
-      });
+    try {
+      const data = await postJSON("/api/assess", payload);
+      STATE.assessment = data;
+      $("#resultText").textContent = data.assessment_text || JSON.stringify(data, null, 2);
+      setKpis(lang, data);
+      setStatus(T(lang,"fertig ✓","bitti ✓","done ✓"), "done");
+    } catch(e) {
+      setStatus(T(lang,"Fehler: ","Hata: ","Error: ") + (e?.message||String(e)), "err");
+    }
+  }
 
-      renderHelpTexts(lang);
-      renderAdaptiveQuestions(lang);
-      renderHints(lang);
+  /* ── run executive report ────────────────── */
+  async function runReport() {
+    const lang = getLang();
 
-      const k = dict[lang] || dict.en;
-      $("#kpiPrimary").textContent = (k["kpi.primary"] || "Primary") + ": —";
-      $("#kpiPath").textContent    = (k["kpi.path"] || "Path") + ": —";
-      $("#kpiRisk").textContent    = (k["kpi.risk"] || "Risk") + ": —";
+    if (!STATE.assessment) {
+      alert(T(lang,"Bitte zuerst die Diagnose starten.","Önce değerlendirmeyi çalıştır.","Run the assessment first."));
+      return;
     }
 
-    $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => applyLang(btn.dataset.lang)));
+    setStatus(T(lang,"Report wird erstellt …","Rapor oluşturuluyor …","Generating report …"), "running");
+    $("#execText").textContent   = "—";
+    $("#copyExecBtn").disabled   = true;
+    $("#reportContainer").style.display = "none";
+    $("#feedbackBox").style.display     = "none";
+    STATE.report = "";
 
-    function renderHelpTexts(lang){
-      const business = (mode === "business");
-      const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
+    try {
+      const payload = { ...buildPayload(), assessment: STATE.assessment };
+      const data    = await postJSON("/api/report", payload);
+      STATE.report  = data.report_markdown || JSON.stringify(data, null, 2);
+      $("#execText").textContent  = STATE.report;
+      $("#reportContainer").style.display = "";
+      $("#copyExecBtn").disabled  = false;
+      clearFeedback();
+      $("#feedbackBox").style.display = "block";
+      setStatus(T(lang,"Report fertig ✓","Rapor hazır ✓","Report ready ✓"), "done");
+    } catch(e) {
+      setStatus(T(lang,"Fehler: ","Hata: ","Error: ") + (e?.message||String(e)), "err");
+    }
+  }
 
-      if (wantsBusiness && !businessOk) {
-        $("#modeHint").innerHTML = t(
-          "Business-Zugang nicht aktiv. Bitte Token über die Landingpage bestätigen.",
-          "Business erişimi aktif değil. Lütfen token’ı ana sayfada doğrula.",
-          "Business access not active. Please verify token on the landing page."
-        );
+  /* ── PDF ─────────────────────────────────── */
+  async function runPdf() {
+    const lang = getLang();
+    if (!STATE.assessment) {
+      alert(T(lang,"Bitte zuerst die Diagnose starten.","Önce değerlendirmeyi çalıştır.","Run the assessment first."));
+      return;
+    }
+    setStatus(T(lang,"PDF wird erstellt …","PDF oluşturuluyor …","Generating PDF …"), "running");
+    try {
+      const payload = { ...buildPayload(), assessment: STATE.assessment };
+      if (STATE.report) payload.report_markdown = STATE.report;
+      const res = await fetch(`${API}/api/pdf`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+      if (!res.ok) throw new Error((await res.text().catch(()=>"")).slice(0,140) || `PDF ${res.status}`);
+      const ct = (res.headers.get("content-type")||"").toLowerCase();
+      if (ct.includes("application/json")) {
+        const d   = await res.json().catch(()=>({}));
+        const b64 = d?.pdf_base64 || d?.base64 || "";
+        if (!b64) throw new Error("No pdf_base64 in response");
+        downloadBlob(new Blob([Uint8Array.from(atob(b64), c=>c.charCodeAt(0))], {type:"application/pdf"}), "mdg-executive-report.pdf");
       } else {
-        $("#modeHint").innerHTML = business
-          ? t(
-              "Business-Modus: Fokus auf Unternehmen, Führung, Teams und Verantwortung.",
-              "Business modu: şirket, liderlik, ekip ve sorumluluk odağı.",
-              "Business mode: focus on companies, leadership, teams, accountability."
-            )
-          : t(
-              "Privat-Modus: Fokus auf persönliche Systeme, Beziehungen, Alltag, Rollen & Belastung.",
-              "Özel mod: kişisel sistemler, ilişkiler, günlük hayat, roller ve yük odağı.",
-              "Private mode: focus on personal systems, relationships, daily life, roles and load."
-            );
+        downloadBlob(new Blob([await res.arrayBuffer()], {type:"application/pdf"}), "mdg-executive-report.pdf");
       }
-
-      /* Redundanz bei Ziel: nur 1 Erklärung, Optionen kurz */
-      $("#goalHelp").innerHTML = t(
-        "<b>Stabilisieren</b> = Spannung senken. <b>Umbauen</b> = Architektur ändern.",
-        "<b>Stabilize</b> = gerilimi düşür. <b>Yeniden kur</b> = mimariyi değiştir.",
-        "<b>Stabilize</b> = reduce tension. <b>Rebuild</b> = change architecture."
-      );
-
-      /* 2 Beispiele bleiben NUR hier (wie gewünscht) */
-      $("#oneLinerHelp").innerHTML = business
-        ? t(
-            "Beispiel 1: <b>„Unsere Entscheidungen dauern zu lange und hängen an einer Person.“</b><br>Beispiel 2: <b>„Team A und B blockieren sich, Qualität fällt.“</b>",
-            "Örnek 1: <b>“Kararlar çok uzun sürüyor ve bir kişiye bağlı.”</b><br>Örnek 2: <b>“Takım A ve B birbirini kilitliyor, kalite düşüyor.”</b>",
-            "Example 1: <b>“Decisions take too long and depend on one person.”</b><br>Example 2: <b>“Team A and B block each other, quality drops.”</b>"
-          )
-        : t(
-            "Beispiel 1: <b>„Ich prokrastiniere und verliere Kontrolle über meinen Alltag.“</b><br>Beispiel 2: <b>„Wir haben wiederkehrende Konflikte und nichts ändert sich.“</b>",
-            "Örnek 1: <b>“Erteleme yapıyorum ve günlük hayat kontrolüm kayıyor.”</b><br>Örnek 2: <b>“Tekrarlayan çatışmalar var ve hiçbir şey değişmiyor.”</b>",
-            "Example 1: <b>“I procrastinate and lose control over my daily life.”</b><br>Example 2: <b>“We have recurring conflicts and nothing changes.”</b>"
-          );
-
-      /* Quickscan: KEINE Beispiele mehr */
-      $("#exLoad").innerHTML = t(
-        "0 = verteilt • 6 = Dauer-Engpass",
-        "0 = dağıtılmış • 6 = sürekli darboğaz",
-        "0 = distributed • 6 = permanent bottleneck"
-      );
-      $("#exDecisions").innerHTML = t(
-        "0 = klar & schnell • 6 = unklar & langsam",
-        "0 = net & hızlı • 6 = belirsiz & yavaş",
-        "0 = clear & fast • 6 = unclear & slow"
-      );
-      $("#exEnergy").innerHTML = t(
-        "0 = stabil • 6 = am Limit",
-        "0 = stabil • 6 = limitte",
-        "0 = stable • 6 = at the limit"
-      );
-      $("#exGrowth").innerHTML = t(
-        "0 = kontrolliert • 6 = Komplexität > Struktur",
-        "0 = kontrollü • 6 = karmaşıklık > yapı",
-        "0 = controlled • 6 = complexity > structure"
-      );
-      $("#exPower").innerHTML = t(
-        "0 = verteilt • 6 = konzentriert",
-        "0 = uyumlu • 6 = kopuk",
-        "0 = aligned • 6 = misalignment"
-      );
-
-      $("#execHint").textContent = business
-        ? t(
-            "Business: Diagnose + Operating Model + Rollen + Rhythmus + KPIs + 30-60-90.",
-            "Business: teşhis + işletim modeli + roller + ritim + KPI + 30-60-90.",
-            "Business: diagnosis + operating model + roles + cadence + KPIs + 30-60-90."
-          )
-        : t(
-            "Privat: Ursachenlogik, Spannungsdynamik, klare Prioritäten, konkrete Moves.",
-            "Özel: neden mantığı, gerilim dinamiği, net öncelikler, somut adımlar.",
-            "Private: causal logic, tension dynamics, clear priorities, concrete moves."
-          );
+      setStatus(T(lang,"PDF fertig ✓","PDF hazır ✓","PDF ready ✓"), "done");
+    } catch(e) {
+      setStatus(T(lang,"Fehler: ","Hata: ","Error: ") + (e?.message||String(e)), "err");
     }
+  }
 
-    function escapeHtml(s){
-      return String(s)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
+  /* ── feedback ────────────────────────────── */
+  /*
+   * UNIFIED SYSTEM — single set of static IDs:
+   *   fbQ1 (textarea)  fbQ2 (textarea)  fbNps (number)
+   *   fbSendBtn        fbStatus
+   * Elements exist in the DOM from page load.
+   * hookFeedback() attaches input-listeners ONCE at init.
+   * clearFeedback() resets values when a new report is generated.
+   */
+  function clearFeedback() {
+    ["fbQ1","fbQ2","fbNps"].forEach(id => { const el = document.getElementById(id); if (el) el.value=""; });
+    $("#fbSendBtn").disabled    = true;
+    $("#fbStatus").textContent  = "—";
+  }
 
-    function renderAdaptiveQuestions(lang){
-      const business = (mode === "business");
-      const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
+  function feedbackOk() {
+    const q1  = ($("#fbQ1").value||"").trim();
+    const q2  = ($("#fbQ2").value||"").trim();
+    const nps = ($("#fbNps").value||"").trim();
+    const n   = Number(nps);
+    return q1.length>=2 && q2.length>=2 && /^\d{1,2}$/.test(nps) && n>=0 && n<=10;
+  }
 
-      const qs = business ? [
-        {
-          id:"b_q1",
-          title: t("Wo entsteht aktuell die größte Verzögerung?","En büyük gecikme nerede?","Where is the biggest delay?"),
-          options: [
-            {v:"decisions", label:t("Entscheidungen","Kararlar","Decisions")},
-            {v:"handoff", label:t("Übergaben","Devir","Handoffs")},
-            {v:"quality", label:t("Qualität / Rework","Kalite / rework","Quality / rework")},
-            {v:"capacity", label:t("Kapazität / Skills","Kapasite / skill","Capacity / skills")}
-          ]
-        },
-        {
-          id:"b_q2",
-          title: t("Was passiert, wenn die Schlüsselrolle zwei Wochen ausfällt?","Kritik rol iki hafta yoksa?","If the key role is out for two weeks?"),
-          options: [
-            {v:"fine", label:t("Läuft weiter","Devam eder","Continues")},
-            {v:"slow", label:t("Wird langsamer","Yavaşlar","Slower")},
-            {v:"break", label:t("Bricht","Kırılır","Breaks")}
-          ]
-        },
-        {
-          id:"b_q3",
-          title: t("Wie klar sind Rollen & Zuständigkeiten?","Roller/sorumluluk ne kadar net?","How clear are roles & ownership?"),
-          options: [
-            {v:"clear", label:t("Sehr klar","Çok net","Very clear")},
-            {v:"mixed", label:t("Teilweise klar","Kısmen net","Partially clear")},
-            {v:"unclear", label:t("Unklar","Belirsiz","Unclear")}
-          ]
-        }
-      ] : [
-        {
-          id:"p_q1",
-          title: t("Was ist der Haupt-Auslöser der Spannung?","Gerilimin ana tetikleyicisi?","Main trigger of the tension?"),
-          options: [
-            {v:"time", label:t("Zeitdruck","Zaman baskısı","Time pressure")},
-            {v:"conflict", label:t("Konflikt","Çatışma","Conflict")},
-            {v:"uncertainty", label:t("Unklarheit","Belirsizlik","Uncertainty")},
-            {v:"energy", label:t("Energie / Erschöpfung","Enerji / yorgunluk","Energy / exhaustion")}
-          ]
-        },
-        {
-          id:"p_q2",
-          title: t("Wie stark hängt das System an einer Person?","Sistem bir kişiye ne kadar bağlı?","How much does the system depend on one person?"),
-          options: [
-            {v:"low", label:t("Gering","Az","Low")},
-            {v:"medium", label:t("Mittel","Orta","Medium")},
-            {v:"high", label:t("Hoch","Yüksek","High")}
-          ]
-        },
-        {
-          id:"p_q3",
-          title: t("Wie gut werden Fehler genutzt (statt versteckt)?","Hatalar öğrenmeye dönüyor mu?","How well are errors used (instead of hidden)?"),
-          options: [
-            {v:"good", label:t("Gut","İyi","Good")},
-            {v:"mixed", label:t("Gemischt","Karışık","Mixed")},
-            {v:"bad", label:t("Schlecht","Kötü","Bad")}
-          ]
-        }
-      ];
-
-      const root = $("#questions");
-      root.innerHTML = "";
-      qs.forEach(q => {
-        const wrap = document.createElement("div");
-        wrap.className = "dx-q";
-        wrap.innerHTML = `
-          <div class="dx-qtitle">${escapeHtml(q.title)}</div>
-          <div class="dx-actions" style="margin-top:.55rem;">
-            ${q.options.map(o => `
-              <label class="pill pill--muted" style="cursor:pointer;">
-                <input type="radio" name="${q.id}" value="${o.v}" style="margin-right:.4rem; accent-color: rgba(110,231,183,.9);" />
-                ${escapeHtml(o.label)}
-              </label>
-            `).join("")}
-          </div>
-        `;
-        root.appendChild(wrap);
+  function hookFeedback() {
+    ["fbQ1","fbQ2","fbNps"].forEach(id => {
+      document.getElementById(id)?.addEventListener("input", () => {
+        document.getElementById("fbSendBtn").disabled = !feedbackOk();
       });
-    }
-
-    function renderHints(lang){
-      const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
-      $("#statusLine").textContent = t("Status: bereit", "Durum: hazır", "Status: ready");
-      $("#execText").textContent = "—";
-      $("#resultText").textContent = "—";
-      $("#copyExecBtn").disabled = true;
-      $("#reportContainer").style.display = "none";
-      $("#feedbackBox").style.display = "none";
-      $("#fbStatus").textContent = "—";
-    }
-
-    function syncSliders(){
-      const pairs = [["sLoad","vLoad"],["sDecisions","vDecisions"],["sEnergy","vEnergy"],["sGrowth","vGrowth"],["sPower","vPower"]];
-      pairs.forEach(([sid, vid]) => {
-        const s = document.getElementById(sid);
-        const v = document.getElementById(vid);
-        if (s && v) v.textContent = s.value;
-      });
-    }
-    $$('input[type="range"]').forEach(r => r.addEventListener("input", syncSliders));
-
-    function readRadios(){
-      const out = {};
-      $$('input[type="radio"]:checked').forEach(r => { out[r.name] = r.value; });
-      return out;
-    }
-
-    function buildPayload(){
-      const oneLiner = ($("#oneLiner").value || "").trim();
-      const intent = $("#goalSelect").value;
-
-      const quick_scan = {
-        load: Number($("#sLoad").value),
-        decisions: Number($("#sDecisions").value),
-        energy: Number($("#sEnergy").value),
-        growth: Number($("#sGrowth").value),
-        power: Number($("#sPower").value),
-      };
-
-      return {
-        version: "v4",
-        mode,
-        token: (mode === "business") ? tokenStored : undefined,
-        lang: getLang(),
-        problem: oneLiner,
-        intent,
-        answers: { quick_scan, radios: readRadios() },
-        meta: { ts: new Date().toISOString(), ua: navigator.userAgent }
-      };
-    }
-
-    async function postJson(path, body){
-      const res = await fetch(`${API_BASE}${path}`, {
-        method: "POST",
-        headers: { "Content-Type":"application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || `Request failed (${res.status})`);
-      return data;
-    }
-
-    function downloadBlob(blob, filename){
-      const a = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 800);
-    }
-
-    let LAST_ASSESSMENT = null;
-    let LAST_REPORT = "";
-
-    async function runAssessment(){
-      const lang = getLang();
-      const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
-      const k = dict[lang] || dict.en;
-
-      const payload = buildPayload();
-
-      if (!payload.problem) {
-        alert(t("Bitte beschreibe die Situation in einem Satz.", "Lütfen durumu tek cümleyle yaz.", "Please describe the situation in one sentence."));
-        return;
-      }
-      if (mode === "business" && !payload.token) {
-        alert(t("Business-Token fehlt. Bitte über die Landingpage erneut einsteigen.", "Business token eksik. Lütfen ana sayfadan tekrar gir.", "Business token missing. Please re-enter via landing page."));
-        return;
-      }
-
-      $("#statusLine").textContent = t("Status: läuft …", "Durum: çalışıyor …", "Status: running …");
-      $("#resultText").textContent = "—";
-      $("#execText").textContent = "—";
-      $("#copyExecBtn").disabled = true;
-      $("#reportContainer").style.display = "none";
-      $("#feedbackBox").style.display = "none";
-      $("#fbStatus").textContent = "—";
-      LAST_ASSESSMENT = null;
-      LAST_REPORT = "";
-
-      try{
-        const data = await postJson("/api/assess", payload);
-        LAST_ASSESSMENT = data;
-
-        const text = data.assessment_text || JSON.stringify(data, null, 2);
-        $("#resultText").textContent = text;
-
-        $("#kpiPrimary").textContent = (k["kpi.primary"] || "Primary") + ": " + (data.primary || "—");
-        $("#kpiPath").textContent    = (k["kpi.path"] || "Path") + ": " + (data.path || "—");
-        $("#kpiRisk").textContent    = (k["kpi.risk"] || "Risk") + ": " + (data.risk || "—");
-
-        $("#statusLine").textContent = t("Status: fertig", "Durum: bitti", "Status: done");
-      } catch(e){
-        $("#statusLine").textContent = t("Status: Fehler – ", "Durum: Hata – ", "Status: Error – ") + (e?.message || String(e));
-      }
-    }
-
-    async function runExecutiveReport(){
-      const lang = getLang();
-      const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
-
-      if (!LAST_ASSESSMENT) {
-        alert(t("Bitte zuerst die Diagnose starten.", "Önce değerlendirmeyi çalıştır.", "Run the assessment first."));
-        return;
-      }
-
-      $("#statusLine").textContent = t("Status: Report wird erstellt …", "Durum: Rapor oluşturuluyor …", "Status: generating report …");
-      $("#execText").textContent = "—";
-      $("#copyExecBtn").disabled = true;
-      $("#reportContainer").style.display = "none";
-      $("#feedbackBox").style.display = "none";
-      $("#fbStatus").textContent = "—";
-      LAST_REPORT = "";
-
-      try{
-        const payload = buildPayload();
-        payload.assessment = LAST_ASSESSMENT;
-
-        const data = await postJson("/api/report", payload);
-        const text = data.report_markdown || JSON.stringify(data, null, 2);
-
-        LAST_REPORT = text;
-        $("#execText").textContent = text;
-
-        $("#reportContainer").style.display = "";
-        $("#copyExecBtn").disabled = false;
-
-        initFeedbackUI();          /* reset state */
-        $("#feedbackBox").style.display = "block";
-
-        $("#statusLine").textContent = t("Status: Report fertig", "Durum: Rapor hazır", "Status: report ready");
-      } catch(e){
-        $("#statusLine").textContent = t("Status: Fehler – ", "Durum: Hata – ", "Status: Error – ") + (e?.message || String(e));
-      }
-    }
-
-    async function runPdf(){
-      const lang = getLang();
-      const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
-
-      if (!LAST_ASSESSMENT) {
-        alert(t("Bitte zuerst die Diagnose starten.", "Önce değerlendirmeyi çalıştır.", "Run the assessment first."));
-        return;
-      }
-      if (mode === "business" && !tokenStored) {
-        alert(t("Business-Token fehlt.", "Business token eksik.", "Business token missing."));
-        return;
-      }
-
-      $("#statusLine").textContent = t("Status: PDF wird erstellt …", "Durum: PDF oluşturuluyor …", "Status: generating PDF …");
-
-      try{
-        const payload = buildPayload();
-        payload.assessment = LAST_ASSESSMENT;
-        if (LAST_REPORT) payload.report_markdown = LAST_REPORT;
-
-        const res = await fetch(`${API_BASE}/api/pdf`, {
-          method: "POST",
-          headers: { "Content-Type":"application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) {
-          const txt = await res.text().catch(() => "");
-          throw new Error((txt && txt.slice(0,140)) || `PDF endpoint failed (${res.status})`);
-        }
-
-        const ct = (res.headers.get("content-type") || "").toLowerCase();
-
-        if (ct.includes("application/json")) {
-          const data = await res.json().catch(() => ({}));
-          const b64 = data?.pdf_base64 || data?.base64 || "";
-          if (!b64) throw new Error("PDF JSON received but no pdf_base64.");
-          const bin = atob(b64);
-          const bytes = new Uint8Array(bin.length);
-          for (let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
-          downloadBlob(new Blob([bytes], { type: "application/pdf" }), "mdg-executive-report.pdf");
-        } else {
-          const buf = await res.arrayBuffer();
-          downloadBlob(new Blob([buf], { type: "application/pdf" }), "mdg-executive-report.pdf");
-        }
-
-        $("#statusLine").textContent = t("Status: PDF fertig", "Durum: PDF hazır", "Status: PDF ready");
-      } catch(e){
-        $("#statusLine").textContent = t("Status: Fehler – ", "Durum: Hata – ", "Status: Error – ") + (e?.message || String(e));
-      }
-    }
-
-    function initFeedbackUI(){
-      const k = dict[getLang()] || dict.en;
-      $("#fbHint").textContent = k["fb.q3hint"] || "";
-      $("#fbQ1").value = "";
-      $("#fbQ2").value = "";
-      $("#fbNps").value = "";
-      $("#fbSendBtn").disabled = true;
-      $("#fbStatus").textContent = "—";
-    }
-
-    function feedbackReady(){
-      const q1 = ($("#fbQ1").value || "").trim();
-      const q2 = ($("#fbQ2").value || "").trim();
-      const nps = ($("#fbNps").value || "").trim();
-      return (q1.length >= 2) && (q2.length >= 2) && (/^\d{1,2}$/.test(nps)) && (Number(nps) >= 0) && (Number(nps) <= 10);
-    }
-
-    function hookFeedbackInputs(){
-      ["fbQ1","fbQ2","fbNps"].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener("input", () => {
-          $("#fbSendBtn").disabled = !feedbackReady();
-        });
-      });
-    }
-
-    async function sendFeedback(){
-      const lang = getLang();
-      const t = (de,tr,en) => (lang==="de"?de:(lang==="tr"?tr:en));
-
-      if (!feedbackReady()) return;
-
-      const payload = {
-        page: "diagnose",
-        mode,
-        lang,
-        problem: ($("#oneLiner").value || "").trim(),
-        q1: ($("#fbQ1").value || "").trim(),
-        q2: ($("#fbQ2").value || "").trim(),
-        nps: Number(($("#fbNps").value || "").trim()),
-        meta: { ts: new Date().toISOString(), ua: navigator.userAgent }
-      };
-
-      $("#fbStatus").textContent = "…";
-      $("#fbSendBtn").disabled = true;
-
-      try{
-        await postJson("/api/feedback", payload);
-        $("#fbStatus").textContent = "✓";
-      } catch(e){
-        $("#fbStatus").textContent = t("Fehler", "Hata", "Error");
-        $("#fbSendBtn").disabled = false;
-      }
-    }
-
-    function resetAll(){
-      $("#oneLiner").value = "";
-      $("#goalSelect").value = "stabilize";
-
-      ["sLoad","sDecisions","sEnergy","sGrowth","sPower"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = "2";
-      });
-      $$('input[type="radio"]').forEach(r => r.checked = false);
-
-      LAST_ASSESSMENT = null;
-      LAST_REPORT = "";
-
-      $("#resultText").textContent = "—";
-      $("#execText").textContent = "—";
-      $("#reportContainer").style.display = "none";
-      $("#copyExecBtn").disabled = true;
-
-      $("#feedbackBox").style.display = "none";
-      $("#fbStatus").textContent = "—";
-
-      renderHints(getLang());
-      syncSliders();
-      renderAdaptiveQuestions(getLang());
-    }
-
-    $("#copyExecBtn").addEventListener("click", async () => {
-      const txt = $("#execText").textContent || "";
-      if (!txt || txt === "—") return;
-      try { await navigator.clipboard.writeText(txt); } catch {}
     });
+  }
 
-    $("#runBtn").addEventListener("click", runAssessment);
-    $("#execBtn").addEventListener("click", runExecutiveReport);
-    $("#pdfBtn").addEventListener("click", runPdf);
+  async function sendFeedback() {
+    const lang = getLang();
+    if (!feedbackOk()) return;
+    const payload = {
+      page:"diagnose", mode, lang,
+      problem: ($("#oneLiner").value||"").trim(),
+      q1:  ($("#fbQ1").value||"").trim(),
+      q2:  ($("#fbQ2").value||"").trim(),
+      nps: Number(($("#fbNps").value||"").trim()),
+      meta: { ts: new Date().toISOString(), ua: navigator.userAgent }
+    };
+    $("#fbStatus").textContent  = "…";
+    $("#fbSendBtn").disabled    = true;
+    try {
+      await postJSON("/api/feedback", payload);
+      $("#fbStatus").textContent = "✓";
+    } catch {
+      $("#fbStatus").textContent = T(lang,"Fehler","Hata","Error");
+      document.getElementById("fbSendBtn").disabled = false;
+    }
+  }
 
-    $("#resetBtn").addEventListener("click", () => {
-      const lang = getLang();
-      const ok = confirm(lang==="de" ? "Wirklich zurücksetzen?" : (lang==="tr" ? "Sıfırlansın mı?" : "Reset?"));
-      if (ok) resetAll();
-    });
+  /* ── copy exec ───────────────────────────── */
+  $("#copyExecBtn").addEventListener("click", async () => {
+    const txt = $("#execText").textContent || "";
+    if (!txt || txt==="—") return;
+    try {
+      await navigator.clipboard.writeText(txt);
+      const btn = $("#copyExecBtn"), lang = getLang(), prev = btn.textContent;
+      btn.classList.add("btn--ok");
+      btn.textContent = T(lang,"Kopiert ✓","Kopyalandı ✓","Copied ✓");
+      setTimeout(() => { btn.classList.remove("btn--ok"); btn.textContent=prev; }, 1800);
+    } catch {}
+  });
 
-    hookFeedbackInputs();
-    $("#fbSendBtn").addEventListener("click", sendFeedback);
-
+  /* ── reset all ───────────────────────────── */
+  function resetAll() {
+    ($("#oneLiner").value = ""), ($("#goalSelect").value = "stabilize");
+    ["sLoad","sDecisions","sEnergy","sGrowth","sPower"].forEach(id => { const el=document.getElementById(id); if(el) el.value="2"; });
+    $$('input[type="radio"]').forEach(r => r.checked=false);
+    STATE.assessment=null; STATE.report="";
+    $("#resultText").textContent = "—";
+    $("#execText").textContent   = "—";
+    $("#reportContainer").style.display = "none";
+    $("#copyExecBtn").disabled   = true;
+    $("#feedbackBox").style.display = "none";
+    const lang = getLang();
+    resetKpis(lang);
+    setStatus(T(lang,"bereit","hazır","ready"), "");
     syncSliders();
-    applyLang("de");
+    renderQuestions(lang);
+  }
 
-    /* ===== Feedback UI Integration ===== */
+  /* ── event wiring ────────────────────────── */
+  $("#runBtn")   .addEventListener("click", runAssessment);
+  $("#execBtn")  .addEventListener("click", runReport);
+  $("#pdfBtn")   .addEventListener("click", runPdf);
+  $("#fbSendBtn").addEventListener("click", sendFeedback);
+  $("#resetBtn") .addEventListener("click", () => {
+    const lang = getLang();
+    if (confirm(T(lang,"Wirklich zurücksetzen?","Sıfırlansın mı?","Reset everything?"))) resetAll();
+  });
 
-    function injectFeedbackBox(){
-      const container = document.getElementById("reportContainer");
-      if (!container) return;
+  /* ── boot ────────────────────────────────── */
+  // Read lang: URL param → localStorage → "de"
+  const initLang = (params.get("lang") || ls.getItem("mdg_lang") || "de").toLowerCase();
+  syncSliders();
+  hookFeedback();                              // wire feedback inputs ONCE, elements exist
+  applyLang(dict[initLang] ? initLang : "de");
+  setStatus(T(initLang,"bereit","hazır","ready"), "");
 
-      if (document.getElementById("feedbackBox")) return;
-
-      const box = document.createElement("div");
-      box.id = "feedbackBox";
-      box.className = "dx-feedback";
-      box.style.display = "none";
-
-      box.innerHTML = `
-        <h4 data-i18n="fb.title">Feedback (kurz)</h4>
-
-        <div class="row">
-          <label data-i18n="fb.q1">1) Was war am hilfreichsten?</label>
-          <textarea id="fbQ1" rows="2"></textarea>
-        </div>
-
-        <div class="row">
-          <label data-i18n="fb.q2">2) Was fehlt / ist unklar?</label>
-          <textarea id="fbQ2" rows="2"></textarea>
-        </div>
-
-        <div class="row">
-          <label data-i18n="fb.q3">3) Bewertung (0–10)</label>
-          <input id="fbNps" type="number" min="0" max="10" />
-          <div id="fbHint" class="hint"></div>
-        </div>
-
-        <div class="actions">
-          <button id="fbSendBtn" disabled data-i18n="fb.send">Senden</button>
-          <span id="fbStatus" class="status">—</span>
-        </div>
-      `;
-
-      container.appendChild(box);
-    }
-
-    injectFeedbackBox();
-
-    const feedbackStyle = document.createElement("style");
-    feedbackStyle.innerHTML = `
-      .dx-feedback{
-        margin-top:1.6rem;
-        padding:1.2rem 1.2rem 1.3rem;
-        border-radius:18px;
-        background:rgba(255,255,255,.03);
-        border:1px solid rgba(255,255,255,.08);
-      }
-
-      .dx-feedback h4{
-        margin:0 0 .8rem;
-        font-size:.95rem;
-        letter-spacing:.08em;
-        text-transform:uppercase;
-        opacity:.85;
-      }
-
-      .dx-feedback .row{
-        margin-bottom:.85rem;
-      }
-
-      .dx-feedback textarea,
-      .dx-feedback input[type="number"]{
-        width:100%;
-        padding:.65rem .75rem;
-        border-radius:12px;
-        border:1px solid rgba(255,255,255,.12);
-        background:rgba(255,255,255,.04);
-        color:#fff;
-        font-size:.85rem;
-        resize:vertical;
-      }
-
-      .dx-feedback input[type="number"]{
-        max-width:120px;
-      }
-
-      .dx-feedback .hint{
-        font-size:.7rem;
-        opacity:.55;
-        margin-top:.35rem;
-      }
-
-      .dx-feedback .actions{
-        display:flex;
-        align-items:center;
-        gap:.8rem;
-        margin-top:.5rem;
-      }
-
-      .dx-feedback button{
-        padding:.55rem 1rem;
-        border-radius:999px;
-        border:1px solid rgba(110,231,183,.35);
-        background:rgba(110,231,183,.12);
-        color:#d1fae5;
-        font-size:.8rem;
-        cursor:pointer;
-      }
-
-      .dx-feedback button:disabled{
-        opacity:.4;
-        cursor:not-allowed;
-      }
-
-      .dx-feedback .status{
-        font-size:.8rem;
-        opacity:.7;
-      }
-    `;
-    document.head.appendChild(feedbackStyle);
-
-    /* ===== Final Init ===== */
-
-    document.addEventListener("DOMContentLoaded", () => {
-      try {
-        syncSliders();
-        applyLang("de");
-        renderAdaptiveQuestions("de");
-        renderHints("de");
-      } catch(e){
-        console.error("Init error:", e);
-      }
-    });
-
-  })();
-  </script>
+})();
+</script>
 </body>
 </html>
