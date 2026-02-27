@@ -1,133 +1,140 @@
-<!-- impressum.html -->
 <!doctype html>
 <html lang="de">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Impressum – MDG v2</title>
-  <meta name="description" content="Impressum von MDG v2" />
+  <title>Impressum – MDG</title>
+  <meta name="description" content="Impressum von MDG" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./style.css" />
+  <style>
+    .page{ max-width:860px; margin:0 auto; padding:1.75rem 1.25rem 4rem; }
+    .page .card h2.h3{ margin-top:1.5rem; margin-bottom:.35rem; }
+    .page .card h2.h3:first-child{ margin-top:0; }
+  </style>
 </head>
+<body>
 
-  <header class="header" id="top">
-    <div class="container header__inner">
-      <a class="brand" href="./index.html" aria-label="Zur Startseite">
+<header class="header" id="top">
+  <div class="container header__inner">
+    <a class="brand" href="./index.html" aria-label="Home">
+      <span class="brand__mark" aria-hidden="true">MDG</span>
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      <a class="nav__link" href="./how.html">Wie es funktioniert</a>
+      <a class="nav__link" href="./why.html">Warum MDG</a>
+      <a class="nav__link" href="./faq.html">FAQ</a>
+    </nav>
+
+    <div class="header__actions">
+      <a class="btn btn--ghost" href="./index.html">Home</a>
+    </div>
+
+    <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="drawer" hidden>
+    <div class="drawer__content">
+      <a class="drawer__link" href="./how.html">Wie es funktioniert</a>
+      <a class="drawer__link" href="./why.html">Warum MDG</a>
+      <a class="drawer__link" href="./faq.html">FAQ</a>
+      <div class="drawer__sep"></div>
+      <a class="btn btn--ghost btn--full" href="./index.html">Home</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <div class="page">
+    <div class="section__head">
+      <h1 class="h2">Impressum</h1>
+      <p class="sub">Angaben gemäß § 5 TMG</p>
+    </div>
+
+    <div class="card">
+      <h2 class="h3">Anbieter</h2>
+      <p class="p">
+        <strong>Selim M. Ayrilmaz</strong><br />
+        Moosacher Straße 18<br />
+        80809 München
+      </p>
+
+      <h2 class="h3">Kontakt</h2>
+      <p class="p">
+        Telefon: 016091489988<br />
+        E-Mail: <a href="mailto:info@mdg-indikation.de">info@mdg-indikation.de</a>
+      </p>
+
+      <h2 class="h3">Registereintrag</h2>
+      <p class="p">
+        Register: i.Gr.<br />
+        Registernummer: –<br />
+        Registergericht: –
+      </p>
+
+      <h2 class="h3">Umsatzsteuer</h2>
+      <p class="p">
+        Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: –
+      </p>
+
+      <h2 class="h3">Inhaltlich verantwortlich</h2>
+      <p class="p">Siehe Anbieter (gemäß § 18 Abs. 2 MStV)</p>
+
+      <h2 class="h3">Haftung für Inhalte</h2>
+      <p class="p">
+        Als Diensteanbieter sind wir gemäß § 7 Abs. 1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.
+        Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen
+        oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.
+      </p>
+
+      <h2 class="h3">Haftung für Links</h2>
+      <p class="p">
+        Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben.
+        Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich.
+      </p>
+
+      <h2 class="h3">Urheberrecht</h2>
+      <p class="p">
+        Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht.
+        Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts
+        bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.
+      </p>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <div class="brand brand--footer">
         <span class="brand__mark" aria-hidden="true">MDG</span>
-        <span class="brand__text">v2</span>
-      </a>
-
-      <nav class="nav" aria-label="Hauptnavigation">
-        <a class="nav__link" href="./index.html#modell">Modell</a>
-        <a class="nav__link" href="./index.html#diagnose">Diagnose</a>
-        <a class="nav__link" href="./index.html#ergebnisse">Ergebnisse</a>
-        <a class="nav__link" href="./index.html#massnahmen">Maßnahmen</a>
-        <a class="nav__link" href="./index.html#export">Export</a>
-      </nav>
-
-      <div class="header__actions">
-        <a class="btn btn--primary" href="./index.html#start">Diagnose starten</a>
       </div>
-
-      <button class="burger" type="button" aria-label="Menü öffnen" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
+      <p class="micro">Strukturdiagnose für Stabilisierung und Umbau.</p>
     </div>
-
-    <div class="drawer" hidden>
-      <div class="drawer__content">
-        <a class="drawer__link" href="./index.html#modell">Modell</a>
-        <a class="drawer__link" href="./index.html#diagnose">Diagnose</a>
-        <a class="drawer__link" href="./index.html#ergebnisse">Ergebnisse</a>
-        <a class="drawer__link" href="./index.html#massnahmen">Maßnahmen</a>
-        <a class="drawer__link" href="./index.html#export">Export</a>
-        <div class="drawer__sep"></div>
-        <a class="btn btn--primary btn--full" href="./index.html#start">Diagnose starten</a>
-      </div>
+    <div class="footer__legal">
+      <a href="./impressum.html" rel="nofollow">Impressum</a>
+      <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+      <a href="./kontakt.html" rel="nofollow">Kontakt</a>
     </div>
-  </header>
+  </div>
+</footer>
 
-  <main id="main">
-    <section class="section">
-      <div class="container">
-        <div class="section__head">
-          <h1 class="h2">Impressum</h1>
-          <p class="sub">Angaben gemäß § 5 TMG</p>
-        </div>
-
-        <div class="card">
-          <h2 class="h3">Anbieter</h2>
-          <p class="p">
-            <strong>Selim M. Ayrilmaz</strong><br />
-            Moosacher Straße 18<br />
-            80809 München<br />
-          </p>
-
-          <h2 class="h3">Kontakt</h2>
-          <p class="p">
-            Telefon: 016091489988<br />
-            E-Mail: <a href="mailto:[email]">info@mdg-indiaktion.de</a>
-          </p>
-
-          <h2 class="h3">Registereintrag</h2>
-          <p class="p">
-            Register: i.Gr.<br />
-            Registernummer: <br />
-            Registergericht:
-          </p>
-
-          <h2 class="h3">Umsatzsteuer</h2>
-          <p class="p">
-            Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG:<br />
-          </p>
-
-          <h2 class="h3">Inhaltlich verantwortlich</h2>
-          <p class="p">siehe oben (falls erforderlich gemäß § 18 Abs. 2 MStV)</p>
-
-          <h2 class="h3">Haftung für Inhalte</h2>
-          <p class="p">
-            Als Diensteanbieter sind wir gemäß § 7 Abs. 1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.
-            Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen
-            oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen. Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen
-            nach den allgemeinen Gesetzen bleiben hiervon unberührt.
-          </p>
-
-          <h2 class="h3">Haftung für Links</h2>
-          <p class="p">
-            Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch
-            keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich.
-          </p>
-
-          <h2 class="h3">Urheberrecht</h2>
-          <p class="p">
-            Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Beiträge Dritter sind als solche gekennzeichnet.
-            Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts bedürfen der schriftlichen Zustimmung des jeweiligen Autors
-            bzw. Erstellers.
-          </p>
-
-          <p class="micro">
-          </p>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <div class="container footer__grid">
-      <div>
-        <div class="brand brand--footer">
-          <span class="brand__mark" aria-hidden="true">MDG</span>
-          <span class="brand__text">v2</span>
-        </div>
-        <p class="micro">Strukturdiagnose für Stabilisierung und Umbau.</p>
-      </div>
-      <div class="footer__legal">
-        <a href="./impressum.html" rel="nofollow">Impressum</a>
-        <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
-        <a href="./kontakt.html" rel="nofollow">Kontakt</a>
-      </div>
-    </div>
-  </footer>
-
-  <script src="./script.js" defer></script>
+<script>
+(() => {
+  const burger = document.querySelector(".burger");
+  const drawer = document.querySelector(".drawer");
+  if (!burger || !drawer) return;
+  const open  = () => { drawer.hidden = false; burger.setAttribute("aria-expanded","true");  document.body.classList.add("no-scroll"); };
+  const close = () => { drawer.hidden = true;  burger.setAttribute("aria-expanded","false"); document.body.classList.remove("no-scroll"); };
+  burger.addEventListener("click", () => drawer.hidden ? open() : close());
+  drawer.addEventListener("click", e => { if (!drawer.querySelector(".drawer__content").contains(e.target)) close(); });
+  window.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+})();
+</script>
 </body>
 </html>
