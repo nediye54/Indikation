@@ -3,6 +3,8 @@
    Clean, High-Contrast, Consulting Grade
    ========================================================= */
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
 :root{
   --bg-0:#05070c;
   --bg-1:#0b111a;
@@ -27,6 +29,12 @@
   --max:1180px;
 
   --header-h:72px;
+
+  --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, Arial, sans-serif;
+  --font-mono: 'DM Mono', 'Fira Code', ui-monospace, monospace;
+
+  --glow-green: rgba(110,231,183,.15);
+  --glow-blue:  rgba(96,165,250,.12);
 }
 
 /* =========================================================
@@ -42,7 +50,7 @@ html,body{
   padding:0;
   background:radial-gradient(circle at 20% 0%, #0c1422 0%, var(--bg-0) 60%);
   color:var(--text);
-  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing:antialiased;
 }
 
@@ -66,7 +74,7 @@ a{
 a:hover{ opacity:.8; }
 
 button{
-  font-family:inherit;
+  font-family: var(--font-body);
   cursor:pointer;
 }
 
@@ -202,6 +210,11 @@ button{
   font-weight:900;
 }
 
+.brand__text{
+  color: var(--muted-2);
+  font-size: .9rem;
+}
+
 .nav{
   display:flex;
   gap:26px;
@@ -261,6 +274,14 @@ button{
 }
 .drawer__link:hover{ color:var(--text); border-color:rgba(110,231,183,.35); }
 
+.drawer__sep{
+  height:1px;
+  background:var(--stroke);
+  margin:4px 0;
+}
+
+.drawer[hidden]{ display:none !important; }
+
 /* Desktop: no burger/drawer */
 @media (min-width: 901px){
   .burger{ display:none !important; }
@@ -279,6 +300,8 @@ button{
   color:var(--text);
   font-weight:600;
   transition:.2s ease;
+  font-family: var(--font-body);
+  cursor:pointer;
 }
 
 .btn:hover{
@@ -308,8 +331,13 @@ button{
 }
 
 /* =========================================================
-   Chips
+   Chips / Lang
    ========================================================= */
+
+.lang{
+  display:flex;
+  gap:6px;
+}
 
 .chip{
   padding:8px 12px;
@@ -318,7 +346,9 @@ button{
   background:var(--card);
   color:var(--text);
   font-weight:650;
+  font-family: var(--font-body);
   transition:.2s ease;
+  cursor:pointer;
 }
 
 .chip--ghost{
@@ -346,6 +376,22 @@ button{
   height:1px;
   background:var(--stroke);
   margin:18px 0;
+}
+
+/* =========================================================
+   Pill
+   ========================================================= */
+
+.pill{
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:.8rem;
+  border:1px solid var(--stroke);
+}
+
+.pill--muted{
+  background:var(--card);
+  color:var(--muted);
 }
 
 /* =========================================================
@@ -377,18 +423,6 @@ button{
   display:flex;
   gap:10px;
   flex-wrap:wrap;
-}
-
-.pill{
-  padding:6px 12px;
-  border-radius:999px;
-  font-size:.8rem;
-  border:1px solid var(--stroke);
-}
-
-.pill--muted{
-  background:var(--card);
-  color:var(--muted);
 }
 
 /* =========================================================
@@ -501,6 +535,7 @@ textarea{
   border:1px solid var(--stroke);
   background:var(--bg-2);
   color:var(--text);
+  font-family: var(--font-body);
   outline:none;
 }
 
@@ -554,6 +589,8 @@ textarea:focus{
   margin-bottom:20px;
 }
 
+.modal[hidden]{ display:none !important; }
+
 #business_overlay{
   position:fixed;
   inset:0;
@@ -566,6 +603,12 @@ textarea:focus{
   position:fixed;
   z-index:1000;
 }
+
+/* =========================================================
+   no-scroll (body lock when drawer/modal open)
+   ========================================================= */
+
+body.no-scroll{ overflow:hidden; }
 
 /* =========================================================
    Footer
@@ -591,6 +634,20 @@ textarea:focus{
   gap:8px;
 }
 
+.footer__legal a{
+  color: var(--muted-2);
+  font-size:.9rem;
+}
+
+.footer__legal a:hover{
+  color: var(--text);
+}
+
+.brand--footer .brand__mark{
+  font-size:.95rem;
+  padding:4px 8px;
+}
+
 /* =========================================================
    Responsive
    ========================================================= */
@@ -606,18 +663,24 @@ textarea:focus{
     grid-template-columns:1fr;
   }
 }
-/* ===== Diagnose/Header mobile cleanup (desktop stays unchanged) ===== */
+
+/* =========================================================
+   Header mobile cleanup
+   ========================================================= */
+
+@media (max-width: 900px){
+  .nav{ display:none; }
+}
+
 @media (max-width: 560px){
   .header__inner{
     gap: .6rem;
   }
-
   .header__actions{
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: .4rem;
   }
-
   .lang{
     gap: .25rem;
   }
@@ -625,10 +688,21 @@ textarea:focus{
     padding: .28rem .45rem;
     font-size: .85rem;
   }
-
   .header__actions .btn{
     padding: 8px 12px;
     font-size: .85rem;
     white-space: nowrap;
   }
+}
+
+/* =========================================================
+   DX actions (shared across pages)
+   ========================================================= */
+
+.dx-actions{
+  display:flex;
+  gap:.55rem;
+  flex-wrap:wrap;
+  align-items:center;
+  margin-top: 1rem;
 }
