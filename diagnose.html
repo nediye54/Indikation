@@ -228,14 +228,14 @@
     }
     .dx-rnote { font-size: .86rem; color: var(--muted); margin: 0 0 .65rem; line-height: 1.4; }
 
-    /* slide-in for report area — display controlled by JS via inline style */
+    /* slide-in for report area */
     #reportContainer { animation: dxSlide .22s ease; }
     @keyframes dxSlide {
       from { opacity: 0; transform: translateY(-6px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ─── Feedback box — display controlled by JS via inline style ─── */
+    /* ─── Feedback box ─── */
     #feedbackBox {
       margin-top: 1rem;
       padding: 1rem 1.1rem 1.1rem;
@@ -291,39 +291,7 @@
       line-height: 1.45;
     }
 
-    /* ─── Mode switch button ─── */
-    .dx-modeswitch {
-      display: inline-flex;
-      align-items: center;
-      gap: .35rem;
-      padding: .22rem .65rem;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.15);
-      background: transparent;
-      color: var(--muted);
-      font-size: .78rem;
-      font-weight: 700;
-      font-family: var(--font-body);
-      cursor: pointer;
-      transition: border-color .15s, color .15s;
-    }
-    .dx-modeswitch:hover {
-      border-color: rgba(110,231,183,.4);
-      color: var(--text);
-    }
-
-    /* ─── Question help tooltip ─── */
-    .dx-qhelp {
-      margin-top: .35rem;
-      font-size: .8rem;
-      color: var(--muted-2);
-      line-height: 1.45;
-      padding: .5rem .7rem;
-      border-radius: 10px;
-      background: rgba(255,255,255,.03);
-      border: 1px solid rgba(255,255,255,.07);
-    }
-    .dx-qhelp b { color: var(--muted); }
+    /* ─── Copy button: success state ─── */
     .btn--ok {
       background: rgba(110,231,183,.12) !important;
       border-color: rgba(110,231,183,.4) !important;
@@ -426,7 +394,6 @@
           <div class="dx-modeline">
             <span class="dx-modetag" id="modeText">—</span>
             <span class="pill pill--muted" id="tokenBadge" style="display:none; font-size:.72rem;">Token ✓</span>
-            <button class="dx-modeswitch" id="modeSwitchBtn" type="button" style="display:none;" data-i18n="dx.switchPrivate">→ Privat wechseln</button>
           </div>
           <div class="dx-fhelp" id="modeHint"></div>
         </div>
@@ -654,28 +621,7 @@
   const mode    = wantBiz && businessOk ? "business" : "private";
 
   $("#modeText").textContent = mode==="business" ? "Business" : "Privat";
-  if (mode==="business") {
-    $("#tokenBadge").style.display = "";
-    // Show switch-to-private button
-    const switchBtn = $("#modeSwitchBtn");
-    if (switchBtn) switchBtn.style.display = "";
-  }
-
-  // Mode switch: clear business flags and reload as private
-  $("#modeSwitchBtn")?.addEventListener("click", () => {
-    const lang = getLang();
-    if (confirm(T(lang,
-      "Zu Privat-Modus wechseln? Business-Token wird entfernt.",
-      "Özel moda geçilsin mi? Business token kaldırılacak.",
-      "Switch to Private mode? Business token will be removed."))) {
-      ["mdg_mode","mdg_business_ok","mdg_business_token"].forEach(k => {
-        ss.removeItem(k); ls.removeItem(k);
-      });
-      ls.setItem("mdg_mode","private");
-      ss.setItem("mdg_mode","private");
-      window.location.href = "./diagnose.html?mode=private&lang=" + encodeURIComponent(lang);
-    }
-  });
+  if (mode==="business") $("#tokenBadge").style.display = "";
 
   /* ── i18n dictionary ─────────────────────── */
   const dict = {
@@ -693,13 +639,10 @@
       "dx.outTitle":"Output","dx.assessTitle":"Strategisches Assessment",
       "dx.execTitle":"Executive Report","dx.execBtn":"Report erzeugen","dx.copy":"Kopieren","dx.pdf":"PDF",
       "dx.privacy":"Inputs werden via API ausschließlich zur Generierung von Assessment und Report verarbeitet.",
-      "dx.switchPrivate":"→ Privat wechseln",
       "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau.",
       "kpi.primary":"Primär","kpi.path":"Pfad","kpi.risk":"Risiko",
       "fb.head":"Feedback","fb.q1":"1) Was war am hilfreichsten?","fb.q2":"2) Was fehlt / ist unklar?",
-      "fb.q3":"3) Bewertung (0–10)","fb.hint":"0 = nicht hilfreich · 10 = extrem hilfreich","fb.send":"Senden",
-      "fb.mailSubject":"MDG Feedback",
-      "fb.mailFallback":"Feedback per E-Mail senden"
+      "fb.q3":"3) Bewertung (0–10)","fb.hint":"0 = nicht hilfreich · 10 = extrem hilfreich","fb.send":"Senden"
     },
     tr: {
       "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS","cta.backHome":"Anasayfa",
@@ -715,13 +658,10 @@
       "dx.outTitle":"Çıktı","dx.assessTitle":"Stratejik değerlendirme",
       "dx.execTitle":"Yönetici raporu","dx.execBtn":"Rapor üret","dx.copy":"Kopyala","dx.pdf":"PDF",
       "dx.privacy":"Veriler yalnızca rapor üretimi için API üzerinden işlenir.",
-      "dx.switchPrivate":"→ Özel moda geç",
       "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
       "kpi.primary":"Ana","kpi.path":"Yol","kpi.risk":"Risk",
       "fb.head":"Geri bildirim","fb.q1":"1) En faydalı kısım neydi?","fb.q2":"2) Ne eksik / belirsiz?",
-      "fb.q3":"3) Puan (0–10)","fb.hint":"0 = faydasız · 10 = çok faydalı","fb.send":"Gönder",
-      "fb.mailSubject":"MDG Geri Bildirim",
-      "fb.mailFallback":"E-posta ile gönder"
+      "fb.q3":"3) Puan (0–10)","fb.hint":"0 = faydasız · 10 = çok faydalı","fb.send":"Gönder"
     },
     en: {
       "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
@@ -737,13 +677,10 @@
       "dx.outTitle":"Output","dx.assessTitle":"Strategic Assessment",
       "dx.execTitle":"Executive Report","dx.execBtn":"Generate Report","dx.copy":"Copy","dx.pdf":"PDF",
       "dx.privacy":"Inputs are processed via API only to generate the assessment and report.",
-      "dx.switchPrivate":"→ Switch to Private",
       "footer.tag":"Structure diagnosis for stabilization and rebuild.",
       "kpi.primary":"Primary","kpi.path":"Path","kpi.risk":"Risk",
       "fb.head":"Feedback","fb.q1":"1) What helped most?","fb.q2":"2) What's missing / unclear?",
-      "fb.q3":"3) Score (0–10)","fb.hint":"0 = not helpful · 10 = extremely helpful","fb.send":"Send",
-      "fb.mailSubject":"MDG Feedback",
-      "fb.mailFallback":"Send via email"
+      "fb.q3":"3) Score (0–10)","fb.hint":"0 = not helpful · 10 = extremely helpful","fb.send":"Send"
     }
   };
 
@@ -810,12 +747,12 @@
           "Örn 1: <b>&quot;Erteleme yapıyorum ve günlük hayat kontrolüm kayıyor.&quot;</b><br>Örn 2: <b>&quot;Tekrarlayan çatışmalar var ve hiçbir şey değişmiyor.&quot;</b>",
           "Ex 1: <b>&quot;I procrastinate and lose control over my daily life.&quot;</b><br>Ex 2: <b>&quot;We have recurring conflicts and nothing changes.&quot;</b>");
 
-    // Slider anchors (no examples — keep it short)
-    $("#exLoad").textContent      = T(lang,"0 = verteilt · 6 = Dauer-Engpass","0 = dağıtılmış · 6 = sürekli darboğaz","0 = distributed · 6 = permanent bottleneck");
-    $("#exDecisions").textContent = T(lang,"0 = klar & schnell · 6 = unklar & langsam","0 = net & hızlı · 6 = belirsiz & yavaş","0 = clear & fast · 6 = unclear & slow");
-    $("#exEnergy").textContent    = T(lang,"0 = stabil · 6 = am Limit","0 = stabil · 6 = limitte","0 = stable · 6 = at the limit");
-    $("#exGrowth").textContent    = T(lang,"0 = kontrolliert · 6 = Komplexität > Struktur","0 = kontrollü · 6 = karmaşıklık > yapı","0 = controlled · 6 = complexity > structure");
-    $("#exPower").textContent     = T(lang,"0 = verteilt · 6 = konzentriert","0 = uyumlu · 6 = kopuk","0 = aligned · 6 = misaligned");
+    // Slider help — dynamic, updates live on slider move
+    updateSliderHelp(lang);
+    ["sLoad","sDecisions","sEnergy","sGrowth","sPower"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("input", () => updateSliderHelp(getLang()));
+    });
 
     // Exec hint
     $("#execHint").textContent = biz
@@ -829,16 +766,153 @@
           "Private: causal logic, tension dynamics, clear priorities, concrete moves.");
   }
 
+  /* ── slider help texts (dynamic, value-aware) ────────────── */
+  function updateSliderHelp(lang) {
+    const biz = mode === "business";
+
+    // Each slider: array of 7 entries (values 0–6), each: { label, hint }
+    // Label = scale anchor shown at all times
+    // Hint  = contextual explanation shown below, specific to current value
+
+    const sliders = {
+      sLoad: {
+        exId: "exLoad",
+        label: T(lang,
+          "0 = Last gleichmäßig verteilt · 6 = dauerhafter Engpass",
+          "0 = yük dengeli dağılmış · 6 = kalıcı darboğaz",
+          "0 = load distributed evenly · 6 = permanent bottleneck"),
+        hints: biz ? [
+          T(lang,"Alle Rollen tragen angemessen – kein Einzelner ist überlastet.","Tüm roller dengeli taşıyor – kimse aşırı yüklü değil.","All roles carry proportional load – no one is overloaded."),
+          T(lang,"Leichte Ungleichgewichte spürbar, aber noch selbstregulierend.","Hafif dengesizlikler var ama sistem kendini düzeltiyor.","Minor imbalances, but the system self-corrects."),
+          T(lang,"Einzelne Personen oder Teams übernehmen regelmäßig mehr als vorgesehen.","Bazı kişiler veya ekipler düzenli olarak fazla yük taşıyor.","Certain people or teams regularly carry more than they should."),
+          T(lang,"Klare Überlastung einzelner Knoten – andere warten oder sind unterausgelastet.","Bazı düğümler açıkça aşırı yüklü – diğerleri bekliyor.","Clear overload at specific nodes – others waiting or underused."),
+          T(lang,"Wichtige Personen arbeiten regelmäßig am Limit – Krankheit oder Kündigung wäre ein Systemausfall.","Kilit kişiler düzenli olarak sınırda çalışıyor – ayrılmaları krize yol açar.","Key people regularly at the limit – their departure would be a system failure."),
+          T(lang,"Das System hängt an 1–2 Personen. Deren Ausfall würde Prozesse zum Stillstand bringen.","Sistem 1–2 kişiye bağlı. Ayrılmaları süreçleri durdurur.","The system depends on 1–2 people. Their departure would halt operations."),
+          T(lang,"Totaler Stau: Engpässe blockieren alles andere. Sofortmaßnahme erforderlich.","Tam tıkanıklık: darboğazlar her şeyi engelliyor. Acil müdahale gerekli.","Total blockage: bottlenecks are stopping everything. Immediate action needed.")
+        ] : [
+          T(lang,"Du hast genug Energie und Kapazität für das, was auf dich wartet.","Seni bekleyenler için yeterli enerjin ve kapasitenin var.","You have enough energy and capacity for what's ahead."),
+          T(lang,"Meistens gut – ab und zu wird es eng, aber du erholt dich schnell.","Çoğunlukla iyi – ara sıra zorlanıyorsun ama çabuk toparlanıyorsun.","Usually fine – occasionally tight, but you recover quickly."),
+          T(lang,"Du merkst, dass einzelne Bereiche mehr Energie kosten als sie zurückgeben.","Bazı alanların verdiğinden fazla enerji aldığını fark ediyorsun.","You notice certain areas cost more energy than they return."),
+          T(lang,"Mehrere Dinge laufen gleichzeitig – du schaffst alles, aber kaum noch mit Puffer.","Birçok şey aynı anda yürüyor – her şeyi yapıyorsun ama tampon kalmadı.","Multiple things running at once – you manage, but with almost no buffer."),
+          T(lang,"Du funktionierst, aber du spürst: wenn noch etwas dazukommt, kippt es.","Çalışıyorsun ama bir şey daha eklense her şeyin dağılacağını hissediyorsun.","You're functioning, but one more thing and it tips over."),
+          T(lang,"Du bist regelmäßig erschöpft – Erholung bringt kaum mehr echte Erholung.","Düzenli olarak tükeniyorsun – dinlenme artık gerçek bir toparlanma sağlamıyor.","You're regularly exhausted – rest barely brings real recovery anymore."),
+          T(lang,"Kompletter Kapazitätsengpass: du kannst nicht mehr priorisieren, nur noch reagieren.","Tam kapasite tükenmesi: öncelik belirleyemiyorsun, sadece tepki veriyorsun.","Complete capacity collapse: you can't prioritize anymore, only react.")
+        ]
+      },
+      sDecisions: {
+        exId: "exDecisions",
+        label: T(lang,
+          "0 = Entscheidungen klar & schnell · 6 = unklar & blockiert",
+          "0 = kararlar net & hızlı · 6 = belirsiz & bloke",
+          "0 = decisions clear & fast · 6 = unclear & blocked"),
+        hints: biz ? [
+          T(lang,"Jeder weiß, wer was entscheidet – Entscheidungen kommen schnell und werden umgesetzt.","Herkes kimin ne kararı verdiğini biliyor – kararlar hızlı alınıp uygulanıyor.","Everyone knows who decides what – decisions come fast and get executed."),
+          T(lang,"Meist klar, gelegentlich kurze Rückfragen – kein strukturelles Problem.","Çoğunlukla net, bazen kısa onay soruları – yapısal sorun yok.","Mostly clear, occasional quick check-ins – no structural problem."),
+          T(lang,"Manche Entscheidungen brauchen unnötig viele Abstimmungsrunden.","Bazı kararlar gereksiz yere çok tur onay gerektiriyor.","Some decisions require unnecessarily many alignment rounds."),
+          T(lang,"Entscheidungen werden oft nach oben eskaliert, obwohl es nicht nötig wäre.","Kararlar genellikle gereksiz yere yukarı taşınıyor.","Decisions are often escalated upward even when not necessary."),
+          T(lang,"Entscheidungsverantwortung ist unklar – Aufgaben bleiben liegen oder werden mehrfach besprochen.","Karar sorumluluğu belirsiz – işler askıda kalıyor ya da defalarca tartışılıyor.","Decision ownership is unclear – tasks stall or get discussed repeatedly."),
+          T(lang,"Entscheidungen passieren entweder gar nicht oder an einer einzigen Person.","Kararlar ya hiç alınmıyor ya da tek bir kişide birikmiş.","Decisions either don't happen or pile up at one single person."),
+          T(lang,"Das System ist entscheidungsgelähmt – Unsicherheit, wer was darf, blockiert alles.","Sistem karar felci içinde – kimin ne yapabileceği belirsizliği her şeyi engelliyor.","The system is decision-paralyzed – uncertainty over who can do what blocks everything.")
+        ] : [
+          T(lang,"Du weißt klar, was du willst und wie du entscheidest – kein innerer Stillstand.","Ne istediğini ve nasıl karar vereceğini net biliyorsun – içsel bir duraksama yok.","You know clearly what you want and how you decide – no inner standstill."),
+          T(lang,"Meistens entscheidungsfreudig – ab und zu zögerst du, aber nicht lange.","Çoğunlukla kararlısın – bazen tereddüt ediyorsun ama uzun sürmüyor.","Usually decisive – occasionally hesitant, but not for long."),
+          T(lang,"Bei manchen Themen merkst du, dass du immer wieder abwägst, statt zu entscheiden.","Bazı konularda karar vermek yerine sürekli tartıyorsun.","On some topics you notice you keep weighing instead of deciding."),
+          T(lang,"Entscheidungen kosten dich überproportional viel Energie – du zweifelst oft nach.","Kararlar sana orantısız enerji maliyeti çıkarıyor – sonradan çok sorguluyorsun.","Decisions cost you disproportionate energy – you often doubt them afterward."),
+          T(lang,"Du verschiebst wichtige Entscheidungen regelmäßig – weil alle Optionen mit Verlust verbunden wirken.","Önemli kararları düzenli erteliyorsun – tüm seçenekler kayıpla bağlantılı görünüyor.","You regularly postpone important decisions – all options seem to involve loss."),
+          T(lang,"Du steckst fest: du weißt nicht, was du wirklich willst oder wohin du gehst.","Sıkışmış hissediyorsun: ne istediğini ya da nereye gittiğini gerçekten bilmiyorsun.","You're stuck: you don't know what you really want or where you're going."),
+          T(lang,"Komplette Entscheidungslähmung: Bewegung fühlt sich in jede Richtung falsch an.","Tam karar felci: her yönde hareket yanlış hissettiriyor.","Complete decision paralysis: movement feels wrong in every direction.")
+        ]
+      },
+      sEnergy: {
+        exId: "exEnergy",
+        label: T(lang,
+          "0 = Energie stabil, Fehler werden gelernt · 6 = Erschöpfung, Fehler werden versteckt",
+          "0 = enerji dengeli, hatalardan ders alınıyor · 6 = tükenme, hatalar gizleniyor",
+          "0 = energy stable, errors are learned from · 6 = exhaustion, errors are hidden"),
+        hints: biz ? [
+          T(lang,"Team hat Energie – Fehler werden offen besprochen und als Lernquelle genutzt.","Ekipte enerji var – hatalar açıkça konuşuluyor ve öğrenme kaynağı olarak kullanılıyor.","Team has energy – errors are openly discussed and used as learning."),
+          T(lang,"Überwiegend gesunde Energie – Fehlerkultur vorhanden, wenn auch nicht explizit gelebt.","Ağırlıklı sağlıklı enerji – hata kültürü var, her ne kadar açıkça yaşatılmasa da.","Mostly healthy energy – error culture present, though not explicitly lived."),
+          T(lang,"Erste Anzeichen von Erschöpfung bei Einzelnen – Fehler werden manchmal unter den Tisch gekehrt.","Bazı kişilerde ilk tükenmişlik belirtileri – hatalar zaman zaman örtbas ediliyor.","First signs of exhaustion in individuals – errors sometimes swept under the rug."),
+          T(lang,"Deutliche Erschöpfungszeichen im Team – Fehler werden eher vermieden als analysiert.","Ekipte belirgin tükenmişlik belirtileri – hatalar analiz edilmek yerine önleniyor.","Clear exhaustion signs in the team – errors avoided rather than analyzed."),
+          T(lang,"Hohe Erschöpfung, sinkende Initiative – Fehler werden systematisch versteckt aus Angst.","Yüksek tükenmişlik, azalan inisiyatif – hatalar korku nedeniyle sistematik gizleniyor.","High exhaustion, falling initiative – errors systematically hidden out of fear."),
+          T(lang,"Burnout bei Schlüsselpersonen – Fehlerkultur nicht vorhanden, Schuldige werden gesucht.","Kilit kişilerde tükenmişlik – hata kültürü yok, suçlu aranıyor.","Burnout in key people – no error culture, blame-seeking instead."),
+          T(lang,"Systemweite Erschöpfung – niemand zeigt Probleme, alle reagieren nur noch defensiv.","Sistem genelinde tükenmişlik – kimse sorunları göstermiyor, herkes savunmacı tepki veriyor.","System-wide exhaustion – nobody surfaces problems, everyone reacts defensively.")
+        ] : [
+          T(lang,"Du hast echte Energie für das, was dir wichtig ist – Rückschläge bringen dich nicht aus der Bahn.","Önemsediklerin için gerçek enerjin var – aksilikler seni raydan çıkarmıyor.","You have real energy for what matters to you – setbacks don't derail you."),
+          T(lang,"Meistens stabil – gelegentliche Tiefs, aber du weißt, wie du dich erholst.","Çoğunlukla dengeli – ara sıra inişler var ama nasıl toparlanacağını biliyorsun.","Mostly stable – occasional lows, but you know how to recover."),
+          T(lang,"Du merkst, dass Fehler oder Misserfolge länger nachwirken als früher.","Hataların veya başarısızlıkların eskisinden daha uzun süre etkisinde kaldığını fark ediyorsun.","You notice that errors or failures linger longer than they used to."),
+          T(lang,"Fehler treffen dich hart – du analysierst sie kaum noch, du vermeidest sie lieber.","Hatalar seni derinden etkiliyor – artık analiz etmek yerine kaçınmayı tercih ediyorsun.","Errors hit you hard – you barely analyze them anymore, you'd rather avoid them."),
+          T(lang,"Du hast kaum noch Energie für Neues – das Bestehende halten kostet alles.","Yeni şeyler için neredeyse enerjin kalmadı – olanı ayakta tutmak her şeyi tüketiyor.","You have barely any energy for new things – maintaining the existing takes everything."),
+          T(lang,"Du funktionierst nach außen, aber innen bist du leer – Erschöpfung ist dein Normalzustand.","Dışarıdan işler görünüyorsun ama içten boşsun – tükenmişlik senin normal halin oldu.","You function outwardly, but inside you're empty – exhaustion has become your baseline."),
+          T(lang,"Komplette innere Erschöpfung – Fehler oder Rückschläge können dich kaum noch bewegen.","Tam içsel tükenmişlik – hatalar veya geri adımlar artık seni neredeyse etkilemiyor.","Complete inner exhaustion – errors or setbacks can barely move you anymore.")
+        ]
+      },
+      sGrowth: {
+        exId: "exGrowth",
+        label: T(lang,
+          "0 = Wachstum kontrolliert · 6 = Komplexität übersteigt Struktur",
+          "0 = büyüme kontrollü · 6 = karmaşıklık yapıyı aşıyor",
+          "0 = growth controlled · 6 = complexity exceeds structure"),
+        hints: biz ? [
+          T(lang,"Wachstum und Strukturkomplexität sind synchron – das System skaliert gesund.","Büyüme ve yapısal karmaşıklık senkron – sistem sağlıklı ölçekleniyor.","Growth and structural complexity are in sync – the system scales healthily."),
+          T(lang,"Leichte Spannung zwischen Wachstum und Prozessen – aber noch kontrollierbar.","Büyüme ve süreçler arasında hafif gerilim – ama hâlâ kontrol altında.","Slight tension between growth and processes – still manageable."),
+          T(lang,"Bestehende Prozesse werden durch Wachstum regelmäßig überdehnt.","Mevcut süreçler büyüme tarafından düzenli olarak aşılıyor.","Existing processes are regularly overstretched by growth."),
+          T(lang,"Das System wächst schneller als die Strukturen – Improvisation ersetzt Architektur.","Sistem yapılardan daha hızlı büyüyor – doğaçlama mimariyi ikame ediyor.","The system grows faster than structures – improvisation replaces architecture."),
+          T(lang,"Komplexität ist unübersichtlich – niemand hat noch einen vollständigen Überblick.","Karmaşıklık artık anlaşılmaz – kimsenin tam bir genel görünümü kalmadı.","Complexity is opaque – nobody has a complete overview anymore."),
+          T(lang,"Struktur ist de facto zusammengebrochen – nur noch informelle Netzwerke halten das System am Laufen.","Yapı fiilen çökmüş – sistemi sadece gayri resmi ağlar ayakta tutuyor.","Structure has de facto collapsed – only informal networks keep the system running."),
+          T(lang,"Totales Kontrollverlust: Wachstum und Komplexität sind nicht mehr steuerbar.","Tam kontrol kaybı: büyüme ve karmaşıklık artık yönetilemez.","Total loss of control: growth and complexity are no longer manageable.")
+        ] : [
+          T(lang,"Dein Leben ist strukturiert und die Komplexität fühlt sich handhabbar an.","Hayatın yapılandırılmış ve karmaşıklık yönetilebilir hissettiriyor.","Your life is structured and the complexity feels manageable."),
+          T(lang,"Gelegentlich wird es unübersichtlich, aber du findest deinen Weg wieder.","Ara sıra bulanıklaşıyor ama yolunu tekrar buluyorsun.","Occasionally things get unclear, but you find your way again."),
+          T(lang,"Du merkst, dass immer mehr Rollen oder Erwartungen auf dich einwirken.","Üzerine giderek daha fazla rol ve beklenti yığıldığını fark ediyorsun.","You notice more and more roles or expectations landing on you."),
+          T(lang,"Das Leben fühlt sich zu komplex an – du verlierst den Überblick über Prioritäten.","Hayat çok karmaşık hissettiriyor – önceliklerin üzerindeki kontrolü kaybediyorsun.","Life feels too complex – you're losing sight of priorities."),
+          T(lang,"Du lebst in ständiger Reaktion – es gibt keinen ruhigen Moment mehr für echte Orientierung.","Sürekli tepkisel yaşıyorsun – gerçek bir yön bulmak için artık sakin bir an yok.","You're living in constant reaction – no quiet moment left for real orientation."),
+          T(lang,"Die Komplexität hat dich überwältigt – du weißt nicht mehr, womit du anfangen sollst.","Karmaşıklık seni ezdi – artık nereden başlayacağını bilmiyorsun.","Complexity has overwhelmed you – you don't know where to start anymore."),
+          T(lang,"Vollständiger Überblicksverlust – alles fühlt sich gleich dringend und gleich unlösbar an.","Tam genel görünüm kaybı – her şey eşit derecede acil ve çözümsüz hissettiriyor.","Complete loss of overview – everything feels equally urgent and equally unsolvable.")
+        ]
+      },
+      sPower: {
+        exId: "exPower",
+        label: T(lang,
+          "0 = Macht & Verantwortung gekoppelt · 6 = entkoppelt / konzentriert",
+          "0 = güç & sorumluluk eşleşmiş · 6 = ayrışmış / yoğunlaşmış",
+          "0 = power & responsibility coupled · 6 = decoupled / concentrated"),
+        hints: biz ? [
+          T(lang,"Wer Verantwortung trägt, hat auch die Entscheidungsmacht – klares, konsistentes System.","Sorumluluk taşıyan karar yetkisine de sahip – net ve tutarlı bir sistem.","Those with responsibility also have decision power – clear, consistent system."),
+          T(lang,"Überwiegend gut gekoppelt – kleine Reibungen, aber keine strukturellen Brüche.","Büyük ölçüde iyi eşleşmiş – küçük sürtüşmeler var ama yapısal kırıklar yok.","Largely well coupled – minor friction, but no structural breaks."),
+          T(lang,"Einzelne Rollen tragen Verantwortung ohne echte Entscheidungsmacht.","Bazı roller gerçek karar gücü olmadan sorumluluk taşıyor.","Certain roles carry responsibility without real decision authority."),
+          T(lang,"Macht und Verantwortung klaffen spürbar auseinander – das erzeugt stille Frustration.","Güç ve sorumluluk belirgin biçimde ayrışmış – bu sessiz hayal kırıklığı yaratıyor.","Power and responsibility are noticeably misaligned – creating silent frustration."),
+          T(lang,"Entscheidungen werden von Personen getroffen, die nicht die Konsequenzen tragen.","Kararlar sonuçları taşımayan kişiler tarafından alınıyor.","Decisions are made by people who don't bear the consequences."),
+          T(lang,"Macht ist bei 1–2 Personen konzentriert, während andere Verantwortung tragen, aber nichts entscheiden dürfen.","Güç 1–2 kişide yoğunlaşmış, diğerleri sorumluluk taşıyor ama karar veremiyorlar.","Power concentrated in 1–2 people while others carry responsibility but cannot decide."),
+          T(lang,"Völlige Entkopplung: Macht, Verantwortung und Konsequenz haben keine strukturelle Verbindung mehr.","Tam ayrışma: güç, sorumluluk ve sonuç arasında artık yapısal bağlantı yok.","Complete decoupling: power, responsibility and consequence have no structural link.")
+        ] : [
+          T(lang,"Du hast das Gefühl, dein Leben aktiv zu gestalten – Entscheidungen liegen bei dir.","Hayatını aktif olarak şekillendirdiğini hissediyorsun – kararlar sende.","You feel like you're actively shaping your life – decisions rest with you."),
+          T(lang,"Überwiegend selbstbestimmt – gelegentlich beeinflusst dich das Umfeld stärker als du willst.","Ağırlıklı olarak öz-belirleyici – çevre zaman zaman istediğinden daha fazla etkiliyor.","Mostly self-determined – occasionally the environment influences you more than you'd like."),
+          T(lang,"Du merkst, dass du in manchen Bereichen Verantwortung trägst, aber nicht wirklich entscheiden kannst.","Bazı alanlarda sorumluluk taşıdığını ama gerçekten karar veremediğini fark ediyorsun.","You notice you carry responsibility in some areas but can't really decide."),
+          T(lang,"Du trägst viel Verantwortung für Dinge, die andere eigentlich steuern – das zehrt.","Başkalarının kontrol ettiği şeyler için çok sorumluluk taşıyorsun – bu yıpratıyor.","You carry a lot of responsibility for things others actually control – that drains you."),
+          T(lang,"Du hast das Gefühl, an Dinge gebunden zu sein, über die du keine echte Kontrolle hast.","Gerçek kontrolün olmadığı şeylere bağlı hissediyorsun kendini.","You feel tied to things you have no real control over."),
+          T(lang,"Du funktionierst, aber kaum nach eigenen Regeln – die Situation bestimmt mehr als du.","İşler yürüyor ama neredeyse kendi kurallarına göre değil – durumu sen değil o belirliyor.","You're functioning, but barely on your own terms – the situation dictates more than you."),
+          T(lang,"Du hast das Steuer aus der Hand verloren – externe Kräfte oder Personen bestimmen dein Leben.","Direksiyonu elinden bıraktın – dış güçler ya da kişiler hayatını belirliyor.","You've lost the wheel – external forces or people are determining your life.")
+        ]
+      }
+    };
+
+    Object.entries(sliders).forEach(([sliderId, cfg]) => {
+      const slider = document.getElementById(sliderId);
+      const exEl = document.getElementById(cfg.exId);
+      if (!slider || !exEl) return;
+      const val = parseInt(slider.value, 10) || 0;
+      const hint = cfg.hints[val] || cfg.hints[0];
+      exEl.innerHTML = `<span style="opacity:.55;font-size:.78rem;">${cfg.label}</span><br><span style="font-size:.82rem;color:var(--text);">${hint}</span>`;
+    });
+  }
+
   /* ── adaptive questions ──────────────────── */
   function renderQuestions(lang) {
     const biz = mode==="business";
     const qs = biz ? [
       { id:"b_q1",
         title: T(lang,"Wo entsteht aktuell die größte Verzögerung?","En büyük gecikme nerede?","Where is the biggest delay?"),
-        help:  T(lang,
-          "Denk an die letzte Woche: Was hat am längsten gedauert – auf eine Entscheidung warten, Aufgaben weitergeben, etwas nachbessern oder schlicht keine Zeit haben?",
-          "Geçen haftayı düşün: en uzun süren ne oldu – karar beklemek, iş devretmek, düzeltmek veya kapasite eksikliği mi?",
-          "Think of last week: what took longest – waiting for a decision, handing off work, reworking something, or simply lacking capacity?"),
         opts: [
           {v:"decisions", l:T(lang,"Entscheidungen","Kararlar","Decisions")},
           {v:"handoff",   l:T(lang,"Übergaben","Devir","Handoffs")},
@@ -847,10 +921,6 @@
         ]},
       { id:"b_q2",
         title: T(lang,"Was passiert, wenn die Schlüsselrolle zwei Wochen ausfällt?","Kritik rol iki hafta yoksa ne olur?","If the key role is out for two weeks?"),
-        help:  T(lang,
-          "Stell dir vor: die wichtigste Person im System ist für 2 Wochen weg – krank, Urlaub, gekündigt. Läuft es normal weiter, wird es deutlich langsamer, oder bricht es zusammen?",
-          "Sistemdeki en önemli kişi 2 hafta yok – hasta, izin, istifa. Normal devam eder mi, yavaşlar mı, yoksa çöker mi?",
-          "Imagine the most critical person in the system is gone for 2 weeks – sick, vacation, resigned. Does it run normally, slow down noticeably, or collapse?"),
         opts: [
           {v:"fine",  l:T(lang,"Läuft weiter","Devam eder","Continues")},
           {v:"slow",  l:T(lang,"Wird langsamer","Yavaşlar","Slower")},
@@ -858,10 +928,6 @@
         ]},
       { id:"b_q3",
         title: T(lang,"Wie klar sind Rollen & Zuständigkeiten?","Roller/sorumluluklar ne kadar net?","How clear are roles & ownership?"),
-        help:  T(lang,
-          "Gibt es Bereiche, wo zwei Leute glauben zuständig zu sein – oder wo niemand sicher ist wer entscheidet? Sehr klar = jeder weiß genau wofür er verantwortlich ist.",
-          "İki kişinin aynı konu için sorumlu olduğunu düşündüğü veya kimin karar vereceğinin belirsiz olduğu alanlar var mı?",
-          "Are there areas where two people think they own something – or where nobody is sure who decides? Very clear = everyone knows exactly what they own."),
         opts: [
           {v:"clear",   l:T(lang,"Sehr klar","Çok net","Very clear")},
           {v:"mixed",   l:T(lang,"Teilweise","Kısmen","Partial")},
@@ -870,10 +936,6 @@
     ] : [
       { id:"p_q1",
         title: T(lang,"Was ist der Haupt-Auslöser der Spannung?","Gerilimin ana tetikleyicisi nedir?","Main trigger of the tension?"),
-        help:  T(lang,
-          "Was löst das Problem meistens konkret aus? Zu viel auf einmal (Zeitdruck), Streit / Missverständnisse (Konflikt), nicht wissen was richtig ist (Unklarheit), oder einfach leer / ausgebrannt sein (Erschöpfung)?",
-          "Sorunu genellikle ne tetikliyor? Çok fazla iş (zaman baskısı), anlaşmazlık (çatışma), ne yapacağını bilmemek (belirsizlik) veya boşalmış / tükenmiş hissi mi?",
-          "What most concretely triggers the problem? Too much at once (time pressure), conflict / misunderstandings, not knowing what's right (uncertainty), or feeling empty / burned out (exhaustion)?"),
         opts: [
           {v:"time",        l:T(lang,"Zeitdruck","Zaman baskısı","Time pressure")},
           {v:"conflict",    l:T(lang,"Konflikt","Çatışma","Conflict")},
@@ -882,10 +944,6 @@
         ]},
       { id:"p_q2",
         title: T(lang,"Wie stark hängt das System an einer Person?","Sistem bir kişiye ne kadar bağlı?","How much does the system depend on one person?"),
-        help:  T(lang,
-          "Gibt es eine Person – oft du selbst – ohne die nichts läuft? Gering = andere können übernehmen. Hoch = wenn diese Person fehlt, stockt alles.",
-          "Sistem olmadan işlemeyen bir kişi var mı – genellikle sen mi? Az = başkaları devralabilir. Yüksek = bu kişi yoksa her şey durur.",
-          "Is there one person – often yourself – without whom nothing works? Low = others can take over. High = if this person is missing, everything stalls."),
         opts: [
           {v:"low",    l:T(lang,"Gering","Az","Low")},
           {v:"medium", l:T(lang,"Mittel","Orta","Medium")},
@@ -893,10 +951,6 @@
         ]},
       { id:"p_q3",
         title: T(lang,"Wie gut werden Fehler genutzt statt versteckt?","Hatalar öğrenmeye dönüyor mu?","How well are errors used instead of hidden?"),
-        help:  T(lang,
-          "Wenn etwas schiefläuft: wird offen darüber geredet und daraus gelernt? Oder werden Fehler ignoriert, unter den Tisch gekehrt, oder lösen sie Schuldzuweisungen aus?",
-          "Bir şey ters gittiğinde: açıkça konuşuluyor ve ders çıkarılıyor mu? Yoksa hatalar görmezden mi geliniyor, kapatılıyor mu ya da suçlama mı başlıyor?",
-          "When something goes wrong: is it discussed openly and learned from? Or are errors ignored, swept under the rug, or do they trigger blame?"),
         opts: [
           {v:"good",  l:T(lang,"Gut","İyi","Good")},
           {v:"mixed", l:T(lang,"Gemischt","Karışık","Mixed")},
@@ -911,8 +965,7 @@
       d.className = "dx-q";
       d.innerHTML = `
         <div class="dx-qtitle">${esc(q.title)}</div>
-        <div class="dx-qhelp">${esc(q.help)}</div>
-        <div class="dx-opts" style="margin-top:.5rem;">
+        <div class="dx-opts">
           ${q.opts.map(o => `
             <label class="dx-opt">
               <input type="radio" name="${q.id}" value="${o.v}" />
@@ -1054,31 +1107,11 @@
 
     try {
       const payload = { ...buildPayload(), assessment: STATE.assessment };
-      const res = await fetch(`${API}/api/report`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error((await res.text().catch(()=>"")).slice(0,140) || `Error ${res.status}`);
-
-      const ct = (res.headers.get("content-type") || "").toLowerCase();
-
-      if (ct.includes("application/pdf") || ct.includes("octet-stream")) {
-        // API returned a PDF directly — download + show confirmation
-        downloadBlob(new Blob([await res.arrayBuffer()], {type:"application/pdf"}), "mdg-executive-report.pdf");
-        STATE.report = "[PDF]";
-        $("#execText").textContent = T(lang,
-          "✓ Report als PDF heruntergeladen.",
-          "✓ Rapor PDF olarak indirildi.",
-          "✓ Report downloaded as PDF.");
-      } else {
-        const data = await res.json().catch(() => ({}));
-        STATE.report = data.report_markdown || JSON.stringify(data, null, 2);
-        $("#execText").textContent = STATE.report;
-      }
-
+      const data    = await postJSON("/api/report", payload);
+      STATE.report  = data.report_markdown || JSON.stringify(data, null, 2);
+      $("#execText").textContent  = STATE.report;
       $("#reportContainer").style.display = "block";
-      $("#copyExecBtn").disabled  = (STATE.report === "[PDF]");
+      $("#copyExecBtn").disabled  = false;
       clearFeedback();
       $("#feedbackBox").style.display = "block";
       setStatus(T(lang,"Report fertig ✓","Rapor hazır ✓","Report ready ✓"), "done");
@@ -1146,61 +1179,25 @@
     });
   }
 
-  const FEEDBACK_EMAIL = "info@mdg-indikation.de";
-
   async function sendFeedback() {
     const lang = getLang();
     if (!feedbackOk()) return;
-    const q1  = ($("#fbQ1").value||"").trim();
-    const q2  = ($("#fbQ2").value||"").trim();
-    const nps = Number(($("#fbNps").value||"").trim());
-    const problem = ($("#oneLiner").value||"").trim();
-
     const payload = {
-      page:"diagnose", mode, lang, problem,
-      q1, q2, nps,
+      page:"diagnose", mode, lang,
+      problem: ($("#oneLiner").value||"").trim(),
+      q1:  ($("#fbQ1").value||"").trim(),
+      q2:  ($("#fbQ2").value||"").trim(),
+      nps: Number(($("#fbNps").value||"").trim()),
       meta: { ts: new Date().toISOString(), ua: navigator.userAgent }
     };
-
-    $("#fbStatus").textContent = "…";
-    $("#fbSendBtn").disabled   = true;
-
-    // 1) Try API endpoint first
-    let apiOk = false;
+    $("#fbStatus").textContent  = "…";
+    $("#fbSendBtn").disabled    = true;
     try {
       await postJSON("/api/feedback", payload);
-      apiOk = true;
       $("#fbStatus").textContent = "✓";
     } catch {
-      // API failed — fall through to mailto
-    }
-
-    if (!apiOk) {
-      // 2) mailto fallback — opens mail client with pre-filled feedback
-      const subject = encodeURIComponent(
-        T(lang, "MDG Feedback", "MDG Geri Bildirim", "MDG Feedback")
-      );
-      const body = encodeURIComponent(
-        [
-          T(lang,"Seite","Sayfa","Page") + ": diagnose | " +
-          T(lang,"Modus","Mod","Mode") + ": " + mode + " | " +
-          T(lang,"Sprache","Dil","Language") + ": " + lang,
-          "",
-          T(lang,"Situation","Durum","Situation") + ": " + (problem || "—"),
-          "",
-          T(lang,"1) Was war am hilfreichsten?","1) En faydalı kısım neydi?","1) What helped most?"),
-          q1,
-          "",
-          T(lang,"2) Was fehlt / ist unklar?","2) Ne eksik / belirsiz?","2) What's missing / unclear?"),
-          q2,
-          "",
-          T(lang,"3) Bewertung (0–10)","3) Puan (0–10)","3) Score (0–10)") + ": " + nps,
-          "",
-          new Date().toISOString()
-        ].join("\n")
-      );
-      window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`;
-      $("#fbStatus").textContent = T(lang,"E-Mail geöffnet ✓","E-posta açıldı ✓","Email opened ✓");
+      $("#fbStatus").textContent = T(lang,"Fehler","Hata","Error");
+      document.getElementById("fbSendBtn").disabled = false;
     }
   }
 
