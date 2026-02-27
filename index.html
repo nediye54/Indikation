@@ -167,10 +167,17 @@
       Kostenpflichtig (249,99 €). Bitte Token eingeben.
     </p>
 
+    <!-- Purchase link -->
+    <a class="btn btn--primary" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/b586d65c-e9a1-4dec-91cc-a7d9c342a107" target="_blank" rel="noopener" id="bizBuyBtn" style="display:inline-flex; align-items:center; gap:.45rem; margin-bottom:.9rem; text-decoration:none;">
+      <span>🔑</span>
+      <span data-i18n="biz.buy">Token kaufen (249,99 €)</span>
+    </a>
+
     <div class="modal__grid">
       <div>
         <div class="modal__label" data-i18n="biz.label">Token</div>
-        <input class="dx-input" id="bizToken" type="text" placeholder="MDG-XXXX-XXXX" autocomplete="off" style="margin-top:.4rem;" />
+        <div class="micro" style="margin:.25rem 0 .45rem; opacity:.75;" data-i18n="biz.afterBuy">Nach dem Kauf erhältst du deinen Token per E-Mail.</div>
+        <input class="dx-input" id="bizToken" type="text" placeholder="MDG-XXXX-XXXX" autocomplete="off" style="margin-top:.25rem;" />
       </div>
       <div class="modal__row">
         <button class="btn btn--primary" type="button" id="bizGo" data-i18n="biz.next">Weiter</button>
@@ -212,7 +219,9 @@
       "biz.tag":"Business Zugang","biz.title":"Token eingeben",
       "biz.text":"Kostenpflichtig (249,99 €). Bitte Token eingeben.",
       "biz.label":"Token","biz.next":"Weiter","biz.cancel":"Abbrechen",
-      "biz.errEmpty":"Bitte Token eingeben.","biz.errInvalid":"Token ungültig.","biz.ok":"Token ok. Weiter …"
+      "biz.errEmpty":"Bitte Token eingeben.","biz.errInvalid":"Token ungültig.","biz.ok":"Token ok. Weiter …",
+      "biz.buy":"Token kaufen (249,99 €)",
+      "biz.afterBuy":"Nach dem Kauf erhältst du deinen Token per E-Mail."
     },
     tr: {
       "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS",
@@ -224,7 +233,9 @@
       "biz.tag":"Business erişim","biz.title":"Token gir",
       "biz.text":"Şirketler için ücretli (249,99 €). Token giriniz.",
       "biz.label":"Token","biz.next":"Devam","biz.cancel":"İptal",
-      "biz.errEmpty":"Token giriniz.","biz.errInvalid":"Token geçersiz.","biz.ok":"Token tamam. Devam …"
+      "biz.errEmpty":"Token giriniz.","biz.errInvalid":"Token geçersiz.","biz.ok":"Token tamam. Devam …",
+      "biz.buy":"Token satın al (249,99 €)",
+      "biz.afterBuy":"Satın aldıktan sonra token e-posta ile gönderilecek."
     },
     en: {
       "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ",
@@ -236,7 +247,9 @@
       "biz.tag":"Business access","biz.title":"Enter token",
       "biz.text":"For Companies (249,99 €). Please enter token.",
       "biz.label":"Token","biz.next":"Continue","biz.cancel":"Cancel",
-      "biz.errEmpty":"Please enter a token.","biz.errInvalid":"Invalid token.","biz.ok":"Token ok. Continuing …"
+      "biz.errEmpty":"Please enter a token.","biz.errInvalid":"Invalid token.","biz.ok":"Token ok. Continuing …",
+      "biz.buy":"Buy token (249.99 €)",
+      "biz.afterBuy":"After purchase you will receive your token by email."
     }
   };
 
