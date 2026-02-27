@@ -229,15 +229,16 @@
     .dx-rnote { font-size: .86rem; color: var(--muted); margin: 0 0 .65rem; line-height: 1.4; }
 
     /* slide-in for report area */
-    #reportContainer { display: none; animation: dxSlide .22s ease; }
+    /* NOTE: display is controlled entirely by JS – no CSS display:none here */
+    #reportContainer { animation: dxSlide .22s ease; }
     @keyframes dxSlide {
       from { opacity: 0; transform: translateY(-6px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
     /* ─── Feedback box ─── */
+    /* NOTE: display is controlled entirely by JS – no CSS display:none here */
     #feedbackBox {
-      display: none;
       margin-top: 1rem;
       padding: 1rem 1.1rem 1.1rem;
       border-radius: var(--r);
@@ -519,12 +520,12 @@
         </div>
 
         <!-- Report text + feedback — shown after generation -->
-        <div id="reportContainer">
+        <div id="reportContainer" style="display:none;">
           <div class="dx-divider" style="margin:.9rem 0 .75rem;"></div>
           <pre id="execText">—</pre>
 
           <!-- ═══ UNIFIED FEEDBACK — single static instance, IDs: fbQ1/fbQ2/fbNps ═══ -->
-          <div id="feedbackBox">
+          <div id="feedbackBox" style="display:none;">
             <div class="dx-fb-head" data-i18n="fb.head">Feedback</div>
             <div class="dx-fb-rows">
 
@@ -967,11 +968,37 @@
 
     try {
       const payload = { ...buildPayload(), assessment: STATE.assessment };
-      const data    = await postJSON("/api/report", payload);
-      STATE.report  = data.report_markdown || JSON.stringify(data, null, 2);
-      $("#execText").textContent  = STATE.report;
-      $("#reportContainer").style.display = "";
-      $("#copyExecBtn").disabled  = false;
+      const res = await fetch(`${API}/api/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error((await res.text().catch(()=>"")).slice(0,140) || `Error ${res.status}`);
+
+      const ct = (res.headers.get("content-type") || "").toLowerCase();
+
+      if (ct.includes("application/pdf") || ct.includes("octet-stream")) {
+        // API returned a PDF directly — download it and show feedback
+        downloadBlob(new Blob([await res.arrayBuffer()], {type:"application/pdf"}), "mdg-executive-report.pdf");
+        STATE.report = "[PDF]";
+        $("#execText").textContent = T(lang,
+          "✓ Report als PDF heruntergeladen.",
+          "✓ Rapor PDF olarak indirildi.",
+          "✓ Report downloaded as PDF.");
+      } else {
+        // JSON response with report_markdown
+        const data = await res.json().catch(() => ({}));
+        if (ct.includes("application/json") || data.report_markdown) {
+          STATE.report = data.report_markdown || JSON.stringify(data, null, 2);
+        } else {
+          // Fallback: treat raw text as report
+          STATE.report = await res.text().catch(() => "");
+        }
+        $("#execText").textContent = STATE.report;
+      }
+
+      $("#reportContainer").style.display = "block";
+      $("#copyExecBtn").disabled  = (STATE.report === "[PDF]");
       clearFeedback();
       $("#feedbackBox").style.display = "block";
       setStatus(T(lang,"Report fertig ✓","Rapor hazır ✓","Report ready ✓"), "done");
