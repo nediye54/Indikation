@@ -228,16 +228,14 @@
     }
     .dx-rnote { font-size: .86rem; color: var(--muted); margin: 0 0 .65rem; line-height: 1.4; }
 
-    /* slide-in for report area */
-    /* NOTE: display is controlled entirely by JS – no CSS display:none here */
+    /* slide-in for report area — display controlled by JS via inline style */
     #reportContainer { animation: dxSlide .22s ease; }
     @keyframes dxSlide {
       from { opacity: 0; transform: translateY(-6px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ─── Feedback box ─── */
-    /* NOTE: display is controlled entirely by JS – no CSS display:none here */
+    /* ─── Feedback box — display controlled by JS via inline style ─── */
     #feedbackBox {
       margin-top: 1rem;
       padding: 1rem 1.1rem 1.1rem;
@@ -293,7 +291,39 @@
       line-height: 1.45;
     }
 
-    /* ─── Copy button: success state ─── */
+    /* ─── Mode switch button ─── */
+    .dx-modeswitch {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .22rem .65rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.15);
+      background: transparent;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 700;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .dx-modeswitch:hover {
+      border-color: rgba(110,231,183,.4);
+      color: var(--text);
+    }
+
+    /* ─── Question help tooltip ─── */
+    .dx-qhelp {
+      margin-top: .35rem;
+      font-size: .8rem;
+      color: var(--muted-2);
+      line-height: 1.45;
+      padding: .5rem .7rem;
+      border-radius: 10px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.07);
+    }
+    .dx-qhelp b { color: var(--muted); }
     .btn--ok {
       background: rgba(110,231,183,.12) !important;
       border-color: rgba(110,231,183,.4) !important;
@@ -396,6 +426,7 @@
           <div class="dx-modeline">
             <span class="dx-modetag" id="modeText">—</span>
             <span class="pill pill--muted" id="tokenBadge" style="display:none; font-size:.72rem;">Token ✓</span>
+            <button class="dx-modeswitch" id="modeSwitchBtn" type="button" style="display:none;" data-i18n="dx.switchPrivate">→ Privat wechseln</button>
           </div>
           <div class="dx-fhelp" id="modeHint"></div>
         </div>
@@ -623,7 +654,28 @@
   const mode    = wantBiz && businessOk ? "business" : "private";
 
   $("#modeText").textContent = mode==="business" ? "Business" : "Privat";
-  if (mode==="business") $("#tokenBadge").style.display = "";
+  if (mode==="business") {
+    $("#tokenBadge").style.display = "";
+    // Show switch-to-private button
+    const switchBtn = $("#modeSwitchBtn");
+    if (switchBtn) switchBtn.style.display = "";
+  }
+
+  // Mode switch: clear business flags and reload as private
+  $("#modeSwitchBtn")?.addEventListener("click", () => {
+    const lang = getLang();
+    if (confirm(T(lang,
+      "Zu Privat-Modus wechseln? Business-Token wird entfernt.",
+      "Özel moda geçilsin mi? Business token kaldırılacak.",
+      "Switch to Private mode? Business token will be removed."))) {
+      ["mdg_mode","mdg_business_ok","mdg_business_token"].forEach(k => {
+        ss.removeItem(k); ls.removeItem(k);
+      });
+      ls.setItem("mdg_mode","private");
+      ss.setItem("mdg_mode","private");
+      window.location.href = "./diagnose.html?mode=private&lang=" + encodeURIComponent(lang);
+    }
+  });
 
   /* ── i18n dictionary ─────────────────────── */
   const dict = {
@@ -641,10 +693,13 @@
       "dx.outTitle":"Output","dx.assessTitle":"Strategisches Assessment",
       "dx.execTitle":"Executive Report","dx.execBtn":"Report erzeugen","dx.copy":"Kopieren","dx.pdf":"PDF",
       "dx.privacy":"Inputs werden via API ausschließlich zur Generierung von Assessment und Report verarbeitet.",
+      "dx.switchPrivate":"→ Privat wechseln",
       "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau.",
       "kpi.primary":"Primär","kpi.path":"Pfad","kpi.risk":"Risiko",
       "fb.head":"Feedback","fb.q1":"1) Was war am hilfreichsten?","fb.q2":"2) Was fehlt / ist unklar?",
-      "fb.q3":"3) Bewertung (0–10)","fb.hint":"0 = nicht hilfreich · 10 = extrem hilfreich","fb.send":"Senden"
+      "fb.q3":"3) Bewertung (0–10)","fb.hint":"0 = nicht hilfreich · 10 = extrem hilfreich","fb.send":"Senden",
+      "fb.mailSubject":"MDG Feedback",
+      "fb.mailFallback":"Feedback per E-Mail senden"
     },
     tr: {
       "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS","cta.backHome":"Anasayfa",
@@ -660,10 +715,13 @@
       "dx.outTitle":"Çıktı","dx.assessTitle":"Stratejik değerlendirme",
       "dx.execTitle":"Yönetici raporu","dx.execBtn":"Rapor üret","dx.copy":"Kopyala","dx.pdf":"PDF",
       "dx.privacy":"Veriler yalnızca rapor üretimi için API üzerinden işlenir.",
+      "dx.switchPrivate":"→ Özel moda geç",
       "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
       "kpi.primary":"Ana","kpi.path":"Yol","kpi.risk":"Risk",
       "fb.head":"Geri bildirim","fb.q1":"1) En faydalı kısım neydi?","fb.q2":"2) Ne eksik / belirsiz?",
-      "fb.q3":"3) Puan (0–10)","fb.hint":"0 = faydasız · 10 = çok faydalı","fb.send":"Gönder"
+      "fb.q3":"3) Puan (0–10)","fb.hint":"0 = faydasız · 10 = çok faydalı","fb.send":"Gönder",
+      "fb.mailSubject":"MDG Geri Bildirim",
+      "fb.mailFallback":"E-posta ile gönder"
     },
     en: {
       "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
@@ -679,10 +737,13 @@
       "dx.outTitle":"Output","dx.assessTitle":"Strategic Assessment",
       "dx.execTitle":"Executive Report","dx.execBtn":"Generate Report","dx.copy":"Copy","dx.pdf":"PDF",
       "dx.privacy":"Inputs are processed via API only to generate the assessment and report.",
+      "dx.switchPrivate":"→ Switch to Private",
       "footer.tag":"Structure diagnosis for stabilization and rebuild.",
       "kpi.primary":"Primary","kpi.path":"Path","kpi.risk":"Risk",
       "fb.head":"Feedback","fb.q1":"1) What helped most?","fb.q2":"2) What's missing / unclear?",
-      "fb.q3":"3) Score (0–10)","fb.hint":"0 = not helpful · 10 = extremely helpful","fb.send":"Send"
+      "fb.q3":"3) Score (0–10)","fb.hint":"0 = not helpful · 10 = extremely helpful","fb.send":"Send",
+      "fb.mailSubject":"MDG Feedback",
+      "fb.mailFallback":"Send via email"
     }
   };
 
@@ -774,6 +835,10 @@
     const qs = biz ? [
       { id:"b_q1",
         title: T(lang,"Wo entsteht aktuell die größte Verzögerung?","En büyük gecikme nerede?","Where is the biggest delay?"),
+        help:  T(lang,
+          "Denk an die letzte Woche: Was hat am längsten gedauert – auf eine Entscheidung warten, Aufgaben weitergeben, etwas nachbessern oder schlicht keine Zeit haben?",
+          "Geçen haftayı düşün: en uzun süren ne oldu – karar beklemek, iş devretmek, düzeltmek veya kapasite eksikliği mi?",
+          "Think of last week: what took longest – waiting for a decision, handing off work, reworking something, or simply lacking capacity?"),
         opts: [
           {v:"decisions", l:T(lang,"Entscheidungen","Kararlar","Decisions")},
           {v:"handoff",   l:T(lang,"Übergaben","Devir","Handoffs")},
@@ -782,6 +847,10 @@
         ]},
       { id:"b_q2",
         title: T(lang,"Was passiert, wenn die Schlüsselrolle zwei Wochen ausfällt?","Kritik rol iki hafta yoksa ne olur?","If the key role is out for two weeks?"),
+        help:  T(lang,
+          "Stell dir vor: die wichtigste Person im System ist für 2 Wochen weg – krank, Urlaub, gekündigt. Läuft es normal weiter, wird es deutlich langsamer, oder bricht es zusammen?",
+          "Sistemdeki en önemli kişi 2 hafta yok – hasta, izin, istifa. Normal devam eder mi, yavaşlar mı, yoksa çöker mi?",
+          "Imagine the most critical person in the system is gone for 2 weeks – sick, vacation, resigned. Does it run normally, slow down noticeably, or collapse?"),
         opts: [
           {v:"fine",  l:T(lang,"Läuft weiter","Devam eder","Continues")},
           {v:"slow",  l:T(lang,"Wird langsamer","Yavaşlar","Slower")},
@@ -789,6 +858,10 @@
         ]},
       { id:"b_q3",
         title: T(lang,"Wie klar sind Rollen & Zuständigkeiten?","Roller/sorumluluklar ne kadar net?","How clear are roles & ownership?"),
+        help:  T(lang,
+          "Gibt es Bereiche, wo zwei Leute glauben zuständig zu sein – oder wo niemand sicher ist wer entscheidet? Sehr klar = jeder weiß genau wofür er verantwortlich ist.",
+          "İki kişinin aynı konu için sorumlu olduğunu düşündüğü veya kimin karar vereceğinin belirsiz olduğu alanlar var mı?",
+          "Are there areas where two people think they own something – or where nobody is sure who decides? Very clear = everyone knows exactly what they own."),
         opts: [
           {v:"clear",   l:T(lang,"Sehr klar","Çok net","Very clear")},
           {v:"mixed",   l:T(lang,"Teilweise","Kısmen","Partial")},
@@ -797,6 +870,10 @@
     ] : [
       { id:"p_q1",
         title: T(lang,"Was ist der Haupt-Auslöser der Spannung?","Gerilimin ana tetikleyicisi nedir?","Main trigger of the tension?"),
+        help:  T(lang,
+          "Was löst das Problem meistens konkret aus? Zu viel auf einmal (Zeitdruck), Streit / Missverständnisse (Konflikt), nicht wissen was richtig ist (Unklarheit), oder einfach leer / ausgebrannt sein (Erschöpfung)?",
+          "Sorunu genellikle ne tetikliyor? Çok fazla iş (zaman baskısı), anlaşmazlık (çatışma), ne yapacağını bilmemek (belirsizlik) veya boşalmış / tükenmiş hissi mi?",
+          "What most concretely triggers the problem? Too much at once (time pressure), conflict / misunderstandings, not knowing what's right (uncertainty), or feeling empty / burned out (exhaustion)?"),
         opts: [
           {v:"time",        l:T(lang,"Zeitdruck","Zaman baskısı","Time pressure")},
           {v:"conflict",    l:T(lang,"Konflikt","Çatışma","Conflict")},
@@ -805,6 +882,10 @@
         ]},
       { id:"p_q2",
         title: T(lang,"Wie stark hängt das System an einer Person?","Sistem bir kişiye ne kadar bağlı?","How much does the system depend on one person?"),
+        help:  T(lang,
+          "Gibt es eine Person – oft du selbst – ohne die nichts läuft? Gering = andere können übernehmen. Hoch = wenn diese Person fehlt, stockt alles.",
+          "Sistem olmadan işlemeyen bir kişi var mı – genellikle sen mi? Az = başkaları devralabilir. Yüksek = bu kişi yoksa her şey durur.",
+          "Is there one person – often yourself – without whom nothing works? Low = others can take over. High = if this person is missing, everything stalls."),
         opts: [
           {v:"low",    l:T(lang,"Gering","Az","Low")},
           {v:"medium", l:T(lang,"Mittel","Orta","Medium")},
@@ -812,6 +893,10 @@
         ]},
       { id:"p_q3",
         title: T(lang,"Wie gut werden Fehler genutzt statt versteckt?","Hatalar öğrenmeye dönüyor mu?","How well are errors used instead of hidden?"),
+        help:  T(lang,
+          "Wenn etwas schiefläuft: wird offen darüber geredet und daraus gelernt? Oder werden Fehler ignoriert, unter den Tisch gekehrt, oder lösen sie Schuldzuweisungen aus?",
+          "Bir şey ters gittiğinde: açıkça konuşuluyor ve ders çıkarılıyor mu? Yoksa hatalar görmezden mi geliniyor, kapatılıyor mu ya da suçlama mı başlıyor?",
+          "When something goes wrong: is it discussed openly and learned from? Or are errors ignored, swept under the rug, or do they trigger blame?"),
         opts: [
           {v:"good",  l:T(lang,"Gut","İyi","Good")},
           {v:"mixed", l:T(lang,"Gemischt","Karışık","Mixed")},
@@ -826,7 +911,8 @@
       d.className = "dx-q";
       d.innerHTML = `
         <div class="dx-qtitle">${esc(q.title)}</div>
-        <div class="dx-opts">
+        <div class="dx-qhelp">${esc(q.help)}</div>
+        <div class="dx-opts" style="margin-top:.5rem;">
           ${q.opts.map(o => `
             <label class="dx-opt">
               <input type="radio" name="${q.id}" value="${o.v}" />
@@ -978,7 +1064,7 @@
       const ct = (res.headers.get("content-type") || "").toLowerCase();
 
       if (ct.includes("application/pdf") || ct.includes("octet-stream")) {
-        // API returned a PDF directly — download it and show feedback
+        // API returned a PDF directly — download + show confirmation
         downloadBlob(new Blob([await res.arrayBuffer()], {type:"application/pdf"}), "mdg-executive-report.pdf");
         STATE.report = "[PDF]";
         $("#execText").textContent = T(lang,
@@ -986,14 +1072,8 @@
           "✓ Rapor PDF olarak indirildi.",
           "✓ Report downloaded as PDF.");
       } else {
-        // JSON response with report_markdown
         const data = await res.json().catch(() => ({}));
-        if (ct.includes("application/json") || data.report_markdown) {
-          STATE.report = data.report_markdown || JSON.stringify(data, null, 2);
-        } else {
-          // Fallback: treat raw text as report
-          STATE.report = await res.text().catch(() => "");
-        }
+        STATE.report = data.report_markdown || JSON.stringify(data, null, 2);
         $("#execText").textContent = STATE.report;
       }
 
@@ -1066,25 +1146,61 @@
     });
   }
 
+  const FEEDBACK_EMAIL = "info@mdg-indikation.de";
+
   async function sendFeedback() {
     const lang = getLang();
     if (!feedbackOk()) return;
+    const q1  = ($("#fbQ1").value||"").trim();
+    const q2  = ($("#fbQ2").value||"").trim();
+    const nps = Number(($("#fbNps").value||"").trim());
+    const problem = ($("#oneLiner").value||"").trim();
+
     const payload = {
-      page:"diagnose", mode, lang,
-      problem: ($("#oneLiner").value||"").trim(),
-      q1:  ($("#fbQ1").value||"").trim(),
-      q2:  ($("#fbQ2").value||"").trim(),
-      nps: Number(($("#fbNps").value||"").trim()),
+      page:"diagnose", mode, lang, problem,
+      q1, q2, nps,
       meta: { ts: new Date().toISOString(), ua: navigator.userAgent }
     };
-    $("#fbStatus").textContent  = "…";
-    $("#fbSendBtn").disabled    = true;
+
+    $("#fbStatus").textContent = "…";
+    $("#fbSendBtn").disabled   = true;
+
+    // 1) Try API endpoint first
+    let apiOk = false;
     try {
       await postJSON("/api/feedback", payload);
+      apiOk = true;
       $("#fbStatus").textContent = "✓";
     } catch {
-      $("#fbStatus").textContent = T(lang,"Fehler","Hata","Error");
-      document.getElementById("fbSendBtn").disabled = false;
+      // API failed — fall through to mailto
+    }
+
+    if (!apiOk) {
+      // 2) mailto fallback — opens mail client with pre-filled feedback
+      const subject = encodeURIComponent(
+        T(lang, "MDG Feedback", "MDG Geri Bildirim", "MDG Feedback")
+      );
+      const body = encodeURIComponent(
+        [
+          T(lang,"Seite","Sayfa","Page") + ": diagnose | " +
+          T(lang,"Modus","Mod","Mode") + ": " + mode + " | " +
+          T(lang,"Sprache","Dil","Language") + ": " + lang,
+          "",
+          T(lang,"Situation","Durum","Situation") + ": " + (problem || "—"),
+          "",
+          T(lang,"1) Was war am hilfreichsten?","1) En faydalı kısım neydi?","1) What helped most?"),
+          q1,
+          "",
+          T(lang,"2) Was fehlt / ist unklar?","2) Ne eksik / belirsiz?","2) What's missing / unclear?"),
+          q2,
+          "",
+          T(lang,"3) Bewertung (0–10)","3) Puan (0–10)","3) Score (0–10)") + ": " + nps,
+          "",
+          new Date().toISOString()
+        ].join("\n")
+      );
+      window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`;
+      $("#fbStatus").textContent = T(lang,"E-Mail geöffnet ✓","E-posta açıldı ✓","Email opened ✓");
     }
   }
 
