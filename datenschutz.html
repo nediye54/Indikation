@@ -1,157 +1,167 @@
-<!-- datenschutz.html -->
 <!doctype html>
 <html lang="de">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Datenschutz – MDG v2</title>
-  <meta name="description" content="Datenschutzerklärung von MDG v2" />
+  <title>Datenschutz – MDG</title>
+  <meta name="description" content="Datenschutzerklärung von MDG" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./style.css" />
+  <style>
+    .page{ max-width:860px; margin:0 auto; padding:1.75rem 1.25rem 4rem; }
+    .page .card h2.h3{ margin-top:1.5rem; margin-bottom:.35rem; }
+    .page .card h2.h3:first-child{ margin-top:0; }
+  </style>
 </head>
+<body>
 
-  <header class="header" id="top">
-    <div class="container header__inner">
-      <a class="brand" href="./index.html" aria-label="Zur Startseite">
+<header class="header" id="top">
+  <div class="container header__inner">
+    <a class="brand" href="./index.html" aria-label="Home">
+      <span class="brand__mark" aria-hidden="true">MDG</span>
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      <a class="nav__link" href="./how.html">Wie es funktioniert</a>
+      <a class="nav__link" href="./why.html">Warum MDG</a>
+      <a class="nav__link" href="./faq.html">FAQ</a>
+    </nav>
+
+    <div class="header__actions">
+      <a class="btn btn--ghost" href="./index.html">Home</a>
+    </div>
+
+    <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="drawer" hidden>
+    <div class="drawer__content">
+      <a class="drawer__link" href="./how.html">Wie es funktioniert</a>
+      <a class="drawer__link" href="./why.html">Warum MDG</a>
+      <a class="drawer__link" href="./faq.html">FAQ</a>
+      <div class="drawer__sep"></div>
+      <a class="btn btn--ghost btn--full" href="./index.html">Home</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <div class="page">
+    <div class="section__head">
+      <h1 class="h2">Datenschutzerklärung</h1>
+      <p class="sub">Informationen nach DSGVO</p>
+    </div>
+
+    <div class="card">
+      <h2 class="h3">1. Verantwortlicher</h2>
+      <p class="p">
+        <strong>Selim M. Ayrilmaz</strong><br />
+        Moosacher Straße 18<br />
+        80809 München<br />
+        E-Mail: <a href="mailto:info@mdg-indikation.de">info@mdg-indikation.de</a><br />
+        Tel.: 016091489988
+      </p>
+
+      <h2 class="h3">2. Allgemeine Hinweise</h2>
+      <p class="p">
+        Diese Datenschutzerklärung informiert dich über Art, Umfang und Zweck der Verarbeitung personenbezogener Daten auf dieser Website.
+        Personenbezogene Daten sind alle Daten, mit denen du persönlich identifiziert werden kannst.
+      </p>
+
+      <h2 class="h3">3. Hosting</h2>
+      <p class="p">
+        Diese Website wird gehostet bei: <strong>[Hosting-Anbieter]</strong>.<br />
+        Der Hosting-Anbieter verarbeitet Zugriffsdaten (Server-Logfiles), um den Betrieb der Website zu ermöglichen.
+      </p>
+
+      <h2 class="h3">4. Server-Logfiles</h2>
+      <p class="p">
+        Beim Besuch der Website können automatisch Informationen erfasst werden (z. B. Browsertyp, Betriebssystem, Referrer-URL, IP-Adresse, Uhrzeit).
+        Die Verarbeitung erfolgt zur Sicherstellung des technischen Betriebs und zur Abwehr von Angriffen.
+        Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse).
+      </p>
+
+      <h2 class="h3">5. Kontaktaufnahme</h2>
+      <p class="p">
+        Wenn du uns per Kontaktformular oder E-Mail kontaktierst, werden deine Angaben zur Bearbeitung der Anfrage verarbeitet.
+        Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertrag/Anbahnung) oder Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse).
+        Die Daten werden gelöscht, sobald die Anfrage erledigt ist und keine gesetzlichen Aufbewahrungspflichten entgegenstehen.
+      </p>
+
+      <h2 class="h3">6. Cookies &amp; lokale Speicherung</h2>
+      <p class="p">
+        Diese Website speichert technisch notwendige Daten im Browser (z. B. Spracheinstellung, Session-Token).
+        Es werden keine Tracking-Cookies oder Analyse-Tools eingesetzt, sofern nicht gesondert angegeben.
+      </p>
+
+      <h2 class="h3">7. API-Verarbeitung</h2>
+      <p class="p">
+        Eingaben im Diagnose-Tool werden über die API <strong>api.mdg-indikation.de</strong> ausschließlich zur Generierung
+        von Assessment und Executive Report verarbeitet. Es findet keine dauerharte Speicherung personenbezogener Inhalte statt,
+        sofern kein explizites Save/Share aktiviert wurde.
+      </p>
+
+      <h2 class="h3">8. Empfänger &amp; Drittlandtransfer</h2>
+      <p class="p">
+        Eine Weitergabe an Dritte erfolgt nur, wenn dies zur Bereitstellung der Website oder zur Bearbeitung deiner Anfrage erforderlich ist
+        oder wenn du eingewilligt hast.
+      </p>
+
+      <h2 class="h3">9. Speicherdauer</h2>
+      <p class="p">
+        Personenbezogene Daten werden nur so lange gespeichert, wie es zur Erfüllung der Zwecke erforderlich ist oder gesetzliche Pflichten bestehen.
+      </p>
+
+      <h2 class="h3">10. Deine Rechte</h2>
+      <p class="p">
+        Du hast das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung (Art. 18),
+        Datenübertragbarkeit (Art. 20) sowie Widerspruch (Art. 21). Außerdem hast du das Recht auf Beschwerde bei einer Aufsichtsbehörde.
+      </p>
+
+      <h2 class="h3">11. Sicherheit</h2>
+      <p class="p">
+        Wir treffen angemessene technische und organisatorische Maßnahmen, um deine Daten zu schützen.
+        Eine vollständige Sicherheit im Internet kann jedoch nicht garantiert werden.
+      </p>
+
+      <p class="micro" style="margin-top:1.5rem;">
+        Hinweis: Bitte ersetze [Hosting-Anbieter] und ergänze eingesetzte Tools (Analytics, Newsletter, Zahlungsanbieter usw.).
+      </p>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <div class="brand brand--footer">
         <span class="brand__mark" aria-hidden="true">MDG</span>
-        <span class="brand__text">v2</span>
-      </a>
-
-      <nav class="nav" aria-label="Hauptnavigation">
-        <a class="nav__link" href="./index.html#modell">Modell</a>
-        <a class="nav__link" href="./index.html#diagnose">Diagnose</a>
-        <a class="nav__link" href="./index.html#ergebnisse">Ergebnisse</a>
-        <a class="nav__link" href="./index.html#massnahmen">Maßnahmen</a>
-        <a class="nav__link" href="./index.html#export">Export</a>
-      </nav>
-
-      <div class="header__actions">
-        <a class="btn btn--primary" href="./index.html#start">Diagnose starten</a>
       </div>
-
-      <button class="burger" type="button" aria-label="Menü öffnen" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
+      <p class="micro">Strukturdiagnose für Stabilisierung und Umbau.</p>
     </div>
-
-    <div class="drawer" hidden>
-      <div class="drawer__content">
-        <a class="drawer__link" href="./index.html#modell">Modell</a>
-        <a class="drawer__link" href="./index.html#diagnose">Diagnose</a>
-        <a class="drawer__link" href="./index.html#ergebnisse">Ergebnisse</a>
-        <a class="drawer__link" href="./index.html#massnahmen">Maßnahmen</a>
-        <a class="drawer__link" href="./index.html#export">Export</a>
-        <div class="drawer__sep"></div>
-        <a class="btn btn--primary btn--full" href="./index.html#start">Diagnose starten</a>
-      </div>
+    <div class="footer__legal">
+      <a href="./impressum.html" rel="nofollow">Impressum</a>
+      <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+      <a href="./kontakt.html" rel="nofollow">Kontakt</a>
     </div>
-  </header>
+  </div>
+</footer>
 
-  <main id="main">
-    <section class="section">
-      <div class="container">
-        <div class="section__head">
-          <h1 class="h2">Datenschutzerklärung</h1>
-          <p class="sub">Informationen nach DSGVO</p>
-        </div>
-
-        <div class="card">
-          <h2 class="h3">1. Verantwortlicher</h2>
-          <p class="p">
-            <strong>Selim M. Ayrilmaz</strong><br />
-            Moosacher Straße 18<br />
-            80809, München<br />
-            info@mdg-indikation.de<a href="mailto:[email]">[email]</a><br />
-            016091489988
-          </p>
-
-          <h2 class="h3">2. Allgemeine Hinweise</h2>
-          <p class="p">
-            Diese Datenschutzerklärung informiert dich über Art, Umfang und Zweck der Verarbeitung personenbezogener Daten auf dieser Website.
-            Personenbezogene Daten sind alle Daten, mit denen du persönlich identifiziert werden kannst.
-          </p>
-
-          <h2 class="h3">3. Hosting</h2>
-          <p class="p">
-            Diese Website wird gehostet bei: <strong>[Hosting-Anbieter]</strong>.<br />
-            Der Hosting-Anbieter verarbeitet Zugriffsdaten (Server-Logfiles), um den Betrieb der Website zu ermöglichen.
-            Bitte ergänze hier – falls verfügbar – die Information zu Auftragsverarbeitung (AVV) mit dem Hoster.
-          </p>
-
-          <h2 class="h3">4. Server-Logfiles</h2>
-          <p class="p">
-            Beim Besuch der Website können automatisch Informationen erfasst werden (z. B. Browsertyp, Betriebssystem, Referrer-URL, IP-Adresse, Uhrzeit).
-            Die Verarbeitung erfolgt zur Sicherstellung des technischen Betriebs und zur Abwehr von Angriffen.
-            Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse).
-          </p>
-
-          <h2 class="h3">5. Kontaktaufnahme</h2>
-          <p class="p">
-            Wenn du uns per Kontaktformular oder E-Mail kontaktierst, werden deine Angaben zur Bearbeitung der Anfrage verarbeitet.
-            Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertrag/Anbahnung) oder Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse).
-            Die Daten werden gelöscht, sobald die Anfrage erledigt ist und keine gesetzlichen Aufbewahrungspflichten entgegenstehen.
-          </p>
-
-          <h2 class="h3">6. Cookies & lokale Speicherung</h2>
-          <p class="p">
-            Diese Website kann technisch notwendige Daten im Browser speichern (z. B. Spracheinstellung).
-            Wenn du zusätzliche Cookies oder Tracking einsetzt, musst du hier einen Cookie-Banner und die Details ergänzen (Zweck, Anbieter, Rechtsgrundlage, Speicherdauer).
-          </p>
-
-          <h2 class="h3">7. Service Worker / Offline-Funktion</h2>
-          <p class="p">
-            Diese Website kann einen Service Worker nutzen, um Inhalte offline verfügbar zu machen und Ladezeiten zu verbessern.
-            Dabei werden statische Dateien (z. B. HTML/CSS/JS) im Browser-Cache gespeichert.
-            Es erfolgt keine Profilbildung, sofern keine zusätzlichen Tracking-Tools eingesetzt werden.
-          </p>
-
-          <h2 class="h3">8. Empfänger & Drittlandtransfer</h2>
-          <p class="p">
-            Eine Weitergabe an Dritte erfolgt nur, wenn dies zur Bereitstellung der Website oder zur Bearbeitung deiner Anfrage erforderlich ist
-            oder wenn du eingewilligt hast. Wenn Dienste außerhalb der EU/EEA eingesetzt werden, musst du hier die Rechtsgrundlage (z. B. SCC) ergänzen.
-          </p>
-
-          <h2 class="h3">9. Speicherdauer</h2>
-          <p class="p">
-            Personenbezogene Daten werden nur so lange gespeichert, wie es zur Erfüllung der Zwecke erforderlich ist oder gesetzliche Pflichten bestehen.
-          </p>
-
-          <h2 class="h3">10. Deine Rechte</h2>
-          <p class="p">
-            Du hast das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung (Art. 18),
-            Datenübertragbarkeit (Art. 20) sowie Widerspruch (Art. 21). Außerdem hast du das Recht auf Beschwerde bei einer Aufsichtsbehörde.
-          </p>
-
-          <h2 class="h3">11. Sicherheit</h2>
-          <p class="p">
-            Wir treffen angemessene technische und organisatorische Maßnahmen, um deine Daten zu schützen.
-            Eine vollständige Sicherheit im Internet kann jedoch nicht garantiert werden.
-          </p>
-
-          <p class="micro">
-            Hinweis: Bitte ersetze die Platzhalter (z. B. [Hosting-Anbieter]) und ergänze eingesetzte Tools (Analytics, Newsletter, Zahlungsanbieter usw.).
-          </p>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <div class="container footer__grid">
-      <div>
-        <div class="brand brand--footer">
-          <span class="brand__mark" aria-hidden="true">MDG</span>
-          <span class="brand__text">v2</span>
-        </div>
-        <p class="micro">Strukturdiagnose für Stabilisierung und Umbau.</p>
-      </div>
-      <div class="footer__legal">
-        <a href="./impressum.html" rel="nofollow">Impressum</a>
-        <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
-        <a href="./kontakt.html" rel="nofollow">Kontakt</a>
-      </div>
-    </div>
-  </footer>
-
-  <script src="./script.js" defer></script>
+<script>
+(() => {
+  const burger = document.querySelector(".burger");
+  const drawer = document.querySelector(".drawer");
+  if (!burger || !drawer) return;
+  const open  = () => { drawer.hidden = false; burger.setAttribute("aria-expanded","true");  document.body.classList.add("no-scroll"); };
+  const close = () => { drawer.hidden = true;  burger.setAttribute("aria-expanded","false"); document.body.classList.remove("no-scroll"); };
+  burger.addEventListener("click", () => drawer.hidden ? open() : close());
+  drawer.addEventListener("click", e => { if (!drawer.querySelector(".drawer__content").contains(e.target)) close(); });
+  window.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+})();
+</script>
 </body>
 </html>
