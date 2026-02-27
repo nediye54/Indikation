@@ -5,40 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>How it works – MDG</title>
   <meta name="description" content="Wie MDG funktioniert: In wenigen Minuten zur Entscheidungssicherheit – Quick Scan, Präzisionsfragen, Output, Executive Report." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./style.css" />
   <style>
-    .page{ max-width: 980px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+    .page{ max-width:980px; margin:0 auto; padding:1.75rem 1.25rem 4rem; }
     .grid{ display:grid; gap:1rem; }
-    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:1rem; }
-    @media (max-width: 900px){ .row{ grid-template-columns:1fr; } }
-    .box{ padding: 1rem; border:1px solid rgba(255,255,255,.10); border-radius: var(--radius2,18px); background: rgba(255,255,255,.02); }
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    @media (max-width:900px){ .row{ grid-template-columns:1fr; } }
+    .box{ padding:1rem; border:1px solid rgba(255,255,255,.10); border-radius:var(--radius,18px); background:rgba(255,255,255,.02); }
     .box h3{ margin:0 0 .35rem; }
-    .mini{ color: var(--muted,#aab); font-size:.95rem; line-height:1.55; }
+    .box-mini{ color:var(--muted); font-size:.95rem; line-height:1.55; }
     .steps{ display:grid; gap:.75rem; margin-top:.5rem; }
     .step{ display:flex; gap:.75rem; align-items:flex-start; }
     .n{
-      width: 2rem; height: 2rem; border-radius: 999px;
+      width:2rem; height:2rem; border-radius:999px;
       display:flex; align-items:center; justify-content:center;
-      font-weight: 950; border:1px solid rgba(255,255,255,.12);
-      background: rgba(110,231,183,.10);
+      font-weight:900; flex-shrink:0;
+      border:1px solid rgba(110,231,183,.25);
+      background:rgba(110,231,183,.08);
+      color:var(--primary);
+      font-size:.82rem;
     }
     .ctaRow{ display:flex; gap:.75rem; flex-wrap:wrap; }
-    .hint{ padding:.85rem 1rem; border:1px solid rgba(255,255,255,.10); border-radius: var(--radius2,18px); background: rgba(255,255,255,.03); }
+    .hint{ padding:.85rem 1rem; border:1px solid rgba(255,255,255,.10); border-radius:var(--radius,18px); background:rgba(255,255,255,.03); }
     .kpi{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.4rem; }
   </style>
 </head>
-
 <body>
+
 <header class="header" id="top">
   <div class="container header__inner">
     <a class="brand" href="./index.html" aria-label="Home">
       <span class="brand__mark" aria-hidden="true">MDG</span>
-      <span class="brand__text">v4</span>
     </a>
 
     <nav class="nav" aria-label="Main">
-      <a class="nav__link" href="./how.html" data-i18n="nav.how">How it works</a>
-      <a class="nav__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
+      <a class="nav__link" href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
+      <a class="nav__link" href="./why.html" data-i18n="nav.why">Warum MDG</a>
       <a class="nav__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
     </nav>
 
@@ -58,8 +63,8 @@
 
   <div class="drawer" hidden>
     <div class="drawer__content">
-      <a class="drawer__link" href="./how.html" data-i18n="nav.how">How it works</a>
-      <a class="drawer__link" href="./why.html" data-i18n="nav.why">Why MDG</a>
+      <a class="drawer__link" href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
+      <a class="drawer__link" href="./why.html" data-i18n="nav.why">Warum MDG</a>
       <a class="drawer__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
       <div class="drawer__sep"></div>
       <a class="btn btn--ghost btn--full" href="./index.html" data-i18n="cta.backHome">Home</a>
@@ -67,70 +72,63 @@
   </div>
 </header>
 
-<main class="page">
+<main id="main">
+<div class="page">
+
   <div class="section__head">
-    <h1 class="h2" data-i18n="how.title">How it works</h1>
+    <h1 class="h2" data-i18n="how.title">Wie es funktioniert</h1>
     <p class="sub" data-i18n="how.sub">
-      MDG führt dich in wenigen Minuten von „diffus“ zu „entscheidbar“ – mit klarer Struktur statt Raten.
+      MDG führt dich in wenigen Minuten von „diffus" zu „entscheidbar" – mit klarer Struktur statt Raten.
     </p>
   </div>
 
   <div class="grid">
-    <div class="card">
-      <h2 class="h3" data-i18n="how.flowTitle">The flow</h2>
 
+    <div class="card">
+      <h2 class="h3" data-i18n="how.flowTitle">Der Flow</h2>
       <div class="steps">
+
         <div class="step">
           <div class="n">1</div>
           <div>
-            <div class="h3" style="margin:0;" data-i18n="how.s1.t">One sentence</div>
-            <div class="mini" data-i18n="how.s1.b">
-              Beschreibe das Muster + die Konsequenz in einem Satz. Das ist der „Case Header“.
-            </div>
+            <div class="h3" style="margin:0;" data-i18n="how.s1.t">Ein Satz</div>
+            <div class="box-mini" data-i18n="how.s1.b">Beschreibe das Muster + die Konsequenz in einem Satz. Das ist der „Case Header".</div>
           </div>
         </div>
 
         <div class="step">
           <div class="n">2</div>
           <div>
-            <div class="h3" style="margin:0;" data-i18n="how.s2.t">Goal</div>
-            <div class="mini" data-i18n="how.s2.b">
-              Du wählst: Stabilisieren (Spannung senken) oder Umbauen (Architektur ändern).
-            </div>
+            <div class="h3" style="margin:0;" data-i18n="how.s2.t">Ziel</div>
+            <div class="box-mini" data-i18n="how.s2.b">Du wählst: Stabilisieren (Spannung senken) oder Umbauen (Architektur ändern).</div>
           </div>
         </div>
 
         <div class="step">
           <div class="n">3</div>
           <div>
-            <div class="h3" style="margin:0;" data-i18n="how.s3.t">Quick Scan (sliders)</div>
-            <div class="mini" data-i18n="how.s3.b">
-              5 Slider messen Last, Entscheidungen, Energie/Fehler, Wachstum/Komplexität, Macht-Verantwortung.
-            </div>
+            <div class="h3" style="margin:0;" data-i18n="how.s3.t">Quick Scan (Slider)</div>
+            <div class="box-mini" data-i18n="how.s3.b">5 Slider messen Last, Entscheidungen, Energie/Fehler, Wachstum/Komplexität, Macht-Verantwortung.</div>
           </div>
         </div>
 
         <div class="step">
           <div class="n">4</div>
           <div>
-            <div class="h3" style="margin:0;" data-i18n="how.s4.t">Precision questions</div>
-            <div class="mini" data-i18n="how.s4.b">
-              Wenige Folgefragen reduzieren Mehrdeutigkeit. Jede Frage hat 2 Beispiele, damit Antworten sauber werden.
-            </div>
+            <div class="h3" style="margin:0;" data-i18n="how.s4.t">Präzisionsfragen</div>
+            <div class="box-mini" data-i18n="how.s4.b">Wenige Folgefragen reduzieren Mehrdeutigkeit. Jede Frage hat 2 Beispiele, damit Antworten sauber werden.</div>
           </div>
         </div>
 
         <div class="step">
           <div class="n">5</div>
           <div>
-            <div class="h3" style="margin:0;" data-i18n="how.s5.t">Strategic output</div>
-            <div class="mini" data-i18n="how.s5.b">
-              Primärinstabilität, Spannungen, Risiko, Pfad (IDG/ADG) plus eine Klärungsfrage.
-            </div>
+            <div class="h3" style="margin:0;" data-i18n="how.s5.t">Strategischer Output</div>
+            <div class="box-mini" data-i18n="how.s5.b">Primärinstabilität, Spannungen, Risiko, Pfad (IDG/ADG) plus eine Klärungsfrage.</div>
             <div class="kpi">
-              <span class="pill pill--muted" data-i18n="how.k1">Primary Instability</span>
-              <span class="pill pill--muted" data-i18n="how.k2">Path</span>
-              <span class="pill pill--muted" data-i18n="how.k3">Risk</span>
+              <span class="pill pill--muted" data-i18n="how.k1">Primärinstabilität</span>
+              <span class="pill pill--muted" data-i18n="how.k2">Pfad</span>
+              <span class="pill pill--muted" data-i18n="how.k3">Risiko</span>
             </div>
           </div>
         </div>
@@ -139,51 +137,51 @@
           <div class="n">6</div>
           <div>
             <div class="h3" style="margin:0;" data-i18n="how.s6.t">Executive Report</div>
-            <div class="mini" data-i18n="how.s6.b">
-              Aus dem Output wird ein umsetzbarer Plan: Indikatoren, Maßnahmen, Architektur-Upgrade, Risiken, 30-60-90.
-            </div>
+            <div class="box-mini" data-i18n="how.s6.b">Aus dem Output wird ein umsetzbarer Plan: Indikatoren, Maßnahmen, Architektur-Upgrade, Risiken, 30-60-90.</div>
           </div>
         </div>
+
       </div>
     </div>
 
     <div class="card">
-      <h2 class="h3" data-i18n="how.principlesTitle">Design principles</h2>
+      <h2 class="h3" data-i18n="how.principlesTitle">Design-Prinzipien</h2>
       <div class="row">
         <div class="box">
-          <h3 class="h3" data-i18n="how.p1.t">No fluff</h3>
-          <p class="mini" data-i18n="how.p1.b">Kurze, dichte Aussagen. Keine Motivationsphrasen. Keine generischen Tipps.</p>
+          <h3 class="h3" data-i18n="how.p1.t">Kein Fluff</h3>
+          <p class="box-mini" data-i18n="how.p1.b">Kurze, dichte Aussagen. Keine Motivationsphrasen. Keine generischen Tipps.</p>
         </div>
         <div class="box">
           <h3 class="h3" data-i18n="how.p2.t">Operational</h3>
-          <p class="mini" data-i18n="how.p2.b">Konkrete Moves, Reihenfolge, Signale. So, dass man morgen handeln kann.</p>
+          <p class="box-mini" data-i18n="how.p2.b">Konkrete Moves, Reihenfolge, Signale. So, dass man morgen handeln kann.</p>
         </div>
       </div>
-
       <div class="row" style="margin-top:1rem;">
         <div class="box">
-          <h3 class="h3" data-i18n="how.p3.t">Separate modes</h3>
-          <p class="mini" data-i18n="how.p3.b">Private und Business verwenden unterschiedliche Fragen/Beispiele, damit Logik sauber bleibt.</p>
+          <h3 class="h3" data-i18n="how.p3.t">Getrennte Modi</h3>
+          <p class="box-mini" data-i18n="how.p3.b">Private und Business verwenden unterschiedliche Fragen/Beispiele, damit Logik sauber bleibt.</p>
         </div>
         <div class="box">
-          <h3 class="h3" data-i18n="how.p4.t">Clarify to confirm</h3>
-          <p class="mini" data-i18n="how.p4.b">Eine starke Klärungsfrage validiert Annahmen und schärft die Diagnose sofort.</p>
+          <h3 class="h3" data-i18n="how.p4.t">Klärung zur Validierung</h3>
+          <p class="box-mini" data-i18n="how.p4.b">Eine starke Klärungsfrage validiert Annahmen und schärft die Diagnose sofort.</p>
         </div>
       </div>
     </div>
 
     <div class="hint">
-      <div class="h3" style="margin:0;" data-i18n="how.tipTitle">Tip for best results</div>
-      <div class="mini" data-i18n="how.tipBody">
+      <div class="h3" style="margin:0 0 .35rem;" data-i18n="how.tipTitle">Tipp für beste Ergebnisse</div>
+      <div class="box-mini" data-i18n="how.tipBody">
         Antworte so konkret wie möglich (Beobachtung statt Interpretation). Wenn du unsicher bist: wähle die realistischste Option.
       </div>
     </div>
 
     <div class="ctaRow">
-      <a class="btn btn--primary" href="./index.html" data-i18n="how.cta">Start diagnosis</a>
-      <a class="btn btn--ghost" href="#top" data-i18n="how.top">Back to top</a>
+      <a class="btn btn--primary" href="./index.html" data-i18n="how.cta">Diagnose starten</a>
+      <a class="btn btn--ghost" href="#top" data-i18n="how.top">Nach oben</a>
     </div>
+
   </div>
+</div>
 </main>
 
 <footer class="footer">
@@ -191,9 +189,8 @@
     <div>
       <div class="brand brand--footer">
         <span class="brand__mark" aria-hidden="true">MDG</span>
-        <span class="brand__text">v4</span>
       </div>
-      <p class="micro" data-i18n="footer.tag">Structure diagnosis for stabilization and rebuild.</p>
+      <p class="micro" data-i18n="footer.tag">Strukturdiagnose für Stabilisierung und Umbau.</p>
     </div>
     <div class="footer__legal">
       <a href="./impressum.html" rel="nofollow">Impressum</a>
@@ -205,26 +202,29 @@
 
 <script>
 (() => {
-  const $ = (s, r=document) => r.querySelector(s);
-  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  "use strict";
+  const $  = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+  const ls = localStorage;
 
-  const burger = $(".burger");
-  const drawer = $(".drawer");
+  /* ── burger ── */
+  const burger = $(".burger"), drawer = $(".drawer");
   if (burger && drawer) {
-    burger.addEventListener("click", () => {
-      const open = !drawer.hasAttribute("hidden");
-      if (open) { drawer.setAttribute("hidden",""); burger.setAttribute("aria-expanded","false"); }
-      else { drawer.removeAttribute("hidden"); burger.setAttribute("aria-expanded","true"); }
-    });
+    const open  = () => { drawer.hidden=false; burger.setAttribute("aria-expanded","true");  document.body.classList.add("no-scroll"); };
+    const close = () => { drawer.hidden=true;  burger.setAttribute("aria-expanded","false"); document.body.classList.remove("no-scroll"); };
+    burger.addEventListener("click", () => drawer.hidden ? open() : close());
+    drawer.addEventListener("click", e => { if (!$(".drawer__content",drawer).contains(e.target)) close(); });
+    window.addEventListener("keydown", e => { if (e.key==="Escape") close(); });
   }
 
+  /* ── i18n ── */
   const dict = {
     de: {
-      "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ","cta.backHome":"Zur Homepage",
+      "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ","cta.backHome":"Home",
       "how.title":"Wie es funktioniert",
-      "how.sub":"MDG führt dich in wenigen Minuten von „diffus“ zu „entscheidbar“ – mit klarer Struktur statt Raten.",
+      "how.sub":"MDG führt dich in wenigen Minuten von „diffus" zu „entscheidbar" – mit klarer Struktur statt Raten.",
       "how.flowTitle":"Der Flow",
-      "how.s1.t":"Ein Satz","how.s1.b":"Beschreibe das Muster + die Konsequenz in einem Satz. Das ist der „Case Header“.",
+      "how.s1.t":"Ein Satz","how.s1.b":"Beschreibe das Muster + die Konsequenz in einem Satz. Das ist der „Case Header".",
       "how.s2.t":"Ziel","how.s2.b":"Du wählst: Stabilisieren (Spannung senken) oder Umbauen (Architektur ändern).",
       "how.s3.t":"Quick Scan (Slider)","how.s3.b":"5 Slider messen Last, Entscheidungen, Energie/Fehler, Wachstum/Komplexität, Macht-Verantwortung.",
       "how.s4.t":"Präzisionsfragen","how.s4.b":"Wenige Folgefragen reduzieren Mehrdeutigkeit. Jede Frage hat 2 Beispiele, damit Antworten sauber werden.",
@@ -244,9 +244,9 @@
     tr: {
       "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS","cta.backHome":"Anasayfa",
       "how.title":"Nasıl çalışır",
-      "how.sub":"MDG seni birkaç dakikada “bulanık”tan “karar verilebilir”e taşır—tahmin yerine net yapı.",
+      "how.sub":"MDG seni birkaç dakikada "bulanık"tan "karar verilebilir"e taşır—tahmin yerine net yapı.",
       "how.flowTitle":"Akış",
-      "how.s1.t":"Tek cümle","how.s1.b":"Desen + sonucu tek cümlede yaz. Bu “case header”dır.",
+      "how.s1.t":"Tek cümle","how.s1.b":"Desen + sonucu tek cümlede yaz. Bu "case header"dır.",
       "how.s2.t":"Hedef","how.s2.b":"Seç: Stabilize (gerilimi düşür) veya Yeniden kur (mimariyi değiştir).",
       "how.s3.t":"Hızlı tarama (slider)","how.s3.b":"5 slider: yük, kararlar, enerji/hata, büyüme/karmaşıklık, güç-sorumluluk.",
       "how.s4.t":"Kesinleştirme soruları","how.s4.b":"Az sayıda takip sorusu belirsizliği azaltır. Her soruda 2 örnek vardır.",
@@ -266,7 +266,7 @@
     en: {
       "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
       "how.title":"How it works",
-      "how.sub":"MDG moves you from “fuzzy” to “decidable” in minutes—structure instead of guessing.",
+      "how.sub":"MDG moves you from "fuzzy" to "decidable" in minutes—structure instead of guessing.",
       "how.flowTitle":"The flow",
       "how.s1.t":"One sentence","how.s1.b":"Write the pattern + the consequence in one sentence. This is the case header.",
       "how.s2.t":"Goal","how.s2.b":"Choose: Stabilize (reduce tension) or Rebuild (change architecture).",
@@ -287,18 +287,19 @@
     }
   };
 
-  function applyLang(lang){
-    if(!dict[lang]) lang="de";
+  function applyLang(lang) {
+    if (!dict[lang]) lang = "de";
+    ls.setItem("mdg_lang", lang);
     document.documentElement.lang = lang;
     $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang===lang)));
     $$("[data-i18n]").forEach(el => {
-      const k = el.dataset.i18n;
-      if (dict[lang][k]) el.textContent = dict[lang][k];
+      const v = dict[lang][el.dataset.i18n];
+      if (v !== undefined) el.textContent = v;
     });
   }
 
-  $$("[data-lang]").forEach(btn => btn.addEventListener("click", () => applyLang(btn.dataset.lang)));
-  applyLang("de");
+  $$("[data-lang]").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.lang)));
+  applyLang(ls.getItem("mdg_lang") || "de");
 })();
 </script>
 </body>
