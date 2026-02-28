@@ -39,7 +39,26 @@
       color:var(--muted); font-size:.9rem; margin:.2rem 0 .4rem;
     }
     .form__check a{ color:var(--primary); }
-    .form__note{ font-size:.8rem; color:var(--muted-2); margin-top:.2rem; }
+
+    /* Status message */
+    .form__status{
+      display:none;
+      padding:.75rem 1rem;
+      border-radius:10px;
+      font-size:.9rem;
+      font-weight:600;
+      margin-top:.2rem;
+    }
+    .form__status--ok{
+      background:rgba(110,231,183,.12);
+      border:1px solid rgba(110,231,183,.3);
+      color:#6ee7b7;
+    }
+    .form__status--err{
+      background:rgba(239,68,68,.1);
+      border:1px solid rgba(239,68,68,.3);
+      color:#f87171;
+    }
   </style>
 </head>
 <body>
@@ -95,8 +114,7 @@
 
       <div class="card">
         <h2 class="h3">Kontaktformular</h2>
-        <!-- NOTE: Frontend-only – Backend/E-Mail-Service separat verbinden -->
-        <form class="form" action="#" method="post">
+        <form class="form" id="contactForm">
           <label class="form__label" for="name">Name</label>
           <input class="form__input" id="name" name="name" type="text" placeholder="Dein Name" autocomplete="name" />
 
@@ -105,22 +123,23 @@
 
           <label class="form__label" for="topic">Thema</label>
           <select class="form__input" id="topic" name="topic">
-            <option value="general">Allgemein</option>
-            <option value="idg">IDG (Stabilisierung)</option>
-            <option value="adg">ADG (Architektur)</option>
-            <option value="business">Business / Token</option>
+            <option value="Allgemein">Allgemein</option>
+            <option value="IDG (Stabilisierung)">IDG (Stabilisierung)</option>
+            <option value="ADG (Architektur)">ADG (Architektur)</option>
+            <option value="Business / Token">Business / Token</option>
           </select>
 
           <label class="form__label" for="message">Nachricht</label>
           <textarea class="form__input" id="message" name="message" rows="5" placeholder="Kurz: System, Problem, Ziel." required></textarea>
 
           <label class="form__check">
-            <input type="checkbox" required />
+            <input type="checkbox" id="privacy" required />
             <span>Ich habe die <a href="./datenschutz.html">Datenschutzerklärung</a> gelesen.</span>
           </label>
 
-          <button class="btn btn--primary" type="submit">Senden</button>
-          <p class="form__note">Dieses Formular ist aktuell ohne Backend. Bitte verbinde es mit einem Mail-/Form-Service.</p>
+          <div class="form__status" id="formStatus"></div>
+
+          <button class="btn btn--primary" type="submit" id="submitBtn">Senden</button>
         </form>
       </div>
     </div>
@@ -145,14 +164,67 @@
 
 <script>
 (() => {
+  /* ── Burger menu ── */
   const burger = document.querySelector(".burger");
   const drawer = document.querySelector(".drawer");
-  if (!burger || !drawer) return;
-  const open  = () => { drawer.hidden = false; burger.setAttribute("aria-expanded","true");  document.body.classList.add("no-scroll"); };
-  const close = () => { drawer.hidden = true;  burger.setAttribute("aria-expanded","false"); document.body.classList.remove("no-scroll"); };
-  burger.addEventListener("click", () => drawer.hidden ? open() : close());
-  drawer.addEventListener("click", e => { if (!drawer.querySelector(".drawer__content").contains(e.target)) close(); });
-  window.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+  if (burger && drawer) {
+    const open  = () => { drawer.hidden = false; burger.setAttribute("aria-expanded","true");  document.body.classList.add("no-scroll"); };
+    const close = () => { drawer.hidden = true;  burger.setAttribute("aria-expanded","false"); document.body.classList.remove("no-scroll"); };
+    burger.addEventListener("click", () => drawer.hidden ? open() : close());
+    drawer.addEventListener("click", e => { if (!drawer.querySelector(".drawer__content").contains(e.target)) close(); });
+    window.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+  }
+
+  /* ── Contact form ── */
+  // ⚠️ Replace with your actual Cloudflare Worker URL
+  const WORKER_URL = "https://YOUR_WORKER.YOUR_SUBDOMAIN.workers.dev";
+
+  const form      = document.getElementById("contactForm");
+  const status    = document.getElementById("formStatus");
+  const submitBtn = document.getElementById("submitBtn");
+
+  function showStatus(msg, isOk) {
+    status.textContent = msg;
+    status.className = "form__status " + (isOk ? "form__status--ok" : "form__status--err");
+    status.style.display = "block";
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Wird gesendet…";
+    status.style.display = "none";
+
+    const payload = {
+      name:    document.getElementById("name").value.trim(),
+      email:   document.getElementById("email").value.trim(),
+      topic:   document.getElementById("topic").value,
+      message: document.getElementById("message").value.trim(),
+    };
+
+    try {
+      const res = await fetch(WORKER_URL + "/api/contact", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.ok) {
+        showStatus("✓ Nachricht gesendet. Wir melden uns bald.", true);
+        form.reset();
+      } else {
+        showStatus("Fehler: " + (data.error || "Unbekannter Fehler. Bitte versuche es erneut."), false);
+      }
+    } catch (err) {
+      showStatus("Verbindungsfehler. Bitte versuche es erneut.", false);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Senden";
+    }
+  });
 })();
 </script>
 </body>
