@@ -1,7 +1,1344 @@
 <!doctype html>
 <html lang="de">
 <head>
+  <meta charset="utf-8" /><!doctype html>
+<html lang="de">
+<head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Diagnose – MDG</title>
+  <meta name="description" content="In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen." />
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+
+    /* ─── Font override ─── */
+    :root {
+      --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'DM Mono', 'Fira Code', ui-monospace, monospace;
+      --glow-green: rgba(110,231,183,.15);
+      --glow-blue:  rgba(96,165,250,.12);
+      --r: 18px;
+    }
+    body { font-family: var(--font-body); }
+
+    /* ─── Page shell ─── */
+    .dx-page {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 1.75rem 1.25rem 4rem;
+    }
+
+    /* ─── Hero bar ─── */
+    .dx-hero {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--stroke);
+      margin-bottom: 1.5rem;
+    }
+    .dx-hero h1 { margin: 0 0 .3rem; }
+    .dx-hero .sub { margin: 0; max-width: 580px; }
+    .dx-kpi {
+      display: flex;
+      gap: .4rem;
+      flex-wrap: wrap;
+      align-self: flex-end;
+    }
+    .dx-kpi .pill {
+      font-family: var(--font-mono);
+      font-size: .75rem;
+      white-space: nowrap;
+      transition: border-color .2s, color .2s;
+    }
+    .dx-kpi .pill.active {
+      border-color: rgba(110,231,183,.45);
+      color: #a7f3d0;
+    }
+
+    /* ─── Two-column layout ─── */
+    .dx-grid {
+      display: grid;
+      grid-template-columns: minmax(0,1.15fr) minmax(360px,.85fr);
+      gap: 1.25rem;
+      align-items: start;
+    }
+    @media (max-width: 980px) { .dx-grid { grid-template-columns: 1fr; } }
+
+    /* ─── Section headers inside card ─── */
+    .dx-shead {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      margin: 0 0 .85rem;
+    }
+    .dx-snum {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.65rem;
+      height: 1.65rem;
+      border-radius: 999px;
+      border: 1px solid rgba(110,231,183,.25);
+      background: rgba(110,231,183,.08);
+      font-weight: 900;
+      font-size: .72rem;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .dx-snum.blue {
+      border-color: rgba(96,165,250,.22);
+      background: rgba(96,165,250,.08);
+      color: #93c5fd;
+    }
+    .dx-stitle { font-weight: 800; font-size: .95rem; margin: 0; }
+
+    /* ─── Field helpers ─── */
+    .dx-fields { display: grid; gap: .85rem; }
+    .dx-field  { display: grid; gap: .3rem; }
+    .dx-flabel {
+      font-size: .76rem;
+      font-weight: 900;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+    }
+    .dx-fhelp   { font-size: .86rem; color: var(--muted); line-height: 1.4; }
+    .dx-fhelp b { color: var(--text); }
+    .dx-divider { height: 1px; background: var(--stroke); margin: .2rem 0; }
+
+    /* ─── Mode tag ─── */
+    .dx-modeline { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+    .dx-modetag {
+      font-weight: 900;
+      font-size: .82rem;
+      padding: .2rem .65rem;
+      border-radius: 999px;
+      border: 1px solid rgba(110,231,183,.28);
+      background: rgba(110,231,183,.07);
+      color: #a7f3d0;
+    }
+
+    /* ─── Range sliders ─── */
+    .dx-range-row { display: grid; grid-template-columns: 1fr auto; gap: .65rem; align-items: center; }
+    .dx-range-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: .95rem;
+      min-width: 1.4rem;
+      text-align: right;
+      color: var(--primary);
+    }
+    input[type="range"].dx-range {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--bg-2);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"].dx-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 0 4px var(--glow-green);
+      transition: box-shadow .15s;
+    }
+    input[type="range"].dx-range::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 0 7px var(--glow-green);
+    }
+    input[type="range"].dx-range::-moz-range-thumb {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: none;
+      cursor: pointer;
+    }
+
+    /* ─── Adaptive questions ─── */
+    .dx-qs    { display: grid; gap: .85rem; }
+    .dx-q     { padding-top: .85rem; border-top: 1px solid rgba(255,255,255,.06); }
+    .dx-q:first-child { border-top: 0; padding-top: 0; }
+    .dx-qtitle { font-weight: 800; font-size: .88rem; line-height: 1.35; margin-bottom: .4rem; }
+    .dx-qhelp  { font-size: .8rem; color: var(--muted); line-height: 1.45; margin-bottom: .5rem; }
+    .dx-qscale { font-size: .73rem; color: var(--muted-2); margin-bottom: .14rem; font-style: italic; font-weight: 600; }
+    .dx-opts   { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .dx-opt {
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .3rem .7rem;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.025);
+      font-size: .79rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .dx-opt:hover {
+      border-color: rgba(110,231,183,.38);
+      background: rgba(110,231,183,.06);
+    }
+    /* selected radio state */
+    .dx-opt:has(input:checked) {
+      border-color: rgba(110,231,183,.55);
+      background: rgba(110,231,183,.10);
+      color: #a7f3d0;
+    }
+    .dx-opt input[type="radio"] {
+      accent-color: var(--primary);
+      width: 12px; height: 12px;
+    }
+
+    /* ─── Action row ─── */
+    .dx-actions { display: flex; gap: .55rem; flex-wrap: wrap; align-items: center; }
+
+    /* ─── Status ─── */
+    #statusLine {
+      font-family: var(--font-mono);
+      font-size: .78rem;
+      color: var(--muted-2);
+      transition: color .2s;
+    }
+    #statusLine.running { color: var(--warning); }
+    #statusLine.done    { color: var(--primary); }
+    #statusLine.err     { color: var(--danger); }
+
+    /* ─── Output column ─── */
+    .dx-out { min-width: 0; }
+
+    .dx-rbox {
+      padding: 1.15rem;
+      border: 1px solid var(--stroke);
+      border-radius: var(--r);
+      background: rgba(255,255,255,.025);
+      transition: border-color .2s;
+    }
+    .dx-rbox + .dx-rbox { margin-top: 1rem; }
+    .dx-rbox:focus-within { border-color: rgba(110,231,183,.22); }
+    .dx-rbox h3 { margin: 0 0 .55rem; font-size: .95rem; }
+    .dx-rbox pre {
+      font-family: var(--font-mono);
+      font-size: .78rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow: auto;
+      max-height: 42vh;
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.65;
+    }
+    .dx-rnote { font-size: .86rem; color: var(--muted); margin: 0 0 .65rem; line-height: 1.4; }
+
+    /* slide-in for report area */
+    #reportContainer { display: none; }
+    #reportContainer.is-visible { display: block; animation: dxSlide .28s ease; }
+    #feedbackBox.is-visible { display: block; animation: dxSlide .2s ease; }
+    @keyframes dxSlide {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── Feedback box ─── */
+    #feedbackBox {
+      display: none;
+      margin-top: 1rem;
+      padding: 1rem 1.1rem 1.1rem;
+      border-radius: var(--r);
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.08);
+      animation: dxSlide .2s ease;
+    }
+    .dx-fb-head {
+      font-size: .72rem;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+      margin-bottom: .75rem;
+    }
+    .dx-fb-rows   { display: grid; gap: .6rem; }
+    .dx-fb-row    { display: grid; gap: .25rem; }
+    .dx-fb-label  { font-weight: 700; font-size: .8rem; color: var(--muted); }
+    .dx-fb-hint   { font-size: .73rem; color: var(--muted-2); }
+    .dx-fb-inline { display: flex; gap: .55rem; flex-wrap: wrap; align-items: center; }
+    .dx-fb-foot   { display: flex; align-items: center; gap: .7rem; margin-top: .4rem; }
+    .dx-fb-status { font-family: var(--font-mono); font-size: .78rem; color: var(--muted-2); }
+
+    /* shared textarea / number input inside feedback */
+    .dx-fb-rows textarea,
+    .dx-fb-rows input[type="number"] {
+      width: 100%;
+      padding: .58rem .72rem;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: var(--bg-2);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: .84rem;
+      resize: vertical;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .dx-fb-rows textarea:focus,
+    .dx-fb-rows input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--glow-green);
+    }
+    .dx-fb-rows input[type="number"] { max-width: 100px; resize: none; }
+
+    /* ─── Privacy note ─── */
+    .dx-privacy {
+      font-size: .76rem;
+      color: var(--muted-2);
+      margin-top: 1rem;
+      line-height: 1.45;
+    }
+
+    /* ─── Copy button: success state ─── */
+    .btn--ok {
+      background: rgba(110,231,183,.12) !important;
+      border-color: rgba(110,231,183,.4) !important;
+      color: #a7f3d0 !important;
+    }
+
+    /* ─── Header cleanup (inherited from style.css; keep nav__link active) ─── */
+    .brand__text   { display: none !important; }
+    .drawer[hidden]{ display: none !important; }
+
+    /* ─── select + input consistent focus ring ─── */
+    .dx-input:focus, select.dx-input:focus {
+      border-color: var(--primary) !important;
+      box-shadow: 0 0 0 3px var(--glow-green) !important;
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════ -->
+<header class="header" id="top">
+  <div class="container header__inner">
+    <a class="brand" href="./index.html" aria-label="Home">
+      <span class="brand__mark" aria-hidden="true">MDG</span>
+      <span class="brand__text">v4</span>
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      <a class="nav__link" href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
+      <a class="nav__link" href="./why.html" data-i18n="nav.why">Warum MDG</a>
+      <a class="nav__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
+    </nav>
+
+    <div class="header__actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
+        <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
+        <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="btn btn--ghost" href="./index.html" data-i18n="cta.backHome">Zur Homepage</a>
+    </div>
+
+    <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="drawer" hidden>
+    <div class="drawer__content">
+      <a class="drawer__link" href="./how.html"  data-i18n="nav.how">Wie es funktioniert</a>
+      <a class="drawer__link" href="./why.html"  data-i18n="nav.why">Warum MDG</a>
+      <a class="drawer__link" href="./faq.html"  data-i18n="nav.faq">FAQ</a>
+      <div class="drawer__sep"></div>
+      <a class="btn btn--ghost btn--full" href="./index.html" data-i18n="cta.backHome">Zur Homepage</a>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════
+     MAIN
+══════════════════════════════════════════ -->
+<main id="main">
+<div class="dx-page">
+
+  <!-- Hero -->
+  <div class="dx-hero">
+    <div>
+      <h1 class="h2" data-i18n="dx.title">Diagnose</h1>
+      <p class="sub" data-i18n="dx.sub">
+        In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen.
+      </p>
+    </div>
+    <div class="dx-kpi">
+      <span class="pill pill--muted" id="kpiPrimary">Primär: —</span>
+      <span class="pill pill--muted" id="kpiPath">Pfad: —</span>
+      <span class="pill pill--muted" id="kpiRisk">Risiko: —</span>
+    </div>
+  </div>
+
+  <!-- Two-column -->
+  <div class="dx-grid">
+
+    <!-- ══ LEFT: INPUT ══ -->
+    <div class="card">
+
+      <!-- 1) Kontext -->
+      <div class="dx-shead">
+        <span class="dx-snum">1</span>
+        <h2 class="dx-stitle" data-i18n="dx.s1">Kontext</h2>
+      </div>
+
+      <div class="dx-fields">
+
+        <!-- Mode -->
+        <div class="dx-field">
+          <div class="dx-flabel" data-i18n="dx.mode">Modus</div>
+          <div class="dx-modeline">
+            <span class="dx-modetag" id="modeText">—</span>
+            <span class="pill pill--muted" id="tokenBadge" style="display:none; font-size:.72rem;">Token ✓</span>
+            <button class="btn btn--ghost" type="button" id="modeSwitchBtn"
+              style="font-size:.72rem;padding:.18rem .6rem;border-radius:999px;line-height:1.4;display:none;"
+              data-i18n="dx.modeSwitch">Modus wechseln</button>
+          </div>
+          <div class="dx-fhelp" id="modeHint"></div>
+        </div>
+
+        <!-- Goal -->
+        <div class="dx-field">
+          <label class="dx-flabel" for="goalSelect" data-i18n="dx.goal">Ziel</label>
+          <select class="dx-input" id="goalSelect">
+            <option value="stabilize" data-i18n="dx.goal.stabilize">Stabilisieren</option>
+            <option value="rebuild"   data-i18n="dx.goal.rebuild">Umbauen</option>
+          </select>
+          <div class="dx-fhelp" id="goalHelp"></div>
+        </div>
+
+        <!-- One-liner -->
+        <div class="dx-field">
+          <label class="dx-flabel" for="oneLiner" data-i18n="dx.oneliner">Situation in einem Satz</label>
+          <div style="position:relative;">
+            <input class="dx-input" id="oneLiner" type="text" maxlength="160" placeholder="…" autocomplete="off"
+              style="padding-right:3.2rem;" />
+            <span id="olCount"
+              style="position:absolute;right:.7rem;top:50%;transform:translateY(-50%);font-family:var(--font-mono);font-size:.7rem;color:var(--muted-2);pointer-events:none;">0/160</span>
+          </div>
+          <div class="dx-fhelp" id="oneLinerHelp"></div>
+        </div>
+
+        <div class="dx-divider"></div>
+
+        <!-- 2) Quick Scan -->
+        <div class="dx-shead" style="margin-bottom:.6rem;">
+          <span class="dx-snum">2</span>
+          <h2 class="dx-stitle" data-i18n="dx.s2">Quick Scan</h2>
+        </div>
+
+        <!-- Slider: Load -->
+        <div class="dx-field">
+          <div class="dx-flabel" data-i18n="q.load.title">Last &amp; Engpässe</div>
+          <div class="dx-fhelp" id="exLoad"></div>
+          <div class="dx-range-row">
+            <input id="sLoad" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
+            <div class="dx-range-val" id="vLoad">2</div>
+          </div>
+        </div>
+
+        <!-- Slider: Decisions -->
+        <div class="dx-field">
+          <div class="dx-flabel" data-i18n="q.decisions.title">Entscheidungsarchitektur</div>
+          <div class="dx-fhelp" id="exDecisions"></div>
+          <div class="dx-range-row">
+            <input id="sDecisions" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
+            <div class="dx-range-val" id="vDecisions">2</div>
+          </div>
+        </div>
+
+        <!-- Slider: Energy -->
+        <div class="dx-field">
+          <div class="dx-flabel" data-i18n="q.energy.title">Energie &amp; Fehlerkultur</div>
+          <div class="dx-fhelp" id="exEnergy"></div>
+          <div class="dx-range-row">
+            <input id="sEnergy" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
+            <div class="dx-range-val" id="vEnergy">2</div>
+          </div>
+        </div>
+
+        <!-- Slider: Growth -->
+        <div class="dx-field">
+          <div class="dx-flabel" data-i18n="q.growth.title">Wachstumsdruck / Komplexität</div>
+          <div class="dx-fhelp" id="exGrowth"></div>
+          <div class="dx-range-row">
+            <input id="sGrowth" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
+            <div class="dx-range-val" id="vGrowth">2</div>
+          </div>
+        </div>
+
+        <!-- Slider: Power -->
+        <div class="dx-field">
+          <div class="dx-flabel" data-i18n="q.power.title">Macht–Verantwortung</div>
+          <div class="dx-fhelp" id="exPower"></div>
+          <div class="dx-range-row">
+            <input id="sPower" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
+            <div class="dx-range-val" id="vPower">2</div>
+          </div>
+        </div>
+
+        <div class="dx-divider"></div>
+
+        <!-- 3) Precision questions -->
+        <div class="dx-shead" style="margin-bottom:.5rem;">
+          <span class="dx-snum">3</span>
+          <h2 class="dx-stitle" data-i18n="dx.s3">Präzisionsfragen</h2>
+        </div>
+        <div class="dx-qs" id="questions"></div>
+
+        <!-- CTA row -->
+        <div class="dx-actions" style="margin-top: .8rem;">
+          <button class="btn btn--primary" type="button" id="runBtn"   data-i18n="dx.run">Diagnose starten</button>
+          <button class="btn btn--ghost"   type="button" id="resetBtn" data-i18n="dx.reset">Zurücksetzen</button>
+          <span id="statusLine" class="micro">—</span>
+        </div>
+
+      </div>
+    </div><!-- /card left -->
+
+    <!-- ══ RIGHT: OUTPUT ══ -->
+    <div class="card dx-out">
+
+      <div class="dx-shead" style="margin-bottom:.9rem;">
+        <span class="dx-snum blue">↗</span>
+        <h2 class="dx-stitle" data-i18n="dx.outTitle">Output</h2>
+      </div>
+
+      <!-- Strategic Assessment -->
+      <div class="dx-rbox">
+        <h3 data-i18n="dx.assessTitle">Strategisches Assessment</h3>
+        <pre id="resultText">—</pre>
+      </div>
+
+      <!-- Executive Report -->
+      <div class="dx-rbox">
+        <h3 data-i18n="dx.execTitle">Executive Report</h3>
+        <p class="dx-rnote" id="execHint"></p>
+
+        <div class="dx-actions">
+          <button class="btn btn--primary" type="button" id="execBtn"     data-i18n="dx.execBtn">Report erzeugen</button>
+          <button class="btn btn--ghost"   type="button" id="copyExecBtn" disabled data-i18n="dx.copy">Kopieren</button>
+          <button class="btn btn--ghost"   type="button" id="pdfBtn"      data-i18n="dx.pdf">PDF</button>
+        </div>
+
+        <!-- Report text + feedback — shown after generation -->
+        <div id="reportContainer">
+          <div class="dx-divider" style="margin:.9rem 0 .75rem;"></div>
+          <pre id="execText">—</pre>
+
+          <!-- ═══ UNIFIED FEEDBACK — single static instance, IDs: fbQ1/fbQ2/fbNps ═══ -->
+          <div id="feedbackBox">
+            <div class="dx-fb-head" data-i18n="fb.head">Feedback</div>
+            <div class="dx-fb-rows">
+
+              <div class="dx-fb-row">
+                <div class="dx-fb-label" data-i18n="fb.q1">1) Was war am hilfreichsten?</div>
+                <textarea id="fbQ1" rows="2" maxlength="220" placeholder="…"></textarea>
+              </div>
+
+              <div class="dx-fb-row">
+                <div class="dx-fb-label" data-i18n="fb.q2">2) Was fehlt / ist unklar?</div>
+                <textarea id="fbQ2" rows="2" maxlength="220" placeholder="…"></textarea>
+              </div>
+
+              <div class="dx-fb-row">
+                <div class="dx-fb-label" data-i18n="fb.q3">3) Bewertung (0–10)</div>
+                <div class="dx-fb-inline">
+                  <input id="fbNps" type="number" min="0" max="10" step="1" placeholder="8" />
+                  <span class="dx-fb-hint" id="fbHint" data-i18n="fb.hint">0 = nicht hilfreich · 10 = extrem hilfreich</span>
+                </div>
+              </div>
+
+              <div class="dx-fb-foot">
+                <button class="btn btn--primary" type="button" id="fbSendBtn" disabled data-i18n="fb.send">Senden</button>
+                <span class="dx-fb-status" id="fbStatus">—</span>
+              </div>
+
+            </div>
+          </div><!-- /feedbackBox -->
+
+        </div><!-- /reportContainer -->
+      </div><!-- /dx-rbox exec -->
+
+      <p class="dx-privacy" data-i18n="dx.privacy">
+        Inputs werden via API ausschließlich zur Generierung von Assessment und Report verarbeitet.
+      </p>
+
+    </div><!-- /card right -->
+
+  </div><!-- /dx-grid -->
+</div><!-- /dx-page -->
+</main>
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <div class="brand brand--footer">
+        <span class="brand__mark" aria-hidden="true">MDG</span>
+        <span class="brand__text">v4</span>
+      </div>
+      <p class="micro" data-i18n="footer.tag">Strukturdiagnose für Stabilisierung und Umbau.</p>
+    </div>
+    <div class="footer__legal">
+      <a href="./impressum.html"   rel="nofollow">Impressum</a>
+      <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
+      <a href="./kontakt.html"     rel="nofollow">Kontakt</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════════════
+     SCRIPT  — clean, single IIFE, no duplication
+══════════════════════════════════════════ -->
+<script>
+(() => {
+  "use strict";
+
+  /* ── helpers ─────────────────────────────── */
+  const $  = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+  const API = "https://api.mdg-indikation.de";
+
+  /* ── mobile drawer ───────────────────────── */
+  const burger = $(".burger"), drawer = $(".drawer");
+  if (burger && drawer) {
+    const open  = () => { drawer.hidden = false; burger.setAttribute("aria-expanded","true");  document.body.classList.add("no-scroll"); };
+    const close = () => { drawer.hidden = true;  burger.setAttribute("aria-expanded","false"); document.body.classList.remove("no-scroll"); };
+    burger.addEventListener("click", () => drawer.hidden ? open() : close());
+    drawer.addEventListener("click", e => { if (!$(".drawer__content",drawer).contains(e.target)) close(); });
+    window.addEventListener("keydown", e => { if (e.key==="Escape") close(); });
+  }
+
+  /* ── mode detection ──────────────────────── */
+  const params = new URLSearchParams(location.search);
+  const ss = sessionStorage, ls = localStorage;
+
+  const modeParam   = (params.get("mode") || "").toLowerCase();
+  const storedMode  = (ss.getItem("mdg_mode") || ls.getItem("mdg_mode") || "").toLowerCase();
+  const businessOk  = ss.getItem("mdg_business_ok")==="1" || ls.getItem("mdg_business_ok")==="1";
+  const tokenStored = (ss.getItem("mdg_business_token") || ls.getItem("mdg_business_token") || ls.getItem("mdg_token") || "").trim();
+
+  const wantBiz = modeParam==="business" || storedMode==="business";
+  const mode    = wantBiz && businessOk ? "business" : "private";
+
+  $("#modeText").textContent = mode==="business" ? "Business" : "Privat";
+  if (mode==="business") $("#tokenBadge").style.display = "";
+
+  /* ── mode switcher ───────────────────────── */
+  const modeSwitchBtn = document.getElementById("modeSwitchBtn");
+  if (modeSwitchBtn) {
+    if (mode === "business") {
+      modeSwitchBtn.style.display = "";
+    } else {
+      modeSwitchBtn.style.display = tokenStored ? "" : "none";
+    }
+    modeSwitchBtn.addEventListener("click", () => {
+      const lang = getLang();
+      if (mode === "business") {
+        const confirmMsg = T(lang,
+          "Zu Privat wechseln? Der Business-Modus bleibt über dein Token weiterhin verfügbar.",
+          "Özel moda geçmek istiyor musun? Business modu token ile erişilebilir olmaya devam eder.",
+          "Switch to Private? Business mode remains accessible via your token.");
+        if (!confirm(confirmMsg)) return;
+        ss.setItem("mdg_mode","private");
+        ls.setItem("mdg_mode","private");
+        location.reload();
+      } else {
+        if (tokenStored) {
+          ss.setItem("mdg_mode","business");
+          ls.setItem("mdg_mode","business");
+          location.reload();
+        } else {
+          alert(T(lang,
+            "Für den Business-Modus ist ein gültiger Token erforderlich. Bitte über die Startseite einsteigen.",
+            "Business modu için geçerli bir token gereklidir. Lütfen ana sayfadan giriş yapın.",
+            "A valid token is required for Business mode. Please enter via the homepage."));
+        }
+      }
+    });
+  }
+
+  /* ── i18n dictionary ─────────────────────── */
+  const dict = {
+    de: {
+      "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ","cta.backHome":"Zur Homepage",
+      "dx.title":"Diagnose",
+      "dx.sub":"In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen.",
+      "dx.s1":"Kontext","dx.s2":"Quick Scan","dx.s3":"Präzisionsfragen",
+      "dx.mode":"Modus","dx.goal":"Ziel","dx.goal.stabilize":"Stabilisieren","dx.goal.rebuild":"Umbauen",
+      "dx.oneliner":"Situation in einem Satz",
+      "q.load.title":"Last & Engpässe","q.decisions.title":"Entscheidungsarchitektur",
+      "q.energy.title":"Energie & Fehlerkultur","q.growth.title":"Wachstumsdruck / Komplexität",
+      "q.power.title":"Macht–Verantwortung",
+      "dx.run":"Diagnose starten","dx.reset":"Zurücksetzen",
+      "dx.outTitle":"Output","dx.assessTitle":"Strategisches Assessment",
+      "dx.execTitle":"Executive Report","dx.execBtn":"Report erzeugen","dx.copy":"Kopieren","dx.pdf":"PDF",
+      "dx.privacy":"Inputs werden via API ausschließlich zur Generierung von Assessment und Report verarbeitet.",
+      "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau.",
+      "dx.modeSwitch":"Modus wechseln",
+      "kpi.primary":"Primär","kpi.path":"Pfad","kpi.risk":"Risiko",
+      "fb.head":"Feedback","fb.q1":"1) Was war am hilfreichsten?","fb.q2":"2) Was fehlt / ist unklar?",
+      "fb.q3":"3) Bewertung (0–10)","fb.hint":"0 = nicht hilfreich · 10 = extrem hilfreich","fb.send":"Senden"
+    },
+    tr: {
+      "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS","cta.backHome":"Anasayfa",
+      "dx.title":"Analiz",
+      "dx.sub":"Birkaç dakika içinde karar güveni: istikrarsızlığı erken gör, nedeni doğru teşhis et, mimari kur.",
+      "dx.s1":"Bağlam","dx.s2":"Hızlı tarama","dx.s3":"Kesinleştirme soruları",
+      "dx.mode":"Mod","dx.goal":"Hedef","dx.goal.stabilize":"Stabilize et","dx.goal.rebuild":"Yeniden kur",
+      "dx.oneliner":"Durumu tek cümleyle anlat",
+      "q.load.title":"Yük & darboğazlar","q.decisions.title":"Karar mimarisi",
+      "q.energy.title":"Enerji & hata kültürü","q.growth.title":"Büyüme baskısı / karmaşıklık",
+      "q.power.title":"Güç–sorumluluk uyumu",
+      "dx.run":"Başlat","dx.reset":"Sıfırla",
+      "dx.outTitle":"Çıktı","dx.assessTitle":"Stratejik değerlendirme",
+      "dx.execTitle":"Yönetici raporu","dx.execBtn":"Rapor üret","dx.copy":"Kopyala","dx.pdf":"PDF",
+      "dx.privacy":"Veriler yalnızca rapor üretimi için API üzerinden işlenir.",
+      "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
+      "dx.modeSwitch":"Mod değiştir",
+      "kpi.primary":"Ana","kpi.path":"Yol","kpi.risk":"Risk",
+      "fb.head":"Geri bildirim","fb.q1":"1) En faydalı kısım neydi?","fb.q2":"2) Ne eksik / belirsiz?",
+      "fb.q3":"3) Puan (0–10)","fb.hint":"0 = faydasız · 10 = çok faydalı","fb.send":"Gönder"
+    },
+    en: {
+      "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
+      "dx.title":"Diagnosis",
+      "dx.sub":"In a few minutes to decision-confidence: detect instability early, diagnose precisely, build architecture.",
+      "dx.s1":"Context","dx.s2":"Quick Scan","dx.s3":"Precision Questions",
+      "dx.mode":"Mode","dx.goal":"Goal","dx.goal.stabilize":"Stabilize","dx.goal.rebuild":"Rebuild",
+      "dx.oneliner":"Describe the situation in one sentence",
+      "q.load.title":"Load & bottlenecks","q.decisions.title":"Decision architecture",
+      "q.energy.title":"Energy & error handling","q.growth.title":"Growth pressure / complexity",
+      "q.power.title":"Power–responsibility alignment",
+      "dx.run":"Run assessment","dx.reset":"Reset",
+      "dx.outTitle":"Output","dx.assessTitle":"Strategic Assessment",
+      "dx.execTitle":"Executive Report","dx.execBtn":"Generate Report","dx.copy":"Copy","dx.pdf":"PDF",
+      "dx.privacy":"Inputs are processed via API only to generate the assessment and report.",
+      "footer.tag":"Structure diagnosis for stabilization and rebuild.",
+      "dx.modeSwitch":"Switch mode",
+      "kpi.primary":"Primary","kpi.path":"Path","kpi.risk":"Risk",
+      "fb.head":"Feedback","fb.q1":"1) What helped most?","fb.q2":"2) What's missing / unclear?",
+      "fb.q3":"3) Score (0–10)","fb.hint":"0 = not helpful · 10 = extremely helpful","fb.send":"Send"
+    }
+  };
+
+  /* ── i18n helpers ────────────────────────── */
+  const getLang = () => {
+    const pressed = $$("[data-lang]").find(b => b.getAttribute("aria-pressed")==="true");
+    return pressed?.dataset.lang || ls.getItem("mdg_lang") || "de";
+  };
+  const T = (lang, de, tr, en) => lang==="tr" ? tr : lang==="en" ? en : de;
+  const esc = s => String(s)
+    .replaceAll("&","&amp;").replaceAll("<","&lt;")
+    .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+
+  /* ── apply language ──────────────────────── */
+  function applyLang(lang) {
+    if (!dict[lang]) lang = "de";
+    ls.setItem("mdg_lang", lang);
+    document.documentElement.lang = lang;
+    $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang===lang)));
+    $$("[data-i18n]").forEach(el => {
+      const v = dict[lang][el.dataset.i18n];
+      if (v !== undefined) el.textContent = v;
+    });
+    renderHelp(lang);
+    renderQuestions(lang);
+    if (!STATE.assessment) resetKpis(lang);
+  }
+  $$("[data-lang]").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.lang)));
+
+  /* ── help texts (mode-aware) ─────────────── */
+  function renderHelp(lang) {
+    const biz = mode==="business";
+
+    // Mode hint
+    $("#modeHint").textContent = (wantBiz && !businessOk)
+      ? T(lang,
+          "Business-Zugang nicht aktiv – bitte Token über die Landingpage bestätigen.",
+          "Business erişimi aktif değil – lütfen token'ı ana sayfada doğrula.",
+          "Business access inactive – please verify token on the landing page.")
+      : biz
+        ? T(lang,
+            "Business: Fokus auf Unternehmen, Führung, Teams und Verantwortung.",
+            "Business: şirket, liderlik, ekip ve sorumluluk odağı.",
+            "Business: focus on companies, leadership, teams & accountability.")
+        : T(lang,
+            "Privat: Fokus auf persönliche Systeme, Beziehungen, Alltag und Belastung.",
+            "Özel: kişisel sistemler, ilişkiler, günlük hayat ve yük odağı.",
+            "Private: focus on personal systems, relationships, daily life & load.");
+
+    // Goal help
+    $("#goalHelp").innerHTML = T(lang,
+      "<b>Stabilisieren</b> = Spannung senken. <b>Umbauen</b> = Architektur ändern.",
+      "<b>Stabilize</b> = gerilimi düşür. <b>Yeniden kur</b> = mimariyi değiştir.",
+      "<b>Stabilize</b> = reduce tension. <b>Rebuild</b> = change architecture.");
+
+    // One-liner: guided help — mode-specific question + concrete/abstract contrast
+    const olHelp_q = biz
+      ? T(lang,
+          "Was ist das konkrete Problem, das dein System gerade bremst oder destabilisiert?",
+          "Sistemini yavaslatan veya istikrarsizlastiran somut sorun nedir?",
+          "What is the concrete problem currently slowing down or destabilizing your system?")
+      : T(lang,
+          "Was belastet, stresst oder blockiert dich gerade am meisten?",
+          "Seni en cok ne zorluyor, strese sokuyor veya engelliyor?",
+          "What is weighing on you, stressing you, or blocking you the most right now?");
+    const olHelp_hint = biz
+      ? T(lang,
+          "Konkret, nicht abstrakt &mdash; nicht <i>&bdquo;Kommunikation&ldquo;</i>, sondern <i>&bdquo;Entscheidungen dauern 2 Wochen wegen unklarer Zuständigkeit.&ldquo;</i>",
+          "Somut, soyut degil &mdash; <i>&bdquo;Iletisim sorunu&ldquo;</i> degil, <i>&bdquo;Belirsiz sorumluluk nedeniyle kararlar 2 hafta suruyor.&ldquo;</i>",
+          "Concrete, not abstract &mdash; not <i>'communication issues'</i>, but <i>'Decisions take 2 weeks due to unclear ownership.'</i>")
+      : T(lang,
+          "Konkret, nicht abstrakt &mdash; nicht <i>&bdquo;Stress&ldquo;</i>, sondern <i>&bdquo;Ich übernehme Aufgaben anderer und komme zu meinen eigenen nicht mehr.&ldquo;</i>",
+          "Somut, soyut degil &mdash; <i>&bdquo;Stres&ldquo;</i> degil, <i>&bdquo;Baskalarin gorevlerini ustleniyorum ve kendi islerime vakit kalmiyor.&ldquo;</i>",
+          "Concrete, not abstract &mdash; not <i>'I am stressed'</i>, but <i>'I keep taking on others tasks and cannot reach my own.'</i>");
+    $("#oneLinerHelp").innerHTML =
+      "<span style='font-size:.78rem;font-weight:700;color:var(--muted-2);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.18rem;'>" + olHelp_q + "</span>" +
+      "<span style='font-size:.8rem;color:var(--muted);font-style:italic;'>" + olHelp_hint + "</span>";
+
+    // Slider help — dynamic, value-aware, mode-specific
+    updateSliderHelp(lang);
+    ["sLoad","sDecisions","sEnergy","sGrowth","sPower"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el.dataset.helpWired) {
+        el.dataset.helpWired = "1";
+        el.addEventListener("input", () => updateSliderHelp(getLang()));
+      }
+    });
+
+    // Exec hint
+    $("#execHint").textContent = biz
+      ? T(lang,
+          "Business: Diagnose + Operating Model + Rollen + Rhythmus + KPIs + 30-60-90.",
+          "Business: teşhis + işletim modeli + roller + ritim + KPI + 30-60-90.",
+          "Business: diagnosis + operating model + roles + cadence + KPIs + 30-60-90.")
+      : T(lang,
+          "Privat: Ursachenlogik, Spannungsdynamik, klare Prioritäten, konkrete Moves.",
+          "Özel: neden mantığı, gerilim dinamiği, net öncelikler, somut adımlar.",
+          "Private: causal logic, tension dynamics, clear priorities, concrete moves.");
+  }
+
+  /* ── slider help texts (dynamic, value-aware, mode-specific) ─── */
+  function updateSliderHelp(lang) {
+    const biz = mode === "business";
+    const sliders = {
+      sLoad: {
+        exId: "exLoad",
+        question: T(lang,"Wie gleichmäßig ist die Last im System verteilt?","Sistemdeki yuk ne kadar esit dagitmis?","How evenly is the load distributed across the system?"),
+        label: T(lang,"0 = gleichmäßig verteilt &middot; 6 = dauerhafter Engpass","0 = dengeli dagitmis &middot; 6 = kalici darbogazlar","0 = evenly distributed &middot; 6 = permanent bottleneck"),
+        hints: biz ? [
+          T(lang,"Alle Rollen tragen angemessen &mdash; kein Einzelner ist strukturell überlastet.","Tum roller dengeli yuk tasiyor &mdash; kimse yapisal olarak asiri yuklu degil.","All roles carry proportional load &mdash; no one is structurally overloaded."),
+          T(lang,"Leichte Ungleichgewichte spürbar, aber das System reguliert sich noch selbst.","Hafif dengesizlikler var, ama sistem hala kendini duezeltiyor.","Minor imbalances noticeable, but the system still self-corrects."),
+          T(lang,"Einzelne Personen oder Teams übernehmen regelmäßig deutlich mehr als andere.","Bazi kisiler veya ekipler duzenli olarak digerlerinden belirgin fazla yuk tasiyor.","Certain people or teams regularly carry noticeably more than others."),
+          T(lang,"Klare Überlastung einzelner Knoten &mdash; andere warten oder sind unterausgelastet.","Bazi dugumler acikca asiri yuklu &mdash; digerleri bekliyor ya da kapasite altinda.","Clear overload at specific nodes &mdash; others waiting or underutilized."),
+          T(lang,"Schlüsselpersonen arbeiten regelmäßig am absoluten Limit &mdash; ihr Ausfall waere ein Systemausfall.","Kilit kisiler duzenli olarak mutlak sinirda calisiyor &mdash; ayrilmalari sistem cokusu olur.","Key people regularly at the absolute limit &mdash; their loss would be a system failure."),
+          T(lang,"Das System hängt an 1&ndash;2 Personen. Deren Ausfall brächte Prozesse zum Stillstand.","Sistem 1&ndash;2 kisiye bagli. Ayrilmalari surecleri durdurur.","The system depends on 1&ndash;2 people. Their departure would halt operations."),
+          T(lang,"Totaler Stau: Engpässe blockieren alles. Sofortmaßnahme noetig.","Tam tikaniklik: darbogazlar her seyi engelliyor. Acil mudahale gerekli.","Total blockage: bottlenecks stop everything. Immediate action needed.")
+        ] : [
+          T(lang,"Du hast genug Kapazität für das, was auf dich wartet &mdash; kein struktureller Engpass.","Bekleyenler icin yeterli kapasitenin var &mdash; yapisal bir darbogazlar yok.","You have enough capacity for what's ahead &mdash; no structural bottleneck."),
+          T(lang,"Meistens gut &mdash; ab und zu wird es eng, aber du erholst dich schnell.","Cogunlukla iyi &mdash; ara sira zorlaniyorsun ama cabuk toparlaniyorsun.","Usually fine &mdash; occasionally tight, but you recover quickly."),
+          T(lang,"Du merkst, dass einzelne Bereiche mehr kosten als sie zurueckgeben.","Bazi alanlarin verdiginden fazla enerji aldigini fark ediyorsun.","You notice certain areas cost more than they return."),
+          T(lang,"Mehrere Dinge laufen gleichzeitig &mdash; du schaffst alles, aber kaum noch mit Puffer.","Bircok sey ayni anda yuruyor &mdash; her seyi yapiyorsun ama neredeyse tampon kalmadi.","Multiple things at once &mdash; you manage, but with almost no buffer left."),
+          T(lang,"Du funktionierst, aber du spürst: wenn noch etwas dazukommt, kippt es.","Calisiyor ama hissediyorsun: bir sey daha eklense her sey dagilacak.","You're functioning, but feel: one more thing and it tips over."),
+          T(lang,"Du bist regelmäßig erschöpft &mdash; Erholung bringt kaum noch echte Regeneration.","Duzenli olarak tukeniyorsun &mdash; dinlenme artik gercek bir iyilesme saglamiyor.","Regularly exhausted &mdash; rest barely brings real regeneration anymore."),
+          T(lang,"Kompletter Kapazitätsengpass: du kannst nicht mehr priorisieren, nur noch reagieren.","Tam kapasite tukenmesi: artik oncelik belirleyemiyorsun, sadece tepki veriyorsun.","Complete capacity collapse: you can't prioritize anymore, only react.")
+        ]
+      },
+      sDecisions: {
+        exId: "exDecisions",
+        question: T(lang,"Wie klar und schnell werden Entscheidungen getroffen?","Kararlar ne kadar net ve hizli aliniyor?","How clearly and quickly are decisions made?"),
+        label: T(lang,"0 = klar &amp; schnell &middot; 6 = unklar &amp; blockiert","0 = net &amp; hizli &middot; 6 = belirsiz &amp; bloke","0 = clear &amp; fast &middot; 6 = unclear &amp; blocked"),
+        hints: biz ? [
+          T(lang,"Jeder weiß, wer was entscheidet &mdash; Entscheidungen kommen schnell und werden zuverlässig umgesetzt.","Herkes kimin ne karari verdigini biliyor &mdash; kararlar hizli alinip guvenilir bicimde uygulanıyor.","Everyone knows who decides what &mdash; decisions come fast and get reliably executed."),
+          T(lang,"Meist klar, gelegentlich kurze Rückfragen noetig &mdash; kein strukturelles Problem.","Cogunlukla net, bazen kisa onay sorulari gerekiyor &mdash; yapisal sorun yok.","Mostly clear, occasional quick check-ins needed &mdash; no structural problem."),
+          T(lang,"Manche Entscheidungen brauchen unnoetig viele Abstimmungsrunden.","Bazi kararlar gereksiz yere cok tur onay gerektiriyor.","Some decisions require unnecessarily many alignment rounds."),
+          T(lang,"Entscheidungsverantwortung ist unklar &mdash; Aufgaben bleiben liegen oder werden mehrfach besprochen.","Karar sorumlulugu belirsiz &mdash; isler askida kaliyor ya da defalarca tartisiliyor.","Decision ownership is unclear &mdash; tasks stall or get discussed repeatedly."),
+          T(lang,"Entscheidungen werden oft nach oben eskaliert, obwohl sie dezentral lösbar waeren.","Kararlar genellikle gereksiz yere yukari tasiniyor, oysa yerel coezilebilir.","Decisions are often escalated upward even though they could be solved locally."),
+          T(lang,"Entscheidungen passieren entweder gar nicht oder akkumulieren bei einer einzelnen Person.","Kararlar ya hic alinmiyor ya da tek bir kisid birikinis.","Decisions either don't happen or pile up at one single person."),
+          T(lang,"Das System ist entscheidungsgelähmt &mdash; Unsicherheit ueber Zuständigkeit blockiert alles.","Sistem karar felci icinde &mdash; sorumluluk belirsizligi her seyi engelliyor.","The system is decision-paralyzed &mdash; ownership uncertainty blocks everything.")
+        ] : [
+          T(lang,"Du weisst klar, was du willst und wie du entscheidest &mdash; kein innerer Stillstand.","Ne istedigini ve nasil karar verecegini net biliyorsun &mdash; icsel bir duraksama yok.","You know clearly what you want and how you decide &mdash; no inner standstill."),
+          T(lang,"Meistens entscheidungsfreudig &mdash; ab und zu zögerst du, aber nicht lange.","Cogunlukla kararlisın &mdash; bazen tereddut ediyorsun ama uzun surmuyor.","Usually decisive &mdash; occasionally hesitant, but not for long."),
+          T(lang,"Bei manchen Themen merkst du, dass du immer wieder abwägst, statt zu entscheiden.","Bazi konularda karar vermek yerine surekli tartip durduğunu fark ediyorsun.","On some topics you notice you keep weighing instead of deciding."),
+          T(lang,"Entscheidungen kosten dich überproportional viel Energie &mdash; du zweifelst oft im Nachhinein.","Kararlar sana orantisiz enerji maliyeti cikariyor &mdash; sonradan cok sorguluyorsun.","Decisions cost you disproportionate energy &mdash; you often doubt them afterward."),
+          T(lang,"Du verschiebst wichtige Entscheidungen regelmäßig &mdash; weil alle Optionen mit Verlust verbunden wirken.","Onemli kararlari duzenli erteliyorsun &mdash; tum secenekler kayipla baglantili gorunuyor.","You regularly postpone important decisions &mdash; all options seem to involve loss."),
+          T(lang,"Du steckst fest: du weisst nicht mehr, was du wirklich willst oder wohin du gehst.","Sikismis hissediyorsun: ne istedigini ya da nereye gittigini gercekten bilmiyorsun.","You're stuck: you don't know what you really want or where you're going."),
+          T(lang,"Komplette Entscheidungslähmung: jede Bewegung fuehlt sich in jede Richtung falsch an.","Tam karar felci: her yonde hareket yanlis hissettiriyor.","Complete decision paralysis: movement feels wrong in every direction.")
+        ]
+      },
+      sEnergy: {
+        exId: "exEnergy",
+        question: T(lang,"Wie ist der Energiezustand und wie wird mit Fehlern umgegangen?","Enerji durumu nasil ve hatalarla nasil basa cikiliyor?","What is the energy level and how are errors handled?"),
+        label: T(lang,"0 = Energie stabil, Fehler werden genutzt &middot; 6 = Erschöpfung, Fehler werden versteckt","0 = enerji dengeli, hatalardan ogreniliyor &middot; 6 = tukenme, hatalar gizleniyor","0 = energy stable, errors learned from &middot; 6 = exhaustion, errors hidden"),
+        hints: biz ? [
+          T(lang,"Team hat Energie &mdash; Fehler werden offen besprochen und konsequent als Lernquelle genutzt.","Ekipte enerji var &mdash; hatalar acikca konusuluyor ve tutarli bicimde ogrenme kaynagi olarak kullaniliyor.","Team has energy &mdash; errors are openly discussed and consistently used as learning."),
+          T(lang,"Überwiegend gesunde Energie &mdash; Fehlerkultur vorhanden, auch wenn nicht explizit gelebt.","Agirlikli saglikli enerji &mdash; hata kulturu var, acikca yasatilmasa da.","Mostly healthy energy &mdash; error culture present, even if not explicitly practiced."),
+          T(lang,"Erste Erschöpfungszeichen bei Einzelnen &mdash; Fehler werden manchmal stillschweigend übergangen.","Bazi kisilerde ilk tukenislik belirtileri &mdash; hatalar zaman zaman sessizce gecistiriliyor.","First exhaustion signs in individuals &mdash; errors sometimes quietly passed over."),
+          T(lang,"Deutliche Erschöpfung im Team &mdash; Fehler werden eher vermieden als analysiert.","Ekipte belirgin tukenislik &mdash; hatalar analiz edilmek yerine kaciniliyor.","Clear exhaustion in the team &mdash; errors are avoided rather than analyzed."),
+          T(lang,"Hohe Erschöpfung, sinkende Initiative &mdash; Fehler werden aus Angst vor Konsequenzen versteckt.","Yuksek tukenislik, azalan inisiyatif &mdash; hatalar sonuc korkusuyla gizleniyor.","High exhaustion, falling initiative &mdash; errors hidden out of fear of consequences."),
+          T(lang,"Burnout bei Schlüsselpersonen &mdash; keine Fehlerkultur, Schuldzuweisungen dominieren.","Kilit kisilerde tukenislik &mdash; hata kulturu yok, suclama hakim.","Burnout in key people &mdash; no error culture, blame-seeking dominates."),
+          T(lang,"Systemweite Erschöpfung &mdash; niemand zeigt Probleme, alle reagieren nur noch defensiv.","Sistem genelinde tukenislik &mdash; kimse sorunlari yuezeye cikарmiyor, herkes savunmaci.","System-wide exhaustion &mdash; nobody surfaces problems, everyone reacts defensively.")
+        ] : [
+          T(lang,"Du hast echte Energie für das, was dir wichtig ist &mdash; Rückschläge bringen dich nicht aus der Bahn.","Onemsediklerin icin gercek enerjin var &mdash; aksilikler seni raydan cikарmiyor.","You have real energy for what matters &mdash; setbacks don't derail you."),
+          T(lang,"Meistens stabil &mdash; gelegentliche Tiefs, aber du weisst, wie du dich erholst.","Cogunlukla dengeli &mdash; ara sira inisler var ama nasil toparlanacagini biliyorsun.","Mostly stable &mdash; occasional lows, but you know how to recover."),
+          T(lang,"Fehler oder Misserfolge wirken länger nach als früher &mdash; Regeneration wird schwerer.","Hatalar veya basarisizliklar eskisinden daha uzun sure etkide kaliyor &mdash; toparlanma zorlasiyor.","Errors or failures linger longer than before &mdash; recovery is getting harder."),
+          T(lang,"Fehler treffen dich hart &mdash; du analysierst sie kaum noch, du vermeidest sie lieber.","Hatalar seni derinden etkiliyor &mdash; artik analiz etmek yerine kacinmayi tercih ediyorsun.","Errors hit hard &mdash; you barely analyze them anymore, you'd rather avoid them."),
+          T(lang,"Kaum noch Energie für Neues &mdash; das Bestehende aufrechtzuerhalten kostet bereits alles.","Yeni seyler icin neredeyse enerji kalmadi &mdash; olanı ayakta tutmak zaten her seyi tuketiyor.","Barely any energy for new things &mdash; maintaining the existing already costs everything."),
+          T(lang,"Du funktionierst nach aussen, aber innen bist du leer &mdash; Erschöpfung ist Normalzustand.","Disaridan isler gorunuyorsun ama icten bossin &mdash; tukenislik senin normal halin oldu.","You function outwardly, but inside you're empty &mdash; exhaustion has become your baseline."),
+          T(lang,"Komplette innere Erschöpfung &mdash; selbst Rückschläge bewegen dich kaum mehr.","Tam icsel tukenislik &mdash; artik geri adimlar bile seni neredeyse etkilemiyor.","Complete inner exhaustion &mdash; even setbacks barely move you anymore.")
+        ]
+      },
+      sGrowth: {
+        exId: "exGrowth",
+        question: T(lang,"Wie gut kommt die Struktur mit Wachstum und Komplexität mit?","Yapi buyume ve karmasiklikla ne kadar iyi basa cikiliyor?","How well does the structure keep up with growth and complexity?"),
+        label: T(lang,"0 = Wachstum kontrolliert &middot; 6 = Komplexität übersteigt Struktur","0 = buyume kontrollü &middot; 6 = karmasiklik yapiyi asiyor","0 = growth controlled &middot; 6 = complexity exceeds structure"),
+        hints: biz ? [
+          T(lang,"Wachstum und Struktur sind synchron &mdash; das System skaliert gesund ohne Kontrollverlust.","Buyume ve yapi senkron &mdash; sistem saglikli olcekleniyor, kontrol kaybi yok.","Growth and structure are in sync &mdash; the system scales healthily without loss of control."),
+          T(lang,"Leichte Spannung zwischen Wachstum und Prozessen &mdash; noch kontrollierbar und selbstheilend.","Buyume ve surecler arasinda hafif gerilim &mdash; hala kontrol altinda ve kendiliğinden iyilesiyor.","Slight tension between growth and processes &mdash; still manageable and self-healing."),
+          T(lang,"Bestehende Prozesse werden durch Wachstum regelmäßig überdehnt &mdash; Nacharbeiten häufen sich.","Mevcut surecler buyume tarafindan duzenli olarak asilıyor &mdash; tekrar isler birikmeye basliyor.","Existing processes regularly overstretched by growth &mdash; rework is accumulating."),
+          T(lang,"Das System waechst schneller als seine Strukturen &mdash; Improvisation ersetzt zunehmend Architektur.","Sistem yapilarindan daha hizli buyuyor &mdash; dogaclama giderek mimariyi ikame ediyor.","The system grows faster than structures &mdash; improvisation increasingly replaces architecture."),
+          T(lang,"Komplexität ist unübersichtlich geworden &mdash; niemand hat mehr einen vollständigen Überblick.","Karmasiklik artik anlasilmaz hale geldi &mdash; kimsenin tam genel gorunumu kalmadi.","Complexity has become opaque &mdash; nobody has a complete overview anymore."),
+          T(lang,"Struktur ist de facto kollabiert &mdash; nur noch informelle Netzwerke halten das System am Laufen.","Yapi fiilen cokmus &mdash; sistemi sadece gayri resmi aglar ayakta tutuyor.","Structure has de facto collapsed &mdash; only informal networks keep the system running."),
+          T(lang,"Totales Kontrollverlust: Wachstum und Komplexität sind nicht mehr steuerbar.","Tam kontrol kaybi: buyume ve karmasiklik artik yoenetilemez.","Total loss of control: growth and complexity are no longer manageable.")
+        ] : [
+          T(lang,"Dein Leben ist strukturiert und die Komplexität fuehlt sich handhabbar an.","Hayatin yapilan. ve karmasiklik yonetilebilir hissettiriyor.","Your life is structured and the complexity feels manageable."),
+          T(lang,"Gelegentlich wird es unübersichtlich, aber du findest deinen Weg schnell wieder.","Ara sira bulaniklasiyor ama yolunu hizlica tekrar buluyorsun.","Occasionally things get unclear, but you quickly find your way again."),
+          T(lang,"Du merkst, dass immer mehr Rollen oder Erwartungen auf dich einwirken.","Üzerine giderek daha fazla rol ve beklenti yigildigini fark ediyorsun.","You notice more and more roles or expectations landing on you."),
+          T(lang,"Das Leben fuehlt sich zu komplex an &mdash; der Überblick ueber Prioritaeten geht verloren.","Hayat cok karmasik hissettiriyor &mdash; oenceliklerin uzerindeki genel gorunum kayboluyor.","Life feels too complex &mdash; the overview of priorities is slipping away."),
+          T(lang,"Du lebst in ständiger Reaktion &mdash; kein ruhiger Moment mehr für echte Orientierung.","Surekli tepkisel yasiyorsun &mdash; gercek yon bulmak icin artik sakin bir an yok.","Living in constant reaction &mdash; no quiet moment left for real orientation."),
+          T(lang,"Komplexität hat dich überwältigt &mdash; du weisst nicht mehr, womit du anfangen sollst.","Karmasiklik seni ezdi &mdash; artik nereden baslayacagini bilmiyorsun.","Complexity has overwhelmed you &mdash; you don't know where to start anymore."),
+          T(lang,"Vollständiger Überblicksverlust &mdash; alles fuehlt sich gleich dringend und gleich unlösbar an.","Tam genel gorunum kaybi &mdash; her sey esit derecede acil ve coezimsiz hissettiriyor.","Complete loss of overview &mdash; everything feels equally urgent and equally unsolvable.")
+        ]
+      },
+      sPower: {
+        exId: "exPower",
+        question: T(lang,"Wie gut sind Macht und Verantwortung aufeinander abgestimmt?","Guc ve sorumluluk ne kadar iyi uyumlu?","How well are power and responsibility aligned?"),
+        label: T(lang,"0 = Macht &amp; Verantwortung gekoppelt &middot; 6 = entkoppelt / konzentriert","0 = guc &amp; sorumluluk eslesmis &middot; 6 = ayrilamis / yogunlasmis","0 = power &amp; responsibility coupled &middot; 6 = decoupled / concentrated"),
+        hints: biz ? [
+          T(lang,"Wer Verantwortung trägt, hat auch die Entscheidungsmacht &mdash; klares, konsistentes System.","Sorumluluk tasiyan karar yetkisine de sahip &mdash; net ve tutarli bir sistem.","Those with responsibility also have decision power &mdash; clear, consistent system."),
+          T(lang,"Überwiegend gut gekoppelt &mdash; kleine Reibungen, aber keine strukturellen Brüche.","Buyuk olcude iyi eslesmis &mdash; kucuk surtusemeler var ama yapisal kiriklar yok.","Largely well coupled &mdash; minor friction, but no structural breaks."),
+          T(lang,"Einzelne Rollen tragen Verantwortung ohne echte Entscheidungsmacht &mdash; stille Frustration entsteht.","Bazi roller gercek karar gucu olmadan sorumluluk tasiyor &mdash; sessiz hayal kirikligi olusturuyor.","Certain roles carry responsibility without real decision authority &mdash; silent frustration builds."),
+          T(lang,"Macht und Verantwortung klaffen spürbar auseinander &mdash; verdeckte Konflikte entstehen.","Guc ve sorumluluk belirgin bicimde ayrilamis &mdash; ortulu catismalar ortaya cikiyor.","Power and responsibility are noticeably misaligned &mdash; hidden conflicts are forming."),
+          T(lang,"Entscheidungen werden von Personen getroffen, die die Konsequenzen nicht tragen &mdash; Accountability fehlt.","Kararlar sonuclari tasimayanlar tarafindan aliniyor &mdash; hesap verebilirlik eksik.","Decisions made by people who don't bear consequences &mdash; accountability is missing."),
+          T(lang,"Macht bei 1&ndash;2 Personen konzentriert, andere tragen Verantwortung ohne Entscheidungsrecht.","Guc 1&ndash;2 kisid yogunlasmis, digerleri karar hakki olmadan sorumluluk tasiyor.","Power concentrated in 1&ndash;2 people, others bear responsibility without decision rights."),
+          T(lang,"Völlige Entkopplung: Macht, Verantwortung und Konsequenz haben keine strukturelle Verbindung mehr.","Tam ayrisma: guc, sorumluluk ve sonuc arasinda artik yapisal baglanti yok.","Complete decoupling: power, responsibility and consequence have no structural link.")
+        ] : [
+          T(lang,"Du gestaltest dein Leben aktiv &mdash; Entscheidungen liegen bei dir, du trägst sie selbst.","Hayatini aktif olarak sekillendiriyorsun &mdash; kararlar sende, kendin ustleniyorsun.","You actively shape your life &mdash; decisions rest with you, you carry them yourself."),
+          T(lang,"Überwiegend selbstbestimmt &mdash; gelegentlich beeinflusst dich das Umfeld staerker als gewuenscht.","Agirlikli oz-belirleyici &mdash; cevre zaman zaman istediginden daha fazla etkiliyor.","Mostly self-determined &mdash; occasionally the environment influences you more than desired."),
+          T(lang,"Du merkst, dass du in manchen Bereichen Verantwortung trägst, aber nicht wirklich entscheiden kannst.","Bazi alanlarda sorumluluk tasidiğini ama gercekten karar veremedigini fark ediyorsun.","You notice you carry responsibility in some areas but can't really decide."),
+          T(lang,"Du trägst viel Verantwortung für Dinge, die andere eigentlich steuern &mdash; das kostet Energie ohne Wirkung.","Baskalari kontrolunu etkiyen seyler icin cok sorumluluk tasiyor &mdash; etkisiz enerji kaybi.","You carry responsibility for things others control &mdash; energy cost without effect."),
+          T(lang,"Du bist an Dinge gebunden, ueber die du keine echte Kontrolle hast &mdash; Ohnmacht macht sich breit.","Gercek kontrolun olmadigi seylere baglisin &mdash; ccaresizlik yayiliyor.","Bound to things you have no real control over &mdash; a sense of powerlessness spreads."),
+          T(lang,"Du funktionierst, aber kaum noch nach eigenen Regeln &mdash; die Situation bestimmt mehr als du.","Isler yuruyor ama neredeyse kendi kurallarina gore degil &mdash; durumu sen degil o belirliyor.","Functioning, but barely on your own terms &mdash; the situation dictates more than you."),
+          T(lang,"Du hast das Steuer aus der Hand verloren &mdash; externe Kraefte oder Personen bestimmen dein Leben.","Direksiyonu elinden biraktın &mdash; dis gucler ya da kisiler hayatini belirliyor.","You've lost the wheel &mdash; external forces or people are determining your life.")
+        ]
+      }
+    };
+    Object.entries(sliders).forEach(([sliderId, cfg]) => {
+      const slider = document.getElementById(sliderId);
+      const exEl   = document.getElementById(cfg.exId);
+      if (!slider || !exEl) return;
+      const val  = parseInt(slider.value, 10) || 0;
+      const hint = cfg.hints[val] || cfg.hints[0];
+      exEl.innerHTML =
+        "<div class='dx-qscale'><b>" + cfg.question + "</b></div>" +
+        "<div class='dx-qscale' style='font-style:normal;margin-bottom:.32rem;'>" + cfg.label + "</div>" +
+        "<span style='font-size:.82rem;color:var(--text);'>" + hint + "</span>";
+    });
+  }
+
+  /* ── adaptive questions ──────────────────── */
+  function renderQuestions(lang) {
+    const biz = mode==="business";
+    const qs = biz ? [
+      { id:"b_q1",
+        title: T(lang,"Wo entsteht aktuell die größte Verzögerung?","En buyuk gecikme nerede?","Where is the biggest delay right now?"),
+        help:  T(lang,"Denk an die letzte Woche: Was hat am laengsten gedauert? Auf eine Entscheidung warten, eine Übergabe, Nacharbeiten oder fehlende Kapazität?","Gecen hafta ne en cok zaman aldi? Karar beklemek, devretmek, tekrar islemek ya da kapasite eksikligi? En sik olani sec.","Think of last week: what took longest? Waiting for a decision, a handoff, rework, or missing capacity? Pick whichever happens most."),
+        opts: [
+          {v:"decisions", l:T(lang,"Entscheidungen","Kararlar","Decisions"),          hint:T(lang,"Dinge warten auf ein Ja/Nein, das nicht kommt oder zu lange braucht.","Kararlar gelmiyor ya da cok uzun suruyor.","Things wait for a yes/no that doesn't come or takes too long.")},
+          {v:"handoff",   l:T(lang,"Übergaben","Devir","Handoffs"),                  hint:T(lang,"Aufgaben fallen zwischen Teams oder Rollen durch den Tisch.","Gorevler ekipler ya da roller arasinda kaybolup gidiyor.","Tasks fall through the cracks between teams or roles.")},
+          {v:"quality",   l:T(lang,"Qualität / Rework","Kalite / rework","Quality / rework"), hint:T(lang,"Dinge muessen regelmäßig wiederholt oder korrigiert werden.","Isler siklikla tekrarlanmak ya da duezeltilemek zorunda kaliyor.","Things regularly need to be repeated or corrected.")},
+          {v:"capacity",  l:T(lang,"Kapazität / Skills","Kapasite / skill","Capacity / skills"), hint:T(lang,"Zu wenig Leute, Zeit oder Know-how für das, was ansteht.","Bekleyenler icin yeterli insan, zaman ya da bilgi yok.","Not enough people, time or know-how for what's ahead.")}
+        ]},
+      { id:"b_q2",
+        title: T(lang,"Was passiert, wenn die wichtigste Person 2 Wochen weg ist?","En kritik kisi 2 hafta yoksa ne olur?","What happens if the key person is away for 2 weeks?"),
+        help:  T(lang,"Stell dir vor, die Person mit den meisten Entscheidungen oder dem meisten Wissen ist krank oder im Urlaub &mdash; nicht gekuendigt, nur weg. Läuft das System trotzdem?","En fazla karara ya da bilgiye sahip kisinin hasta ya da izinde oldugunu hayal et &mdash; isten cikarilmiyor, sadece yok. Sistem yine de isliyor mu?","Imagine the person with most decisions or knowledge is sick or on holiday &mdash; not gone for good, just away. Does the system still run?"),
+        opts: [
+          {v:"fine",  l:T(lang,"Läuft weiter","Devam eder","Continues fine"),    hint:T(lang,"Andere übernehmen nahtlos, kein Stau, kein Qualitätsverlust.","Digerleri sorunsuz devralir, tikanma ya da kalite kaybi yok.","Others take over seamlessly, no backlog, no quality loss.")},
+          {v:"slow",  l:T(lang,"Wird langsamer","Yavaşlar","Slows down"),          hint:T(lang,"Es läuft noch, aber Entscheidungen dauern länger oder Qualität sinkt spürbar.","Devam ediyor ama kararlar daha uzun suruyor ya da kalite belirgin dusyor.","Still runs, but decisions take longer or quality drops noticeably.")},
+          {v:"break", l:T(lang,"Bricht zusammen","Kırılır","Breaks down"),         hint:T(lang,"Ohne diese Person entstehen sofort Staus, Fehler oder Stillstand.","Bu kisi olmadan hemen tikanmalar, hatalar ya da durma yasanir.","Without this person, backlogs, errors or standstill appear immediately.")}
+        ]},
+      { id:"b_q3",
+        title: T(lang,"Wie klar sind Rollen & Zuständigkeiten?","Roller ve sorumluluklar ne kadar net?","How clear are roles & ownership?"),
+        help:  T(lang,"Gibt es Bereiche, wo zwei Personen glauben, zuständig zu sein &mdash; oder niemand sicher ist, wer entscheidet? Beides ist ein Zeichen unklarer Architektur.","Iki kisinin sorumlu oldugunu dusundugu ya da kimin karar vereceginden kimsenin emin olmadigi alanlar var mi? Her ikisi de belirsiz mimarinin isaretidir.","Are there areas where two people think they own something &mdash; or no one is sure who decides? Both are signs of unclear architecture."),
+        opts: [
+          {v:"clear",   l:T(lang,"Sehr klar","Cok net","Very clear"),  hint:T(lang,"Jeder weiß, wer was verantwortet &mdash; ohne nachfragen zu muessen.","Herkes kimin neyi ustlendigini biliyor &mdash; sormak zorunda kalmadan.","Everyone knows who owns what &mdash; without having to ask.")},
+          {v:"mixed",   l:T(lang,"Teilweise","Kısmen","Partial"),       hint:T(lang,"Die meisten Bereiche sind klar, aber bei manchen gibt es Doppelzuständigkeit oder Lücken.","Cogunluk alan net ama bazi konularda cakisma ya da bosluk var.","Most areas are clear, but some have overlapping ownership or gaps.")},
+          {v:"unclear", l:T(lang,"Unklar","Belirsiz","Unclear"),        hint:T(lang,"Regelmäßig unklar, wer entscheidet oder verantwortlich ist &mdash; erzeugt Reibung und Stau.","Kimin karar verdigi ya da sorumlu oldugu siklikla belirsiz &mdash; surtusme ve tikanmaya yol aciyor.","Regularly unclear who decides or is responsible &mdash; creates friction and bottlenecks.")}
+        ]}
+    ] : [
+      { id:"p_q1",
+        title: T(lang,"Was löst die Spannung konkret aus?","Gerilimi somut olarak ne tetikliyor?","What concretely triggers the tension?"),
+        help:  T(lang,"Denk an den Moment, wo du merkst: hier stimmt etwas nicht. Was passiert da meistens &mdash; zu viel auf einmal, ein Konflikt, nicht wissen was richtig ist, oder bist du schlicht erschöpft?","Bir sey yanlis diye hissettigin ana dusen. O anda genellikle ne oluyor &mdash; cok fazla sey ayni anda, biriyle catisma, dogrunun ne oldugunu bilmemek ya da sadece tukenimis olmak?","Think of the moment you notice something is off. What's usually happening &mdash; too much at once, a conflict, not knowing what's right, or simply exhaustion?"),
+        opts: [
+          {v:"time",        l:T(lang,"Zeitdruck","Zaman baskisi","Time pressure"),  hint:T(lang,"Zu viel passiert gleichzeitig &mdash; du kannst nicht mehr alles schaffen.","Ayni anda cok fazla sey oluyor &mdash; artik her seyi yapamiyorsun.","Too much happening at once &mdash; you can't get through everything anymore.")},
+          {v:"conflict",    l:T(lang,"Konflikt","Catisma","Conflict"),               hint:T(lang,"Eine Beziehung oder Situation reibt sich &mdash; Spannung mit einer Person oder Gruppe.","Bir iliski ya da durum surtusyor &mdash; bir kisi ya da grupla gerilim var.","A relationship or situation causes friction &mdash; tension with a person or group.")},
+          {v:"uncertainty", l:T(lang,"Unklarheit","Belirsizlik","Uncertainty"),      hint:T(lang,"Du weisst nicht, was richtig ist oder wie es weitergehen soll &mdash; Orientierung fehlt.","Dogrunun ne oldugunu ya da nasil devam edecegini bilmiyorsun &mdash; yon duygusu eksik.","You don't know what's right or how to move forward &mdash; a sense of direction is missing.")},
+          {v:"energy",      l:T(lang,"Erschöpfung","Yorgunluk","Exhaustion"),       hint:T(lang,"Die Energie fehlt &mdash; nicht wegen Faulheit, sondern weil das System zu viel zieht.","Enerji yok &mdash; tembellikten degil, sistem cok fazla cekiyor.","Energy is missing &mdash; not from laziness, but because the system draws too much.")}
+        ]},
+      { id:"p_q2",
+        title: T(lang,"Wie viel hängt an dir oder einer einzigen Person?","Ne kadari sana ya da tek bir kisiye bagli?","How much depends on you or one single person?"),
+        help:  T(lang,"Stell dir vor, du bist zwei Wochen nicht erreichbar &mdash; krank, Urlaub, nicht verfuegbar. Was passiert? Läuft es weiter, wird es langsamer, oder bricht es ein?","Iki hafta ulasiilamazsın &mdash; hasta, izinde, erisilemez. Ne olur? Devam mi eder, yavaşlar mi, yoksa coker mi?","Imagine you are unreachable for two weeks &mdash; sick, on holiday, unavailable. What happens?"),
+        opts: [
+          {v:"low",    l:T(lang,"Gering — läuft ohne mich","Az — bensiz de devam eder","Low — runs without me"),    hint:T(lang,"Andere können übernehmen, nichts Wichtiges stockt.","Digerleri devralabilir, onemli hicbir sey durmuyor.","Others can take over, nothing important stalls.")},
+          {v:"medium", l:T(lang,"Mittel — wird langsamer","Orta — yavaşlar","Medium — slows down"),                  hint:T(lang,"Es geht noch, aber Dinge verzögern sich oder Qualität leidet spürbar.","Devam ediyor ama isler gecikiyor ya da kalite belirgin dusyor.","Still works, but things slow down or quality suffers noticeably.")},
+          {v:"high",   l:T(lang,"Hoch — bricht ohne mich ein","Yuksek — bensiz coker","High — collapses without me"), hint:T(lang,"Ohne mich entstehen sofort Staus, Fehler oder Stillstand &mdash; ich bin der Flaschenhals.","Bensiz hemen tikanmalar, hatalar ya da durma basliyor &mdash; ben darbogazım.","Without me, bottlenecks, errors or standstill appear immediately &mdash; I am the bottleneck.")}
+        ]},
+      { id:"p_q3",
+        title: T(lang,"Wie wird mit Fehlern & Rückschlägen umgegangen?","Hatalar ve aksiliklerle nasil basa cikiliyor?","How are errors & setbacks handled?"),
+        help:  T(lang,"Wenn etwas schiefläuft: Wird darüber offen geredet und daraus gelernt? Oder werden Fehler ignoriert, vertuscht oder lösen sofort Schuldzuweisungen aus?","Bir seyler ters gittiginde: Acikca konusuluyor mu ve bundan ders cikарiliyor mu? Yoksa hatalar goermezden mi geliniyor, ortbas mi ediliyor ya da hemen suclama mi basliyor?","When something goes wrong: is it openly discussed and learned from? Or are errors ignored, covered up, or do they immediately trigger blame?"),
+        opts: [
+          {v:"good",  l:T(lang,"Gut — offen & lernend","Iyi — acik ve ogrenen","Good — open & learning"),  hint:T(lang,"Fehler werden angesprochen, analysiert und als Lernquelle genutzt &mdash; ohne Schuldzuweisung.","Hatalar ele aliniyor, analiz ediliyor ve suclama olmadan oegrenme kaynagi olarak kullaniliyor.","Errors are surfaced, analyzed and used as learning &mdash; without blame.")},
+          {v:"mixed", l:T(lang,"Gemischt — je nach Thema","Karisik — konuya gore","Mixed — depends on topic"), hint:T(lang,"Manche Fehler werden offen besprochen, andere eher vermieden oder vertuscht.","Bazi hatalar acikca konusuluyor, digerleri kaciniliyor ya da ortbas ediliyor.","Some errors are addressed openly, others tend to be avoided or hidden.")},
+          {v:"bad",   l:T(lang,"Schlecht — Schuld & Vermeidung","Kotu — suc & kacinma","Bad — blame & avoidance"), hint:T(lang,"Fehler lösen Schuld, Angst oder Schweigen aus &mdash; sie werden versteckt statt genutzt.","Hatalar suclama, korku ya da sessizlige yol aciyor &mdash; kullanilmak yerine gizleniyor.","Errors trigger blame, fear or silence &mdash; they are hidden instead of used.")}
+        ]}
+    ];
+
+    const root = $("#questions");
+    root.innerHTML = "";
+    qs.forEach(q => {
+      const d = document.createElement("div");
+      d.className = "dx-q";
+      const optsHtml = q.opts.map(o =>
+        "<label class='dx-opt' title='" + o.hint.replace(/'/g,"&#039;") + "'>" +
+        "<input type='radio' name='" + q.id + "' value='" + o.v + "' />" +
+        esc(o.l) + "</label>"
+      ).join("");
+      d.innerHTML =
+        "<div class='dx-qtitle'>" + esc(q.title) + "</div>" +
+        "<div class='dx-qhelp'>" + q.help + "</div>" +
+        "<div class='dx-opts'>" + optsHtml + "</div>";
+      root.appendChild(d);
+    });
+  }
+
+  /* ── sliders ─────────────────────────────── */
+  function syncSliders() {
+    [["sLoad","vLoad"],["sDecisions","vDecisions"],["sEnergy","vEnergy"],
+     ["sGrowth","vGrowth"],["sPower","vPower"]].forEach(([sid,vid]) => {
+      const s = document.getElementById(sid), v = document.getElementById(vid);
+      if (s && v) v.textContent = s.value;
+    });
+  }
+  $$('input[type="range"]').forEach(r => r.addEventListener("input", syncSliders));
+
+  /* ── KPI pills ───────────────────────────── */
+  function resetKpis(lang) {
+    const k = dict[lang] || dict.de;
+    $("#kpiPrimary").textContent = k["kpi.primary"] + ": —";
+    $("#kpiPath").textContent    = k["kpi.path"]    + ": —";
+    $("#kpiRisk").textContent    = k["kpi.risk"]    + ": —";
+    [$('#kpiPrimary'),$('#kpiPath'),$('#kpiRisk')].forEach(el => el?.classList.remove("active"));
+  }
+  function setKpis(lang, data) {
+    const k = dict[lang] || dict.de;
+    const set = (id, key, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = k[key] + ": " + (val || "—");
+      if (val) el.classList.add("active"); else el.classList.remove("active");
+    };
+    set("kpiPrimary","kpi.primary", data?.primary);
+    set("kpiPath",   "kpi.path",    data?.path);
+    set("kpiRisk",   "kpi.risk",    data?.risk);
+  }
+
+  /* ── status line ─────────────────────────── */
+  function setStatus(msg, cls="") {
+    const el = $("#statusLine");
+    el.textContent = msg;
+    el.className = "micro" + (cls ? " "+cls : "");
+  }
+
+  /* ── API ─────────────────────────────────── */
+  async function postJSON(path, body) {
+    const res  = await fetch(`${API}${path}`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
+    return data;
+  }
+  function downloadBlob(blob, name) {
+    const a = document.createElement("a"), url = URL.createObjectURL(blob);
+    a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 800);
+  }
+
+  /* ── payload builder ─────────────────────── */
+  function buildPayload() {
+    const radios = {};
+    $$('input[type="radio"]:checked').forEach(r => { radios[r.name] = r.value; });
+    return {
+      version: "v4",
+      mode,
+      token:   mode==="business" ? tokenStored : undefined,
+      lang:    getLang(),
+      problem: ($("#oneLiner").value || "").trim(),
+      intent:  $("#goalSelect").value,
+      answers: {
+        quick_scan: {
+          load:      +$("#sLoad").value,
+          decisions: +$("#sDecisions").value,
+          energy:    +$("#sEnergy").value,
+          growth:    +$("#sGrowth").value,
+          power:     +$("#sPower").value,
+        },
+        radios
+      },
+      meta: { ts: new Date().toISOString(), ua: navigator.userAgent }
+    };
+  }
+
+  /* ── state ───────────────────────────────── */
+  const STATE = { assessment: null, report: "" };
+
+  /* ── run assessment ──────────────────────── */
+  async function runAssessment() {
+    const lang = getLang();
+    const payload = buildPayload();
+
+    if (!payload.problem) {
+      alert(T(lang,"Bitte beschreibe die Situation in einem Satz.","Lütfen durumu tek cümleyle yaz.","Please describe the situation in one sentence."));
+      return;
+    }
+    if (mode==="business" && !payload.token) {
+      alert(T(lang,"Business-Token fehlt – bitte über die Landingpage einsteigen.","Business token eksik.","Business token missing."));
+      return;
+    }
+
+    setStatus(T(lang,"läuft …","çalışıyor …","running …"), "running");
+    $("#resultText").textContent = "—";
+    $("#execText").textContent   = "—";
+    $("#copyExecBtn").disabled   = true;
+    $("#reportContainer").classList.remove("is-visible");
+    $("#feedbackBox").classList.remove("is-visible");
+    STATE.assessment = null; STATE.report = "";
+    resetKpis(lang);
+
+    try {
+      const data = await postJSON("/api/assess", payload);
+      STATE.assessment = data;
+      $("#resultText").textContent = data.assessment_text || JSON.stringify(data, null, 2);
+      setKpis(lang, data);
+      setStatus(T(lang,"fertig ✓","bitti ✓","done ✓"), "done");
+    } catch(e) {
+      setStatus(T(lang,"Fehler: ","Hata: ","Error: ") + (e?.message||String(e)), "err");
+    }
+  }
+
+  /* ── run executive report ────────────────── */
+  async function runReport() {
+    const lang = getLang();
+
+    if (!STATE.assessment) {
+      alert(T(lang,"Bitte zuerst die Diagnose starten.","Önce değerlendirmeyi çalıştır.","Run the assessment first."));
+      return;
+    }
+
+    setStatus(T(lang,"Report wird erstellt …","Rapor oluşturuluyor …","Generating report …"), "running");
+    $("#execText").textContent   = "—";
+    $("#copyExecBtn").disabled   = true;
+    $("#reportContainer").classList.remove("is-visible");
+    $("#feedbackBox").classList.remove("is-visible");
+    STATE.report = "";
+
+    try {
+      const payload = { ...buildPayload(), assessment: STATE.assessment };
+      const data    = await postJSON("/api/report", payload);
+      STATE.report  = data.report_markdown || JSON.stringify(data, null, 2);
+      $("#execText").textContent  = STATE.report;
+      const rc = $("#reportContainer"), fb = $("#feedbackBox");
+      rc.classList.remove("is-visible"); void rc.offsetWidth;
+      rc.classList.add("is-visible");
+      $("#copyExecBtn").disabled  = false;
+      clearFeedback();
+      fb.classList.remove("is-visible"); void fb.offsetWidth;
+      fb.classList.add("is-visible");
+      setStatus(T(lang,"Report fertig ✓","Rapor hazır ✓","Report ready ✓"), "done");
+    } catch(e) {
+      setStatus(T(lang,"Fehler: ","Hata: ","Error: ") + (e?.message||String(e)), "err");
+    }
+  }
+
+  /* ── PDF ─────────────────────────────────── */
+  async function runPdf() {
+    const lang = getLang();
+    if (!STATE.assessment) {
+      alert(T(lang,"Bitte zuerst die Diagnose starten.","Önce değerlendirmeyi çalıştır.","Run the assessment first."));
+      return;
+    }
+    setStatus(T(lang,"PDF wird erstellt …","PDF oluşturuluyor …","Generating PDF …"), "running");
+    try {
+      const payload = { ...buildPayload(), assessment: STATE.assessment };
+      if (STATE.report) payload.report_markdown = STATE.report;
+      const res = await fetch(`${API}/api/pdf`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+      if (!res.ok) throw new Error((await res.text().catch(()=>"")).slice(0,140) || `PDF ${res.status}`);
+      const ct = (res.headers.get("content-type")||"").toLowerCase();
+      if (ct.includes("application/json")) {
+        const d   = await res.json().catch(()=>({}));
+        const b64 = d?.pdf_base64 || d?.base64 || "";
+        if (!b64) throw new Error("No pdf_base64 in response");
+        downloadBlob(new Blob([Uint8Array.from(atob(b64), c=>c.charCodeAt(0))], {type:"application/pdf"}), "mdg-executive-report.pdf");
+      } else {
+        downloadBlob(new Blob([await res.arrayBuffer()], {type:"application/pdf"}), "mdg-executive-report.pdf");
+      }
+      setStatus(T(lang,"PDF fertig ✓","PDF hazır ✓","PDF ready ✓"), "done");
+    } catch(e) {
+      setStatus(T(lang,"Fehler: ","Hata: ","Error: ") + (e?.message||String(e)), "err");
+    }
+  }
+
+  /* ── feedback ────────────────────────────── */
+  /*
+   * UNIFIED SYSTEM — single set of static IDs:
+   *   fbQ1 (textarea)  fbQ2 (textarea)  fbNps (number)
+   *   fbSendBtn        fbStatus
+   * Elements exist in the DOM from page load.
+   * hookFeedback() attaches input-listeners ONCE at init.
+   * clearFeedback() resets values when a new report is generated.
+   */
+  function clearFeedback() {
+    ["fbQ1","fbQ2","fbNps"].forEach(id => { const el = document.getElementById(id); if (el) el.value=""; });
+    $("#fbSendBtn").disabled    = true;
+    $("#fbStatus").textContent  = "—";
+  }
+
+  function feedbackOk() {
+    const q1  = ($("#fbQ1").value||"").trim();
+    const q2  = ($("#fbQ2").value||"").trim();
+    const nps = ($("#fbNps").value||"").trim();
+    const n   = Number(nps);
+    return q1.length>=2 && q2.length>=2 && /^\d{1,2}$/.test(nps) && n>=0 && n<=10;
+  }
+
+  function hookFeedback() {
+    ["fbQ1","fbQ2","fbNps"].forEach(id => {
+      document.getElementById(id)?.addEventListener("input", () => {
+        document.getElementById("fbSendBtn").disabled = !feedbackOk();
+      });
+    });
+  }
+
+  async function sendFeedback() {
+    const lang = getLang();
+    if (!feedbackOk()) return;
+    const payload = {
+      page:"diagnose", mode, lang,
+      problem: ($("#oneLiner").value||"").trim(),
+      q1:  ($("#fbQ1").value||"").trim(),
+      q2:  ($("#fbQ2").value||"").trim(),
+      nps: Number(($("#fbNps").value||"").trim()),
+      meta: { ts: new Date().toISOString(), ua: navigator.userAgent }
+    };
+    $("#fbStatus").textContent  = "…";
+    $("#fbSendBtn").disabled    = true;
+    try {
+      await postJSON("/api/feedback", payload);
+      $("#fbStatus").textContent = "✓";
+    } catch {
+      $("#fbStatus").textContent = T(lang,"Fehler","Hata","Error");
+      document.getElementById("fbSendBtn").disabled = false;
+    }
+  }
+
+  /* ── copy exec ───────────────────────────── */
+  $("#copyExecBtn").addEventListener("click", async () => {
+    const txt = $("#execText").textContent || "";
+    if (!txt || txt==="—") return;
+    try {
+      await navigator.clipboard.writeText(txt);
+      const btn = $("#copyExecBtn"), lang = getLang(), prev = btn.textContent;
+      btn.classList.add("btn--ok");
+      btn.textContent = T(lang,"Kopiert ✓","Kopyalandı ✓","Copied ✓");
+      setTimeout(() => { btn.classList.remove("btn--ok"); btn.textContent=prev; }, 1800);
+    } catch {}
+  });
+
+  /* ── reset all ───────────────────────────── */
+  function resetAll() {
+    ($("#oneLiner").value = ""), ($("#goalSelect").value = "stabilize");
+    ["sLoad","sDecisions","sEnergy","sGrowth","sPower"].forEach(id => { const el=document.getElementById(id); if(el) el.value="2"; });
+    $$('input[type="radio"]').forEach(r => r.checked=false);
+    STATE.assessment=null; STATE.report="";
+    $("#resultText").textContent = "—";
+    $("#execText").textContent   = "—";
+    $("#reportContainer").classList.remove("is-visible");
+    $("#copyExecBtn").disabled   = true;
+    $("#feedbackBox").classList.remove("is-visible");
+    const lang = getLang();
+    resetKpis(lang);
+    setStatus(T(lang,"bereit","hazır","ready"), "");
+    syncSliders();
+    renderQuestions(lang);
+  }
+
+  /* ── event wiring ────────────────────────── */
+  $("#runBtn")   .addEventListener("click", runAssessment);
+  $("#execBtn")  .addEventListener("click", runReport);
+  $("#pdfBtn")   .addEventListener("click", runPdf);
+  $("#fbSendBtn").addEventListener("click", sendFeedback);
+  $("#resetBtn") .addEventListener("click", () => {
+    const lang = getLang();
+    if (confirm(T(lang,"Wirklich zurücksetzen?","Sıfırlansın mı?","Reset everything?"))) resetAll();
+  });
+
+  /* ── boot ────────────────────────────────── */
+  // Read lang: URL param → localStorage → "de"
+  const initLang = (params.get("lang") || ls.getItem("mdg_lang") || "de").toLowerCase();
+  syncSliders();
+  hookFeedback();                              // wire feedback inputs ONCE, elements exist
+
+  // Char counter for one-liner
+  const oneLiner = document.getElementById("oneLiner");
+  const olCount  = document.getElementById("olCount");
+  if (oneLiner && olCount) {
+    const updateCount = () => {
+      const n = oneLiner.value.length;
+      olCount.textContent = n + "/160";
+      olCount.style.color = n > 155 ? "var(--danger)" : n > 140 ? "var(--warning)" : "var(--muted-2)";
+    };
+    oneLiner.addEventListener("input", updateCount);
+    updateCount();
+  }
+
+  applyLang(dict[initLang] ? initLang : "de");
+  setStatus(T(initLang,"bereit","hazır","ready"), "");
+
+})();
+</script>
+</body>
+</html>
+
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Diagnose – MDG</title>
   <meta name="description" content="In wenigen Minuten zur Entscheidungssicherheit: Instabilität früh erkennen, Ursache präzise diagnostizieren, Architektur bauen." />
