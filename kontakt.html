@@ -176,8 +176,7 @@
   }
 
   /* ── Contact form ── */
-  // ⚠️ Replace with your actual Cloudflare Worker URL
-  const WORKER_URL = "https://api.mdg-indikation.de";
+  const WEB3FORMS_KEY = "3099d841-ee8e-48cc-a502-b9fcb7c60829";
 
   const form      = document.getElementById("contactForm");
   const status    = document.getElementById("formStatus");
@@ -197,26 +196,27 @@
     status.style.display = "none";
 
     const payload = {
-      name:    document.getElementById("name").value.trim(),
-      email:   document.getElementById("email").value.trim(),
-      topic:   document.getElementById("topic").value,
-      message: document.getElementById("message").value.trim(),
+      access_key: WEB3FORMS_KEY,
+      name:       document.getElementById("name").value.trim(),
+      email:      document.getElementById("email").value.trim(),
+      subject:    "[MDG Kontakt] " + document.getElementById("topic").value,
+      message:    document.getElementById("message").value.trim(),
     };
 
     try {
-      const res = await fetch(WORKER_URL + "/api/contact", {
+      const res = await fetch("https://api.web3forms.com/submit", {
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body:    JSON.stringify(payload),
       });
 
       const data = await res.json().catch(() => ({}));
 
-      if (res.ok && data.ok) {
+      if (res.ok && data.success) {
         showStatus("✓ Nachricht gesendet. Wir melden uns bald.", true);
         form.reset();
       } else {
-        showStatus("Fehler: " + (data.error || "Unbekannter Fehler. Bitte versuche es erneut."), false);
+        showStatus("Fehler: " + (data.message || "Unbekannter Fehler. Bitte versuche es erneut."), false);
       }
     } catch (err) {
       showStatus("Verbindungsfehler. Bitte versuche es erneut.", false);
