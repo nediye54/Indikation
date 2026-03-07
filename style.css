@@ -674,24 +674,41 @@ body.no-scroll{ overflow:hidden; }
 
 @media (max-width: 560px){
   .header__inner{
-    gap: .6rem;
+    gap: .5rem;
   }
   .header__actions{
     flex-wrap: wrap;
     justify-content: flex-end;
-    gap: .4rem;
+    gap: .35rem;
   }
   .lang{
     gap: .25rem;
   }
+  /* Touch target: minimum 44×44px per WCAG */
   .lang .chip{
-    padding: .28rem .45rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 .55rem;
     font-size: .85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   .header__actions .btn{
     padding: 8px 12px;
     font-size: .85rem;
     white-space: nowrap;
+  }
+}
+
+/* KPI pills: wrap on very small screens */
+.dx-kpi{
+  flex-wrap: wrap;
+}
+@media (max-width: 400px){
+  .dx-kpi .pill{
+    width: 100%;
+    text-align: center;
   }
 }
 
