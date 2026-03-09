@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./style.css" />
+  <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
   <style>
     .hero__actions{
       display:flex;
@@ -295,8 +296,8 @@
       Kostenpflichtig. Bitte Token eingeben.
     </p>
 
-    <!-- Purchase link -->
-    <a class="btn btn--primary" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/b586d65c-e9a1-4dec-91cc-a7d9c342a107" target="_blank" rel="noopener" id="bizBuyBtn" style="display:inline-flex; align-items:center; gap:.45rem; margin-bottom:.9rem; text-decoration:none;">
+    <!-- Purchase link – opens as overlay over the page -->
+    <a class="btn btn--primary lemonsqueezy-button" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/b586d65c-e9a1-4dec-91cc-a7d9c342a107" id="bizBuyBtn" style="display:inline-flex; align-items:center; gap:.45rem; margin-bottom:.9rem; text-decoration:none;">
       <span>🔑</span>
       <span data-i18n="biz.buy">Token kaufen</span>
     </a>
