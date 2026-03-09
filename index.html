@@ -129,6 +129,30 @@
       font-weight: 600;
     }
 
+    /* ── Headline gradient ── */
+    .h1 .grad {
+      background: linear-gradient(90deg, #6ee7b7, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── System Visual ── */
+    .hero__visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.92;
+    }
+    .hero__visual svg {
+      width: 100%;
+      max-width: 480px;
+      height: auto;
+    }
+    @media (max-width: 1000px) {
+      .hero__visual { display: none; }
+    }
+
     /* Modal */
     .modal[hidden]{ display:none !important; }
     .modal{
@@ -261,6 +285,75 @@
         </div>
 
       </div>
+
+      <!-- System Visual -->
+      <div class="hero__visual">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+          <defs>
+            <radialGradient id="hglow1" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#6ee7b7" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="#6ee7b7" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="hglow2" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.13"/>
+              <stop offset="100%" stop-color="#60a5fa" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="hblur25"><feGaussianBlur stdDeviation="25"/></filter>
+            <filter id="hblur10"><feGaussianBlur stdDeviation="10"/></filter>
+            <clipPath id="hclip"><rect width="480" height="480"/></clipPath>
+          </defs>
+          <g clip-path="url(#hclip)">
+            <!-- Atmosphere -->
+            <ellipse cx="240" cy="240" rx="220" ry="220" fill="url(#hglow1)" filter="url(#hblur25)"/>
+            <ellipse cx="320" cy="320" rx="160" ry="160" fill="url(#hglow2)" filter="url(#hblur25)"/>
+
+            <!-- Outer rings -->
+            <circle cx="240" cy="240" r="190" fill="none" stroke="rgba(110,231,183,0.06)" stroke-width="1.5"/>
+            <circle cx="240" cy="240" r="145" fill="none" stroke="rgba(110,231,183,0.05)" stroke-width="1"/>
+            <circle cx="240" cy="240" r="100" fill="none" stroke="rgba(110,231,183,0.07)" stroke-width="1"/>
+
+            <!-- Inner filled circle -->
+            <circle cx="240" cy="240" r="64" fill="rgba(110,231,183,0.05)" stroke="rgba(110,231,183,0.15)" stroke-width="1.5"/>
+            <circle cx="240" cy="240" r="38" fill="rgba(110,231,183,0.07)" stroke="rgba(110,231,183,0.2)" stroke-width="1"/>
+
+            <!-- Center node -->
+            <circle cx="240" cy="240" r="10" fill="rgba(110,231,183,0.3)" filter="url(#hblur10)"/>
+            <circle cx="240" cy="240" r="6" fill="#6ee7b7"/>
+            <text x="240" y="222" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9" fill="#6ee7b7" fill-opacity="0.7" letter-spacing="0.1em">BALANCE</text>
+
+            <!-- Axis lines -->
+            <line x1="240" y1="95" x2="240" y2="176" stroke="#6ee7b7" stroke-width="1.2" stroke-opacity="0.3"/>
+            <line x1="240" y1="304" x2="240" y2="385" stroke="#6ee7b7" stroke-width="1.2" stroke-opacity="0.2"/>
+            <line x1="95" y1="240" x2="176" y2="240" stroke="#60a5fa" stroke-width="1.2" stroke-opacity="0.2"/>
+            <line x1="304" y1="240" x2="385" y2="240" stroke="#60a5fa" stroke-width="1.2" stroke-opacity="0.3"/>
+
+            <!-- Top node: MORAL -->
+            <circle cx="240" cy="82" r="16" fill="rgba(110,231,183,0.06)" stroke="rgba(110,231,183,0.28)" stroke-width="1.2"/>
+            <circle cx="240" cy="82" r="5" fill="#6ee7b7" fill-opacity="0.75"/>
+            <text x="240" y="60" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9" fill="rgba(234,240,255,0.4)" letter-spacing="0.08em">MORAL</text>
+
+            <!-- Bottom node -->
+            <circle cx="240" cy="398" r="13" fill="rgba(110,231,183,0.05)" stroke="rgba(110,231,183,0.2)" stroke-width="1"/>
+            <circle cx="240" cy="398" r="4" fill="#6ee7b7" fill-opacity="0.5"/>
+
+            <!-- Left node -->
+            <circle cx="82" cy="240" r="13" fill="rgba(96,165,250,0.06)" stroke="rgba(96,165,250,0.22)" stroke-width="1"/>
+            <circle cx="82" cy="240" r="4" fill="#60a5fa" fill-opacity="0.55"/>
+
+            <!-- Right node: INDIKATION -->
+            <circle cx="398" cy="240" r="16" fill="rgba(96,165,250,0.07)" stroke="rgba(96,165,250,0.28)" stroke-width="1.2"/>
+            <circle cx="398" cy="240" r="5" fill="#60a5fa" fill-opacity="0.75"/>
+            <text x="398" y="270" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9" fill="rgba(234,240,255,0.4)" letter-spacing="0.08em">INDIKATION</text>
+
+            <!-- Diagonal connectors -->
+            <line x1="240" y1="176" x2="176" y2="240" stroke="rgba(110,231,183,0.08)" stroke-width="1"/>
+            <line x1="240" y1="176" x2="304" y2="240" stroke="rgba(96,165,250,0.08)" stroke-width="1"/>
+            <line x1="240" y1="304" x2="176" y2="240" stroke="rgba(110,231,183,0.06)" stroke-width="1"/>
+            <line x1="240" y1="304" x2="304" y2="240" stroke="rgba(96,165,250,0.06)" stroke-width="1"/>
+          </g>
+        </svg>
+      </div>
+
     </div>
   </section>
 </main>
@@ -423,6 +516,18 @@
       const v = dict[lang][el.dataset.i18n];
       if (v !== undefined) el.textContent = v;
     });
+
+    // Gradient on last sentence of h1
+    const h1 = document.querySelector('.h1');
+    if (h1) {
+      const parts = h1.textContent.trim().split('.');
+      const filtered = parts.filter(p => p.trim());
+      if (filtered.length > 0) {
+        const last = filtered.pop().trim();
+        const before = filtered.join('.') + '.';
+        h1.innerHTML = before + ' <span class="grad">' + last + '.</span>';
+      }
+    }
   }
 
   $$("[data-lang]").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.lang)));
