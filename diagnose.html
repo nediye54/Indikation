@@ -629,12 +629,40 @@
   const ss = sessionStorage, ls = localStorage;
 
   const modeParam   = (params.get("mode") || "").toLowerCase();
+  const sessionParam = params.get("session") || "";
   const storedMode  = (ss.getItem("mdg_mode") || ls.getItem("mdg_mode") || "").toLowerCase();
   const businessOk  = ss.getItem("mdg_business_ok")==="1" || ls.getItem("mdg_business_ok")==="1";
   const tokenStored = (ss.getItem("mdg_business_token") || ls.getItem("mdg_business_token") || ls.getItem("mdg_token") || "").trim();
+  const teamSession = sessionParam || ss.getItem("mdg_team_session") || ls.getItem("mdg_team_session") || "";
 
-  const wantBiz = modeParam==="business" || storedMode==="business";
-  const mode    = wantBiz && businessOk ? "business" : "private";
+  const wantBiz  = modeParam==="business" || storedMode==="business";
+  const wantTeam = modeParam==="team" || modeParam==="relationship" || storedMode==="team" || storedMode==="relationship";
+  const isTeam   = wantTeam && businessOk;
+  const isRelationship = (modeParam==="relationship" || storedMode==="relationship") && businessOk;
+
+  const mode = isTeam ? (isRelationship ? "relationship" : "team") : wantBiz && businessOk ? "business" : "private";
+
+  // If team/relationship mode with session, show member onboarding
+  if ((mode === "team" || mode === "relationship") && teamSession) {
+    showTeamMemberOnboarding(teamSession, mode);
+  }
+
+  const modeLabels = { business: "Business", team: "Team", relationship: "Beziehung / Familie", private: "Privat" };
+  $("#modeText").textContent = modeLabels[mode] || "Privat";
+  if (mode === "business" || mode === "team" || mode === "relationship") $("#tokenBadge").style.display = "";
+
+  // Team banner
+  if (mode === "team" || mode === "relationship") {
+    const banner = document.createElement("div");
+    banner.style.cssText = "background:rgba(110,231,183,0.08);border:1px solid rgba(110,231,183,0.2);border-radius:12px;padding:14px 18px;margin-bottom:1.5rem;font-size:14px;color:rgba(234,240,255,0.8);";
+    const label = mode === "relationship" ? "Beziehungs-Diagnose" : "Team-Diagnose";
+    const desc  = mode === "relationship"
+      ? "Du diagnostizierst als Teil einer gemeinsamen Beziehungsanalyse. Deine Perspektive bleibt anonym – der Gesamt-Report zeigt strukturelle Muster ohne Schuldzuweisung."
+      : "Du diagnostizierst als Teil einer Team-Analyse. Deine Perspektive bleibt anonym – der Gesamt-Report zeigt was kein Einzelner sehen kann.";
+    banner.innerHTML = `<strong style="color:#6ee7b7;">👥 ${label}</strong><br><span style="opacity:.75;">${desc}</span>`;
+    const hero = document.querySelector(".dx-hero");
+    if (hero) hero.after(banner);
+  }
 
   $("#modeText").textContent = mode==="business" ? "Business" : "Privat";
   if (mode==="business") $("#tokenBadge").style.display = "";
@@ -1305,6 +1333,91 @@
     const lang = getLang();
     if (confirm(T(lang,"Wirklich zurücksetzen?","Sıfırlansın mı?","Reset everything?"))) resetAll();
   });
+
+  /* ── team member onboarding ──────────────── */
+  function showTeamMemberOnboarding(sessionId, teamMode) {
+    // Check if already submitted
+    const memberKey = "mdg_team_member_" + sessionId;
+    const existingMemberId = ls.getItem(memberKey);
+
+    if (!existingMemberId) {
+      // Show role input overlay
+      const overlay = document.createElement("div");
+      overlay.id = "teamOverlay";
+      overlay.style.cssText = `
+        position:fixed;inset:0;z-index:999;background:rgba(5,7,12,0.95);
+        display:flex;align-items:center;justify-content:center;padding:24px;
+      `;
+      const isRel = teamMode === "relationship";
+      const label  = isRel ? "Beziehungs-Diagnose" : "Team-Diagnose";
+      const roleHint = isRel
+        ? "z.B. Partner, Elternteil, Kind, Geschwister …"
+        : "z.B. CEO, Teamleiter, Entwickler, HR …";
+      overlay.innerHTML = `
+        <div style="background:#0c1120;border:1px solid rgba(110,231,183,0.2);border-radius:18px;padding:32px;max-width:460px;width:100%;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6ee7b7;margin-bottom:12px;">${label}</div>
+          <h2 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:#eaf0ff;margin:0 0 12px;">Wer bist du in diesem System?</h2>
+          <p style="font-size:14px;color:rgba(234,240,255,0.6);margin:0 0 24px;line-height:1.65;">
+            Deine Rolle bleibt anonym im Gesamt-Report. Sie hilft nur dabei, strukturelle Spannungen zwischen verschiedenen Perspektiven sichtbar zu machen.
+          </p>
+          <input id="teamRoleInput" placeholder="${roleHint}"
+            style="width:100%;padding:12px 16px;background:#05070c;border:1px solid rgba(110,231,183,0.2);border-radius:10px;color:#eaf0ff;font-family:'Outfit',sans-serif;font-size:15px;outline:none;margin-bottom:16px;box-sizing:border-box;"
+          />
+          <button id="teamRoleGo" style="width:100%;padding:14px;background:linear-gradient(135deg,#6ee7b7,#60a5fa);border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:#000;cursor:pointer;">
+            Diagnose starten
+          </button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      const memberId = "m_" + Math.random().toString(36).slice(2,10);
+      document.getElementById("teamRoleGo").addEventListener("click", () => {
+        const role = (document.getElementById("teamRoleInput").value || "").trim();
+        ls.setItem(memberKey, memberId);
+        ls.setItem("mdg_team_role", role);
+        ss.setItem("mdg_team_member_id", memberId);
+        ss.setItem("mdg_team_role", role);
+        overlay.remove();
+      });
+
+      document.getElementById("teamRoleInput").addEventListener("keydown", e => {
+        if (e.key === "Enter") document.getElementById("teamRoleGo").click();
+      });
+    }
+
+    // Hook into existing submit flow to also send team response
+    const origSubmit = window._teamSubmitHooked;
+    if (!origSubmit) {
+      window._teamSubmitHooked = true;
+      // After report is generated, submit to team session
+      const origFetch = window.fetch;
+      window.fetch = async function(url, opts) {
+        const res = await origFetch(url, opts);
+        if (typeof url === "string" && url.includes("/api/report")) {
+          // Fire and forget team submit
+          try {
+            const body = JSON.parse(opts?.body || "{}");
+            const mId  = ss.getItem("mdg_team_member_id") || ls.getItem(memberKey);
+            const role = ss.getItem("mdg_team_role") || ls.getItem("mdg_team_role") || "";
+            origFetch(`${API_BASE}/api/team/submit`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                sessionId,
+                memberId: mId,
+                role,
+                lang: body.lang,
+                problem: body.problem || body.one_liner,
+                intent: body.intent,
+                answers: body.answers,
+              })
+            }).catch(() => {});
+          } catch(e) { /* silent */ }
+        }
+        return res;
+      };
+    }
+  }
 
   /* ── boot ────────────────────────────────── */
   // Read lang: URL param → localStorage → "de"
