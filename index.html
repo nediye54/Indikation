@@ -282,6 +282,18 @@
             <div class="who-card__desc" data-i18n="who.biz.desc">Führungskräfte, HR, Strategie: strukturelle Spannungen in Teams und Organisationen erkennen, bevor sie eskalieren.</div>
             <span class="who-card__badge who-card__badge--paid" data-i18n="who.biz.badge">Kostenpflichtig · Token erforderlich</span>
           </button>
+          <button class="who-card" type="button" id="btnTeam">
+            <div class="who-card__label" data-i18n="who.team.label">Team</div>
+            <div class="who-card__title" data-i18n="who.team.title">Team-Diagnose starten</div>
+            <div class="who-card__desc" data-i18n="who.team.desc">3–10 Personen, eine Wahrheit. Jedes Mitglied diagnostiziert aus seiner Perspektive – der Gesamt-Report zeigt was kein Einzelner sehen kann.</div>
+            <span class="who-card__badge who-card__badge--paid" data-i18n="who.team.badge">Team-Token erforderlich · 3–10 Personen</span>
+          </button>
+          <button class="who-card" type="button" id="btnRelationship">
+            <div class="who-card__label" data-i18n="who.rel.label">Beziehung / Familie</div>
+            <div class="who-card__title" data-i18n="who.rel.title">Beziehungs-Diagnose starten</div>
+            <div class="who-card__desc" data-i18n="who.rel.desc">2–6 Personen. Jeder diagnostiziert anonym aus seiner Perspektive – der Gesamt-Report zeigt strukturelle Spannungen ohne Schuldzuweisung.</div>
+            <span class="who-card__badge who-card__badge--paid" data-i18n="who.rel.badge">Beziehungs-Token erforderlich · 2–6 Personen</span>
+          </button>
         </div>
 
       </div>
@@ -410,6 +422,70 @@
   </div>
 </div>
 
+<!-- Team Token Modal -->
+<div class="modal" id="teamModal" hidden>
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="teamTitle">
+    <div class="modal__top">
+      <div>
+        <div class="modal__tag" data-i18n="team.tag">Team Zugang</div>
+        <h2 class="h3" id="teamTitle" style="margin:.45rem 0 0;" data-i18n="team.title">Team-Token eingeben</h2>
+      </div>
+      <button class="modal__x" type="button" id="teamClose" aria-label="Schließen">×</button>
+    </div>
+    <p class="micro" style="margin:0 0 .9rem; opacity:.9;" data-i18n="team.text">
+      3–10 Personen. Jeder diagnostiziert aus seiner Perspektive – der Gesamt-Report zeigt was kein Einzelner sehen kann.
+    </p>
+    <a class="btn btn--primary lemonsqueezy-button" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/b586d65c-e9a1-4dec-91cc-a7d9c342a107" id="teamBuyBtn" style="display:inline-flex; align-items:center; gap:.45rem; margin-bottom:.9rem; text-decoration:none;">
+      <span>👥</span>
+      <span data-i18n="team.buy">Team-Token kaufen (590 €)</span>
+    </a>
+    <div class="modal__grid">
+      <div>
+        <div class="modal__label" data-i18n="team.label">Team-Token</div>
+        <div class="micro" style="margin:.25rem 0 .45rem; opacity:.75;" data-i18n="team.afterBuy">Nach dem Kauf erhältst du deinen Token per E-Mail.</div>
+        <input class="dx-input" id="teamToken" type="text" placeholder="MDG-XXXX-XXXX" autocomplete="off" style="margin-top:.25rem;" />
+      </div>
+      <div class="modal__row">
+        <button class="btn btn--primary" type="button" id="teamGo" data-i18n="team.next">Team-Session starten</button>
+        <button class="btn btn--ghost"   type="button" id="teamCancel" data-i18n="team.cancel">Abbrechen</button>
+        <span class="modal__status" id="teamStatus"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Relationship Token Modal -->
+<div class="modal" id="relModal" hidden>
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="relTitle">
+    <div class="modal__top">
+      <div>
+        <div class="modal__tag" data-i18n="rel.tag">Beziehung / Familie</div>
+        <h2 class="h3" id="relTitle" style="margin:.45rem 0 0;" data-i18n="rel.title">Beziehungs-Token eingeben</h2>
+      </div>
+      <button class="modal__x" type="button" id="relClose" aria-label="Schließen">×</button>
+    </div>
+    <p class="micro" style="margin:0 0 .9rem; opacity:.9;" data-i18n="rel.text">
+      2–6 Personen. Anonym. Der Gesamt-Report zeigt Muster ohne Schuldzuweisung.
+    </p>
+    <a class="btn btn--primary lemonsqueezy-button" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/b586d65c-e9a1-4dec-91cc-a7d9c342a107" id="relBuyBtn" style="display:inline-flex; align-items:center; gap:.45rem; margin-bottom:.9rem; text-decoration:none;">
+      <span>❤️</span>
+      <span data-i18n="rel.buy">Beziehungs-Token kaufen (290 €)</span>
+    </a>
+    <div class="modal__grid">
+      <div>
+        <div class="modal__label" data-i18n="rel.label">Beziehungs-Token</div>
+        <div class="micro" style="margin:.25rem 0 .45rem; opacity:.75;" data-i18n="rel.afterBuy">Nach dem Kauf erhältst du deinen Token per E-Mail.</div>
+        <input class="dx-input" id="relToken" type="text" placeholder="MDG-XXXX-XXXX" autocomplete="off" style="margin-top:.25rem;" />
+      </div>
+      <div class="modal__row">
+        <button class="btn btn--primary" type="button" id="relGo" data-i18n="rel.next">Session starten</button>
+        <button class="btn btn--ghost"   type="button" id="relCancel" data-i18n="rel.cancel">Abbrechen</button>
+        <span class="modal__status" id="relStatus"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (() => {
   "use strict";
@@ -445,6 +521,10 @@
       "who.biz.title":"Team oder System diagnostizieren",
       "who.biz.desc":"Führungskräfte, HR, Strategie: strukturelle Spannungen in Teams und Organisationen erkennen, bevor sie eskalieren.",
       "who.biz.badge":"Kostenpflichtig · Token erforderlich",
+      "who.team.label":"Team",
+      "who.team.title":"Team-Diagnose starten",
+      "who.team.desc":"3–10 Personen, eine Wahrheit. Jedes Mitglied diagnostiziert aus seiner Perspektive – der Gesamt-Report zeigt was kein Einzelner sehen kann.",
+      "who.team.badge":"Team-Token erforderlich · 3–10 Personen",
       "cta.private":"Jetzt ermitteln (privat)","cta.business":"Für Unternehmen",
       "hero.note":"Privat: sofort starten. Business: Token erforderlich.",
       "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau.",
@@ -453,7 +533,23 @@
       "biz.label":"Token","biz.next":"Weiter","biz.cancel":"Abbrechen",
       "biz.errEmpty":"Bitte Token eingeben.","biz.errInvalid":"Token ungültig.","biz.ok":"Token ok. Weiter …",
       "biz.buy":"Token kaufen (249,99 €)",
-      "biz.afterBuy":"Nach dem Kauf erhältst du deinen Token per E-Mail."
+      "biz.afterBuy":"Nach dem Kauf erhältst du deinen Token per E-Mail.",
+      "team.tag":"Team Zugang","team.title":"Team-Token eingeben",
+      "team.text":"3–10 Personen. Jeder diagnostiziert aus seiner Perspektive – der Gesamt-Report zeigt was kein Einzelner sehen kann.",
+      "team.label":"Team-Token","team.next":"Team-Session starten","team.cancel":"Abbrechen",
+      "team.errEmpty":"Bitte Team-Token eingeben.","team.errInvalid":"Team-Token ungültig.","team.ok":"Team-Session wird erstellt …",
+      "team.buy":"Team-Token kaufen (590 €)",
+      "team.afterBuy":"Nach dem Kauf erhältst du deinen Token per E-Mail.",
+      "who.rel.label":"Beziehung / Familie",
+      "who.rel.title":"Beziehungs-Diagnose starten",
+      "who.rel.desc":"2–6 Personen. Jeder diagnostiziert anonym aus seiner Perspektive – der Gesamt-Report zeigt strukturelle Spannungen ohne Schuldzuweisung.",
+      "who.rel.badge":"Beziehungs-Token erforderlich · 2–6 Personen",
+      "rel.tag":"Beziehung / Familie","rel.title":"Beziehungs-Token eingeben",
+      "rel.text":"2–6 Personen. Anonym. Der Gesamt-Report zeigt Muster ohne Schuldzuweisung.",
+      "rel.label":"Beziehungs-Token","rel.next":"Session starten","rel.cancel":"Abbrechen",
+      "rel.errEmpty":"Bitte Token eingeben.","rel.errInvalid":"Token ungültig.","rel.ok":"Session wird erstellt …",
+      "rel.buy":"Beziehungs-Token kaufen (290 €)",
+      "rel.afterBuy":"Nach dem Kauf erhältst du deinen Token per E-Mail."
     },
     tr: {
       "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS",
@@ -585,6 +681,107 @@
   input.addEventListener("keydown", e => {
     if (e.key==="Enter")  $("#bizGo").click();
     if (e.key==="Escape") closeModal();
+  });
+
+  /* ── Team Modal ── */
+  const teamModal  = $("#teamModal");
+  const teamStatus = $("#teamStatus");
+  const teamInput  = $("#teamToken");
+
+  function openTeamModal(){
+    teamStatus.textContent = "";
+    teamInput.value = "";
+    teamModal.removeAttribute("hidden");
+    setTimeout(() => teamInput.focus(), 60);
+  }
+  function closeTeamModal(){
+    teamModal.setAttribute("hidden","");
+    teamStatus.textContent = "";
+  }
+
+  $("#btnTeam")    .addEventListener("click", openTeamModal);
+  $("#teamClose")  .addEventListener("click", closeTeamModal);
+  $("#teamCancel") .addEventListener("click", closeTeamModal);
+  teamModal.addEventListener("click", e => { if (e.target === teamModal) closeTeamModal(); });
+  window.addEventListener("keydown", e => { if (e.key==="Escape" && !teamModal.hasAttribute("hidden")) closeTeamModal(); });
+
+  $("#teamGo").addEventListener("click", async () => {
+    const token = (teamInput.value||"").trim();
+    if (!token){ teamStatus.textContent = t("team.errEmpty"); return; }
+    teamStatus.textContent = "…";
+    const r = await verifyToken(token).catch(()=>({ok:false}));
+    if (!r.ok){ teamStatus.textContent = t("team.errInvalid"); return; }
+    teamStatus.textContent = t("team.ok");
+    // Create team session
+    const lang = ls.getItem("mdg_lang") || "de";
+    const sessRes = await fetch(`${API_BASE}/api/team/session`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ token, inviteBase: window.location.origin + "/diagnose.html" })
+    }).catch(()=>null);
+    const sessData = sessRes ? await sessRes.json().catch(()=>({})) : {};
+    if (sessData?.ok && sessData?.sessionId) {
+      ["mdg_mode","mdg_business_ok","mdg_business_token","mdg_team_session"].forEach(k => {
+        const val = k==="mdg_mode" ? "team" : k==="mdg_business_ok" ? "1" : k==="mdg_business_token" ? token : sessData.sessionId;
+        ss.setItem(k, val); ls.setItem(k, val);
+      });
+      setTimeout(() => { window.location.href = `./diagnose.html?mode=team&session=${sessData.sessionId}&lang=${encodeURIComponent(lang)}`; }, 350);
+    }
+  });
+
+  teamInput.addEventListener("keydown", e => {
+    if (e.key==="Enter")  $("#teamGo").click();
+    if (e.key==="Escape") closeTeamModal();
+  });
+
+  /* ── Relationship Modal ── */
+  const relModal  = $("#relModal");
+  const relStatus = $("#relStatus");
+  const relInput  = $("#relToken");
+
+  function openRelModal(){
+    relStatus.textContent = "";
+    relInput.value = "";
+    relModal.removeAttribute("hidden");
+    setTimeout(() => relInput.focus(), 60);
+  }
+  function closeRelModal(){
+    relModal.setAttribute("hidden","");
+    relStatus.textContent = "";
+  }
+
+  $("#btnRelationship").addEventListener("click", openRelModal);
+  $("#relClose")  .addEventListener("click", closeRelModal);
+  $("#relCancel") .addEventListener("click", closeRelModal);
+  relModal.addEventListener("click", e => { if (e.target === relModal) closeRelModal(); });
+  window.addEventListener("keydown", e => { if (e.key==="Escape" && !relModal.hasAttribute("hidden")) closeRelModal(); });
+
+  $("#relGo").addEventListener("click", async () => {
+    const token = (relInput.value||"").trim();
+    if (!token){ relStatus.textContent = t("rel.errEmpty"); return; }
+    relStatus.textContent = "…";
+    const r = await verifyToken(token).catch(()=>({ok:false}));
+    if (!r.ok){ relStatus.textContent = t("rel.errInvalid"); return; }
+    relStatus.textContent = t("rel.ok");
+    const lang = ls.getItem("mdg_lang") || "de";
+    const sessRes = await fetch(`${API_BASE}/api/team/session`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ token, inviteBase: window.location.origin + "/diagnose.html" })
+    }).catch(()=>null);
+    const sessData = sessRes ? await sessRes.json().catch(()=>({})) : {};
+    if (sessData?.ok && sessData?.sessionId) {
+      ["mdg_mode","mdg_business_ok","mdg_business_token","mdg_team_session"].forEach(k => {
+        const val = k==="mdg_mode" ? "relationship" : k==="mdg_business_ok" ? "1" : k==="mdg_business_token" ? token : sessData.sessionId;
+        ss.setItem(k, val); ls.setItem(k, val);
+      });
+      setTimeout(() => { window.location.href = `./diagnose.html?mode=relationship&session=${sessData.sessionId}&lang=${encodeURIComponent(lang)}`; }, 350);
+    }
+  });
+
+  relInput.addEventListener("keydown", e => {
+    if (e.key==="Enter")  $("#relGo").click();
+    if (e.key==="Escape") closeRelModal();
   });
 })();
 </script>
