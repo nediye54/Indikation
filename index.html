@@ -275,6 +275,12 @@
             <div class="who-card__desc" data-i18n="who.private.desc">Berufliche Übergänge, persönliche Krisen, Entscheidungen unter Druck – wenn du spürst dass etwas nicht stimmt, aber nicht weißt was.</div>
             <span class="who-card__badge who-card__badge--free" data-i18n="who.private.badge">Kostenlos · Sofort starten</span>
           </a>
+          <button class="who-card" type="button" id="btnEmployee">
+            <div class="who-card__label" data-i18n="who.emp.label">Angestellt</div>
+            <div class="who-card__title" data-i18n="who.emp.title">Arbeitssituation klären</div>
+            <div class="who-card__desc" data-i18n="who.emp.desc">Unzufrieden aber nicht sicher warum. Bleiben oder gehen. Mehr Klarheit über deine Rolle, dein Team, deine nächste Entscheidung.</div>
+            <span class="who-card__badge who-card__badge--paid" data-i18n="who.emp.badge">Ab 19,99 € · Token erforderlich</span>
+          </button>
 
           <button class="who-card" type="button" id="btnBusiness">
             <div class="who-card__label" data-i18n="who.biz.label">Organisation / Unternehmen</div>
@@ -422,6 +428,38 @@
   </div>
 </div>
 
+<!-- Employee Token Modal -->
+<div class="modal" id="empModal" hidden>
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="empTitle">
+    <div class="modal__top">
+      <div>
+        <div class="modal__tag" data-i18n="emp.tag">Angestellten Zugang</div>
+        <h2 class="h3" id="empTitle" style="margin:.45rem 0 0;" data-i18n="emp.title">Token eingeben</h2>
+      </div>
+      <button class="modal__x" type="button" id="empClose" aria-label="Schließen">×</button>
+    </div>
+    <p class="micro" style="margin:0 0 .9rem; opacity:.9;" data-i18n="emp.text">
+      Strukturelle Klarheit über deine Arbeitssituation.
+    </p>
+    <a class="btn btn--primary lemonsqueezy-button" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/EMPLOYEE-VARIANT-ID" id="empBuyBtn" style="display:inline-flex; align-items:center; gap:.45rem; margin-bottom:.9rem; text-decoration:none;">
+      <span>💼</span>
+      <span data-i18n="emp.buy">Token kaufen (19,99 €)</span>
+    </a>
+    <div class="modal__grid">
+      <div>
+        <div class="modal__label" data-i18n="emp.label">Token</div>
+        <div class="micro" style="margin:.25rem 0 .45rem; opacity:.75;" data-i18n="emp.afterBuy">Nach dem Kauf erhältst du deinen Token per E-Mail.</div>
+        <input class="dx-input" id="empToken" type="text" placeholder="MDG-XXXX-XXXX" autocomplete="off" style="margin-top:.25rem;" />
+      </div>
+      <div class="modal__row">
+        <button class="btn btn--primary" type="button" id="empGo" data-i18n="emp.next">Weiter</button>
+        <button class="btn btn--ghost"   type="button" id="empCancel" data-i18n="emp.cancel">Abbrechen</button>
+        <span class="modal__status" id="empStatus"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Team Token Modal -->
 <div class="modal" id="teamModal" hidden>
   <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="teamTitle">
@@ -469,7 +507,7 @@
     </p>
     <a class="btn btn--primary lemonsqueezy-button" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/b586d65c-e9a1-4dec-91cc-a7d9c342a107" id="relBuyBtn" style="display:inline-flex; align-items:center; gap:.45rem; margin-bottom:.9rem; text-decoration:none;">
       <span>❤️</span>
-      <span data-i18n="rel.buy">Beziehungs-Token kaufen (290 €)</span>
+      <span data-i18n="rel.buy">Beziehungs-Token kaufen (99,99 €)</span>
     </a>
     <div class="modal__grid">
       <div>
@@ -543,12 +581,22 @@
       "who.rel.label":"Beziehung / Familie",
       "who.rel.title":"Beziehungs-Diagnose starten",
       "who.rel.desc":"2–6 Personen. Jeder diagnostiziert anonym aus seiner Perspektive – der Gesamt-Report zeigt strukturelle Spannungen ohne Schuldzuweisung.",
+      "who.emp.label":"Angestellt",
+      "who.emp.title":"Arbeitssituation klären",
+      "who.emp.desc":"Unzufrieden aber nicht sicher warum. Bleiben oder gehen. Mehr Klarheit über deine Rolle, dein Team, deine nächste Entscheidung.",
+      "who.emp.badge":"Ab 19,99 € · Token erforderlich",
+      "emp.tag":"Angestellten Zugang","emp.title":"Token eingeben",
+      "emp.text":"Strukturelle Klarheit über deine Arbeitssituation. Kein Coaching, keine Ratschläge – ein präzises Bild.",
+      "emp.label":"Token","emp.next":"Weiter","emp.cancel":"Abbrechen",
+      "emp.errEmpty":"Bitte Token eingeben.","emp.errInvalid":"Token ungültig.","emp.ok":"Token ok. Weiter …",
+      "emp.buy":"Token kaufen (19,99 €)",
+      "emp.afterBuy":"Nach dem Kauf erhältst du deinen Token per E-Mail.",
       "who.rel.badge":"Beziehungs-Token erforderlich · 2–6 Personen",
       "rel.tag":"Beziehung / Familie","rel.title":"Beziehungs-Token eingeben",
       "rel.text":"2–6 Personen. Anonym. Der Gesamt-Report zeigt Muster ohne Schuldzuweisung.",
       "rel.label":"Beziehungs-Token","rel.next":"Session starten","rel.cancel":"Abbrechen",
       "rel.errEmpty":"Bitte Token eingeben.","rel.errInvalid":"Token ungültig.","rel.ok":"Session wird erstellt …",
-      "rel.buy":"Beziehungs-Token kaufen (290 €)",
+      "rel.buy":"Beziehungs-Token kaufen (99,99 €)",
       "rel.afterBuy":"Nach dem Kauf erhältst du deinen Token per E-Mail."
     },
     tr: {
@@ -682,6 +730,36 @@
     if (e.key==="Enter")  $("#bizGo").click();
     if (e.key==="Escape") closeModal();
   });
+
+  /* ── Employee Modal ── */
+  const empModal  = $("#empModal");
+  const empStatus = $("#empStatus");
+  const empInput  = $("#empToken");
+
+  function openEmpModal(){ empStatus.textContent=""; empInput.value=""; empModal.removeAttribute("hidden"); setTimeout(()=>empInput.focus(),60); }
+  function closeEmpModal(){ empModal.setAttribute("hidden",""); empStatus.textContent=""; }
+
+  $("#btnEmployee").addEventListener("click", openEmpModal);
+  $("#empClose")  .addEventListener("click", closeEmpModal);
+  $("#empCancel") .addEventListener("click", closeEmpModal);
+  empModal.addEventListener("click", e => { if(e.target===empModal) closeEmpModal(); });
+
+  $("#empGo").addEventListener("click", async () => {
+    const token = (empInput.value||"").trim();
+    if (!token){ empStatus.textContent = t("emp.errEmpty"); return; }
+    empStatus.textContent = "…";
+    const r = await verifyToken(token).catch(()=>({ok:false}));
+    if (!r.ok){ empStatus.textContent = t("emp.errInvalid"); return; }
+    empStatus.textContent = t("emp.ok");
+    const lang = ls.getItem("mdg_lang") || "de";
+    ["mdg_mode","mdg_business_ok","mdg_business_token"].forEach(k => {
+      const val = k==="mdg_mode" ? "employee" : k==="mdg_business_ok" ? "1" : token;
+      ss.setItem(k,val); ls.setItem(k,val);
+    });
+    setTimeout(() => { window.location.href = `./diagnose.html?mode=employee&lang=${encodeURIComponent(lang)}`; }, 350);
+  });
+
+  empInput.addEventListener("keydown", e => { if(e.key==="Enter") $("#empGo").click(); if(e.key==="Escape") closeEmpModal(); });
 
   /* ── Team Modal ── */
   const teamModal  = $("#teamModal");
