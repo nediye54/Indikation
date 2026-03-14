@@ -793,23 +793,26 @@
 
   /* ── help texts (mode-aware) ─────────────── */
   function renderHelp(lang) {
-    const biz = mode==="business";
+    const biz        = mode==="business";
+    const isEmployee = mode==="employee";
+    const isRel      = mode==="relationship";
+    const isTeam     = mode==="team";
+    const isPaid     = biz || isEmployee || isRel || isTeam;
 
     // Mode hint
-    $("#modeHint").textContent = (wantBiz && !businessOk)
+    const modeHints = {
+      business:     T(lang, "Berater / HR / Strategie: Fremdsystem diagnostizieren, bevor du intervenierst.", "Danışman / İK: müdahaleden önce yabancı sistemi tanı.", "Consultant / HR: diagnose the external system before intervening."),
+      employee:     T(lang, "Angestellt: Klarheit über deine Arbeitssituation – bleiben, gehen oder umbauen.", "Çalışan: iş durumunla ilgili netlik – kal, git ya da yeniden kur.", "Employee: clarity on your work situation – stay, leave or rebuild."),
+      team:         T(lang, "Team: jedes Mitglied diagnostiziert anonym – der Report zeigt was kein Einzelner sehen kann.", "Ekip: her üye anonim olarak tanı koyar – rapor kimsenin tek başına göremeyeceğini gösterir.", "Team: each member diagnoses anonymously – the report shows what no individual can see."),
+      relationship: T(lang, "Beziehung / Familie: anonym, ohne Schuld, strukturelle Muster sichtbar machen.", "İlişki / Aile: anonim, suçsuz, yapısal örüntüleri görünür kıl.", "Relationship / Family: anonymous, no blame, making structural patterns visible."),
+      private:      T(lang, "Privat: Fokus auf persönliche Systeme, Beziehungen, Alltag und Belastung.", "Özel: kişisel sistemler, ilişkiler, günlük hayat ve yük odağı.", "Private: focus on personal systems, relationships, daily life & load."),
+    };
+    $("#modeHint").textContent = (isPaid && !businessOk)
       ? T(lang,
-          "Business-Zugang nicht aktiv – bitte Token über die Landingpage bestätigen.",
-          "Business erişimi aktif değil – lütfen token'ı ana sayfada doğrula.",
-          "Business access inactive – please verify token on the landing page.")
-      : biz
-        ? T(lang,
-            "Business: Fokus auf Unternehmen, Führung, Teams und Verantwortung.",
-            "Business: şirket, liderlik, ekip ve sorumluluk odağı.",
-            "Business: focus on companies, leadership, teams & accountability.")
-        : T(lang,
-            "Privat: Fokus auf persönliche Systeme, Beziehungen, Alltag und Belastung.",
-            "Özel: kişisel sistemler, ilişkiler, günlük hayat ve yük odağı.",
-            "Private: focus on personal systems, relationships, daily life & load.");
+          "Zugang nicht aktiv – bitte Token über die Startseite bestätigen.",
+          "Erişim aktif değil – lütfen token'ı ana sayfada doğrula.",
+          "Access inactive – please verify token on the landing page.")
+      : (modeHints[mode] || modeHints.private);
 
     // Goal help
     $("#goalHelp").innerHTML = T(lang,
@@ -818,24 +821,22 @@
       "<b>Stabilize</b> = reduce tension. <b>Rebuild</b> = change architecture.");
 
     // One-liner: guided help — mode-specific question + concrete/abstract contrast
-    const olHelp_q = biz
-      ? T(lang,
-          "Was ist das konkrete Problem, das dein System gerade bremst oder destabilisiert?",
-          "Sistemini yavaslatan veya istikrarsizlastiran somut sorun nedir?",
-          "What is the concrete problem currently slowing down or destabilizing your system?")
-      : T(lang,
-          "Was belastet, stresst oder blockiert dich gerade am meisten?",
-          "Seni en cok ne zorluyor, strese sokuyor veya engelliyor?",
-          "What is weighing on you, stressing you, or blocking you the most right now?");
-    const olHelp_hint = biz
-      ? T(lang,
-          "Konkret, nicht abstrakt &mdash; nicht <i>&bdquo;Kommunikation&ldquo;</i>, sondern <i>&bdquo;Entscheidungen dauern 2 Wochen wegen unklarer Zuständigkeit.&ldquo;</i>",
-          "Somut, soyut degil &mdash; <i>&bdquo;Iletisim sorunu&ldquo;</i> degil, <i>&bdquo;Belirsiz sorumluluk nedeniyle kararlar 2 hafta suruyor.&ldquo;</i>",
-          "Concrete, not abstract &mdash; not <i>'communication issues'</i>, but <i>'Decisions take 2 weeks due to unclear ownership.'</i>")
-      : T(lang,
-          "Konkret, nicht abstrakt &mdash; nicht <i>&bdquo;Stress&ldquo;</i>, sondern <i>&bdquo;Ich übernehme Aufgaben anderer und komme zu meinen eigenen nicht mehr.&ldquo;</i>",
-          "Somut, soyut degil &mdash; <i>&bdquo;Stres&ldquo;</i> degil, <i>&bdquo;Baskalarin gorevlerini ustleniyorum ve kendi islerime vakit kalmiyor.&ldquo;</i>",
-          "Concrete, not abstract &mdash; not <i>'I am stressed'</i>, but <i>'I keep taking on others tasks and cannot reach my own.'</i>");
+    const olQuestions = {
+      business:     T(lang, "Was ist das konkrete Problem im System das du diagnostizierst?", "Tanı koyduğun sistemdeki somut sorun nedir?", "What is the concrete problem in the system you are diagnosing?"),
+      employee:     T(lang, "Was läuft in deiner Arbeitssituation gerade nicht – und seit wann?", "İş durumunda ne yolunda gitmiyor – ve ne zamandan beri?", "What is not working in your work situation – and since when?"),
+      team:         T(lang, "Was ist das Muster das sich in eurem Team immer wieder zeigt?", "Ekibinizde tekrar tekrar ortaya çıkan örüntü nedir?", "What is the pattern that keeps showing up in your team?"),
+      relationship: T(lang, "Was ist das Thema das zwischen euch immer wieder auftaucht?", "Aranızda tekrar tekrar gündeme gelen konu nedir?", "What is the topic that keeps coming up between you?"),
+      private:      T(lang, "Was belastet, stresst oder blockiert dich gerade am meisten?", "Seni en cok ne zorluyor, strese sokuyor veya engelliyor?", "What is weighing on you, stressing you, or blocking you the most right now?"),
+    };
+    const olHints = {
+      business:     T(lang, "Konkret, nicht abstrakt &mdash; nicht <i>&bdquo;Kommunikation&ldquo;</i>, sondern <i>&bdquo;Entscheidungen dauern 2 Wochen wegen unklarer Zuständigkeit.&ldquo;</i>", "Somut ol &mdash; iletisim degil, belirsiz sorumluluk.", "Concrete, not abstract &mdash; not <i>'communication issues'</i>, but <i>'Decisions take 2 weeks due to unclear ownership.'</i>"),
+      employee:     T(lang, "Konkret, nicht abstrakt &mdash; nicht <i>&bdquo;unzufrieden&ldquo;</i>, sondern <i>&bdquo;Ich leiste mehr als meine Rolle hergibt und werde dafür nicht gesehen.&ldquo;</i>", "Somut ol &mdash; 'mutsuz' değil, 'rolümün ötesinde emek veriyorum ama görülmüyorum.'", "Concrete, not abstract &mdash; not <i>'unhappy'</i>, but <i>'I deliver more than my role requires and am not recognized for it.'</i>"),
+      team:         T(lang, "Konkret, nicht abstrakt &mdash; nicht <i>&bdquo;schlechte Kommunikation&ldquo;</i>, sondern <i>&bdquo;Dieselben Konflikte tauchen nach jedem Meeting wieder auf.&ldquo;</i>", "Somut ol &mdash; 'kötü iletişim' değil, 'aynı çatışmalar her toplantıdan sonra tekrar çıkıyor.'", "Concrete &mdash; not <i>'bad communication'</i>, but <i>'The same conflicts resurface after every meeting.'</i>"),
+      relationship: T(lang, "Konkret, nicht abstrakt &mdash; nicht <i>&bdquo;wir verstehen uns nicht&ldquo;</i>, sondern <i>&bdquo;Dasselbe Thema eskaliert immer wieder auf dieselbe Art.&ldquo;</i>", "Somut ol &mdash; 'anlaşamıyoruz' değil, 'aynı konu hep aynı şekilde tırmanıyor.'", "Concrete &mdash; not <i>'we don't understand each other'</i>, but <i>'The same topic escalates the same way every time.'</i>"),
+      private:      T(lang, "Konkret, nicht abstrakt &mdash; nicht <i>&bdquo;Stress&ldquo;</i>, sondern <i>&bdquo;Ich übernehme Aufgaben anderer und komme zu meinen eigenen nicht mehr.&ldquo;</i>", "Somut, soyut degil &mdash; 'stres' degil, 'baskalarin gorevlerini ustleniyorum.'", "Concrete, not abstract &mdash; not <i>'I am stressed'</i>, but <i>'I keep taking on others tasks and cannot reach my own.'</i>"),
+    };
+    const olHelp_q    = olQuestions[mode] || olQuestions.private;
+    const olHelp_hint = olHints[mode]     || olHints.private;
     $("#oneLinerHelp").innerHTML =
       "<span style='font-size:.78rem;font-weight:700;color:var(--muted-2);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.18rem;'>" + olHelp_q + "</span>" +
       "<span style='font-size:.8rem;color:var(--muted);font-style:italic;'>" + olHelp_hint + "</span>";
@@ -851,20 +852,21 @@
     });
 
     // Exec hint
-    $("#execHint").textContent = biz
-      ? T(lang,
-          "Business: Diagnose + Operating Model + Rollen + Rhythmus + KPIs + 30-60-90.",
-          "Business: teşhis + işletim modeli + roller + ritim + KPI + 30-60-90.",
-          "Business: diagnosis + operating model + roles + cadence + KPIs + 30-60-90.")
-      : T(lang,
-          "Privat: Ursachenlogik, Spannungsdynamik, klare Prioritäten, konkrete Moves.",
-          "Özel: neden mantığı, gerilim dinamiği, net öncelikler, somut adımlar.",
-          "Private: causal logic, tension dynamics, clear priorities, concrete moves.");
+    const execHints = {
+      business:     T(lang, "Diagnose + Operating Model + Rollen + Rhythmus + KPIs + 30-60-90. McKinsey-Niveau.", "Teşhis + işletim modeli + roller + ritim + KPI + 30-60-90.", "Diagnosis + operating model + roles + cadence + KPIs + 30-60-90. McKinsey level."),
+      employee:     T(lang, "Ursache der Unzufriedenheit + Spannungsfelder + Bleiben-oder-gehen + konkrete Schritte diese Woche.", "Memnuniyetsizliğin sebebi + gerilim alanları + kal-git + bu hafta atılacak somut adımlar.", "Root of dissatisfaction + tension fields + stay-or-go + concrete steps this week."),
+      team:         T(lang, "Kollektives Muster + versteckte Spannungen + was kein Einzelner sehen kann + nächste Schritte.", "Kolektif örüntü + gizli gerilimler + kimsenin tek başına göremeyeceği + sonraki adımlar.", "Collective pattern + hidden tensions + what no individual can see + next steps."),
+      relationship: T(lang, "Strukturelles Muster + was beide Seiten nicht sehen + zwei Wege + was diese Woche hilft.", "Yapısal örüntü + her iki tarafın göremediği + iki yol + bu hafta yardımcı olacak.", "Structural pattern + what both sides can't see + two paths + what helps this week."),
+      private:      T(lang, "Ursachenlogik, Spannungsdynamik, klare Prioritäten, konkrete Moves.", "Neden mantığı, gerilim dinamiği, net öncelikler, somut adımlar.", "Causal logic, tension dynamics, clear priorities, concrete moves."),
+    };
+    $("#execHint").textContent = execHints[mode] || execHints.private;
   }
 
   /* ── slider help texts (dynamic, value-aware, mode-specific) ─── */
   function updateSliderHelp(lang) {
-    const biz = mode === "business";
+    const biz        = mode === "business" || mode === "team";
+    const isEmployee = mode === "employee";
+    const isRel      = mode === "relationship";
     const sliders = {
       sLoad: {
         exId: "exLoad",
