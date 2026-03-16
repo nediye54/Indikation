@@ -433,61 +433,20 @@
 
         <div class="dx-divider"></div>
 
-        <!-- 2) Quick Scan -->
+        <!-- 2) Quick Scan — binary choice cards -->
         <div class="dx-shead" style="margin-bottom:.6rem;">
           <span class="dx-snum">2</span>
           <h2 class="dx-stitle" data-i18n="dx.s2">Quick Scan</h2>
         </div>
 
-        <!-- Slider: Load -->
-        <div class="dx-field">
-          <div class="dx-flabel" data-i18n="q.load.title">Last &amp; Engpässe</div>
-          <div class="dx-fhelp" id="exLoad"></div>
-          <div class="dx-range-row">
-            <input id="sLoad" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
-            <div class="dx-range-val" id="vLoad">2</div>
-          </div>
-        </div>
+        <div id="quickScanCards" style="display:grid;gap:.65rem;"></div>
 
-        <!-- Slider: Decisions -->
-        <div class="dx-field">
-          <div class="dx-flabel" data-i18n="q.decisions.title">Entscheidungsarchitektur</div>
-          <div class="dx-fhelp" id="exDecisions"></div>
-          <div class="dx-range-row">
-            <input id="sDecisions" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
-            <div class="dx-range-val" id="vDecisions">2</div>
-          </div>
-        </div>
-
-        <!-- Slider: Energy -->
-        <div class="dx-field">
-          <div class="dx-flabel" data-i18n="q.energy.title">Energie &amp; Fehlerkultur</div>
-          <div class="dx-fhelp" id="exEnergy"></div>
-          <div class="dx-range-row">
-            <input id="sEnergy" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
-            <div class="dx-range-val" id="vEnergy">2</div>
-          </div>
-        </div>
-
-        <!-- Slider: Growth -->
-        <div class="dx-field">
-          <div class="dx-flabel" data-i18n="q.growth.title">Wachstumsdruck / Komplexität</div>
-          <div class="dx-fhelp" id="exGrowth"></div>
-          <div class="dx-range-row">
-            <input id="sGrowth" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
-            <div class="dx-range-val" id="vGrowth">2</div>
-          </div>
-        </div>
-
-        <!-- Slider: Power -->
-        <div class="dx-field">
-          <div class="dx-flabel" data-i18n="q.power.title">Macht–Verantwortung</div>
-          <div class="dx-fhelp" id="exPower"></div>
-          <div class="dx-range-row">
-            <input id="sPower" class="dx-range" type="range" min="0" max="6" step="1" value="2" />
-            <div class="dx-range-val" id="vPower">2</div>
-          </div>
-        </div>
+        <!-- Hidden inputs to carry quick scan values forward -->
+        <input type="hidden" id="sLoad"      value="3" />
+        <input type="hidden" id="sDecisions" value="3" />
+        <input type="hidden" id="sEnergy"    value="3" />
+        <input type="hidden" id="sGrowth"    value="3" />
+        <input type="hidden" id="sPower"     value="3" />
 
         <div class="dx-divider"></div>
 
@@ -786,6 +745,7 @@
       if (v !== undefined) el.textContent = v;
     });
     renderHelp(lang);
+    renderQuickScan(lang);
     renderQuestions(lang);
     if (!STATE.assessment) resetKpis(lang);
   }
@@ -1067,15 +1027,122 @@
     });
   }
 
-  /* ── sliders ─────────────────────────────── */
-  function syncSliders() {
-    [["sLoad","vLoad"],["sDecisions","vDecisions"],["sEnergy","vEnergy"],
-     ["sGrowth","vGrowth"],["sPower","vPower"]].forEach(([sid,vid]) => {
-      const s = document.getElementById(sid), v = document.getElementById(vid);
-      if (s && v) v.textContent = s.value;
+  /* ── quick scan cards ───────────────────── */
+  const QS_DATA = {
+    de: [
+      { id: "sLoad",      q: "Wie ist die Last verteilt?",
+        a: [ { v:1, l:"Gleichmäßig", hint:"Niemand ist strukturell überlastet." },
+             { v:4, l:"Ungleich",    hint:"Einzelne tragen deutlich mehr als andere." },
+             { v:6, l:"Engpass",     hint:"Das System hängt an 1–2 Personen." } ] },
+      { id: "sDecisions", q: "Wie werden Entscheidungen getroffen?",
+        a: [ { v:1, l:"Klar & schnell",  hint:"Jeder weiß, wer was entscheidet." },
+             { v:4, l:"Langsam",          hint:"Viele Abstimmungsrunden, kaum Klarheit." },
+             { v:6, l:"Blockiert",        hint:"Entscheidungen stauen sich oder passieren gar nicht." } ] },
+      { id: "sEnergy",    q: "Wie ist der Energiezustand?",
+        a: [ { v:1, l:"Stabil",       hint:"Fehler werden offen besprochen und genutzt." },
+             { v:4, l:"Erschöpft",    hint:"Initiative sinkt, Fehler werden vermieden." },
+             { v:6, l:"Ausgebrannt",  hint:"Niemand zeigt Probleme, alle reagieren defensiv." } ] },
+      { id: "sGrowth",    q: "Wie kommt die Struktur mit Komplexität mit?",
+        a: [ { v:1, l:"Kontrolliert",   hint:"Struktur und Wachstum sind synchron." },
+             { v:4, l:"Überdehnt",      hint:"Prozesse werden regelmäßig überholt." },
+             { v:6, l:"Überwältigt",    hint:"Niemand hat mehr den vollen Überblick." } ] },
+      { id: "sPower",     q: "Wie sind Macht und Verantwortung verteilt?",
+        a: [ { v:1, l:"Gekoppelt",    hint:"Wer verantwortlich ist, kann auch entscheiden." },
+             { v:4, l:"Verschoben",   hint:"Manche tragen Verantwortung ohne Entscheidungsmacht." },
+             { v:6, l:"Entkoppelt",   hint:"Wer entscheidet, trägt die Konsequenzen nicht." } ] }
+    ],
+    tr: [
+      { id: "sLoad",      q: "Yük nasıl dağılmış?",
+        a: [ { v:1, l:"Dengeli",     hint:"Kimse yapısal olarak aşırı yüklü değil." },
+             { v:4, l:"Dengesiz",    hint:"Bazıları diğerlerinden çok daha fazla yük taşıyor." },
+             { v:6, l:"Darboğaz",    hint:"Sistem 1–2 kişiye bağlı." } ] },
+      { id: "sDecisions", q: "Kararlar nasıl alınıyor?",
+        a: [ { v:1, l:"Net & hızlı",   hint:"Herkes kimin ne kararı verdiğini biliyor." },
+             { v:4, l:"Yavaş",         hint:"Çok tur onay, az netlik." },
+             { v:6, l:"Bloke",         hint:"Kararlar birikyor ya da alınmıyor." } ] },
+      { id: "sEnergy",    q: "Enerji durumu nasıl?",
+        a: [ { v:1, l:"Dengeli",      hint:"Hatalar açıkça tartışılıyor ve öğrenme kaynağı." },
+             { v:4, l:"Tükenmiş",     hint:"İnisiyatif azalıyor, hatalardan kaçınılıyor." },
+             { v:6, l:"Yanmış",       hint:"Kimse sorun çıkarmıyor, herkes savunmacı." } ] },
+      { id: "sGrowth",    q: "Yapı karmaşıklıkla ne kadar başa çıkıyor?",
+        a: [ { v:1, l:"Kontrollü",   hint:"Yapı ve büyüme senkron." },
+             { v:4, l:"Zorlanıyor",  hint:"Süreçler düzenli olarak aşılıyor." },
+             { v:6, l:"Ezilmiş",     hint:"Artık kimsenin tam genel görünümü yok." } ] },
+      { id: "sPower",     q: "Güç ve sorumluluk nasıl dağılmış?",
+        a: [ { v:1, l:"Uyumlu",    hint:"Sorumlu olan karar da verebiliyor." },
+             { v:4, l:"Kaymış",    hint:"Bazıları karar yetkisi olmadan sorumluluk taşıyor." },
+             { v:6, l:"Ayrılmış",  hint:"Karar veren sonuçları taşımıyor." } ] }
+    ],
+    en: [
+      { id: "sLoad",      q: "How is load distributed?",
+        a: [ { v:1, l:"Evenly",      hint:"Nobody is structurally overloaded." },
+             { v:4, l:"Uneven",      hint:"Some carry significantly more than others." },
+             { v:6, l:"Bottleneck",  hint:"The system depends on 1–2 people." } ] },
+      { id: "sDecisions", q: "How are decisions made?",
+        a: [ { v:1, l:"Clear & fast",  hint:"Everyone knows who decides what." },
+             { v:4, l:"Slow",           hint:"Many alignment rounds, little clarity." },
+             { v:6, l:"Blocked",        hint:"Decisions pile up or don't happen at all." } ] },
+      { id: "sEnergy",    q: "What is the energy level?",
+        a: [ { v:1, l:"Stable",      hint:"Errors are openly discussed and learned from." },
+             { v:4, l:"Drained",     hint:"Initiative falls, errors are avoided." },
+             { v:6, l:"Burned out",  hint:"Nobody surfaces problems, everyone reacts defensively." } ] },
+      { id: "sGrowth",    q: "How well does structure keep up with complexity?",
+        a: [ { v:1, l:"Controlled",   hint:"Structure and growth are in sync." },
+             { v:4, l:"Overstretched", hint:"Processes are regularly overtaken." },
+             { v:6, l:"Overwhelmed",  hint:"Nobody has a complete overview anymore." } ] },
+      { id: "sPower",     q: "How are power and responsibility distributed?",
+        a: [ { v:1, l:"Coupled",     hint:"Those responsible can also decide." },
+             { v:4, l:"Shifted",     hint:"Some carry responsibility without decision authority." },
+             { v:6, l:"Decoupled",   hint:"Those who decide don't bear the consequences." } ] }
+    ]
+  };
+
+  function renderQuickScan(lang) {
+    const container = document.getElementById("quickScanCards");
+    if (!container) return;
+    const data = QS_DATA[lang] || QS_DATA.de;
+    container.innerHTML = "";
+    data.forEach(item => {
+      const card = document.createElement("div");
+      card.style.cssText = "padding:.75rem .9rem;border:1px solid var(--stroke);border-radius:14px;background:rgba(255,255,255,.02);";
+      const qLabel = document.createElement("div");
+      qLabel.style.cssText = "font-size:.82rem;font-weight:800;color:var(--text);margin-bottom:.5rem;";
+      qLabel.textContent = item.q;
+      card.appendChild(qLabel);
+      const btns = document.createElement("div");
+      btns.style.cssText = "display:flex;gap:.4rem;flex-wrap:wrap;";
+      item.a.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.dataset.qid = item.id;
+        btn.dataset.val = opt.v;
+        btn.title = opt.hint;
+        btn.textContent = opt.l;
+        btn.style.cssText = "padding:.32rem .8rem;border-radius:999px;border:1px solid var(--stroke);background:rgba(255,255,255,.03);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;color:var(--text);font-family:var(--font-body);";
+        btn.addEventListener("click", () => {
+          // Deselect siblings
+          btns.querySelectorAll("button").forEach(b => {
+            b.style.borderColor = "";
+            b.style.background = "rgba(255,255,255,.03)";
+            b.style.color = "var(--text)";
+          });
+          // Select this
+          btn.style.borderColor = "rgba(110,231,183,.55)";
+          btn.style.background = "rgba(110,231,183,.10)";
+          btn.style.color = "#a7f3d0";
+          // Update hidden input
+          const hidden = document.getElementById(item.id);
+          if (hidden) hidden.value = opt.v;
+        });
+        btns.appendChild(btn);
+      });
+      card.appendChild(btns);
+      container.appendChild(card);
     });
   }
-  $$('input[type="range"]').forEach(r => r.addEventListener("input", syncSliders));
+
+  /* ── sliders (kept as no-op for payload compat) ── */
+  function syncSliders() { /* sliders replaced by quick scan cards */ }
 
   /* ── KPI pills ───────────────────────────── */
   function resetKpis(lang) {
@@ -1425,6 +1492,7 @@
   // Read lang: URL param → localStorage → "de"
   const initLang = (params.get("lang") || ls.getItem("mdg_lang") || "de").toLowerCase();
   syncSliders();
+  renderQuickScan(dict[initLang] ? initLang : 'de');
   hookFeedback();                              // wire feedback inputs ONCE, elements exist
 
   // Char counter for one-liner
