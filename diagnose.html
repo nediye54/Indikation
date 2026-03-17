@@ -1105,18 +1105,31 @@
     data.forEach(item => {
       const card = document.createElement("div");
       card.style.cssText = "padding:.75rem .9rem;border:1px solid var(--stroke);border-radius:14px;background:rgba(255,255,255,.02);";
+
+      // Question label
       const qLabel = document.createElement("div");
-      qLabel.style.cssText = "font-size:.82rem;font-weight:800;color:var(--text);margin-bottom:.5rem;";
+      qLabel.style.cssText = "font-size:.82rem;font-weight:800;color:var(--text);margin-bottom:.28rem;";
       qLabel.textContent = item.q;
       card.appendChild(qLabel);
+
+      // Static hint line: shows all options' meaning at a glance
+      const qHintLine = document.createElement("div");
+      qHintLine.style.cssText = "font-size:.74rem;color:var(--muted-2);margin-bottom:.5rem;line-height:1.4;";
+      qHintLine.textContent = item.a.map(o => o.l + " — " + o.hint).join(" · ");
+      card.appendChild(qHintLine);
+
       const btns = document.createElement("div");
-      btns.style.cssText = "display:flex;gap:.4rem;flex-wrap:wrap;";
+      btns.style.cssText = "display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.35rem;";
+
+      // Dynamic hint shown after selection
+      const dynHint = document.createElement("div");
+      dynHint.style.cssText = "font-size:.78rem;color:#a7f3d0;line-height:1.45;min-height:1.2em;display:none;";
+
       item.a.forEach(opt => {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.dataset.qid = item.id;
         btn.dataset.val = opt.v;
-        btn.title = opt.hint;
         btn.textContent = opt.l;
         btn.style.cssText = "padding:.32rem .8rem;border-radius:999px;border:1px solid var(--stroke);background:rgba(255,255,255,.03);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;color:var(--text);font-family:var(--font-body);";
         btn.addEventListener("click", () => {
@@ -1130,6 +1143,9 @@
           btn.style.borderColor = "rgba(110,231,183,.55)";
           btn.style.background = "rgba(110,231,183,.10)";
           btn.style.color = "#a7f3d0";
+          // Show dynamic hint
+          dynHint.textContent = "→ " + opt.hint;
+          dynHint.style.display = "block";
           // Update hidden input
           const hidden = document.getElementById(item.id);
           if (hidden) hidden.value = opt.v;
@@ -1137,6 +1153,7 @@
         btns.appendChild(btn);
       });
       card.appendChild(btns);
+      card.appendChild(dynHint);
       container.appendChild(card);
     });
   }
