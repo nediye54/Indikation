@@ -4,141 +4,87 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Impressum – MDG</title>
-  <meta name="description" content="Impressum von MDG" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./style.css" />
-  <style>
-    .page{ max-width:860px; margin:0 auto; padding:1.75rem 1.25rem 4rem; }
-    .page .card h2.h3{ margin-top:1.5rem; margin-bottom:.35rem; }
-    .page .card h2.h3:first-child{ margin-top:0; }
-  </style>
 </head>
 <body>
-
-<header class="header" id="top">
-  <div class="container header__inner">
-    <a class="brand" href="./index.html" aria-label="Home">
-      <span class="brand__mark" aria-hidden="true">MDG</span>
-    </a>
-
-    <nav class="nav" aria-label="Main">
-      <a class="nav__link" href="./how.html">Wie es funktioniert</a>
-      <a class="nav__link" href="./why.html">Warum MDG</a>
-      <a class="nav__link" href="./faq.html">FAQ</a>
+<header class="header">
+  <div class="header__inner container">
+    <a class="brand" href="./index.html">MDG</a>
+    <nav class="nav">
+      <a class="nav__link" href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
+      <a class="nav__link" href="./why.html" data-i18n="nav.why">Warum MDG</a>
+      <a class="nav__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
     </nav>
-
     <div class="header__actions">
-      <a class="btn btn--ghost" href="./index.html">Home</a>
+      <div class="lang">
+        <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
+        <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
+        <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
     </div>
-
-    <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
+    <button class="burger" id="burgerBtn" aria-label="Menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
   </div>
-
-  <div class="drawer" hidden>
-    <div class="drawer__content">
-      <a class="drawer__link" href="./how.html">Wie es funktioniert</a>
-      <a class="drawer__link" href="./why.html">Warum MDG</a>
-      <a class="drawer__link" href="./faq.html">FAQ</a>
-      <div class="drawer__sep"></div>
-      <a class="btn btn--ghost btn--full" href="./index.html">Home</a>
-    </div>
-  </div>
 </header>
-
-<main id="main">
-  <div class="page">
-    <div class="section__head">
-      <h1 class="h2">Impressum</h1>
-      <p class="sub">Angaben gemäß § 5 TMG</p>
-    </div>
-
-    <div class="card">
-      <h2 class="h3">Anbieter</h2>
-      <p class="p">
-        <strong>ArcAxis - System Monitoring GmbH i.G.</strong><br />
-        Moosacher Straße 18<br />
-        80809 München
-      </p>
-
-      <h2 class="h3">Kontakt</h2>
-      <p class="p">
-        Telefon: 016091489988<br />
-        E-Mail: <a href="mailto:info@mdg-indikation.de">info@mdg-indikation.de</a>
-      </p>
-
-      <h2 class="h3">Registereintrag</h2>
-      <p class="p">
-        Register: i.Gr.<br />
-        Registernummer: –<br />
-        Registergericht: –
-      </p>
-
-      <h2 class="h3">Umsatzsteuer</h2>
-      <p class="p">
-        Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: –
-      </p>
-
-      <h2 class="h3">Inhaltlich verantwortlich</h2>
-      <p class="p">Siehe Anbieter (gemäß § 18 Abs. 2 MStV)</p>
-
-      <h2 class="h3">Haftung für Inhalte</h2>
-      <p class="p">
-        Als Diensteanbieter sind wir gemäß § 7 Abs. 1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.
-        Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen
-        oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.
-      </p>
-
-      <h2 class="h3">Haftung für Links</h2>
-      <p class="p">
-        Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben.
-        Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich.
-      </p>
-
-      <h2 class="h3">Urheberrecht</h2>
-      <p class="p">
-        Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht.
-        Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts
-        bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.
-      </p>
-    </div>
+<div class="drawer" id="drawer" hidden>
+  <a class="drawer__link" href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
+  <a class="drawer__link" href="./why.html" data-i18n="nav.why">Warum MDG</a>
+  <a class="drawer__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
+  <div class="drawer__sep"></div>
+  <div class="lang">
+    <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
+    <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
+    <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
   </div>
+</div>
+<main>
+<div class="page" style="max-width:720px;">
+  <div class="section__head" style="text-align:left;">
+    <h1 class="h1">Impressum</h1>
+    <p class="sub">Angaben gemäß § 5 TMG</p>
+  </div>
+  <div class="card">
+    <h2 class="h3">Anbieter</h2>
+    <p class="sub" style="margin-top:.5rem;">ArcAxis – System Monitoring GmbH i.G.<br/>Moosacher Straße 18<br/>80809 München</p>
+    <h2 class="h3" style="margin-top:1.5rem;">Kontakt</h2>
+    <p class="sub" style="margin-top:.5rem;">Telefon: 016091489988<br/>E-Mail: <a href="mailto:info@mdg-indikation.de">info@mdg-indikation.de</a></p>
+    <h2 class="h3" style="margin-top:1.5rem;">Inhaltlich verantwortlich</h2>
+    <p class="sub" style="margin-top:.5rem;">Selim M. Ayrilmaz (gemäß § 18 Abs. 2 MStV)</p>
+    <h2 class="h3" style="margin-top:1.5rem;">Haftung für Inhalte</h2>
+    <p class="sub" style="margin-top:.5rem;">Als Diensteanbieter sind wir gemäß § 7 Abs. 1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.</p>
+    <h2 class="h3" style="margin-top:1.5rem;">Urheberrecht</h2>
+    <p class="sub" style="margin-top:.5rem;">Die durch die Seitenbetreiber erstellten Inhalte und Werke unterliegen dem deutschen Urheberrecht. Die Vervielfältigung bedarf der schriftlichen Zustimmung.</p>
+  </div>
+</div>
 </main>
-
 <footer class="footer">
-  <div class="container footer__grid">
-    <div>
-      <div class="brand brand--footer">
-        <span class="brand__mark" aria-hidden="true">MDG</span>
-      </div>
-      <p class="micro">Strukturdiagnose für Stabilisierung und Umbau.</p>
-    </div>
+  <div class="footer__grid">
+    <a class="brand" href="./index.html" style="font-size:.85rem;letter-spacing:.18em;">MDG</a>
     <div class="footer__legal">
-      <a href="./impressum.html" rel="nofollow">Impressum</a>
-      <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
-      <a href="./kontakt.html" rel="nofollow">Kontakt</a>
-    </div>
-    <div class="footer__legal">
-      <a href="https://www.hugendubel.de/de/search?q=moral+des+gleichgewichts" target="_blank" rel="noopener">MDG – Bücher</a>
-      <a href="./why.html">Warum MDG</a>
-      <a href="./faq.html">FAQ</a>
+      <a href="./impressum.html">Impressum</a>
+      <a href="./datenschutz.html">Datenschutz</a>
+      <a href="./kontakt.html">Kontakt</a>
+      <a href="https://www.hugendubel.de/de/search?q=moral+des+gleichgewichts" target="_blank" rel="noopener">Bücher</a>
     </div>
   </div>
 </footer>
-
 <script>
-(() => {
-  const burger = document.querySelector(".burger");
-  const drawer = document.querySelector(".drawer");
-  if (!burger || !drawer) return;
-  const open  = () => { drawer.hidden = false; burger.setAttribute("aria-expanded","true");  document.body.classList.add("no-scroll"); };
-  const close = () => { drawer.hidden = true;  burger.setAttribute("aria-expanded","false"); document.body.classList.remove("no-scroll"); };
-  burger.addEventListener("click", () => drawer.hidden ? open() : close());
-  drawer.addEventListener("click", e => { if (!drawer.querySelector(".drawer__content").contains(e.target)) close(); });
-  window.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+(()=>{
+  const burger = document.getElementById("burgerBtn");
+  const drawer = document.getElementById("drawer");
+  if(burger && drawer){
+    burger.addEventListener("click",()=>{ drawer.hidden=!drawer.hidden; document.body.style.overflow=drawer.hidden?"":"hidden"; });
+    drawer.addEventListener("click",e=>{ if(e.target===drawer){ drawer.hidden=true; document.body.style.overflow=""; }});
+    window.addEventListener("keydown",e=>{ if(e.key==="Escape"){ drawer.hidden=true; document.body.style.overflow=""; }});
+  }
+  const ls=localStorage;
+  function applyLang(lang){ if(!lang)lang="de"; ls.setItem("mdg_lang",lang); document.documentElement.lang=lang; document.querySelectorAll("[data-lang]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.lang===lang))); }
+  document.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>applyLang(b.dataset.lang)));
+  applyLang(ls.getItem("mdg_lang")||"de");
 })();
 </script>
 </body>
