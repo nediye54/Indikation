@@ -487,7 +487,7 @@
         <p class="dx-rnote" id="execHint"></p>
 
         <div class="dx-actions">
-          <button class="btn btn--primary" type="button" id="execBtn"     data-i18n="dx.execBtn">Report erzeugen</button>
+          <button class="btn btn--primary" type="button" id="execBtn" data-i18n="dx.execBtn" style="display:none;">Report erzeugen</button>
           <button class="btn btn--ghost"   type="button" id="copyExecBtn" disabled data-i18n="dx.copy">Kopieren</button>
           <button class="btn btn--ghost"   type="button" id="pdfBtn"      data-i18n="dx.pdf">PDF</button>
         </div>
@@ -772,7 +772,7 @@
           "Zugang nicht aktiv – bitte Token über die Startseite bestätigen.",
           "Erişim aktif değil – lütfen token'ı ana sayfada doğrula.",
           "Access inactive – please verify token on the landing page.")
-      : (modeHints[mode] || modeHints.private);
+      : "";
 
     // Goal help
     $("#goalHelp").innerHTML = T(lang,
@@ -1112,11 +1112,7 @@
       qLabel.textContent = item.q;
       card.appendChild(qLabel);
 
-      // Static hint line: shows all options' meaning at a glance
-      const qHintLine = document.createElement("div");
-      qHintLine.style.cssText = "font-size:.74rem;color:var(--muted-2);margin-bottom:.5rem;line-height:1.4;";
-      qHintLine.textContent = item.a.map(o => o.l + " — " + o.hint).join(" · ");
-      card.appendChild(qHintLine);
+
 
       const btns = document.createElement("div");
       btns.style.cssText = "display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.35rem;";
@@ -1258,7 +1254,8 @@
       STATE.assessment = data;
       $("#resultText").textContent = data.assessment_text || JSON.stringify(data, null, 2);
       setKpis(lang, data);
-      setStatus(T(lang,"fertig ✓","bitti ✓","done ✓"), "done");
+      setStatus(T(lang,"Assessment fertig ✓ – Report wird erstellt …","Değerlendirme bitti ✓ – Rapor oluşturuluyor …","Assessment done ✓ – generating report …"), "running");
+      await runReport();
     } catch(e) {
       setStatus(T(lang,"Fehler: ","Hata: ","Error: ") + (e?.message||String(e)), "err");
     }
@@ -1267,11 +1264,7 @@
   /* ── run executive report ────────────────── */
   async function runReport() {
     const lang = getLang();
-
-    if (!STATE.assessment) {
-      alert(T(lang,"Bitte zuerst die Diagnose starten.","Önce değerlendirmeyi çalıştır.","Run the assessment first."));
-      return;
-    }
+    if (!STATE.assessment) return;
 
     setStatus(T(lang,"Report wird erstellt …","Rapor oluşturuluyor …","Generating report …"), "running");
     $("#execText").textContent   = "—";
