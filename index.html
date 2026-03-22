@@ -781,7 +781,7 @@
         <div class="price-card__label" data-i18n="price.org.label">Organisation & Team</div>
         <div class="price-card__price">199 €</div>
         <div class="price-card__period" data-i18n="price.org.period">Einmalig · Token per E-Mail</div>
-        <div class="price-card__desc" data-i18n="price.org.desc">Business, Team oder Verein. Executive Report auf McKinsey-Niveau.</div>
+        <div class="price-card__desc" data-i18n="price.org.desc">Business, Team oder Verein. Für Vorstände. Direkt präsentierbar.</div>
         <button class="price-card__btn" type="button" id="btnOrg" data-i18n="price.org.btn">Token kaufen</button>
       </div>
 
@@ -847,7 +847,7 @@
       <button class="modal__close" id="orgClose">×</button>
     </div>
     <div class="modal__body">
-      <p class="modal__desc" data-i18n="modal.org.desc">Für Business, Teams und Vereine. Executive Report auf McKinsey-Niveau. Token wird nach dem Kauf per E-Mail zugeschickt.</p>
+      <p class="modal__desc" data-i18n="modal.org.desc">Für Business, Teams und Vereine. Für Vorstände. Direkt präsentierbar. Token wird nach dem Kauf per E-Mail zugeschickt.</p>
       <a class="modal__buy lemonsqueezy-button" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/7fdad9f2-9903-4dc8-acc8-a52577f878e6" id="orgBuyBtn" data-i18n="modal.org.buy">199 € – Token kaufen</a>
       <label class="modal__input-label" data-i18n="modal.token.label">Token</label>
       <input class="modal__input" id="orgTokenInput" type="text" placeholder="MDG-XXXX-XXXX-XXXX" autocomplete="off" />
@@ -885,6 +885,7 @@
   const dict = {
     de: {
       "nav.how": "Wie es funktioniert", "nav.why": "Warum MDG", "nav.faq": "FAQ",
+      "footer.impressum": "Impressum", "footer.datenschutz": "Datenschutz", "footer.kontakt": "Kontakt",
       "hero.eyebrow": "Strukturdiagnose",
       "hero.question": "In welchem System spürst du eine Spannung,\ndie du nicht benennen kannst?",
       "hero.sub": "MDG macht sichtbar was sich falsch anfühlt – strukturell, präzise, ohne Coaching.",
@@ -914,7 +915,7 @@
       "price.personal.desc": "Angestellt, Beziehung oder Familie. Tiefere Analyse mit erweitertem Report.",
       "price.personal.btn": "Token kaufen",
       "price.org.label": "Organisation & Team", "price.org.period": "Einmalig · Token per E-Mail",
-      "price.org.desc": "Business, Team oder Verein. Executive Report auf McKinsey-Niveau.",
+      "price.org.desc": "Business, Team oder Verein. Für Vorstände. Direkt präsentierbar.",
       "price.org.btn": "Token kaufen",
       "books.text": "MDG ist mehr als ein Tool. Die Theorie dahinter ist in drei Büchern erschienen – Moral, Indikation und Architektur des Gleichgewichts.",
       "books.link": "Bücher auf Hugendubel →",
@@ -922,13 +923,14 @@
       "modal.personal.desc": "Für Angestellte, Beziehungen und Familien. Token wird nach dem Kauf per E-Mail zugeschickt.",
       "modal.personal.buy": "29 € – Token kaufen",
       "modal.org.label": "Organisations-Zugang", "modal.org.title": "Token eingeben",
-      "modal.org.desc": "Für Business, Teams und Vereine. Executive Report auf McKinsey-Niveau.",
+      "modal.org.desc": "Für Business, Teams und Vereine. Für Vorstände. Direkt präsentierbar.",
       "modal.org.buy": "199 € – Token kaufen",
       "modal.token.label": "Token", "modal.go": "Weiter", "modal.cancel": "Abbrechen",
       "err.empty": "Bitte Token eingeben.", "err.invalid": "Token ungültig.", "ok": "Token ok. Weiter …"
     },
     tr: {
       "nav.how": "Nasıl çalışır", "nav.why": "Neden MDG", "nav.faq": "SSS",
+      "footer.impressum": "Künye", "footer.datenschutz": "Gizlilik", "footer.kontakt": "İletişim",
       "hero.eyebrow": "Yapısal Teşhis",
       "hero.question": "Hangi sistemde adını koyamadığın\nbir gerilim hissediyorsun?",
       "hero.sub": "MDG yanlış hissettireni görünür kılar – yapısal, kesin, koçluk olmadan.",
@@ -958,7 +960,7 @@
       "price.personal.desc": "Çalışan, ilişki veya aile. Gelişmiş raporla derin analiz.",
       "price.personal.btn": "Token satın al",
       "price.org.label": "Organizasyon & Takım", "price.org.period": "Tek seferlik · Token e-posta ile",
-      "price.org.desc": "Business, takım veya kulüp. McKinsey seviyesinde Executive Rapor.",
+      "price.org.desc": "Business, takım veya kulüp. Yönetim kurulu için. Doğrudan sunulabilir.",
       "price.org.btn": "Token satın al",
       "books.text": "MDG bir araçtan fazlasıdır. Arkasındaki teori üç kitapta yayımlandı – Denge'nin Ahlakı, Göstergesi ve Mimarisi.",
       "books.link": "Hugendubel'deki kitaplar →",
@@ -966,13 +968,14 @@
       "modal.personal.desc": "Çalışanlar, ilişkiler ve aileler için. Token satın aldıktan sonra e-posta ile gönderilir.",
       "modal.personal.buy": "29 € – Token satın al",
       "modal.org.label": "Organizasyon erişimi", "modal.org.title": "Token gir",
-      "modal.org.desc": "Business, takımlar ve kulüpler için. McKinsey seviyesinde Executive Rapor.",
+      "modal.org.desc": "Business, takımlar ve kulüpler için. Yönetim kurulu için. Doğrudan sunulabilir.",
       "modal.org.buy": "199 € – Token satın al",
-      "modal.token.label": "Token", "modal.go": "Devam", "modal.cancel": "İptal",
+      "modal.token.label": "Jeton", "modal.go": "Devam", "modal.cancel": "İptal",
       "err.empty": "Token giriniz.", "err.invalid": "Token geçersiz.", "ok": "Token tamam. Devam …"
     },
     en: {
       "nav.how": "How it works", "nav.why": "Why MDG", "nav.faq": "FAQ",
+      "footer.impressum": "Imprint", "footer.datenschutz": "Privacy", "footer.kontakt": "Contact",
       "hero.eyebrow": "Structural Diagnosis",
       "hero.question": "In which system do you feel a tension\nyou cannot name?",
       "hero.sub": "MDG makes visible what feels wrong – structurally, precisely, without coaching.",
@@ -1002,7 +1005,7 @@
       "price.personal.desc": "Employed, relationship or family. Deeper analysis with extended report.",
       "price.personal.btn": "Buy token",
       "price.org.label": "Organisation & Team", "price.org.period": "One-time · Token by email",
-      "price.org.desc": "Business, team or club. Executive report at McKinsey level.",
+      "price.org.desc": "Business, team or club. Board-ready. Directly presentable.",
       "price.org.btn": "Buy token",
       "books.text": "MDG is more than a tool. The theory behind it has been published in three books – Moral, Indication and Architecture of Equilibrium.",
       "books.link": "Books on Hugendubel →",
@@ -1010,7 +1013,7 @@
       "modal.personal.desc": "For employees, relationships and families. Token sent by email after purchase.",
       "modal.personal.buy": "€29 – Buy token",
       "modal.org.label": "Organisation access", "modal.org.title": "Enter token",
-      "modal.org.desc": "For business, teams and clubs. Executive report at McKinsey level.",
+      "modal.org.desc": "For business, teams and clubs. Board-ready. Directly presentable.",
       "modal.org.buy": "€199 – Buy token",
       "modal.token.label": "Token", "modal.go": "Continue", "modal.cancel": "Cancel",
       "err.empty": "Please enter a token.", "err.invalid": "Invalid token.", "ok": "Token ok. Continuing …"
