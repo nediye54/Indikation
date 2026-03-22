@@ -3,534 +3,858 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MDG – Strukturdiagnose für Stabilisierung und Umbau</title>
-  <meta name="description" content="MDG macht Instabilität in sozialen Systemen sichtbar – für Privatpersonen und Organisationen. Kein Coaching. Strukturelles Bild." />
-  <meta property="og:title" content="MDG – Strukturdiagnose für Stabilisierung und Umbau" />
-  <meta property="og:description" content="MDG macht Instabilität in sozialen Systemen sichtbar. Kein Coaching. Strukturelles Bild deiner Situation." />
+  <title>MDG – Strukturdiagnose</title>
+  <meta name="description" content="In welchem System spürst du eine Spannung die du nicht benennen kannst?" />
+  <meta property="og:title" content="MDG – Strukturdiagnose" />
+  <meta property="og:description" content="In welchem System spürst du eine Spannung die du nicht benennen kannst?" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://mdg-indikation.de" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="MDG – Strukturdiagnose" />
-  <meta name="twitter:description" content="MDG macht Instabilität in sozialen Systemen sichtbar. Kein Coaching. Strukturelles Bild." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
   <style>
-    .hero__actions{
-      display:flex;
-      gap:.75rem;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-top:1.2rem;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #06080d;
+      --bg1:     #0b0f18;
+      --bg2:     #111622;
+      --text:    #e8edf8;
+      --muted:   rgba(232,237,248,.55);
+      --muted2:  rgba(232,237,248,.32);
+      --green:   #6ee7b7;
+      --blue:    #60a5fa;
+      --stroke:  rgba(255,255,255,.09);
+      --stroke2: rgba(255,255,255,.14);
+      --r:       16px;
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-mono:  'DM Mono', monospace;
     }
 
-    /* ── Hero orientation line ── */
-    .hero__for {
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-serif);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Grain overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: .4;
+    }
+
+    /* ── Radial glow ── */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -20vh;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80vw;
+      height: 60vh;
+      background: radial-gradient(ellipse, rgba(110,231,183,.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    main { position: relative; z-index: 1; }
+
+    /* ── Header ── */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid transparent;
+      transition: border-color .3s, background .3s;
+    }
+    .header.scrolled {
+      background: rgba(6,8,13,.85);
+      backdrop-filter: blur(12px);
+      border-color: var(--stroke);
+    }
+
+    .brand {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: .22em;
+      color: var(--text);
+      text-decoration: none;
+      text-transform: uppercase;
       display: inline-flex;
       align-items: center;
-      gap: .45rem;
-      padding: .3rem .75rem;
-      border-radius: 999px;
-      border: 1px solid rgba(110,231,183,.28);
-      background: rgba(110,231,183,.06);
-      font-size: .82rem;
-      font-weight: 600;
-      color: var(--primary);
-      letter-spacing: .03em;
-      margin-bottom: .9rem;
+      gap: .5rem;
     }
-
-    /* ── Who cards ── */
-    .who-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-top: 1.6rem;
-    }
-    @media (max-width: 560px) {
-      .who-grid { grid-template-columns: 1fr; }
-    }
-
-    .who-card {
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 16px;
-      padding: 18px 20px;
-      cursor: pointer;
-      transition: border-color .2s, background .2s, transform .2s;
-      text-align: left;
-      font-family: var(--font-body);
-      color: var(--text);
-      display: block;
-      text-decoration: none;
-    }
-    .who-card:hover {
-      border-color: var(--primary);
-      background: rgba(110,231,183,.07);
-      transform: translateY(-2px);
-      opacity: 1;
-    }
-    .who-card__label {
-      font-size: .72rem;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--muted-2);
-      margin-bottom: .45rem;
-    }
-    .who-card__title {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: .4rem;
-      color: var(--text);
-    }
-    .who-card__desc {
-      font-size: .83rem;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-    .who-card__badge {
+    .brand::before {
+      content: '';
       display: inline-block;
-      margin-top: .75rem;
-      font-size: .75rem;
-      font-weight: 600;
-      padding: .2rem .55rem;
-      border-radius: 999px;
-    }
-    .who-card__badge--free {
-      background: rgba(110,231,183,.12);
-      color: var(--primary);
-      border: 1px solid rgba(110,231,183,.25);
-    }
-    .who-card__badge--paid {
-      background: rgba(96,165,250,.1);
-      color: var(--primary-2);
-      border: 1px solid rgba(96,165,250,.22);
-    }
-
-    /* ── Result preview strip ── */
-    .hero__result {
-      margin-top: 1.4rem;
-      padding: .75rem 1rem;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.03);
-      display: flex;
-      align-items: flex-start;
-      gap: .65rem;
-    }
-    .hero__result__icon {
-      font-size: 1.1rem;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
       flex-shrink: 0;
-      margin-top: .05rem;
+      box-shadow: 0 0 8px rgba(110,231,183,.5);
     }
-    .hero__result__text {
-      font-size: .83rem;
+
+    .nav {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+    .nav a {
+      font-family: var(--font-mono);
+      font-size: .72rem;
+      letter-spacing: .1em;
       color: var(--muted);
-      line-height: 1.5;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color .2s;
     }
-    .hero__result__text strong {
-      color: var(--text);
-      font-weight: 600;
+    .nav a:hover { color: var(--text); }
+
+    .lang-row {
+      display: flex;
+      gap: .5rem;
+    }
+    .lang-btn {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      letter-spacing: .12em;
+      padding: .25rem .5rem;
+      border: 1px solid var(--stroke);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--muted2);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .lang-btn[aria-pressed="true"] {
+      border-color: rgba(110,231,183,.4);
+      color: var(--green);
     }
 
-    /* ── Headline gradient ── */
-    .h1 .grad {
-      background: linear-gradient(90deg, #6ee7b7, #60a5fa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* ── System Visual ── */
-    .hero__visual {
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      opacity: 0.92;
-    }
-    .hero__visual svg {
-      width: 100%;
-      max-width: 480px;
-      height: auto;
-    }
-    @media (max-width: 1000px) {
-      .hero__visual { display: none; }
+      padding: 8rem 2rem 4rem;
+      text-align: center;
     }
 
-    /* Modal */
-    .modal[hidden]{ display:none !important; }
-    .modal{
-      position:fixed;
-      inset:0;
-      z-index:50;
-      display:grid;
-      place-items:center;
-      background:rgba(0,0,0,.55);
-      padding:1rem;
+    .hero__inner {
+      max-width: 720px;
     }
-    .modal__card{
-      width:min(520px,100%);
-      border-radius:var(--radius);
-      border:1px solid var(--stroke);
-      background:rgba(10,14,22,.92);
-      backdrop-filter:blur(10px);
-      padding:1.5rem;
+
+    .hero__eyebrow {
+      font-family: var(--font-mono);
+      font-size: .7rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp .8s .2s forwards;
     }
-    .modal__top{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:.75rem;
-      margin-bottom:.85rem;
+
+    .hero__question {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 300;
+      line-height: 1.2;
+      letter-spacing: -.01em;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp .9s .4s forwards;
     }
-    .modal__tag{
-      display:inline-flex;
-      align-items:center;
-      gap:.4rem;
-      padding:.2rem .55rem;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.04);
-      font-size:.82rem;
-      color:var(--muted);
+
+    .hero__question em {
+      font-style: italic;
+      color: var(--muted);
     }
-    .modal__x{
-      width:36px; height:36px;
-      border-radius:999px;
-      border:1px solid var(--stroke);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      cursor:pointer;
-      display:grid;
-      place-items:center;
-      font-size:1.1rem;
-      flex-shrink:0;
+
+    .hero__sub {
+      font-size: 1.15rem;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.65;
+      max-width: 560px;
+      margin: 0 auto 3rem;
+      opacity: 0;
+      animation: fadeUp .9s .6s forwards;
     }
-    .modal__x:hover{ border-color:var(--primary); }
-    .modal__grid{ display:grid; gap:.65rem; }
-    .modal__label{ font-weight:800; font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted-2); }
-    .modal__row{
-      display:flex;
-      gap:.6rem;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-top:.6rem;
+
+
+
+    /* ── System lines ── */
+    .hero__systems {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .75rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp .9s .75s forwards;
+      font-size: .95rem;
+      font-weight: 300;
+      color: var(--muted2);
+      letter-spacing: .04em;
     }
-    .modal__status{ font-family:var(--font-mono); font-size:.8rem; color:var(--muted-2); }
+    .hero__systems-dot {
+      color: var(--stroke2);
+    }
+
+    /* ── Hero CTA ── */
+    .hero__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .85rem 2.25rem;
+      border: 1px solid rgba(110,231,183,.35);
+      border-radius: 999px;
+      background: rgba(110,231,183,.07);
+      color: var(--green);
+      font-family: var(--font-mono);
+      font-size: .72rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      text-decoration: none;
+      margin-bottom: 2.5rem;
+      transition: background .2s, border-color .2s;
+      opacity: 0;
+      animation: fadeUp .9s .8s forwards;
+    }
+    .hero__cta:hover {
+      background: rgba(110,231,183,.13);
+      border-color: rgba(110,231,183,.55);
+    }
+    .hero__cta::after { content: '↓'; margin-left: .25rem; }
+
+    /* ── Divider ── */
+    .divider {
+      width: 1px;
+      height: 80px;
+      background: linear-gradient(to bottom, transparent, var(--stroke2), transparent);
+      margin: 0 auto 4rem;
+      opacity: 0;
+      animation: fadeUp .9s 1s forwards;
+    }
+
+    /* ── How it works ── */
+    .how {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 2rem 6rem;
+    }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: .68rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    @media (max-width: 640px) {
+      .steps { grid-template-columns: 1fr; }
+    }
+
+    .step {
+      text-align: center;
+      padding: 1.5rem 1rem;
+    }
+
+    .step__num {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      letter-spacing: .14em;
+      color: var(--green);
+      margin-bottom: 1rem;
+    }
+
+    .step__title {
+      font-size: 1.3rem;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: .6rem;
+    }
+
+    .step__desc {
+      font-size: .9rem;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── Pricing ── */
+    .pricing {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 2rem 6rem;
+    }
+
+    .price-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 640px) {
+      .price-grid { grid-template-columns: 1fr; }
+    }
+
+    .price-card {
+      border: 1px solid var(--stroke);
+      border-radius: var(--r);
+      padding: 2rem 1.5rem;
+      background: rgba(255,255,255,.02);
+      position: relative;
+    }
+
+    .price-card--featured {
+      border-color: rgba(110,231,183,.25);
+      background: rgba(110,231,183,.04);
+    }
+
+    .price-card__label {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 1rem;
+    }
+
+    .price-card__price {
+      font-size: 2.5rem;
+      font-weight: 300;
+      color: var(--text);
+      margin-bottom: .25rem;
+      line-height: 1;
+    }
+
+    .price-card__period {
+      font-family: var(--font-mono);
+      font-size: .68rem;
+      color: var(--muted2);
+      margin-bottom: 1.5rem;
+    }
+
+    .price-card__desc {
+      font-size: .95rem;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .price-card__btn {
+      display: block;
+      width: 100%;
+      padding: .75rem;
+      border-radius: 8px;
+      border: 1px solid var(--stroke2);
+      background: transparent;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: .7rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all .2s;
+      text-align: center;
+      text-decoration: none;
+    }
+    .price-card__btn:hover {
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .price-card__btn--primary {
+      background: rgba(110,231,183,.1);
+      border-color: rgba(110,231,183,.35);
+      color: var(--green);
+    }
+    .price-card__btn--primary:hover {
+      background: rgba(110,231,183,.18);
+    }
+
+    /* ── Books ── */
+    .books {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 2rem 6rem;
+      text-align: center;
+    }
+
+    .books__text {
+      font-size: 1rem;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 520px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .books__link {
+      font-family: var(--font-mono);
+      font-size: .7rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      text-decoration: none;
+      border-bottom: 1px solid var(--stroke2);
+      padding-bottom: 2px;
+      transition: color .2s, border-color .2s;
+    }
+    .books__link:hover {
+      color: var(--text);
+      border-color: var(--stroke2);
+    }
+
+    /* ── Footer ── */
+    .footer {
+      border-top: 1px solid var(--stroke);
+      padding: 2.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer__brand {
+      font-family: var(--font-serif);
+      font-size: .95rem;
+      font-weight: 300;
+      letter-spacing: .06em;
+      color: var(--muted2);
+      font-style: italic;
+    }
+
+    .footer__links {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .footer__links a {
+      font-family: var(--font-serif);
+      font-size: .9rem;
+      font-weight: 300;
+      letter-spacing: .04em;
+      color: var(--muted2);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .footer__links a:hover { color: var(--muted); }
+
+    /* ── Modal ── */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: grid;
+      place-items: center;
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(8px);
+      padding: 1rem;
+    }
+    .modal[hidden] { display: none !important; }
+
+    .modal__card {
+      width: min(480px, 100%);
+      border: 1px solid var(--stroke2);
+      border-radius: var(--r);
+      background: rgba(11,15,24,.96);
+      padding: 2rem;
+    }
+
+    .modal__top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .modal__label {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--green);
+    }
+
+    .modal__title {
+      font-size: 1.4rem;
+      font-weight: 400;
+      margin-top: .35rem;
+    }
+
+    .modal__close {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--stroke);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      display: grid;
+      place-items: center;
+      transition: border-color .15s;
+      flex-shrink: 0;
+    }
+    .modal__close:hover { border-color: var(--green); color: var(--text); }
+
+    .modal__body { margin-bottom: 1rem; }
+
+    .modal__desc {
+      font-size: .95rem;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+
+    .modal__buy {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .75rem 1.25rem;
+      border-radius: 8px;
+      background: rgba(110,231,183,.1);
+      border: 1px solid rgba(110,231,183,.3);
+      color: var(--green);
+      font-family: var(--font-mono);
+      font-size: .72rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      margin-bottom: 1.25rem;
+      transition: background .2s;
+      width: fit-content;
+    }
+    .modal__buy:hover { background: rgba(110,231,183,.18); }
+
+    .modal__input-label {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: .5rem;
+      display: block;
+    }
+
+    .modal__input {
+      width: 100%;
+      padding: .75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--stroke2);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: .85rem;
+      outline: none;
+      transition: border-color .15s;
+      margin-bottom: .75rem;
+    }
+    .modal__input:focus { border-color: rgba(110,231,183,.4); }
+
+    .modal__actions {
+      display: flex;
+      gap: .6rem;
+      align-items: center;
+    }
+
+    .modal__btn {
+      padding: .65rem 1.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--stroke2);
+      background: rgba(110,231,183,.1);
+      border-color: rgba(110,231,183,.3);
+      color: var(--green);
+      font-family: var(--font-mono);
+      font-size: .7rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .modal__btn:hover { background: rgba(110,231,183,.18); }
+
+    .modal__btn--ghost {
+      background: transparent;
+      border-color: var(--stroke);
+      color: var(--muted);
+    }
+    .modal__btn--ghost:hover { border-color: var(--stroke2); color: var(--text); }
+
+    .modal__status {
+      font-family: var(--font-mono);
+      font-size: .72rem;
+      color: var(--muted2);
+    }
+
+    /* ── Burger ── */
+    .burger {
+      display: none;
+      width: 40px; height: 40px;
+      border: 1px solid var(--stroke);
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .burger span {
+      display: block;
+      width: 16px; height: 1.5px;
+      background: var(--muted);
+      border-radius: 2px;
+    }
+
+    @media (max-width: 768px) {
+      .nav { display: none; }
+      .burger { display: flex; }
+    }
+
+    /* ── Drawer ── */
+    .drawer {
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+      background: rgba(6,8,13,.96);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+    .drawer[hidden] { display: none !important; }
+    .drawer a {
+      font-family: var(--font-mono);
+      font-size: .85rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
 
-<header class="header" id="top">
-  <div class="container header__inner">
-    <a class="brand" href="./index.html" aria-label="Home">
-      <span class="brand__mark" aria-hidden="true">MDG</span>
-    </a>
-
-    <nav class="nav" aria-label="Main">
-      <a class="nav__link" href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
-      <a class="nav__link" href="./why.html" data-i18n="nav.why">Warum MDG</a>
-      <a class="nav__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
-    </nav>
-
-    <div class="header__actions">
-      <div class="lang" role="group" aria-label="Language">
-        <button class="chip chip--ghost" type="button" data-lang="de" aria-pressed="true">DE</button>
-        <button class="chip chip--ghost" type="button" data-lang="tr" aria-pressed="false">TR</button>
-        <button class="chip chip--ghost" type="button" data-lang="en" aria-pressed="false">EN</button>
-      </div>
+<header class="header" id="hdr">
+  <a class="brand" href="/">MDG</a>
+  <nav class="nav">
+    <a href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
+    <a href="./why.html" data-i18n="nav.why">Warum MDG</a>
+    <a href="./faq.html" data-i18n="nav.faq">FAQ</a>
+  </nav>
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <div class="lang-row">
+      <button class="lang-btn" data-lang="de" aria-pressed="true">DE</button>
+      <button class="lang-btn" data-lang="tr" aria-pressed="false">TR</button>
+      <button class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
     </div>
-
-    <button class="burger" type="button" aria-label="Menu" aria-expanded="false">
+    <button class="burger" id="burgerBtn" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
   </div>
-
-  <div class="drawer" hidden>
-    <div class="drawer__content">
-      <a class="drawer__link" href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
-      <a class="drawer__link" href="./why.html" data-i18n="nav.why">Warum MDG</a>
-      <a class="drawer__link" href="./faq.html" data-i18n="nav.faq">FAQ</a>
-    </div>
-  </div>
 </header>
 
-<main id="main">
+<div class="drawer" id="drawer" hidden>
+  <a href="./how.html" data-i18n="nav.how">Wie es funktioniert</a>
+  <a href="./why.html" data-i18n="nav.why">Warum MDG</a>
+  <a href="./faq.html" data-i18n="nav.faq">FAQ</a>
+  <button class="lang-btn" data-lang="de" aria-pressed="true" style="margin-top:1rem;">DE</button>
+  <button class="lang-btn" data-lang="tr" aria-pressed="false">TR</button>
+  <button class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+</div>
+
+<main>
+
+  <!-- ── HERO ── -->
   <section class="hero">
-    <div class="container hero__inner">
-      <div class="hero__copy">
+    <div class="hero__inner">
+      <p class="hero__eyebrow" data-i18n="hero.eyebrow">Strukturdiagnose</p>
 
-        <div class="hero__for" data-i18n="hero.for">Für Privatpersonen &amp; Organisationen</div>
+      <h1 class="hero__question" data-i18n="hero.question">
+        In welchem System spürst du eine Spannung,<br>
+        <em>die du nicht benennen kannst?</em>
+      </h1>
 
-        <h1 class="h1" data-i18n="hero.title">Instabilität früh erkennen. Ursache präzise diagnostizieren. Architektur bauen.</h1>
-        <p class="sub" data-i18n="hero.sub">MDG, IDG und ADG machen Spannungen in sozialen Systemen sichtbar – ob in deinem Leben, deinem Team oder deiner Organisation.</p>
+      <p class="hero__sub" data-i18n="hero.sub">
+        MDG macht sichtbar was sich falsch anfühlt – strukturell, präzise, ohne Coaching.
+      </p>
 
-        <div class="hero__result">
-          <div class="hero__result__icon">📋</div>
-          <div class="hero__result__text" data-i18n="hero.result">
-            Du beantwortest strukturierte Fragen. Das System erkennt Muster. Du bekommst eine <strong>präzise Diagnose</strong> mit konkreten Handlungsfeldern – kein Ratgeber, kein Coaching, sondern ein strukturelles Bild deiner Situation.
-          </div>
-        </div>
-
-        <div class="who-grid">
-          <a class="who-card" href="./diagnose.html?mode=private" id="btnPrivate">
-            <div class="who-card__label" data-i18n="who.private.label">Privatperson</div>
-            <div class="who-card__title" data-i18n="who.private.title">Eigene Situation verstehen</div>
-            <div class="who-card__desc" data-i18n="who.private.desc">Etwas stimmt nicht – aber du weißt nicht was. Kein Ratgeber, kein Coaching. Ein strukturelles Bild deiner Situation.</div>
-            <span class="who-card__badge who-card__badge--free" data-i18n="who.private.badge">Kostenlos · Sofort starten</span>
-          </a>
-          <button class="who-card" type="button" id="btnEmployee">
-            <div class="who-card__label" data-i18n="who.emp.label">Angestellt</div>
-            <div class="who-card__title" data-i18n="who.emp.title">Arbeitssituation klären</div>
-            <div class="who-card__desc" data-i18n="who.emp.desc">Unzufrieden aber nicht sicher warum. Bleiben oder gehen. Mehr Klarheit über deine Rolle, dein Team, deine nächste Entscheidung.</div>
-            <span class="who-card__badge who-card__badge--paid" data-i18n="who.emp.badge">Ab 19,99 € · Token erforderlich</span>
-          </button>
-
-          <button class="who-card" type="button" id="btnBusiness">
-            <div class="who-card__label" data-i18n="who.biz.label">Organisation / Unternehmen</div>
-            <div class="who-card__title" data-i18n="who.biz.title">Fremdsystem diagnostizieren</div>
-            <div class="who-card__desc" data-i18n="who.biz.desc">Du bist nicht Teil des Systems – du analysierst es. Strukturelle Spannungen sichtbar machen bevor du intervenierst.</div>
-            <span class="who-card__badge who-card__badge--paid" data-i18n="who.biz.badge">Kostenpflichtig · Token erforderlich</span>
-          </button>
-          <button class="who-card" type="button" id="btnTeam">
-            <div class="who-card__label" data-i18n="who.team.label">Team</div>
-            <div class="who-card__title" data-i18n="who.team.title">Team-Diagnose starten</div>
-            <div class="who-card__desc" data-i18n="who.team.desc">3–10 Personen. Jeder diagnostiziert aus seiner Perspektive. Der Report zeigt die strukturellen Spannungen im System.</div>
-            <span class="who-card__badge who-card__badge--paid" data-i18n="who.team.badge">Team-Token erforderlich · 3–10 Personen</span>
-          </button>
-          <button class="who-card" type="button" id="btnRelationship">
-            <div class="who-card__label" data-i18n="who.rel.label">Beziehung / Familie</div>
-            <div class="who-card__title" data-i18n="who.rel.title">Beziehungs-Diagnose starten</div>
-            <div class="who-card__desc" data-i18n="who.rel.desc">2–6 Personen. Jeder diagnostiziert anonym aus seiner Perspektive – der Gesamt-Report zeigt strukturelle Spannungen ohne Schuldzuweisung.</div>
-            <span class="who-card__badge who-card__badge--paid" data-i18n="who.rel.badge">Beziehungs-Token erforderlich · 2–6 Personen</span>
-          </button>
-        </div>
-
+      <div class="hero__systems">
+        <span data-i18n="sys.private">Persönliches System</span>
+        <span class="hero__systems-dot">·</span>
+        <span data-i18n="sys.personal">Arbeit & Beziehung</span>
+        <span class="hero__systems-dot">·</span>
+        <span data-i18n="sys.org">Organisation & Team</span>
       </div>
 
-      <!-- System Visual -->
-      <div class="hero__visual">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
-          <defs>
-            <radialGradient id="hglow1" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#6ee7b7" stop-opacity="0.18"/>
-              <stop offset="100%" stop-color="#6ee7b7" stop-opacity="0"/>
-            </radialGradient>
-            <radialGradient id="hglow2" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.13"/>
-              <stop offset="100%" stop-color="#60a5fa" stop-opacity="0"/>
-            </radialGradient>
-            <filter id="hblur25"><feGaussianBlur stdDeviation="25"/></filter>
-            <filter id="hblur10"><feGaussianBlur stdDeviation="10"/></filter>
-            <clipPath id="hclip"><rect width="480" height="480"/></clipPath>
-          </defs>
-          <g clip-path="url(#hclip)">
-            <!-- Atmosphere -->
-            <ellipse cx="240" cy="240" rx="220" ry="220" fill="url(#hglow1)" filter="url(#hblur25)"/>
-            <ellipse cx="320" cy="320" rx="160" ry="160" fill="url(#hglow2)" filter="url(#hblur25)"/>
+      <a class="hero__cta" href="#pricing" data-i18n="hero.cta">Diagnose beginnen</a>
+    </div>
+  </section>
 
-            <!-- Outer rings -->
-            <circle cx="240" cy="240" r="190" fill="none" stroke="rgba(110,231,183,0.06)" stroke-width="1.5"/>
-            <circle cx="240" cy="240" r="145" fill="none" stroke="rgba(110,231,183,0.05)" stroke-width="1"/>
-            <circle cx="240" cy="240" r="100" fill="none" stroke="rgba(110,231,183,0.07)" stroke-width="1"/>
+  <div class="divider"></div>
 
-            <!-- Inner filled circle -->
-            <circle cx="240" cy="240" r="64" fill="rgba(110,231,183,0.05)" stroke="rgba(110,231,183,0.15)" stroke-width="1.5"/>
-            <circle cx="240" cy="240" r="38" fill="rgba(110,231,183,0.07)" stroke="rgba(110,231,183,0.2)" stroke-width="1"/>
+  <!-- ── HOW ── -->
+  <section class="how">
+    <p class="section-label" data-i18n="how.label">Wie es funktioniert</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step__num">01</div>
+        <div class="step__title" data-i18n="step1.title">Du beschreibst</div>
+        <div class="step__desc" data-i18n="step1.desc">Eine Situation. Ein System. Eine Spannung die sich nicht auflöst. In einem Satz.</div>
+      </div>
+      <div class="step">
+        <div class="step__num">02</div>
+        <div class="step__title" data-i18n="step2.title">MDG diagnostiziert</div>
+        <div class="step__desc" data-i18n="step2.desc">Das Modell erkennt welche Kraft überwiegt – und auf wessen Kosten. Strukturell, nicht psychologisch.</div>
+      </div>
+      <div class="step">
+        <div class="step__num">03</div>
+        <div class="step__title" data-i18n="step3.title">Du siehst klar</div>
+        <div class="step__desc" data-i18n="step3.desc">Ein präziser Report mit konkreten Handlungsfeldern. Kein Ratgeber. Ein Spiegel.</div>
+      </div>
+    </div>
+  </section>
 
-            <!-- Center node -->
-            <circle cx="240" cy="240" r="10" fill="rgba(110,231,183,0.3)" filter="url(#hblur10)"/>
-            <circle cx="240" cy="240" r="6" fill="#6ee7b7"/>
-            <text x="240" y="222" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9" fill="#6ee7b7" fill-opacity="0.7" letter-spacing="0.1em">BALANCE</text>
+  <!-- ── PRICING ── -->
+  <section class="pricing" id="pricing">
+    <p class="section-label" data-i18n="pricing.label">Zugang</p>
+    <div class="price-grid">
 
-            <!-- Axis lines -->
-            <line x1="240" y1="95" x2="240" y2="176" stroke="#6ee7b7" stroke-width="1.2" stroke-opacity="0.3"/>
-            <line x1="240" y1="304" x2="240" y2="385" stroke="#6ee7b7" stroke-width="1.2" stroke-opacity="0.2"/>
-            <line x1="95" y1="240" x2="176" y2="240" stroke="#60a5fa" stroke-width="1.2" stroke-opacity="0.2"/>
-            <line x1="304" y1="240" x2="385" y2="240" stroke="#60a5fa" stroke-width="1.2" stroke-opacity="0.3"/>
+      <div class="price-card">
+        <div class="price-card__label" data-i18n="price.free.label">Privat</div>
+        <div class="price-card__price">0 €</div>
+        <div class="price-card__period" data-i18n="price.free.period">Kostenlos · Sofort</div>
+        <div class="price-card__desc" data-i18n="price.free.desc">Persönliche Diagnose. Strukturelles Assessment und vollständiger Report.</div>
+        <a class="price-card__btn price-card__btn--primary" href="./diagnose.html?mode=private" data-i18n="price.free.btn">Jetzt starten</a>
+      </div>
 
-            <!-- Top node: MORAL -->
-            <circle cx="240" cy="82" r="16" fill="rgba(110,231,183,0.06)" stroke="rgba(110,231,183,0.28)" stroke-width="1.2"/>
-            <circle cx="240" cy="82" r="5" fill="#6ee7b7" fill-opacity="0.75"/>
-            <text x="240" y="60" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9" fill="rgba(234,240,255,0.4)" letter-spacing="0.08em">MORAL</text>
+      <div class="price-card price-card--featured">
+        <div class="price-card__label" data-i18n="price.personal.label">Persönlich & Beruflich</div>
+        <div class="price-card__price">29 €</div>
+        <div class="price-card__period" data-i18n="price.personal.period">Einmalig · Token per E-Mail</div>
+        <div class="price-card__desc" data-i18n="price.personal.desc">Angestellt, Beziehung oder Familie. Tiefere Analyse mit erweitertem Report.</div>
+        <button class="price-card__btn price-card__btn--primary" type="button" id="btnPersonal" data-i18n="price.personal.btn">Token kaufen</button>
+      </div>
 
-            <!-- Bottom node -->
-            <circle cx="240" cy="398" r="13" fill="rgba(110,231,183,0.05)" stroke="rgba(110,231,183,0.2)" stroke-width="1"/>
-            <circle cx="240" cy="398" r="4" fill="#6ee7b7" fill-opacity="0.5"/>
-
-            <!-- Left node -->
-            <circle cx="82" cy="240" r="13" fill="rgba(96,165,250,0.06)" stroke="rgba(96,165,250,0.22)" stroke-width="1"/>
-            <circle cx="82" cy="240" r="4" fill="#60a5fa" fill-opacity="0.55"/>
-
-            <!-- Right node: INDIKATION -->
-            <circle cx="398" cy="240" r="16" fill="rgba(96,165,250,0.07)" stroke="rgba(96,165,250,0.28)" stroke-width="1.2"/>
-            <circle cx="398" cy="240" r="5" fill="#60a5fa" fill-opacity="0.75"/>
-            <text x="398" y="270" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9" fill="rgba(234,240,255,0.4)" letter-spacing="0.08em">INDIKATION</text>
-
-            <!-- Diagonal connectors -->
-            <line x1="240" y1="176" x2="176" y2="240" stroke="rgba(110,231,183,0.08)" stroke-width="1"/>
-            <line x1="240" y1="176" x2="304" y2="240" stroke="rgba(96,165,250,0.08)" stroke-width="1"/>
-            <line x1="240" y1="304" x2="176" y2="240" stroke="rgba(110,231,183,0.06)" stroke-width="1"/>
-            <line x1="240" y1="304" x2="304" y2="240" stroke="rgba(96,165,250,0.06)" stroke-width="1"/>
-          </g>
-        </svg>
+      <div class="price-card">
+        <div class="price-card__label" data-i18n="price.org.label">Organisation & Team</div>
+        <div class="price-card__price">199 €</div>
+        <div class="price-card__period" data-i18n="price.org.period">Einmalig · Token per E-Mail</div>
+        <div class="price-card__desc" data-i18n="price.org.desc">Business, Team oder Verein. Executive Report auf McKinsey-Niveau.</div>
+        <button class="price-card__btn" type="button" id="btnOrg" data-i18n="price.org.btn">Token kaufen</button>
       </div>
 
     </div>
   </section>
+
+  <!-- ── BOOKS ── -->
+  <section class="books">
+    <p class="books__text" data-i18n="books.text">
+      MDG ist mehr als ein Tool. Die Theorie dahinter ist in drei Büchern erschienen –
+      Moral, Indikation und Architektur des Gleichgewichts.
+    </p>
+    <a class="books__link" href="https://www.hugendubel.de/de/search?q=moral+des+gleichgewichts" target="_blank" rel="noopener" data-i18n="books.link">
+      Bücher auf Hugendubel →
+    </a>
+  </section>
+
 </main>
 
 <footer class="footer">
-  <div class="container footer__grid">
-    <div>
-      <div class="brand brand--footer">
-        <span class="brand__mark" aria-hidden="true">MDG</span>
-      </div>
-      <p class="micro" data-i18n="footer.tag">Strukturdiagnose für Stabilisierung und Umbau.</p>
-    </div>
-    <div class="footer__legal">
-      <a href="./impressum.html" rel="nofollow">Impressum</a>
-      <a href="./datenschutz.html" rel="nofollow">Datenschutz</a>
-      <a href="./kontakt.html" rel="nofollow">Kontakt</a>
-    </div>
-    <div class="footer__legal">
-      <a href="https://www.hugendubel.de/de/search?q=moral+des+gleichgewichts" target="_blank" rel="noopener">MDG – Bücher</a>
-      <a href="./why.html">Warum MDG</a>
-      <a href="./faq.html">FAQ</a>
-    </div>
+  <a class="brand" href="/" style="font-size:.95rem;letter-spacing:.18em;">MDG</a>
+  <div class="footer__links">
+    <a href="./impressum.html">Impressum</a>
+    <a href="./datenschutz.html">Datenschutz</a>
+    <a href="./kontakt.html">Kontakt</a>
+    <a href="./why.html" data-i18n="nav.why">Warum MDG</a>
+    <a href="./faq.html" data-i18n="nav.faq">FAQ</a>
   </div>
 </footer>
 
-<!-- Business Token Modal -->
-<div class="modal" id="bizModal" hidden>
-  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="bizTitle">
+<!-- ── PERSONAL MODAL (29€) ── -->
+<div class="modal" id="personalModal" hidden>
+  <div class="modal__card">
     <div class="modal__top">
       <div>
-        <div class="modal__tag" data-i18n="biz.tag">Business Zugang</div>
-        <h2 class="h3" id="bizTitle" style="margin:.45rem 0 0;" data-i18n="biz.title">Token eingeben</h2>
+        <div class="modal__label" data-i18n="modal.personal.label">Persönlicher Zugang</div>
+        <h2 class="modal__title" data-i18n="modal.personal.title">Token eingeben</h2>
       </div>
-      <button class="modal__x" type="button" id="bizClose" aria-label="Schließen">×</button>
+      <button class="modal__close" id="personalClose">×</button>
     </div>
-
-    <p class="micro" style="margin:0 0 .9rem; opacity:.9;" data-i18n="biz.text">
-      Kostenpflichtig. Bitte Token eingeben.
-    </p>
-
-    <!-- Purchase link – opens as overlay over the page -->
-    <a class="btn btn--primary lemonsqueezy-button" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/b586d65c-e9a1-4dec-91cc-a7d9c342a107" id="bizBuyBtn" style="display:inline-flex; align-items:center; gap:.45rem; margin-bottom:.9rem; text-decoration:none;">
-      <span>🔑</span>
-      <span data-i18n="biz.buy">Token kaufen</span>
-    </a>
-
-    <div class="modal__grid">
-      <div>
-        <div class="modal__label" data-i18n="biz.label">Token</div>
-        <div class="micro" style="margin:.25rem 0 .45rem; opacity:.75;" data-i18n="biz.afterBuy">Nach dem Kauf erhältst du deinen Token per E-Mail.</div>
-        <input class="dx-input" id="bizToken" type="text" placeholder="MDG-XXXX-XXXX" autocomplete="off" style="margin-top:.25rem;" />
-      </div>
-      <div class="modal__row">
-        <button class="btn btn--primary" type="button" id="bizGo" data-i18n="biz.next">Weiter</button>
-        <button class="btn btn--ghost"   type="button" id="bizCancel" data-i18n="biz.cancel">Abbrechen</button>
-        <span class="modal__status" id="bizStatus"></span>
+    <div class="modal__body">
+      <p class="modal__desc" data-i18n="modal.personal.desc">Für Angestellte, Beziehungen und Familien. Token wird nach dem Kauf per E-Mail zugeschickt.</p>
+      <a class="modal__buy lemonsqueezy-button" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/3095d998-658f-4e32-a426-673b129b38d6" id="personalBuyBtn" data-i18n="modal.personal.buy">29 € – Token kaufen</a>
+      <label class="modal__input-label" data-i18n="modal.token.label">Token</label>
+      <input class="modal__input" id="personalTokenInput" type="text" placeholder="MDG-XXXX-XXXX-XXXX" autocomplete="off" />
+      <div class="modal__actions">
+        <button class="modal__btn" id="personalGoBtn" data-i18n="modal.go">Weiter</button>
+        <button class="modal__btn modal__btn--ghost" id="personalCancelBtn" data-i18n="modal.cancel">Abbrechen</button>
+        <span class="modal__status" id="personalStatus"></span>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Employee Token Modal -->
-<div class="modal" id="empModal" hidden>
-  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="empTitle">
+<!-- ── ORG MODAL (199€) ── -->
+<div class="modal" id="orgModal" hidden>
+  <div class="modal__card">
     <div class="modal__top">
       <div>
-        <div class="modal__tag" data-i18n="emp.tag">Angestellten Zugang</div>
-        <h2 class="h3" id="empTitle" style="margin:.45rem 0 0;" data-i18n="emp.title">Token eingeben</h2>
+        <div class="modal__label" data-i18n="modal.org.label">Organisations-Zugang</div>
+        <h2 class="modal__title" data-i18n="modal.org.title">Token eingeben</h2>
       </div>
-      <button class="modal__x" type="button" id="empClose" aria-label="Schließen">×</button>
+      <button class="modal__close" id="orgClose">×</button>
     </div>
-    <p class="micro" style="margin:0 0 .9rem; opacity:.9;" data-i18n="emp.text">
-      Strukturelle Klarheit über deine Arbeitssituation.
-    </p>
-    <a class="btn btn--primary lemonsqueezy-button" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/3095d998-658f-4e32-a426-673b129b38d6" id="empBuyBtn" style="display:inline-flex; align-items:center; gap:.45rem; margin-bottom:.9rem; text-decoration:none;">
-      <span>💼</span>
-      <span data-i18n="emp.buy">Token kaufen (19,99 €)</span>
-    </a>
-    <div class="modal__grid">
-      <div>
-        <div class="modal__label" data-i18n="emp.label">Token</div>
-        <div class="micro" style="margin:.25rem 0 .45rem; opacity:.75;" data-i18n="emp.afterBuy">Nach dem Kauf erhältst du deinen Token per E-Mail.</div>
-        <input class="dx-input" id="empToken" type="text" placeholder="MDG-XXXX-XXXX" autocomplete="off" style="margin-top:.25rem;" />
-      </div>
-      <div class="modal__row">
-        <button class="btn btn--primary" type="button" id="empGo" data-i18n="emp.next">Weiter</button>
-        <button class="btn btn--ghost"   type="button" id="empCancel" data-i18n="emp.cancel">Abbrechen</button>
-        <span class="modal__status" id="empStatus"></span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Team Token Modal -->
-<div class="modal" id="teamModal" hidden>
-  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="teamTitle">
-    <div class="modal__top">
-      <div>
-        <div class="modal__tag" data-i18n="team.tag">Team Zugang</div>
-        <h2 class="h3" id="teamTitle" style="margin:.45rem 0 0;" data-i18n="team.title">Team-Token eingeben</h2>
-      </div>
-      <button class="modal__x" type="button" id="teamClose" aria-label="Schließen">×</button>
-    </div>
-    <p class="micro" style="margin:0 0 .9rem; opacity:.9;" data-i18n="team.text">
-      3–10 Personen. Jeder diagnostiziert aus seiner Perspektive – der Gesamt-Report zeigt was kein Einzelner sehen kann.
-    </p>
-    <a class="btn btn--primary lemonsqueezy-button" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/82aad079-0683-4ec3-81b8-4bb4be0c93e8" id="teamBuyBtn" style="display:inline-flex; align-items:center; gap:.45rem; margin-bottom:.9rem; text-decoration:none;">
-      <span>👥</span>
-      <span data-i18n="team.buy">Team-Token kaufen (590 €)</span>
-    </a>
-    <div class="modal__grid">
-      <div>
-        <div class="modal__label" data-i18n="team.label">Team-Token</div>
-        <div class="micro" style="margin:.25rem 0 .45rem; opacity:.75;" data-i18n="team.afterBuy">Nach dem Kauf erhältst du deinen Token per E-Mail.</div>
-        <input class="dx-input" id="teamToken" type="text" placeholder="MDG-XXXX-XXXX" autocomplete="off" style="margin-top:.25rem;" />
-      </div>
-      <div class="modal__row">
-        <button class="btn btn--primary" type="button" id="teamGo" data-i18n="team.next">Team-Session starten</button>
-        <button class="btn btn--ghost"   type="button" id="teamCancel" data-i18n="team.cancel">Abbrechen</button>
-        <span class="modal__status" id="teamStatus"></span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Relationship Token Modal -->
-<div class="modal" id="relModal" hidden>
-  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="relTitle">
-    <div class="modal__top">
-      <div>
-        <div class="modal__tag" data-i18n="rel.tag">Beziehung / Familie</div>
-        <h2 class="h3" id="relTitle" style="margin:.45rem 0 0;" data-i18n="rel.title">Beziehungs-Token eingeben</h2>
-      </div>
-      <button class="modal__x" type="button" id="relClose" aria-label="Schließen">×</button>
-    </div>
-    <p class="micro" style="margin:0 0 .9rem; opacity:.9;" data-i18n="rel.text">
-      2–6 Personen. Anonym. Der Gesamt-Report zeigt Muster ohne Schuldzuweisung.
-    </p>
-    <a class="btn btn--primary lemonsqueezy-button" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/a50eba0b-1d8c-4f62-b459-316cc9c407c9" id="relBuyBtn" style="display:inline-flex; align-items:center; gap:.45rem; margin-bottom:.9rem; text-decoration:none;">
-      <span>❤️</span>
-      <span data-i18n="rel.buy">Beziehungs-Token kaufen (99,99 €)</span>
-    </a>
-    <div class="modal__grid">
-      <div>
-        <div class="modal__label" data-i18n="rel.label">Beziehungs-Token</div>
-        <div class="micro" style="margin:.25rem 0 .45rem; opacity:.75;" data-i18n="rel.afterBuy">Nach dem Kauf erhältst du deinen Token per E-Mail.</div>
-        <input class="dx-input" id="relToken" type="text" placeholder="MDG-XXXX-XXXX" autocomplete="off" style="margin-top:.25rem;" />
-      </div>
-      <div class="modal__row">
-        <button class="btn btn--primary" type="button" id="relGo" data-i18n="rel.next">Session starten</button>
-        <button class="btn btn--ghost"   type="button" id="relCancel" data-i18n="rel.cancel">Abbrechen</button>
-        <span class="modal__status" id="relStatus"></span>
+    <div class="modal__body">
+      <p class="modal__desc" data-i18n="modal.org.desc">Für Business, Teams und Vereine. Executive Report auf McKinsey-Niveau. Token wird nach dem Kauf per E-Mail zugeschickt.</p>
+      <a class="modal__buy lemonsqueezy-button" href="https://mdg-indikation.lemonsqueezy.com/checkout/buy/b586d65c-e9a1-4dec-91cc-a7d9c342a107" id="orgBuyBtn" data-i18n="modal.org.buy">199 € – Token kaufen</a>
+      <label class="modal__input-label" data-i18n="modal.token.label">Token</label>
+      <input class="modal__input" id="orgTokenInput" type="text" placeholder="MDG-XXXX-XXXX-XXXX" autocomplete="off" />
+      <div class="modal__actions">
+        <button class="modal__btn" id="orgGoBtn" data-i18n="modal.go">Weiter</button>
+        <button class="modal__btn modal__btn--ghost" id="orgCancelBtn" data-i18n="modal.cancel">Abbrechen</button>
+        <span class="modal__status" id="orgStatus"></span>
       </div>
     </div>
   </div>
@@ -539,339 +863,258 @@
 <script>
 (() => {
   "use strict";
-  const API_BASE = "https://api.mdg-indikation.de";
-  const $  = (s, r=document) => r.querySelector(s);
-  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
-  const ls = localStorage;
-  const ss = sessionStorage;
+  const API = "https://api.mdg-indikation.de";
+  const ls = localStorage, ss = sessionStorage;
+
+  /* ── scroll header ── */
+  window.addEventListener("scroll", () => {
+    document.getElementById("hdr").classList.toggle("scrolled", scrollY > 40);
+  });
 
   /* ── burger ── */
-  const burger = $(".burger"), drawer = $(".drawer");
-  if (burger && drawer) {
-    const open  = () => { drawer.hidden=false; burger.setAttribute("aria-expanded","true");  document.body.classList.add("no-scroll"); };
-    const close = () => { drawer.hidden=true;  burger.setAttribute("aria-expanded","false"); document.body.classList.remove("no-scroll"); };
-    burger.addEventListener("click", () => drawer.hidden ? open() : close());
-    drawer.addEventListener("click", e => { if (!$(".drawer__content",drawer).contains(e.target)) close(); });
-    window.addEventListener("keydown", e => { if (e.key==="Escape") close(); });
-  }
+  const drawer = document.getElementById("drawer");
+  document.getElementById("burgerBtn").addEventListener("click", () => {
+    drawer.hidden = !drawer.hidden;
+    document.body.style.overflow = drawer.hidden ? "" : "hidden";
+  });
+  drawer.addEventListener("click", e => {
+    if (e.target === drawer) { drawer.hidden = true; document.body.style.overflow = ""; }
+  });
 
   /* ── i18n ── */
   const dict = {
     de: {
-      "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ",
-      "hero.for":"Für Privatpersonen & Organisationen",
-      "hero.title":"Instabilität früh erkennen. Ursache präzise diagnostizieren. Architektur bauen.",
-      "hero.sub":"MDG, IDG und ADG machen Spannungen in sozialen Systemen sichtbar – ob in deinem Leben, deinem Team oder deiner Organisation.",
-      "hero.result":"Du beantwortest strukturierte Fragen. Das System erkennt Muster. Du bekommst eine präzise Diagnose mit konkreten Handlungsfeldern – kein Ratgeber, kein Coaching, sondern ein strukturelles Bild deiner Situation.",
-      "who.private.label":"Privatperson",
-      "who.private.title":"Eigene Situation verstehen",
-      "who.private.desc":"Etwas stimmt nicht – aber du weißt nicht was. Kein Ratgeber, kein Coaching. Ein strukturelles Bild deiner Situation.",
-      "who.private.badge":"Kostenlos · Sofort starten",
-      "who.biz.label":"Berater / HR / Strategie",
-      "who.biz.title":"Fremdsystem diagnostizieren",
-      "who.biz.desc":"Du bist nicht Teil des Systems – du analysierst es. Strukturelle Spannungen sichtbar machen bevor du intervenierst.",
-      "who.biz.badge":"Kostenpflichtig · Token erforderlich",
-      "who.team.label":"Team",
-      "who.team.title":"Team-Diagnose starten",
-      "who.team.desc":"3–10 Personen. Jeder diagnostiziert aus seiner Perspektive. Der Report zeigt die strukturellen Spannungen im System.",
-      "who.team.badge":"Team-Token erforderlich · 3–10 Personen",
-      "cta.private":"Jetzt ermitteln (privat)","cta.business":"Für Unternehmen",
-      "hero.note":"Privat: sofort starten. Business: Token erforderlich.",
-      "footer.tag":"Strukturdiagnose für Stabilisierung und Umbau.",
-      "biz.tag":"Business Zugang","biz.title":"Token eingeben",
-      "biz.text":"Kostenpflichtig. Bitte Token eingeben.",
-      "biz.label":"Token","biz.next":"Weiter","biz.cancel":"Abbrechen",
-      "biz.errEmpty":"Bitte Token eingeben.","biz.errInvalid":"Token ungültig.","biz.ok":"Token ok. Weiter …",
-      "biz.buy":"Token kaufen (249,99 €)",
-      "biz.afterBuy":"Nach dem Kauf erhältst du deinen Token per E-Mail.",
-      "team.tag":"Team Zugang","team.title":"Team-Token eingeben",
-      "team.text":"3–10 Personen. Jeder diagnostiziert aus seiner Perspektive – der Gesamt-Report zeigt was kein Einzelner sehen kann.",
-      "team.label":"Team-Token","team.next":"Team-Session starten","team.cancel":"Abbrechen",
-      "team.errEmpty":"Bitte Team-Token eingeben.","team.errInvalid":"Team-Token ungültig.","team.ok":"Team-Session wird erstellt …",
-      "team.buy":"Team-Token kaufen (590 €)",
-      "team.afterBuy":"Nach dem Kauf erhältst du deinen Token per E-Mail.",
-      "who.rel.label":"Beziehung / Familie",
-      "who.rel.title":"Beziehungs-Diagnose starten",
-      "who.rel.desc":"2–6 Personen. Anonym. Keine Schuld. Der Report zeigt was zwischen euch strukturell wirkt.",
-      "who.emp.label":"Angestellt",
-      "who.emp.title":"Arbeitssituation klären",
-      "who.emp.desc":"Du spürst die Spannung – bleiben oder gehen. MDG zeigt wo sie herkommt und was du konkret tun kannst.",
-      "who.emp.badge":"Ab 19,99 € · Token erforderlich",
-      "emp.tag":"Angestellten Zugang","emp.title":"Token eingeben",
-      "emp.text":"Strukturelle Klarheit über deine Arbeitssituation. Kein Coaching, keine Ratschläge – ein präzises Bild.",
-      "emp.label":"Token","emp.next":"Weiter","emp.cancel":"Abbrechen",
-      "emp.errEmpty":"Bitte Token eingeben.","emp.errInvalid":"Token ungültig.","emp.ok":"Token ok. Weiter …",
-      "emp.buy":"Token kaufen (19,99 €)",
-      "emp.afterBuy":"Nach dem Kauf erhältst du deinen Token per E-Mail.",
-      "who.rel.badge":"Beziehungs-Token erforderlich · 2–6 Personen",
-      "rel.tag":"Beziehung / Familie","rel.title":"Beziehungs-Token eingeben",
-      "rel.text":"2–6 Personen. Anonym. Der Gesamt-Report zeigt Muster ohne Schuldzuweisung.",
-      "rel.label":"Beziehungs-Token","rel.next":"Session starten","rel.cancel":"Abbrechen",
-      "rel.errEmpty":"Bitte Token eingeben.","rel.errInvalid":"Token ungültig.","rel.ok":"Session wird erstellt …",
-      "rel.buy":"Beziehungs-Token kaufen (99,99 €)",
-      "rel.afterBuy":"Nach dem Kauf erhältst du deinen Token per E-Mail."
+      "nav.how": "Wie es funktioniert", "nav.why": "Warum MDG", "nav.faq": "FAQ",
+      "hero.eyebrow": "Strukturdiagnose",
+      "hero.question": "In welchem System spürst du eine Spannung,\ndie du nicht benennen kannst?",
+      "hero.sub": "MDG macht sichtbar was sich falsch anfühlt – strukturell, präzise, ohne Coaching.",
+      "hero.cta": "Diagnose beginnen",
+      "sys.private": "Persönliches System", "sys.personal": "Arbeit & Beziehung", "sys.org": "Organisation & Team",
+      "path.private.system": "Persönliches System",
+      "path.private.title": "Eigene Situation",
+      "path.private.desc": "Etwas stimmt nicht – du weißt nur nicht was. Ein strukturelles Bild deiner Lage.",
+      "path.private.action": "Kostenlos starten",
+      "path.personal.system": "Arbeits- oder Beziehungssystem",
+      "path.personal.title": "Tiefere Analyse",
+      "path.personal.desc": "Angestellt, in einer Beziehung oder Familie. Klarheit über Rollen, Spannungen und den nächsten Schritt.",
+      "path.personal.action": "Ab 29 €",
+      "path.org.system": "Organisations- oder Teamsystem",
+      "path.org.title": "Organisation & Team",
+      "path.org.desc": "Strukturelle Spannungen in Teams, Unternehmen oder Vereinen sichtbar machen – bevor sie eskalieren.",
+      "path.org.action": "Ab 199 €",
+      "how.label": "Wie es funktioniert",
+      "step1.title": "Du beschreibst", "step1.desc": "Eine Situation. Ein System. Eine Spannung die sich nicht auflöst. In einem Satz.",
+      "step2.title": "MDG diagnostiziert", "step2.desc": "Das Modell erkennt welche Kraft überwiegt – und auf wessen Kosten. Strukturell, nicht psychologisch.",
+      "step3.title": "Du siehst klar", "step3.desc": "Ein präziser Report mit konkreten Handlungsfeldern. Kein Ratgeber. Ein Spiegel.",
+      "pricing.label": "Zugang",
+      "price.free.label": "Privat", "price.free.period": "Kostenlos · Sofort",
+      "price.free.desc": "Persönliche Diagnose. Strukturelles Assessment und vollständiger Report.",
+      "price.free.btn": "Jetzt starten",
+      "price.personal.label": "Persönlich & Beruflich", "price.personal.period": "Einmalig · Token per E-Mail",
+      "price.personal.desc": "Angestellt, Beziehung oder Familie. Tiefere Analyse mit erweitertem Report.",
+      "price.personal.btn": "Token kaufen",
+      "price.org.label": "Organisation & Team", "price.org.period": "Einmalig · Token per E-Mail",
+      "price.org.desc": "Business, Team oder Verein. Executive Report auf McKinsey-Niveau.",
+      "price.org.btn": "Token kaufen",
+      "books.text": "MDG ist mehr als ein Tool. Die Theorie dahinter ist in drei Büchern erschienen – Moral, Indikation und Architektur des Gleichgewichts.",
+      "books.link": "Bücher auf Hugendubel →",
+      "modal.personal.label": "Persönlicher Zugang", "modal.personal.title": "Token eingeben",
+      "modal.personal.desc": "Für Angestellte, Beziehungen und Familien. Token wird nach dem Kauf per E-Mail zugeschickt.",
+      "modal.personal.buy": "29 € – Token kaufen",
+      "modal.org.label": "Organisations-Zugang", "modal.org.title": "Token eingeben",
+      "modal.org.desc": "Für Business, Teams und Vereine. Executive Report auf McKinsey-Niveau.",
+      "modal.org.buy": "199 € – Token kaufen",
+      "modal.token.label": "Token", "modal.go": "Weiter", "modal.cancel": "Abbrechen",
+      "err.empty": "Bitte Token eingeben.", "err.invalid": "Token ungültig.", "ok": "Token ok. Weiter …"
     },
     tr: {
-      "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS",
-      "hero.for":"Bireyler ve Organizasyonlar için",
-      "hero.title":"İstikrarsızlığı erken gör. Nedeni doğru teşhis et. Mimari kur.",
-      "hero.sub":"MDG/IDG/ADG sosyal sistemlerdeki gerilimi görünür kılar – hayatında, ekibinde veya organizasyonunda.",
-      "hero.result":"Yapılandırılmış sorular cevaplarsın. Sistem örüntüleri tanır. Somut eylem alanlarıyla kesin bir teşhis alırsın – rehber değil, koçluk değil, durumunun yapısal resmi.",
-      "who.private.label":"Bireysel",
-      "who.private.title":"Kendi durumunu analiz et",
-      "who.private.desc":"Kariyer geçişleri, kişisel krizler, baskı altında kararlar – bir şeylerin yanlış gittiğini hissediyorsun ama ne olduğunu bilmiyorsun.",
-      "who.private.badge":"Ücretsiz · Hemen başla",
-      "who.biz.label":"Organizasyon / Şirket",
-      "who.biz.title":"Ekip veya sistemi teşhis et",
-      "who.biz.desc":"Yöneticiler, İK, Strateji: ekip ve organizasyonlardaki yapısal gerilimleri tırmanmadan önce fark et.",
-      "who.biz.badge":"Ücretli · Token gerekli",
-      "cta.private":"Hemen başla (özel)","cta.business":"Şirketler için",
-      "hero.note":"Özel: hemen başla. Business: token gerekli.",
-      "footer.tag":"Stabilizasyon ve yeniden kurulum için yapı teşhisi.",
-      "biz.tag":"Business erişim","biz.title":"Token gir",
-      "biz.text":"Şirketler için ücretli. Token giriniz.",
-      "biz.label":"Token","biz.next":"Devam","biz.cancel":"İptal",
-      "biz.errEmpty":"Token giriniz.","biz.errInvalid":"Token geçersiz.","biz.ok":"Token tamam. Devam …",
-      "biz.buy":"Token satın al (249,99 €)",
-      "biz.afterBuy":"Satın aldıktan sonra token e-posta ile gönderilecek."
+      "nav.how": "Nasıl çalışır", "nav.why": "Neden MDG", "nav.faq": "SSS",
+      "hero.eyebrow": "Yapısal Teşhis",
+      "hero.question": "Hangi sistemde adını koyamadığın\nbir gerilim hissediyorsun?",
+      "hero.sub": "MDG yanlış hissettireni görünür kılar – yapısal, kesin, koçluk olmadan.",
+      "hero.cta": "Teşhise başla",
+      "sys.private": "Kişisel Sistem", "sys.personal": "İş & İlişki", "sys.org": "Organizasyon & Takım",
+      "path.private.system": "Kişisel sistem",
+      "path.private.title": "Kendi durumun",
+      "path.private.desc": "Bir şeyler yanlış – ama ne olduğunu bilmiyorsun. Durumunun yapısal bir resmi.",
+      "path.private.action": "Ücretsiz başla",
+      "path.personal.system": "İş veya ilişki sistemi",
+      "path.personal.title": "Derin analiz",
+      "path.personal.desc": "Çalışan, ilişki veya aile. Roller, gerilimler ve sonraki adım için netlik.",
+      "path.personal.action": "29 €'dan itibaren",
+      "path.org.system": "Organizasyon veya takım sistemi",
+      "path.org.title": "Organizasyon & Takım",
+      "path.org.desc": "Takımlardaki, şirketlerdeki veya kulüplerdeki yapısal gerilimleri tırmanmadan önce görünür kıl.",
+      "path.org.action": "199 €'dan itibaren",
+      "how.label": "Nasıl çalışır",
+      "step1.title": "Sen tanımlarsın", "step1.desc": "Bir durum. Bir sistem. Çözülmeyen bir gerilim. Tek cümlede.",
+      "step2.title": "MDG teşhis koyar", "step2.desc": "Model hangi gücün ağır bastığını – ve kimin pahasına olduğunu tanır. Yapısal, psikolojik değil.",
+      "step3.title": "Sen netleşirsin", "step3.desc": "Somut eylem alanlarıyla kesin bir rapor. Rehber değil. Bir ayna.",
+      "pricing.label": "Erişim",
+      "price.free.label": "Bireysel", "price.free.period": "Ücretsiz · Hemen",
+      "price.free.desc": "Kişisel teşhis. Yapısal değerlendirme ve tam rapor.",
+      "price.free.btn": "Hemen başla",
+      "price.personal.label": "Kişisel & Mesleki", "price.personal.period": "Tek seferlik · Token e-posta ile",
+      "price.personal.desc": "Çalışan, ilişki veya aile. Gelişmiş raporla derin analiz.",
+      "price.personal.btn": "Token satın al",
+      "price.org.label": "Organizasyon & Takım", "price.org.period": "Tek seferlik · Token e-posta ile",
+      "price.org.desc": "Business, takım veya kulüp. McKinsey seviyesinde Executive Rapor.",
+      "price.org.btn": "Token satın al",
+      "books.text": "MDG bir araçtan fazlasıdır. Arkasındaki teori üç kitapta yayımlandı – Denge'nin Ahlakı, Göstergesi ve Mimarisi.",
+      "books.link": "Hugendubel'deki kitaplar →",
+      "modal.personal.label": "Kişisel erişim", "modal.personal.title": "Token gir",
+      "modal.personal.desc": "Çalışanlar, ilişkiler ve aileler için. Token satın aldıktan sonra e-posta ile gönderilir.",
+      "modal.personal.buy": "29 € – Token satın al",
+      "modal.org.label": "Organizasyon erişimi", "modal.org.title": "Token gir",
+      "modal.org.desc": "Business, takımlar ve kulüpler için. McKinsey seviyesinde Executive Rapor.",
+      "modal.org.buy": "199 € – Token satın al",
+      "modal.token.label": "Token", "modal.go": "Devam", "modal.cancel": "İptal",
+      "err.empty": "Token giriniz.", "err.invalid": "Token geçersiz.", "ok": "Token tamam. Devam …"
     },
     en: {
-      "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ",
-      "hero.for":"For individuals & organizations",
-      "hero.title":"Detect instability early. Diagnose precisely. Build architecture.",
-      "hero.sub":"MDG/IDG/ADG make tension in social systems visible – whether in your life, your team, or your organization.",
-      "hero.result":"You answer structured questions. The system identifies patterns. You receive a precise diagnosis with concrete areas for action – not a self-help guide, not coaching, but a structural picture of your situation.",
-      "who.private.label":"Individual",
-      "who.private.title":"Analyze your own situation",
-      "who.private.desc":"Career transitions, personal crises, decisions under pressure – when you sense something is wrong but don't know what.",
-      "who.private.badge":"Free · Start instantly",
-      "who.biz.label":"Organization / Company",
-      "who.biz.title":"Diagnose a team or system",
-      "who.biz.desc":"Leaders, HR, Strategy: identify structural tensions in teams and organizations before they escalate.",
-      "who.biz.badge":"Paid · Token required",
-      "cta.private":"Start now (private)","cta.business":"For companies",
-      "hero.note":"Private: start instantly. Business: token required.",
-      "footer.tag":"Structure diagnosis for stabilization and rebuild.",
-      "biz.tag":"Business access","biz.title":"Enter token",
-      "biz.text":"For Companies. Please enter token.",
-      "biz.label":"Token","biz.next":"Continue","biz.cancel":"Cancel",
-      "biz.errEmpty":"Please enter a token.","biz.errInvalid":"Invalid token.","biz.ok":"Token ok. Continuing …",
-      "biz.buy":"Buy token (249.99 €)",
-      "biz.afterBuy":"After purchase you will receive your token by email."
+      "nav.how": "How it works", "nav.why": "Why MDG", "nav.faq": "FAQ",
+      "hero.eyebrow": "Structural Diagnosis",
+      "hero.question": "In which system do you feel a tension\nyou cannot name?",
+      "hero.sub": "MDG makes visible what feels wrong – structurally, precisely, without coaching.",
+      "hero.cta": "Begin diagnosis",
+      "sys.private": "Personal System", "sys.personal": "Work & Relationship", "sys.org": "Organisation & Team",
+      "path.private.system": "Personal system",
+      "path.private.title": "Your own situation",
+      "path.private.desc": "Something is wrong – you just don't know what. A structural picture of your situation.",
+      "path.private.action": "Start free",
+      "path.personal.system": "Work or relationship system",
+      "path.personal.title": "Deeper analysis",
+      "path.personal.desc": "Employed, in a relationship or family. Clarity on roles, tensions and next steps.",
+      "path.personal.action": "From 29 €",
+      "path.org.system": "Organisation or team system",
+      "path.org.title": "Organisation & Team",
+      "path.org.desc": "Make structural tensions in teams, companies or clubs visible – before they escalate.",
+      "path.org.action": "From 199 €",
+      "how.label": "How it works",
+      "step1.title": "You describe", "step1.desc": "A situation. A system. A tension that won't resolve. In one sentence.",
+      "step2.title": "MDG diagnoses", "step2.desc": "The model identifies which force dominates – and at whose cost. Structural, not psychological.",
+      "step3.title": "You see clearly", "step3.desc": "A precise report with concrete areas for action. Not a guide. A mirror.",
+      "pricing.label": "Access",
+      "price.free.label": "Private", "price.free.period": "Free · Instant",
+      "price.free.desc": "Personal diagnosis. Structural assessment and full report.",
+      "price.free.btn": "Start now",
+      "price.personal.label": "Personal & Professional", "price.personal.period": "One-time · Token by email",
+      "price.personal.desc": "Employed, relationship or family. Deeper analysis with extended report.",
+      "price.personal.btn": "Buy token",
+      "price.org.label": "Organisation & Team", "price.org.period": "One-time · Token by email",
+      "price.org.desc": "Business, team or club. Executive report at McKinsey level.",
+      "price.org.btn": "Buy token",
+      "books.text": "MDG is more than a tool. The theory behind it has been published in three books – Moral, Indication and Architecture of Equilibrium.",
+      "books.link": "Books on Hugendubel →",
+      "modal.personal.label": "Personal access", "modal.personal.title": "Enter token",
+      "modal.personal.desc": "For employees, relationships and families. Token sent by email after purchase.",
+      "modal.personal.buy": "€29 – Buy token",
+      "modal.org.label": "Organisation access", "modal.org.title": "Enter token",
+      "modal.org.desc": "For business, teams and clubs. Executive report at McKinsey level.",
+      "modal.org.buy": "€199 – Buy token",
+      "modal.token.label": "Token", "modal.go": "Continue", "modal.cancel": "Cancel",
+      "err.empty": "Please enter a token.", "err.invalid": "Invalid token.", "ok": "Token ok. Continuing …"
     }
   };
-
-  function t(k){ const l = ls.getItem("mdg_lang")||"de"; return (dict[l]&&dict[l][k]) || (dict.de[k]||k); }
 
   function applyLang(lang) {
     if (!dict[lang]) lang = "de";
     ls.setItem("mdg_lang", lang);
     document.documentElement.lang = lang;
-    $$("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang===lang)));
-    $$("[data-i18n]").forEach(el => {
+    document.querySelectorAll("[data-lang]").forEach(b =>
+      b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+    document.querySelectorAll("[data-i18n]").forEach(el => {
       const v = dict[lang][el.dataset.i18n];
       if (v !== undefined) el.textContent = v;
     });
-
-    // Gradient on last sentence of h1
-    const h1 = document.querySelector('.h1');
-    if (h1) {
-      const parts = h1.textContent.trim().split('.');
-      const filtered = parts.filter(p => p.trim());
-      if (filtered.length > 0) {
-        const last = filtered.pop().trim();
-        const before = filtered.join('.') + '.';
-        h1.innerHTML = before + ' <span class="grad">' + last + '.</span>';
-      }
-    }
   }
-
-  $$("[data-lang]").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.lang)));
+  document.querySelectorAll("[data-lang]").forEach(b =>
+    b.addEventListener("click", () => applyLang(b.dataset.lang)));
   applyLang(ls.getItem("mdg_lang") || "de");
 
-  /* ── modal ── */
-  const modal  = $("#bizModal");
-  const status = $("#bizStatus");
-  const input  = $("#bizToken");
-
-  function openModal(){
-    status.textContent = "";
-    input.value = (ss.getItem("mdg_business_token") || ls.getItem("mdg_business_token") || "").trim();
-    modal.removeAttribute("hidden");
-    setTimeout(() => input.focus(), 60);
-  }
-  function closeModal(){
-    modal.setAttribute("hidden","");
-    status.textContent = "";
-  }
-
-  $("#btnBusiness").addEventListener("click", openModal);
-  $("#bizClose")  .addEventListener("click", closeModal);
-  $("#bizCancel") .addEventListener("click", closeModal);
-  modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
-  window.addEventListener("keydown", e => { if (e.key==="Escape" && !modal.hasAttribute("hidden")) closeModal(); });
-
   /* ── token verify ── */
-  async function verifyToken(token){
-    const res  = await fetch(`${API_BASE}/api/token/verify`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({token})
+  function normalizeToken(s) {
+    return String(s||"").replace(/[\u2010-\u2015\u2212]/g,"-").trim().toUpperCase().replace(/\s+/g,"");
+  }
+  async function verifyToken(token) {
+    const res = await fetch(`${API}/api/token/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token })
     });
     const data = await res.json().catch(()=>({}));
-    if (!res.ok) return {ok:false};
-    return {ok: Boolean(data?.ok)};
+    return { ok: Boolean(data?.ok), mode: data?.mode };
   }
 
-  $("#bizGo").addEventListener("click", async () => {
-    const token = (input.value||"").trim();
-    if (!token){ status.textContent = t("biz.errEmpty"); return; }
+  /* ── modal helpers ── */
+  function openModal(id) {
+    document.getElementById(id).removeAttribute("hidden");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal(id) {
+    document.getElementById(id).setAttribute("hidden","");
+    document.body.style.overflow = "";
+  }
+
+  /* ── personal modal ── */
+  document.getElementById("btnPersonal").addEventListener("click", () => openModal("personalModal"));
+  document.getElementById("personalClose").addEventListener("click", () => closeModal("personalModal"));
+  document.getElementById("personalCancelBtn").addEventListener("click", () => closeModal("personalModal"));
+  document.getElementById("personalModal").addEventListener("click", e => {
+    if (e.target === document.getElementById("personalModal")) closeModal("personalModal");
+  });
+  document.getElementById("personalGoBtn").addEventListener("click", async () => {
+    const lang = ls.getItem("mdg_lang") || "de";
+    const token = normalizeToken(document.getElementById("personalTokenInput").value);
+    const status = document.getElementById("personalStatus");
+    if (!token) { status.textContent = dict[lang]["err.empty"]; return; }
     status.textContent = "…";
     const r = await verifyToken(token).catch(()=>({ok:false}));
-    if (!r.ok){ status.textContent = t("biz.errInvalid"); return; }
-    status.textContent = t("biz.ok");
+    if (!r.ok) { status.textContent = dict[lang]["err.invalid"]; return; }
+    status.textContent = dict[lang]["ok"];
+    const mode = r.mode || "employee";
     ["mdg_mode","mdg_business_ok","mdg_business_token"].forEach(k => {
-      ss.setItem(k, k==="mdg_mode" ? "business" : k==="mdg_business_ok" ? "1" : token);
-      ls.setItem(k, k==="mdg_mode" ? "business" : k==="mdg_business_ok" ? "1" : token);
+      const v = k==="mdg_mode" ? mode : k==="mdg_business_ok" ? "1" : token;
+      ss.setItem(k,v); ls.setItem(k,v);
     });
+    setTimeout(() => { window.location.href = `./diagnose.html?mode=${mode}&lang=${lang}`; }, 350);
+  });
+  document.getElementById("personalTokenInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") document.getElementById("personalGoBtn").click();
+  });
+
+  /* ── org modal ── */
+  document.getElementById("btnOrg").addEventListener("click", () => openModal("orgModal"));
+  document.getElementById("orgClose").addEventListener("click", () => closeModal("orgModal"));
+  document.getElementById("orgCancelBtn").addEventListener("click", () => closeModal("orgModal"));
+  document.getElementById("orgModal").addEventListener("click", e => {
+    if (e.target === document.getElementById("orgModal")) closeModal("orgModal");
+  });
+  document.getElementById("orgGoBtn").addEventListener("click", async () => {
     const lang = ls.getItem("mdg_lang") || "de";
-    setTimeout(() => { window.location.href = `./diagnose.html?mode=business&lang=${encodeURIComponent(lang)}`; }, 350);
-  });
-
-  input.addEventListener("keydown", e => {
-    if (e.key==="Enter")  $("#bizGo").click();
-    if (e.key==="Escape") closeModal();
-  });
-
-  /* ── Employee Modal ── */
-  const empModal  = $("#empModal");
-  const empStatus = $("#empStatus");
-  const empInput  = $("#empToken");
-
-  function openEmpModal(){ empStatus.textContent=""; empInput.value=""; empModal.removeAttribute("hidden"); setTimeout(()=>empInput.focus(),60); }
-  function closeEmpModal(){ empModal.setAttribute("hidden",""); empStatus.textContent=""; }
-
-  $("#btnEmployee").addEventListener("click", openEmpModal);
-  $("#empClose")  .addEventListener("click", closeEmpModal);
-  $("#empCancel") .addEventListener("click", closeEmpModal);
-  empModal.addEventListener("click", e => { if(e.target===empModal) closeEmpModal(); });
-
-  $("#empGo").addEventListener("click", async () => {
-    const token = (empInput.value||"").trim();
-    if (!token){ empStatus.textContent = t("emp.errEmpty"); return; }
-    empStatus.textContent = "…";
+    const token = normalizeToken(document.getElementById("orgTokenInput").value);
+    const status = document.getElementById("orgStatus");
+    if (!token) { status.textContent = dict[lang]["err.empty"]; return; }
+    status.textContent = "…";
     const r = await verifyToken(token).catch(()=>({ok:false}));
-    if (!r.ok){ empStatus.textContent = t("emp.errInvalid"); return; }
-    empStatus.textContent = t("emp.ok");
-    const lang = ls.getItem("mdg_lang") || "de";
+    if (!r.ok) { status.textContent = dict[lang]["err.invalid"]; return; }
+    status.textContent = dict[lang]["ok"];
+    const mode = r.mode || "business";
     ["mdg_mode","mdg_business_ok","mdg_business_token"].forEach(k => {
-      const val = k==="mdg_mode" ? "employee" : k==="mdg_business_ok" ? "1" : token;
-      ss.setItem(k,val); ls.setItem(k,val);
+      const v = k==="mdg_mode" ? mode : k==="mdg_business_ok" ? "1" : token;
+      ss.setItem(k,v); ls.setItem(k,v);
     });
-    setTimeout(() => { window.location.href = `./diagnose.html?mode=employee&lang=${encodeURIComponent(lang)}`; }, 350);
+    setTimeout(() => { window.location.href = `./diagnose.html?mode=${mode}&lang=${lang}`; }, 350);
+  });
+  document.getElementById("orgTokenInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") document.getElementById("orgGoBtn").click();
   });
 
-  empInput.addEventListener("keydown", e => { if(e.key==="Enter") $("#empGo").click(); if(e.key==="Escape") closeEmpModal(); });
-
-  /* ── Team Modal ── */
-  const teamModal  = $("#teamModal");
-  const teamStatus = $("#teamStatus");
-  const teamInput  = $("#teamToken");
-
-  function openTeamModal(){
-    teamStatus.textContent = "";
-    teamInput.value = "";
-    teamModal.removeAttribute("hidden");
-    setTimeout(() => teamInput.focus(), 60);
-  }
-  function closeTeamModal(){
-    teamModal.setAttribute("hidden","");
-    teamStatus.textContent = "";
-  }
-
-  $("#btnTeam")    .addEventListener("click", openTeamModal);
-  $("#teamClose")  .addEventListener("click", closeTeamModal);
-  $("#teamCancel") .addEventListener("click", closeTeamModal);
-  teamModal.addEventListener("click", e => { if (e.target === teamModal) closeTeamModal(); });
-  window.addEventListener("keydown", e => { if (e.key==="Escape" && !teamModal.hasAttribute("hidden")) closeTeamModal(); });
-
-  $("#teamGo").addEventListener("click", async () => {
-    const token = (teamInput.value||"").trim();
-    if (!token){ teamStatus.textContent = t("team.errEmpty"); return; }
-    teamStatus.textContent = "…";
-    const r = await verifyToken(token).catch(()=>({ok:false}));
-    if (!r.ok){ teamStatus.textContent = t("team.errInvalid"); return; }
-    teamStatus.textContent = t("team.ok");
-    // Create team session
-    const lang = ls.getItem("mdg_lang") || "de";
-    const sessRes = await fetch(`${API_BASE}/api/team/session`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ token, inviteBase: window.location.origin + "/diagnose.html" })
-    }).catch(()=>null);
-    const sessData = sessRes ? await sessRes.json().catch(()=>({})) : {};
-    if (sessData?.ok && sessData?.sessionId) {
-      ["mdg_mode","mdg_business_ok","mdg_business_token","mdg_team_session"].forEach(k => {
-        const val = k==="mdg_mode" ? "team" : k==="mdg_business_ok" ? "1" : k==="mdg_business_token" ? token : sessData.sessionId;
-        ss.setItem(k, val); ls.setItem(k, val);
-      });
-      setTimeout(() => { window.location.href = `./diagnose.html?mode=team&session=${sessData.sessionId}&lang=${encodeURIComponent(lang)}`; }, 350);
+  window.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      closeModal("personalModal");
+      closeModal("orgModal");
     }
-  });
-
-  teamInput.addEventListener("keydown", e => {
-    if (e.key==="Enter")  $("#teamGo").click();
-    if (e.key==="Escape") closeTeamModal();
-  });
-
-  /* ── Relationship Modal ── */
-  const relModal  = $("#relModal");
-  const relStatus = $("#relStatus");
-  const relInput  = $("#relToken");
-
-  function openRelModal(){
-    relStatus.textContent = "";
-    relInput.value = "";
-    relModal.removeAttribute("hidden");
-    setTimeout(() => relInput.focus(), 60);
-  }
-  function closeRelModal(){
-    relModal.setAttribute("hidden","");
-    relStatus.textContent = "";
-  }
-
-  $("#btnRelationship").addEventListener("click", openRelModal);
-  $("#relClose")  .addEventListener("click", closeRelModal);
-  $("#relCancel") .addEventListener("click", closeRelModal);
-  relModal.addEventListener("click", e => { if (e.target === relModal) closeRelModal(); });
-  window.addEventListener("keydown", e => { if (e.key==="Escape" && !relModal.hasAttribute("hidden")) closeRelModal(); });
-
-  $("#relGo").addEventListener("click", async () => {
-    const token = (relInput.value||"").trim();
-    if (!token){ relStatus.textContent = t("rel.errEmpty"); return; }
-    relStatus.textContent = "…";
-    const r = await verifyToken(token).catch(()=>({ok:false}));
-    if (!r.ok){ relStatus.textContent = t("rel.errInvalid"); return; }
-    relStatus.textContent = t("rel.ok");
-    const lang = ls.getItem("mdg_lang") || "de";
-    const sessRes = await fetch(`${API_BASE}/api/team/session`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ token, inviteBase: window.location.origin + "/diagnose.html" })
-    }).catch(()=>null);
-    const sessData = sessRes ? await sessRes.json().catch(()=>({})) : {};
-    if (sessData?.ok && sessData?.sessionId) {
-      ["mdg_mode","mdg_business_ok","mdg_business_token","mdg_team_session"].forEach(k => {
-        const val = k==="mdg_mode" ? "relationship" : k==="mdg_business_ok" ? "1" : k==="mdg_business_token" ? token : sessData.sessionId;
-        ss.setItem(k, val); ls.setItem(k, val);
-      });
-      setTimeout(() => { window.location.href = `./diagnose.html?mode=relationship&session=${sessData.sessionId}&lang=${encodeURIComponent(lang)}`; }, 350);
-    }
-  });
-
-  relInput.addEventListener("keydown", e => {
-    if (e.key==="Enter")  $("#relGo").click();
-    if (e.key==="Escape") closeRelModal();
   });
 })();
 </script>
