@@ -712,12 +712,12 @@
       <p class="hero__eyebrow" data-i18n="hero.eyebrow">Strukturdiagnose</p>
 
       <h1 class="hero__question" data-i18n="hero.question">
-        In welchem System spürst du eine Spannung,<br>
-        <em>die du nicht benennen kannst?</em>
+        Immer wieder derselbe Konflikt –<br>
+        <em>obwohl du ihn löst.</em>
       </h1>
 
       <p class="hero__sub" data-i18n="hero.sub">
-        MDG macht sichtbar was sich falsch anfühlt – strukturell, präzise, ohne Coaching.
+        MDG zeigt die Struktur hinter dem Muster. Nicht was passiert ist – sondern warum es immer wieder passiert.
       </p>
 
       <div class="hero__systems">
@@ -766,7 +766,7 @@
         <div class="price-card__price">0 €</div>
         <div class="price-card__period" data-i18n="price.free.period">Kostenlos · Sofort</div>
         <div class="price-card__desc" data-i18n="price.free.desc">Persönliche Diagnose. Strukturelles Assessment und vollständiger Report.</div>
-        <a class="price-card__btn price-card__btn--primary" href="./diagnose.html?mode=private" data-i18n="price.free.btn">Jetzt starten</a>
+        <a class="price-card__btn price-card__btn--primary" id="freeStartBtn" href="./diagnose.html?mode=private" data-i18n="price.free.btn">Jetzt starten</a>
       </div>
 
       <div class="price-card price-card--featured">
@@ -887,8 +887,8 @@
       "nav.how": "Wie es funktioniert", "nav.why": "Warum MDG", "nav.faq": "FAQ",
       "footer.impressum": "Impressum", "footer.datenschutz": "Datenschutz", "footer.kontakt": "Kontakt",
       "hero.eyebrow": "Strukturdiagnose",
-      "hero.question": "In welchem System spürst du eine Spannung,\ndie du nicht benennen kannst?",
-      "hero.sub": "MDG macht sichtbar was sich falsch anfühlt – strukturell, präzise, ohne Coaching.",
+      "hero.question": "Immer wieder derselbe Konflikt –\nobwohl du ihn löst.",
+      "hero.sub": "MDG zeigt die Struktur hinter dem Muster. Nicht was passiert ist – sondern warum es immer wieder passiert.",
       "hero.cta": "Diagnose beginnen",
       "sys.private": "Persönliches System", "sys.personal": "Arbeit & Beziehung", "sys.org": "Organisation & Team",
       "path.private.system": "Persönliches System",
@@ -932,8 +932,8 @@
       "nav.how": "Nasıl çalışır", "nav.why": "Neden MDG", "nav.faq": "SSS",
       "footer.impressum": "Künye", "footer.datenschutz": "Gizlilik", "footer.kontakt": "İletişim",
       "hero.eyebrow": "Yapısal Teşhis",
-      "hero.question": "Hangi sistemde adını koyamadığın\nbir gerilim hissediyorsun?",
-      "hero.sub": "MDG yanlış hissettireni görünür kılar – yapısal, kesin, koçluk olmadan.",
+      "hero.question": "Hep aynı çatışma –\nçözdüğün halde.",
+      "hero.sub": "MDG örüntünün arkasındaki yapıyı gösterir. Ne olduğunu değil – neden tekrar tekrar olduğunu.",
       "hero.cta": "Teşhise başla",
       "sys.private": "Kişisel Sistem", "sys.personal": "İş & İlişki", "sys.org": "Organizasyon & Takım",
       "path.private.system": "Kişisel sistem",
@@ -977,8 +977,8 @@
       "nav.how": "How it works", "nav.why": "Why MDG", "nav.faq": "FAQ",
       "footer.impressum": "Imprint", "footer.datenschutz": "Privacy", "footer.kontakt": "Contact",
       "hero.eyebrow": "Structural Diagnosis",
-      "hero.question": "In which system do you feel a tension\nyou cannot name?",
-      "hero.sub": "MDG makes visible what feels wrong – structurally, precisely, without coaching.",
+      "hero.question": "The same conflict, again –\nalthough you resolved it.",
+      "hero.sub": "MDG shows the structure behind the pattern. Not what happened – but why it keeps happening.",
       "hero.cta": "Begin diagnosis",
       "sys.private": "Personal System", "sys.personal": "Work & Relationship", "sys.org": "Organisation & Team",
       "path.private.system": "Personal system",
@@ -1119,6 +1119,16 @@
       closeModal("orgModal");
     }
   });
+  // Lang in alle Diagnose-Links einbauen
+  function updateDiagnoseLinks() {
+    const lang = ls.getItem("mdg_lang") || "de";
+    const btn = document.getElementById("freeStartBtn");
+    if (btn) btn.href = "./diagnose.html?mode=private&lang=" + lang;
+  }
+  updateDiagnoseLinks();
+  document.querySelectorAll("[data-lang]").forEach(b =>
+    b.addEventListener("click", () => setTimeout(updateDiagnoseLinks, 10))
+  );
 })();
 </script>
 </body>
