@@ -467,17 +467,19 @@
       color: #d1d5db;
     }
     .report-body .r-li {
-      display: flex;
-      gap: .6rem;
-      margin: .35rem 0;
+      display: grid;
+      grid-template-columns: 1rem 1fr;
+      gap: 0 .5rem;
+      margin: .55rem 0;
       color: #d1d5db;
+      line-height: 1.65;
     }
     .report-body .r-li::before {
       content: "·";
       color: #6ee7b7;
       font-weight: 700;
-      flex-shrink: 0;
-      margin-top: .05rem;
+      padding-top: .05rem;
+      justify-self: center;
     }
     .report-body .r-hr {
       border: none;
@@ -1083,9 +1085,9 @@
 
     // Mode hint
     const modeHints = {
-      business:     T(lang, "Berater / HR / Strategie: Fremdsystem diagnostizieren, bevor du intervenierst.", "Danışman / İK: müdahaleden önce yabancı sistemi tanı.", "Consultant / HR: diagnose the external system before intervening."),
+      business:     T(lang, "Berater / HR / Strategie: Fremdsystem diagnostizieren, bevor du intervenierst. Geeignet ab ca. 10 Mitarbeitenden – bei kleineren Teams fehlen die strukturellen Muster.", "Danışman / İK: müdahaleden önce yabancı sistemi tanı. Yaklaşık 10+ çalışanlı yapılar için uygundur.", "Consultant / HR: diagnose the external system before intervening. Suitable for organisations of ~10+ people."),
       employee:     T(lang, "Angestellt: Klarheit über deine Arbeitssituation – bleiben, gehen oder umbauen.", "Çalışan: iş durumunla ilgili netlik – kal, git ya da yeniden kur.", "Employee: clarity on your work situation – stay, leave or rebuild."),
-      team:         T(lang, "Team: jedes Mitglied diagnostiziert anonym – der Report zeigt was kein Einzelner sehen kann.", "Ekip: her üye anonim olarak tanı koyar – rapor kimsenin tek başına göremeyeceğini gösterir.", "Team: each member diagnoses anonymously – the report shows what no individual can see."),
+      team:         T(lang, "Team: jedes Mitglied diagnostiziert anonym – der Report zeigt was kein Einzelner sehen kann. Sinnvoll ab 3 Personen, optimal ab 5.", "Ekip: her üye anonim olarak tanı koyar – rapor kimsenin tek başına göremeyeceğini gösterir. 3 kişiden itibaren anlamlı, ideal 5+.", "Team: each member diagnoses anonymously – the report shows what no individual can see. Meaningful from 3 people, optimal from 5."),
       relationship: T(lang, "Beziehung / Familie: anonym, ohne Schuld, strukturelle Muster sichtbar machen.", "İlişki / Aile: anonim, suçsuz, yapısal örüntüleri görünür kıl.", "Relationship / Family: anonymous, no blame, making structural patterns visible."),
       private:      T(lang, "Privat: Fokus auf persönliche Systeme, Beziehungen, Alltag und Belastung.", "Özel: kişisel sistemler, ilişkiler, günlük hayat ve yük odağı.", "Private: focus on personal systems, relationships, daily life & load."),
     };
@@ -1396,9 +1398,10 @@
     ];
 
     // ── select correct set ───────────────────────────────────────
-    const qs = mode === "business" ? qs_business
-      : mode === "team"            ? qs_team
-      : mode === "employee"        ? qs_employee
+    const qs = mode === "business"     ? qs_business
+      : mode === "team"                ? qs_team
+      : mode === "employee"            ? qs_employee
+      : mode === "relationship"        ? qs_private  // relationship uses personal questions
       : qs_private;
 
     const root = $("#questions");
