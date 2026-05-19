@@ -1140,6 +1140,16 @@
   document.querySelectorAll("[data-lang]").forEach(b =>
     b.addEventListener("click", () => setTimeout(updateDiagnoseLinks, 10))
   );
+
+  // Privat-Button: clear any paid token state so no picker shows
+  const freeBtn = document.getElementById("freeStartBtn");
+  if (freeBtn) {
+    freeBtn.addEventListener("click", () => {
+      ["mdg_business_ok","mdg_token_type","mdg_sub_mode","mdg_mode"].forEach(k => {
+        ss.removeItem(k); ls.removeItem(k);
+      });
+    });
+  }
 })();
 </script>
 </body>
