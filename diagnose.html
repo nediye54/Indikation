@@ -611,13 +611,9 @@
   <div class="dx-header">
     <div>
       <h1 class="dx-title" data-i18n="dx.title">Diagnose</h1>
-      <p class="dx-sub" data-i18n="dx.sub">Beantworte die Fragen so konkret wie möglich. Assessment und Report werden automatisch erstellt.</p>
+      <p class="dx-sub" data-i18n="dx.sub">Beantworte die Fragen so konkret wie möglich. Assessment und Report werden dann erstellt.</p>
     </div>
-    <div class="dx-kpis">
-      <span class="kpi-pill" id="kpiPrimary">Primär: —</span>
-      <span class="kpi-pill" id="kpiPath">Pfad: —</span>
-      <span class="kpi-pill" id="kpiRisk">Risiko: —</span>
-    </div>
+
   </div>
 
   <div class="dx-grid">
@@ -699,16 +695,11 @@
 
       <div class="dx-rbox">
         <h3 data-i18n="dx.assessTitle">Strukturelles Assessment</h3>
-        <pre id="resultText">—</pre>
+        <div id="resultText" class="report-body">—</div>
       </div>
 
       <div class="dx-rbox">
-        <h3 data-i18n="dx.execTitle">Executive Report</h3>
         <p class="dx-rnote" id="execHint"></p>
-        <div class="dx-actions">
-          <button class="btn btn--ghost" type="button" id="copyExecBtn" disabled data-i18n="dx.copy">Kopieren</button>
-          <button class="btn btn--ghost" type="button" id="pdfBtn" data-i18n="dx.pdf">PDF</button>
-        </div>
 
         <div id="reportContainer">
           <div class="dx-divider" style="margin:.9rem 0 .75rem;"></div>
@@ -737,6 +728,10 @@
                 <span class="dx-fb-status" id="fbStatus">—</span>
               </div>
             </div>
+          </div>
+
+          <div class="dx-actions" style="margin-top:1.2rem;">
+            <button class="btn btn--ghost" type="button" id="pdfBtn" data-i18n="dx.pdf">PDF</button>
           </div>
         </div>
       </div>
@@ -870,7 +865,7 @@
     de: {
       "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ","cta.backHome":"Zur Homepage",
       "dx.title":"Diagnose",
-      "dx.sub":"Beantworte die Fragen so konkret wie möglich. Assessment und Report werden automatisch erstellt.",
+      "dx.sub":"Beantworte die Fragen so konkret wie möglich. Assessment und Report werden dann erstellt.",
       "dx.s1":"Kontext","dx.s2":"Quick Scan","dx.s3":"Präzisionsfragen",
       "dx.mode":"Modus","dx.goal":"Ziel","dx.goal.stabilize":"Stabilisieren","dx.goal.rebuild":"Umbauen",
       "dx.oneliner":"Situation in einem Satz",
@@ -910,7 +905,7 @@
     en: {
       "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
       "dx.title":"Diagnosis",
-      "dx.sub":"Answer the questions as concretely as possible. Assessment and report are generated automatically.",
+      "dx.sub":"Answer the questions as concretely as possible. Assessment and report are then generated.",
       "dx.s1":"Context","dx.s2":"Quick Scan","dx.s3":"Precision Questions",
       "dx.mode":"Mode","dx.goal":"Goal","dx.goal.stabilize":"Stabilize","dx.goal.rebuild":"Rebuild",
       "dx.oneliner":"Describe the situation in one sentence",
@@ -1450,9 +1445,9 @@
     }
 
     setStatus(T(lang,"läuft …","çalışıyor …","running …"), "running");
-    $("#resultText").textContent = "—";
+    $("#resultText").innerHTML = "—";
     $("#execText").textContent   = "—";
-    $("#copyExecBtn").disabled   = true;
+    
     $("#reportContainer").classList.remove("is-visible");
     $("#feedbackBox").classList.remove("is-visible");
     STATE.assessment = null; STATE.report = "";
@@ -1461,7 +1456,7 @@
     try {
       const data = await postJSON("/api/assess", payload);
       STATE.assessment = data;
-      $("#resultText").textContent = data.assessment_text || JSON.stringify(data, null, 2);
+      $("#resultText").innerHTML = renderReport(data.assessment_text || JSON.stringify(data, null, 2));
       setKpis(lang, data);
       setStatus(T(lang,"Assessment fertig ✓ – Report wird erstellt …","Değerlendirme bitti ✓ – Rapor oluşturuluyor …","Assessment done ✓ – generating report …"), "running");
       await runReport();
@@ -1477,7 +1472,7 @@
 
     setStatus(T(lang,"Report wird erstellt …","Rapor oluşturuluyor …","Generating report …"), "running");
     $("#execText").textContent   = "—";
-    $("#copyExecBtn").disabled   = true;
+    
     $("#reportContainer").classList.remove("is-visible");
     $("#feedbackBox").classList.remove("is-visible");
     STATE.report = "";
@@ -1490,7 +1485,7 @@
       const rc = $("#reportContainer"), fb = $("#feedbackBox");
       rc.classList.remove("is-visible"); void rc.offsetWidth;
       rc.classList.add("is-visible");
-      $("#copyExecBtn").disabled  = false;
+      
       clearFeedback();
       fb.classList.remove("is-visible"); void fb.offsetWidth;
       fb.classList.add("is-visible");
@@ -1582,17 +1577,7 @@
   }
 
   /* ── copy exec ───────────────────────────── */
-  $("#copyExecBtn").addEventListener("click", async () => {
-    const txt = $("#execText").textContent || "";
-    if (!txt || txt==="—") return;
-    try {
-      await navigator.clipboard.writeText(txt);
-      const btn = $("#copyExecBtn"), lang = getLang(), prev = btn.textContent;
-      btn.classList.add("btn--ok");
-      btn.textContent = T(lang,"Kopiert ✓","Kopyalandı ✓","Copied ✓");
-      setTimeout(() => { btn.classList.remove("btn--ok"); btn.textContent=prev; }, 1800);
-    } catch {}
-  });
+
 
   /* ── reset all ───────────────────────────── */
   function resetAll() {
@@ -1600,10 +1585,10 @@
     ["sLoad","sDecisions","sEnergy","sGrowth","sPower"].forEach(id => { const el=document.getElementById(id); if(el) el.value="2"; });
     $$('input[type="radio"]').forEach(r => r.checked=false);
     STATE.assessment=null; STATE.report="";
-    $("#resultText").textContent = "—";
+    $("#resultText").innerHTML = "—";
     $("#execText").textContent   = "—";
     $("#reportContainer").classList.remove("is-visible");
-    $("#copyExecBtn").disabled   = true;
+    
     $("#feedbackBox").classList.remove("is-visible");
     const lang = getLang();
     resetKpis(lang);
