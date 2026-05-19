@@ -200,12 +200,12 @@
 
     /* ── Grid ── */
     .dx-grid {
-      display: grid;
-      grid-template-columns: 1.1fr .9fr;
+      display: flex;
+      flex-direction: column;
       gap: 1.25rem;
-      align-items: start;
+      max-width: 760px;
+      margin: 0 auto;
     }
-    @media (max-width: 900px) { .dx-grid { grid-template-columns: 1fr; } }
 
     /* ── Cards ── */
     .dx-card {
