@@ -440,6 +440,66 @@
       line-height: 1.4;
     }
 
+    /* ── Report Body ── */
+    .report-body {
+      font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+      font-size: .93rem;
+      line-height: 1.75;
+      color: var(--text);
+    }
+    .report-body .r-h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 1.6rem 0 .5rem;
+      padding-bottom: .35rem;
+      border-bottom: 1px solid rgba(110,231,183,.18);
+      letter-spacing: .01em;
+    }
+    .report-body .r-h3 {
+      font-size: .95rem;
+      font-weight: 600;
+      color: #6ee7b7;
+      margin: 1.1rem 0 .3rem;
+    }
+    .report-body .r-p {
+      margin: .5rem 0;
+      color: #d1d5db;
+    }
+    .report-body .r-li {
+      display: flex;
+      gap: .6rem;
+      margin: .35rem 0;
+      color: #d1d5db;
+    }
+    .report-body .r-li::before {
+      content: "·";
+      color: #6ee7b7;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: .05rem;
+    }
+    .report-body .r-hr {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,.07);
+      margin: 1.2rem 0;
+    }
+    .report-body .r-em {
+      color: #9ca3af;
+      font-style: italic;
+    }
+    .report-body .r-strong {
+      color: #fff;
+      font-weight: 600;
+    }
+    .report-body .r-footer {
+      margin-top: 1.5rem;
+      padding-top: .75rem;
+      border-top: 1px solid rgba(255,255,255,.07);
+      font-size: .8rem;
+      color: #4b5563;
+    }
+
     #reportContainer { display: none; }
     #reportContainer.is-visible { display: block; animation: dxSlide .28s ease; }
     #feedbackBox.is-visible { display: block; animation: dxSlide .2s ease; }
@@ -652,7 +712,7 @@
 
         <div id="reportContainer">
           <div class="dx-divider" style="margin:.9rem 0 .75rem;"></div>
-          <pre id="execText">—</pre>
+          <div id="execText" class="report-body">—</div>
 
           <div id="feedbackBox">
             <div class="dx-fb-head" data-i18n="fb.head">Feedback</div>
@@ -1426,7 +1486,7 @@
       const payload = { ...buildPayload(), assessment: STATE.assessment };
       const data    = await postJSON("/api/report", payload);
       STATE.report  = data.report_markdown || JSON.stringify(data, null, 2);
-      $("#execText").textContent  = STATE.report;
+      $("#execText").innerHTML = renderReport(STATE.report);
       const rc = $("#reportContainer"), fb = $("#feedbackBox");
       rc.classList.remove("is-visible"); void rc.offsetWidth;
       rc.classList.add("is-visible");
@@ -1671,6 +1731,68 @@
   setStatus(T(initLang,"bereit","hazır","ready"), "");
 
 })();
+
+  // ── Report Markdown Renderer ─────────────────────────────────
+  function renderReport(md) {
+    if (!md) return "<span style='color:#6b7280'>—</span>";
+    const lines = md.replace(/\r/g, "").split("\n");
+    let html = "";
+    let inList = false;
+
+    const closeList = () => { if (inList) { inList = false; } };
+    const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const inline = s => {
+      return esc(s)
+        .replace(/\*\*(.+?)\*\*/g, "<span class='r-strong'>$1</span>")
+        .replace(/\*(.+?)\*/g, "<span class='r-em'>$1</span>")
+        .replace(/`(.+?)`/g, "<code style='font-family:monospace;font-size:.85em;color:#6ee7b7;'>$1</code>");
+    };
+
+    for (const raw of lines) {
+      const line = raw.trim();
+
+      if (line === "---" || line === "***") {
+        closeList();
+        html += "<div class='r-hr'></div>";
+        continue;
+      }
+      if (line.startsWith("## ")) {
+        closeList();
+        html += "<div class='r-h2'>" + inline(line.slice(3)) + "</div>";
+        continue;
+      }
+      if (line.startsWith("### ")) {
+        closeList();
+        html += "<div class='r-h3'>" + inline(line.slice(4)) + "</div>";
+        continue;
+      }
+      if (line.startsWith("- ") || line.startsWith("* ") || line.startsWith("• ")) {
+        inList = true;
+        html += "<div class='r-li'>" + inline(line.slice(2)) + "</div>";
+        continue;
+      }
+      if (/^\d+\.\s/.test(line)) {
+        inList = true;
+        html += "<div class='r-li'>" + inline(line.replace(/^\d+\.\s/, "")) + "</div>";
+        continue;
+      }
+      if (line === "") {
+        closeList();
+        html += "";
+        continue;
+      }
+      // Check if it's the footer line (mdg-indikation.de)
+      if (line.includes("mdg-indikation.de")) {
+        closeList();
+        html += "<div class='r-footer'>" + inline(line) + "</div>";
+        continue;
+      }
+      closeList();
+      html += "<p class='r-p'>" + inline(line) + "</p>";
+    }
+    return html;
+  }
+
 </script>
 </body>
 </html>
