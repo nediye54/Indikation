@@ -791,13 +791,122 @@
   const businessOk  = ss.getItem("mdg_business_ok")==="1" || ls.getItem("mdg_business_ok")==="1";
   const tokenStored = (ss.getItem("mdg_business_token") || ls.getItem("mdg_business_token") || ls.getItem("mdg_token") || "").trim();
   const teamSession = sessionParam || ss.getItem("mdg_team_session") || ls.getItem("mdg_team_session") || "";
+  const tokenType   = (ss.getItem("mdg_token_type") || ls.getItem("mdg_token_type") || "").toLowerCase();
 
   const wantBiz  = modeParam==="business" || storedMode==="business";
   const wantTeam = modeParam==="team" || modeParam==="relationship" || storedMode==="team" || storedMode==="relationship";
   const isTeam   = wantTeam && businessOk;
   const isRelationship = (modeParam==="relationship" || storedMode==="relationship") && businessOk;
 
-  const mode = isTeam ? (isRelationship ? "relationship" : "team") : wantBiz && businessOk ? "business" : "private";
+  // Sub-mode: if token type needs a choice, read stored sub-mode or show picker
+  const storedSubMode = (ss.getItem("mdg_sub_mode") || ls.getItem("mdg_sub_mode") || "").toLowerCase();
+
+  let mode = isTeam ? (isRelationship ? "relationship" : "team") : wantBiz && businessOk ? "business" : "private";
+
+  // Apply sub-mode overrides for personal/org tokens
+  if (businessOk) {
+    if (tokenType === "personal" || storedMode === "employee" || storedMode === "relationship") {
+      if (storedSubMode === "relationship") mode = "relationship";
+      else if (storedSubMode === "employee") mode = "employee";
+    } else if (tokenType === "org" || storedMode === "business" || storedMode === "team") {
+      if (storedSubMode === "team") mode = "team";
+      else if (storedSubMode === "business") mode = "business";
+    }
+  }
+
+  // Show sub-mode picker if token type requires a choice and none stored yet
+  function showSubModePicker(type) {
+    const lang = (ls.getItem("mdg_lang") || "de");
+    const T3 = (de, tr, en) => lang==="tr" ? tr : lang==="en" ? en : de;
+
+    const overlay = document.createElement("div");
+    overlay.id = "subModePicker";
+    overlay.style.cssText = `
+      position:fixed;inset:0;z-index:9000;
+      background:rgba(5,7,12,0.92);backdrop-filter:blur(8px);
+      display:flex;align-items:center;justify-content:center;padding:24px;`;
+
+    const isOrg = type === "org";
+    const title = isOrg
+      ? T3("Was möchtest du analysieren?", "Ne analiz etmek istiyorsun?", "What do you want to analyse?")
+      : T3("Was möchtest du analysieren?", "Ne analiz etmek istiyorsun?", "What do you want to analyse?");
+
+    const opts = isOrg ? [
+      { mode: "team",     icon: "👥",
+        label: T3("Team",         "Ekip",         "Team"),
+        desc:  T3("Dynamiken, Rollen und Spannungen in einer Gruppe von Menschen.",
+                  "Bir grup insandaki dinamikler, roller ve gerilimler.",
+                  "Dynamics, roles and tensions in a group of people.") },
+      { mode: "business", icon: "🏢",
+        label: T3("Organisation", "Organizasyon", "Organisation"),
+        desc:  T3("Entscheidungsarchitektur, Strukturen und Führung einer Organisation.",
+                  "Bir organizasyonun karar mimarisi, yapıları ve liderliği.",
+                  "Decision architecture, structures and leadership of an organisation.") }
+    ] : [
+      { mode: "relationship", icon: "🤝",
+        label: T3("Beziehung",   "İlişki",   "Relationship"),
+        desc:  T3("Partnerschaft, Familie oder eine wichtige persönliche Beziehung.",
+                  "Bir ortaklık, aile ya da önemli bir kişisel ilişki.",
+                  "A partnership, family or important personal relationship.") },
+      { mode: "employee",     icon: "💼",
+        label: T3("Arbeit",      "İş",       "Work"),
+        desc:  T3("Deine Arbeitssituation – Rolle, Umfeld, Entscheidung bleiben oder gehen.",
+                  "İş durumun – rol, ortam, kalma ya da gitme kararı.",
+                  "Your work situation – role, environment, decision to stay or leave.") }
+    ];
+
+    overlay.innerHTML = `
+      <div style="max-width:480px;width:100%;background:#0f1117;border:1px solid rgba(110,231,183,0.2);border-radius:20px;padding:36px 32px;">
+        <div style="font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:700;color:#eaf0ff;margin-bottom:8px;">${title}</div>
+        <div style="font-size:.875rem;color:rgba(234,240,255,0.45);margin-bottom:28px;">
+          ${T3("Wähle den Kontext für deine Diagnose.", "Tanın için bağlamı seç.", "Choose the context for your diagnosis.")}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          ${opts.map(o => `
+            <button data-pick="${o.mode}" style="
+              display:flex;align-items:flex-start;gap:16px;
+              background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+              border-radius:14px;padding:18px 20px;cursor:pointer;text-align:left;
+              transition:border-color .15s,background .15s;width:100%;">
+              <span style="font-size:1.5rem;line-height:1;flex-shrink:0;">${o.icon}</span>
+              <div>
+                <div style="font-family:'Outfit',sans-serif;font-size:1rem;font-weight:600;color:#eaf0ff;margin-bottom:4px;">${o.label}</div>
+                <div style="font-size:.8rem;color:rgba(234,240,255,0.5);line-height:1.5;">${o.desc}</div>
+              </div>
+            </button>`).join("")}
+        </div>
+      </div>`;
+
+    // Hover effect
+    overlay.querySelectorAll("[data-pick]").forEach(btn => {
+      btn.addEventListener("mouseenter", () => {
+        btn.style.borderColor = "rgba(110,231,183,0.4)";
+        btn.style.background  = "rgba(110,231,183,0.05)";
+      });
+      btn.addEventListener("mouseleave", () => {
+        btn.style.borderColor = "rgba(255,255,255,0.08)";
+        btn.style.background  = "rgba(255,255,255,0.03)";
+      });
+      btn.addEventListener("click", () => {
+        const picked = btn.dataset.pick;
+        ss.setItem("mdg_sub_mode", picked);
+        ls.setItem("mdg_sub_mode", picked);
+        overlay.remove();
+        // Reload so mode init picks up the stored sub-mode
+        location.reload();
+      });
+    });
+
+    document.body.appendChild(overlay);
+  }
+
+  // Trigger picker if token type is personal or org and no sub-mode chosen yet
+  if (businessOk && !storedSubMode) {
+    if (tokenType === "personal") { showSubModePicker("personal"); }
+    else if (tokenType === "org")  { showSubModePicker("org"); }
+    else if (storedMode === "employee" || storedMode === "relationship") { showSubModePicker("personal"); }
+    else if (storedMode === "business" || storedMode === "team") { showSubModePicker("org"); }
+  }
 
   // If team/relationship mode with session, show member onboarding
   if ((mode === "team" || mode === "relationship") && teamSession) {
@@ -829,32 +938,43 @@
   /* ── mode switcher ───────────────────────── */
   const modeSwitchBtn = document.getElementById("modeSwitchBtn");
   if (modeSwitchBtn) {
-    if (mode === "business") {
-      modeSwitchBtn.style.display = "";
-    } else {
-      modeSwitchBtn.style.display = tokenStored ? "" : "none";
-    }
+    // Show switch button if paid token active
+    const hasSubModeChoice = businessOk && (tokenType === "personal" || tokenType === "org"
+      || ["employee","relationship","team","business"].includes(storedMode));
+    modeSwitchBtn.style.display = (businessOk || tokenStored) ? "" : "none";
+
     modeSwitchBtn.addEventListener("click", () => {
       const lang = getLang();
-      if (mode === "business") {
+      // If this is a sub-mode token, offer to re-pick
+      if (hasSubModeChoice && storedSubMode) {
         const confirmMsg = T(lang,
-          "Zu Privat wechseln? Der Business-Modus bleibt über dein Token weiterhin verfügbar.",
-          "Özel moda geçmek istiyor musun? Business modu token ile erişilebilir olmaya devam eder.",
-          "Switch to Private? Business mode remains accessible via your token.");
+          "Kontext wechseln? Du kannst zwischen den verfügbaren Optionen neu wählen.",
+          "Bağlamı değiştirmek istiyor musun? Mevcut seçenekler arasında yeniden seçim yapabilirsin.",
+          "Switch context? You can choose again between the available options.");
         if (!confirm(confirmMsg)) return;
-        ss.setItem("mdg_mode","private");
-        ls.setItem("mdg_mode","private");
+        ss.removeItem("mdg_sub_mode");
+        ls.removeItem("mdg_sub_mode");
+        location.reload();
+        return;
+      }
+      if (mode === "business" || mode === "team" || mode === "employee" || mode === "relationship") {
+        const confirmMsg = T(lang,
+          "Zu Privat wechseln? Der bezahlte Modus bleibt über dein Token verfügbar.",
+          "Özel moda geçmek istiyor musun? Ücretli mod token ile erişilebilir olmaya devam eder.",
+          "Switch to Private? Paid mode remains accessible via your token.");
+        if (!confirm(confirmMsg)) return;
+        ss.setItem("mdg_mode","private"); ls.setItem("mdg_mode","private");
+        ss.removeItem("mdg_sub_mode");   ls.removeItem("mdg_sub_mode");
         location.reload();
       } else {
         if (tokenStored) {
-          ss.setItem("mdg_mode","business");
-          ls.setItem("mdg_mode","business");
+          ss.removeItem("mdg_sub_mode"); ls.removeItem("mdg_sub_mode");
           location.reload();
         } else {
           alert(T(lang,
-            "Für den Business-Modus ist ein gültiger Token erforderlich. Bitte über die Startseite einsteigen.",
-            "Business modu için geçerli bir token gereklidir. Lütfen ana sayfadan giriş yapın.",
-            "A valid token is required for Business mode. Please enter via the homepage."));
+            "Für einen kostenpflichtigen Modus ist ein gültiger Token erforderlich. Bitte über die Startseite einsteigen.",
+            "Ücretli mod için geçerli bir token gereklidir. Lütfen ana sayfadan giriş yapın.",
+            "A valid token is required for paid mode. Please enter via the homepage."));
         }
       }
     });
@@ -1154,60 +1274,130 @@
 
   /* ── adaptive questions ──────────────────── */
   function renderQuestions(lang) {
-    const biz = mode==="business";
-    const qs = biz ? [
-      { id:"b_q1",
-        title: T(lang,"Wo entsteht aktuell die größte Verzögerung?","En buyuk gecikme nerede?","Where is the biggest delay right now?"),
-        help:  T(lang,"Denk an die letzte Woche: Was hat am längsten gedauert? Auf eine Entscheidung warten, eine Übergabe, Nacharbeiten oder fehlende Kapazität?","Geçen hafta ne en çok zaman aldı? Karar beklemek, devretmek, tekrar işlemek ya da kapasite eksikliği? En sık olanı sec.","Think of last week: what took longest? Waiting for a decision, a handoff, rework, or missing capacity? Pick whichever happens most."),
+
+    // ── PRIVAT ──────────────────────────────────────────────────
+    const qs_private = [
+      { id:"pr_q1",
+        title: T(lang,"Was passiert gerade in deinem Leben?","Hayatında şu an ne oluyor?","What is happening in your life right now?"),
+        help:  T(lang,"Nicht was du erreichen willst &mdash; was ist der Bereich, der gerade zieht, drückt oder keine Ruhe lässt?","Ne başarmak istediğin değil &mdash; hangisi seni şu an zorluyor, baskı yapıyor ya da rahat bırakmıyor?","Not what you want to achieve &mdash; which area is pulling, pressing or giving you no rest right now?"),
         opts: [
-          {v:"decisions", l:T(lang,"Entscheidungen","Kararlar","Decisions"),          hint:T(lang,"Dinge warten auf ein Ja/Nein, das nicht kommt oder zu lange braucht.","Kararlar gelmiyor ya da çok uzun suruyor.","Things wait for a yes/no that doesn't come or takes too long.")},
-          {v:"handoff",   l:T(lang,"Übergaben","Devir","Handoffs"),                  hint:T(lang,"Aufgaben fallen zwischen Teams oder Rollen durch den Tisch.","Gorevler ekipler ya da roller arasinda kaybolup gidiyor.","Tasks fall through the cracks between teams or roles.")},
-          {v:"quality",   l:T(lang,"Qualität / Rework","Kalite / rework","Quality / rework"), hint:T(lang,"Dinge müssen regelmäßig wiederholt oder korrigiert werden.","İşler sıklıkla tekrarlanmak ya da düzeltilemek zorunda kalıyor.","Things regularly need to be repeated or corrected.")},
-          {v:"capacity",  l:T(lang,"Kapazität / Skills","Kapasite / skill","Capacity / skills"), hint:T(lang,"Zu wenig Leute, Zeit oder Know-how für das, was ansteht.","Bekleyenler için yeterli insan, zaman ya da bilgi yok.","Not enough people, time or know-how for what's ahead.")}
+          {v:"relationship", l:T(lang,"Beziehung / Familie","İlişki / Aile","Relationship / Family"), hint:T(lang,"Eine wichtige Beziehung ist belastet oder unklar.","Önemli bir ilişki zorlanıyor ya da belirsiz.","An important relationship is strained or unclear.")},
+          {v:"work",         l:T(lang,"Arbeit / Beruf","İş / Kariyer","Work / Career"),               hint:T(lang,"Dein Verhältnis zur Arbeit stimmt gerade nicht &mdash; Rolle, Umfeld oder Richtung.","İşle ilişkin şu an uymuyor &mdash; rol, ortam ya da yön.","Your relationship to work is off &mdash; role, environment or direction.")},
+          {v:"self",         l:T(lang,"Ich selbst","Ben kendim","Myself"),                             hint:T(lang,"Etwas in dir zieht in eine andere Richtung als dein Leben gerade geht.","İçindeki bir şey hayatının gittiği yönden farklı çekiyor.","Something in you pulls in a different direction than your life is going.")},
+          {v:"transition",   l:T(lang,"Übergang / Veränderung","Geçiş / Değişim","Transition / Change"), hint:T(lang,"Du stehst vor einer Veränderung oder mittendrin &mdash; und weißt nicht wie.","Bir değişimin öncesinde ya da ortasındasın &mdash; nasıl olacağını bilmiyorsun.","You are facing or in the middle of a change &mdash; and don't know how.")}
         ]},
-      { id:"b_q2",
-        title: T(lang,"Was passiert, wenn die wichtigste Person 2 Wochen weg ist?","En kritik kisi 2 hafta yoksa ne olur?","What happens if the key person is away for 2 weeks?"),
-        help:  T(lang,"Stell dir vor, die Person mit den meisten Entscheidungen oder dem meisten Wissen ist krank oder im Urlaub &mdash; nicht gekündigt, nur weg. Läuft das System trotzdem?","En fazla karara ya da bilgiye sahip kisinin hasta ya da izinde oldugunu hayal et &mdash; isten cikarilmiyor, sadece yok. Sistem yine de isliyor mu?","Imagine the person with most decisions or knowledge is sick or on holiday &mdash; not gone for good, just away. Does the system still run?"),
+      { id:"pr_q2",
+        title: T(lang,"Wie lange ist dieser Zustand schon so?","Bu durum ne zamandır böyle?","How long has this situation been like this?"),
+        help:  T(lang,"Nicht die Ursache &mdash; wie lange begleitet dich dieses Gefühl oder diese Situation bereits?","Nedeni değil &mdash; bu his ya da durum ne süredir yanında?","Not the cause &mdash; how long has this feeling or situation been with you?"),
         opts: [
-          {v:"fine",  l:T(lang,"Läuft weiter","Devam eder","Continues fine"),    hint:T(lang,"Andere übernehmen nahtlos, kein Stau, kein Qualitätsverlust.","Digerleri sorunsuz devralir, tikanma ya da kalite kaybi yok.","Others take over seamlessly, no backlog, no quality loss.")},
-          {v:"slow",  l:T(lang,"Wird langsamer","Yavaşlar","Slows down"),          hint:T(lang,"Es läuft noch, aber Entscheidungen dauern länger oder Qualität sinkt spürbar.","Devam ediyor ama kararlar daha uzun suruyor ya da kalite belirgin dusyor.","Still runs, but decisions take longer or quality drops noticeably.")},
-          {v:"break", l:T(lang,"Bricht zusammen","Kırılır","Breaks down"),         hint:T(lang,"Ohne diese Person entstehen sofort Staus, Fehler oder Stillstand.","Bu kisi olmadan hemen tikanmalar, hatalar ya da durma yasanir.","Without this person, backlogs, errors or standstill appear immediately.")}
+          {v:"new",    l:T(lang,"Neu — wenige Wochen","Yeni — birkaç hafta","New — a few weeks"),        hint:T(lang,"Das ist frisch. Noch keine Gewohnheit, aber schon spürbar.","Taze. Henüz alışkanlık değil ama hissedilir.","Fresh. Not yet a habit, but already noticeable.")},
+          {v:"months", l:T(lang,"Einige Monate","Birkaç ay","Several months"),                            hint:T(lang,"Es zieht sich. Gelegentliche Verbesserungen, aber kein echter Durchbruch.","Sürüp gidiyor. Ara sıra iyileşme, ama gerçek bir kırılma yok.","It drags on. Occasional improvements, but no real breakthrough.")},
+          {v:"long",   l:T(lang,"Schon länger — über ein Jahr","Uzun süredir — bir yıldan fazla","A long time — over a year"), hint:T(lang,"Das ist kein Ausnahmezustand mehr. Es ist fast normal geworden.","Bu artık istisna değil. Neredeyse normal hale geldi.","This is no longer an exception. It has almost become normal.")}
         ]},
-      { id:"b_q3",
-        title: T(lang,"Wie klar sind Rollen & Zuständigkeiten?","Roller ve sorumluluklar ne kadar net?","How clear are roles & ownership?"),
-        help:  T(lang,"Gibt es Bereiche, wo zwei Personen glauben, zuständig zu sein &mdash; oder niemand sicher ist, wer entscheidet? Beides ist ein Zeichen unklarer Architektur.","Iki kisinin sorumlu oldugunu dusundugu ya da kimin karar vereceginden kimsenin emin olmadigi alanlar var mi? Her ikisi de belirsiz mimarinin isaretidir.","Are there areas where two people think they own something &mdash; or no one is sure who decides? Both are signs of unclear architecture."),
+      { id:"pr_q3",
+        title: T(lang,"Was hast du bereits versucht?","Şimdiye kadar ne denedin?","What have you already tried?"),
+        help:  T(lang,"Kein Urteil &mdash; nur um zu verstehen wo du schon warst. Was war die häufigste Reaktion auf diesen Zustand?","Yargılama yok &mdash; sadece nerede olduğunu anlamak için. Bu duruma en sık ne şekilde tepki verdin?","No judgment &mdash; just to understand where you have been. What was the most common reaction to this situation?"),
         opts: [
-          {v:"clear",   l:T(lang,"Sehr klar","Çok net","Very clear"),  hint:T(lang,"Jeder weiß, wer was verantwortet &mdash; ohne nachfragen zu müssen.","Herkes kimin neyi ustlendigini biliyor &mdash; sormak zorunda kalmadan.","Everyone knows who owns what &mdash; without having to ask.")},
-          {v:"mixed",   l:T(lang,"Teilweise","Kısmen","Partial"),       hint:T(lang,"Die meisten Bereiche sind klar, aber bei manchen gibt es Doppelzuständigkeit oder Lücken.","Cogunluk alan net ama bazi konularda cakisma ya da bosluk var.","Most areas are clear, but some have overlapping ownership or gaps.")},
-          {v:"unclear", l:T(lang,"Unklar","Belirsiz","Unclear"),        hint:T(lang,"Regelmäßig unklar, wer entscheidet oder verantwortlich ist &mdash; erzeugt Reibung und Stau.","Kimin karar verdigi ya da sorumlu oldugu sıklıkla belirsiz &mdash; surtusme ve tikanmaya yol aciyor.","Regularly unclear who decides or is responsible &mdash; creates friction and bottlenecks.")}
-        ]}
-    ] : [
-      { id:"p_q1",
-        title: T(lang,"Was löst die Spannung konkret aus?","Gerilimi somut olarak ne tetikliyor?","What concretely triggers the tension?"),
-        help:  T(lang,"Denk an den Moment, wo du merkst: hier stimmt etwas nicht. Was passiert da meistens &mdash; zu viel auf einmal, ein Konflikt, nicht wissen was richtig ist, oder bist du schlicht erschöpft?","Bir sey yanlis diye hissettigin ana dusen. O anda genellikle ne oluyor &mdash; çok fazla sey ayni anda, biriyle catisma, doğrunun ne oldugunu bilmemek ya da sadece tukenimis olmak?","Think of the moment you notice something is off. What's usually happening &mdash; too much at once, a conflict, not knowing what's right, or simply exhaustion?"),
-        opts: [
-          {v:"time",        l:T(lang,"Zeitdruck","Zaman baskisi","Time pressure"),  hint:T(lang,"Zu viel passiert gleichzeitig &mdash; du kannst nicht mehr alles schaffen.","Ayni anda çok fazla sey oluyor &mdash; artık her seyi yapamiyorsun.","Too much happening at once &mdash; you can't get through everything anymore.")},
-          {v:"conflict",    l:T(lang,"Konflikt","Catisma","Conflict"),               hint:T(lang,"Eine Beziehung oder Situation reibt sich &mdash; Spannung mit einer Person oder Gruppe.","Bir iliski ya da durum surtusyor &mdash; bir kisi ya da grupla gerilim var.","A relationship or situation causes friction &mdash; tension with a person or group.")},
-          {v:"uncertainty", l:T(lang,"Unklarheit","Belirsizlik","Uncertainty"),      hint:T(lang,"Du weißt nicht, was richtig ist oder wie es weitergehen soll &mdash; Orientierung fehlt.","Dogrunun ne oldugunu ya da nasıl devam edecegini bilmiyorsun &mdash; yön duygusu eksik.","You don't know what's right or how to move forward &mdash; a sense of direction is missing.")},
-          {v:"energy",      l:T(lang,"Erschöpfung","Yorgunluk","Exhaustion"),       hint:T(lang,"Die Energie fehlt &mdash; nicht wegen Faulheit, sondern weil das System zu viel zieht.","Enerji yok &mdash; tembellikten degil, sistem çok fazla cekiyor.","Energy is missing &mdash; not from laziness, but because the system draws too much.")}
-        ]},
-      { id:"p_q2",
-        title: T(lang,"Wie viel hängt an dir oder einer einzigen Person?","Ne kadari sana ya da tek bir kisiye bagli?","How much depends on you or one single person?"),
-        help:  T(lang,"Stell dir vor, du bist zwei Wochen nicht erreichbar &mdash; krank, Urlaub, nicht verfügbar. Was passiert? Läuft es weiter, wird es langsamer, oder bricht es ein?","Iki hafta ulasiilamazsın &mdash; hasta, izinde, erisilemez. Ne olur? Devam mi eder, yavaşlar mi, yoksa coker mi?","Imagine you are unreachable for two weeks &mdash; sick, on holiday, unavailable. What happens?"),
-        opts: [
-          {v:"low",    l:T(lang,"Gering — läuft ohne mich","Az — bensiz de devam eder","Low — runs without me"),    hint:T(lang,"Andere können übernehmen, nichts Wichtiges stockt.","Digerleri devralabilir, onemli hicbir sey durmuyor.","Others can take over, nothing important stalls.")},
-          {v:"medium", l:T(lang,"Mittel — wird langsamer","Orta — yavaşlar","Medium — slows down"),                  hint:T(lang,"Es geht noch, aber Dinge verzögern sich oder Qualität leidet spürbar.","Devam ediyor ama isler gecikiyor ya da kalite belirgin dusyo.","Still works, but things slow down or quality suffers noticeably.")},
-          {v:"high",   l:T(lang,"Hoch — bricht ohne mich ein","Yuksek — bensiz coker","High — collapses without me"), hint:T(lang,"Ohne mich entstehen sofort Staus, Fehler oder Stillstand &mdash; ich bin der Flaschenhals.","Bensiz hemen tikanmalar, hatalar ya da durma basliyor &mdash; ben darbogazım.","Without me, bottlenecks, errors or standstill appear immediately &mdash; I am the bottleneck.")}
-        ]},
-      { id:"p_q3",
-        title: T(lang,"Wie wird mit Fehlern & Rückschlägen umgegangen?","Hatalar ve aksiliklerle nasil basa çıkılıyor?","How are errors & setbacks handled?"),
-        help:  T(lang,"Wenn etwas schiefläuft: Wird darüber offen geredet und daraus gelernt? Oder werden Fehler ignoriert, vertuscht oder lösen sofort Schuldzuweisungen aus?","Bir seyler ters gittiginde: Acikca konuşuluyor mu ve bundan ders cikарiliyor mu? Yoksa hatalar görmezden mi geliniyor, örtbas mi ediliyor ya da hemen suclama mi basliyor?","When something goes wrong: is it openly discussed and learned from? Or are errors ignored, covered up, or do they immediately trigger blame?"),
-        opts: [
-          {v:"good",  l:T(lang,"Gut — offen & lernend","Iyi — acik ve ogrenen","Good — open & learning"),  hint:T(lang,"Fehler werden angesprochen, analysiert und als Lernquelle genutzt &mdash; ohne Schuldzuweisung.","Hatalar ele alınıyor, analiz ediliyor ve suclama olmadan ögrenme kaynagi olarak kullaniliyor.","Errors are surfaced, analyzed and used as learning &mdash; without blame.")},
-          {v:"mixed", l:T(lang,"Gemischt — je nach Thema","Karışık — konuya gore","Mixed — depends on topic"), hint:T(lang,"Manche Fehler werden offen besprochen, andere eher vermieden oder vertuscht.","Bazi hatalar açıkça konuşuluyor, digerleri kaçınılıyor ya da örtbas ediliyor.","Some errors are addressed openly, others tend to be avoided or hidden.")},
-          {v:"bad",   l:T(lang,"Schlecht — Schuld & Vermeidung","Kotu — suc & kacinma","Bad — blame & avoidance"), hint:T(lang,"Fehler lösen Schuld, Angst oder Schweigen aus &mdash; sie werden versteckt statt genutzt.","Hatalar suclama, korku ya da sessizlige yol aciyor &mdash; kullanilmak yerine gizleniyor.","Errors trigger blame, fear or silence &mdash; they are hidden instead of used.")}
+          {v:"endure",  l:T(lang,"Aushalten & Hoffen","Katlanmak & Ummak","Endure & Hope"),             hint:T(lang,"Abwarten, dass es besser wird &mdash; ohne aktive Veränderung.","İyileşmesini beklemek &mdash; aktif değişiklik olmadan.","Waiting for it to get better &mdash; without active change.")},
+          {v:"distract",l:T(lang,"Ablenken & Beschäftigen","Dikkat dağıtmak","Distract & Stay Busy"),   hint:T(lang,"Mehr Arbeit, mehr Aktivitäten &mdash; um nicht fühlen zu müssen was ist.","Daha fazla iş, aktivite &mdash; olanı hissetmemek için.","More work, more activities &mdash; to avoid feeling what is.")},
+          {v:"talk",    l:T(lang,"Darüber geredet","Konuştum","Talked about it"),                        hint:T(lang,"Mit Freunden, Familie oder Fachleuten gesprochen &mdash; hat aber nicht wirklich geholfen.","Arkadaşlar, aile ya da uzmanlarla konuştum &mdash; ama gerçekten yardımcı olmadı.","Spoke with friends, family or professionals &mdash; but it didn't really help.")},
+          {v:"change",  l:T(lang,"Etwas verändert","Bir şeyi değiştirdim","Changed something"),         hint:T(lang,"Konkrete Schritte unternommen &mdash; aber das Grundproblem bleibt.","Somut adımlar attım &mdash; ama temel sorun devam ediyor.","Took concrete steps &mdash; but the underlying problem remains.")}
         ]}
     ];
+
+    // ── EMPLOYEE (persönlich & beruflich) ────────────────────────
+    const qs_employee = [
+      { id:"em_q1",
+        title: T(lang,"Was drückt dich bei der Arbeit gerade am meisten?","İşte şu an seni en çok ne eziyor?","What weighs on you most at work right now?"),
+        help:  T(lang,"Nicht das offizielle Problem &mdash; was ist das, was dich abends noch beschäftigt oder morgens nicht loslässt?","Resmi sorun değil &mdash; seni akşamları hâlâ meşgul eden ya da sabahları bırakmayan nedir?","Not the official problem &mdash; what still occupies you in the evenings or won't let you go in the mornings?"),
+        opts: [
+          {v:"role",        l:T(lang,"Meine Rolle passt nicht","Rolüm uymuyor","My role doesn't fit"),         hint:T(lang,"Was ich tue stimmt nicht mit dem überein, was ich eigentlich kann oder will.","Yaptığım şey gerçekte yapabildiğimle ya da istediğimle örtüşmüyor.","What I do doesn't match what I can or want to do.")},
+          {v:"environment", l:T(lang,"Das Umfeld stimmt nicht","Ortam uymuyor","The environment is wrong"),     hint:T(lang,"Team, Führung oder Kultur fühlen sich falsch an &mdash; ich passe nicht dazu.","Ekip, yönetim ya da kültür yanlış hissettiriyor &mdash; ben buraya uymuyorum.","Team, leadership or culture feels wrong &mdash; I don't fit.")},
+          {v:"direction",   l:T(lang,"Ich weiß nicht wohin","Nereye gideceğimi bilmiyorum","I don't know where to go"), hint:T(lang,"Die Richtung ist unklar &mdash; bleiben, wechseln, ganz neu anfangen?","Yön belirsiz &mdash; kalmak mı, değiştirmek mi, yeniden başlamak mı?","The direction is unclear &mdash; stay, switch, start fresh?")},
+          {v:"energy",      l:T(lang,"Ich bin einfach erschöpft","Sadece yorgunum","I am simply exhausted"),       hint:T(lang,"Die Arbeit kostet mehr als sie gibt &mdash; der Akku lädt nicht mehr richtig auf.","İş verdiğinden fazlasını alıyor &mdash; pil artık tam şarj olmuyor.","Work costs more than it gives &mdash; the battery no longer charges properly.")}
+        ]},
+      { id:"em_q2",
+        title: T(lang,"Wie klar ist deine eigene Entscheidung gerade?","Şu an kendi kararın ne kadar net?","How clear is your own decision right now?"),
+        help:  T(lang,"Wenn du ehrlich bist &mdash; hast du innerlich schon entschieden, suchst du noch Klarheit, oder wartest du dass sich etwas von selbst löst?","Dürüst olursan &mdash; içinde zaten karar verdin mi, hâlâ netlik mi arıyorsun, yoksa bir şeyin kendi kendine çözülmesini mi bekliyorsun?","If you are honest &mdash; have you already decided inside, are you still seeking clarity, or waiting for something to resolve itself?"),
+        opts: [
+          {v:"decided",  l:T(lang,"Ich weiß es eigentlich","Aslında biliyorum","I actually know"),               hint:T(lang,"Innerlich hab ich entschieden, aber noch nicht gehandelt &mdash; warum auch immer.","İçimde karar verdim, ama henüz harekete geçmedim &mdash; her nedense.","Inside I have decided, but haven't acted yet &mdash; for whatever reason.")},
+          {v:"unclear",  l:T(lang,"Ich bin noch hin und her","Hâlâ kararsızım","I'm still going back and forth"), hint:T(lang,"Beide Optionen haben echte Argumente &mdash; ich komme nicht aus dem Abwägen raus.","Her iki seçeneğin de gerçek argümanları var &mdash; tartmaktan çıkamıyorum.","Both options have real arguments &mdash; I can't get out of weighing.")},
+          {v:"waiting",  l:T(lang,"Ich warte ab","Bekliyorum","I am waiting"),                                   hint:T(lang,"Vielleicht ändert sich noch etwas &mdash; ein Zeichen, eine Chance, eine Verbesserung.","Belki bir şey değişir &mdash; bir işaret, bir fırsat, bir iyileşme.","Maybe something changes &mdash; a sign, a chance, an improvement.")}
+        ]},
+      { id:"em_q3",
+        title: T(lang,"Was hält dich noch?","Seni hâlâ ne tutuyor?","What is still keeping you?"),
+        help:  T(lang,"Nicht was dich hält sollte &mdash; was hält dich tatsächlich davon ab, eine klare Entscheidung zu treffen oder umzusetzen?","Seni tutması gereken değil &mdash; net bir karar vermeni ya da uygulamanı gerçekte ne engelliyor?","Not what should keep you &mdash; what is actually preventing you from making or implementing a clear decision?"),
+        opts: [
+          {v:"security",  l:T(lang,"Sicherheit & Einkommen","Güvenlik & Gelir","Security & Income"),           hint:T(lang,"Finanzielle Abhängigkeit oder Angst vor dem Sprung ins Ungewisse.","Finansal bağımlılık ya da bilinmeyene atlama korkusu.","Financial dependency or fear of jumping into the unknown.")},
+          {v:"guilt",     l:T(lang,"Verantwortung gegenüber anderen","Başkalarına karşı sorumluluk","Responsibility to others"), hint:T(lang,"Ich will niemanden im Stich lassen &mdash; Team, Vorgesetzte, das Unternehmen.","Kimseyi yarı yolda bırakmak istemiyorum &mdash; ekip, yöneticiler, şirket.","I don't want to let anyone down &mdash; team, managers, the company.")},
+          {v:"identity",  l:T(lang,"Ich weiß nicht wer ich ohne das bin","Bensiz kim olduğumu bilmiyorum","I don't know who I am without it"), hint:T(lang,"Die Arbeit ist Teil meiner Identität &mdash; loslassen bedeutet auch sich selbst neu definieren.","İş kimliğimin bir parçası &mdash; bırakmak, kendini yeniden tanımlamak demek.","Work is part of my identity &mdash; letting go also means redefining myself.")},
+          {v:"noplan",    l:T(lang,"Ich habe noch keinen Plan B","Henüz B planım yok","I don't have a plan B yet"), hint:T(lang,"Keine konkrete Alternative in Sicht &mdash; erst wenn ich weiß wohin, kann ich loslassen.","Somut bir alternatif görünmüyor &mdash; nereye gideceğimi bilince bırakabilirim.","No concrete alternative in sight &mdash; only when I know where to go can I let go.")}
+        ]}
+    ];
+
+    // ── TEAM ────────────────────────────────────────────────────
+    const qs_team = [
+      { id:"tm_q1",
+        title: T(lang,"Wo entsteht im Team die meiste Reibung?","Ekipte en fazla sürtüşme nerede oluşuyor?","Where does the most friction arise in the team?"),
+        help:  T(lang,"Nicht der letzte Konflikt &mdash; wo reibt es sich strukturell immer wieder, egal wer gerade involviert ist?","Son çatışma değil &mdash; kim dahil olursa olsun yapısal olarak sürekli nerede sürtüşüyor?","Not the last conflict &mdash; where does it structurally rub again and again, regardless of who is involved?"),
+        opts: [
+          {v:"priorities", l:T(lang,"Unterschiedliche Prioritäten","Farklı öncelikler","Different priorities"),    hint:T(lang,"Was für eine Seite dringend ist, ist für die andere zweitrangig &mdash; ständige Spannung.","Bir taraf için acil olan, diğer için ikincil &mdash; sürekli gerilim.","What is urgent for one side is secondary for the other &mdash; constant tension.")},
+          {v:"info",       l:T(lang,"Informationen kommen nicht an","Bilgiler ulaşmıyor","Information doesn't arrive"), hint:T(lang,"Entscheidungen werden ohne die Richtigen getroffen, oder wichtige Dinge kommen zu spät.","Kararlar doğru kişiler olmadan alınıyor ya da önemli şeyler geç geliyor.","Decisions made without the right people, or important things arrive too late.")},
+          {v:"ownership",  l:T(lang,"Unklare Verantwortung","Belirsiz sorumluluk","Unclear ownership"),            hint:T(lang,"Mehrere glauben für dasselbe zuständig zu sein &mdash; oder niemand fühlt sich verantwortlich.","Birden fazla kişi aynı şeyden sorumlu olduğunu sanıyor &mdash; ya da kimse sorumlu hissetmiyor.","Multiple people think they own the same thing &mdash; or nobody feels responsible.")},
+          {v:"speed",      l:T(lang,"Unterschiedliches Tempo","Farklı hız","Different pace"),                       hint:T(lang,"Manche wollen schnell entscheiden, andere brauchen mehr Zeit &mdash; das blockiert.","Bazıları hızlı karar vermek istiyor, diğerleri daha fazla zamana ihtiyaç duyuyor &mdash; bu bloke oluyor.","Some want to decide fast, others need more time &mdash; this blocks things.")}
+        ]},
+      { id:"tm_q2",
+        title: T(lang,"Wie offen ist der Umgang mit Problemen im Team?","Ekipte sorunlarla başa çıkma ne kadar açık?","How openly does the team deal with problems?"),
+        help:  T(lang,"Wenn etwas nicht stimmt &mdash; wird es angesprochen, oder lässt man es lieber laufen? Was ist die ehrliche Antwort für euer Team?","Bir şeyler yanlış gittiğinde &mdash; dile getiriliyor mu, yoksa devam etmesine mi izin veriliyor? Ekibiniz için dürüst yanıt ne?","When something is wrong &mdash; is it addressed, or do people let it run? What is the honest answer for your team?"),
+        opts: [
+          {v:"open",    l:T(lang,"Offen — Probleme werden direkt angesprochen","Açık — sorunlar doğrudan dile getiriliyor","Open — problems are raised directly"), hint:T(lang,"Auch unangenehme Dinge kommen auf den Tisch &mdash; ohne Angst vor Konsequenzen.","Nahoş şeyler de masaya geliyor &mdash; sonuç korkusu olmadan.","Even uncomfortable things come to the table &mdash; without fear of consequences.")},
+          {v:"selective",l:T(lang,"Selektiv — je nach Person oder Thema","Seçici — kişiye veya konuya göre","Selective — depending on person or topic"), hint:T(lang,"Manche Dinge werden offen besprochen, andere eher vermieden &mdash; hängt von der Person ab.","Bazı şeyler açıkça konuşuluyor, diğerleri kaçınılıyor &mdash; kişiye göre değişiyor.","Some things discussed openly, others avoided &mdash; depends on the person.")},
+          {v:"hidden",  l:T(lang,"Still — Probleme werden lieber vermieden","Sessiz — sorunlardan kaçınmak tercih ediliyor","Silent — problems are preferred to be avoided"), hint:T(lang,"Es gibt unausgesprochene Spannungen &mdash; jeder weiß es, aber niemand sagt es.","Söylenmemiş gerilimler var &mdash; herkes biliyor ama kimse söylemiyor.","There are unspoken tensions &mdash; everyone knows but nobody says it.")}
+        ]},
+      { id:"tm_q3",
+        title: T(lang,"Wie werden Entscheidungen im Team getroffen?","Ekipte kararlar nasıl alınıyor?","How are decisions made in the team?"),
+        help:  T(lang,"Wer entscheidet was &mdash; und ist das für alle klar? Oder entstehen Entscheidungen irgendwie, und man merkt erst danach wer eigentlich zuständig war?","Kim ne karar veriyor &mdash; ve bu herkes için açık mı? Yoksa kararlar bir şekilde oluşuyor ve ancak sonradan kimin sorumlu olduğu anlaşılıyor mu?","Who decides what &mdash; and is that clear to everyone? Or do decisions happen somehow, and you only notice afterwards who was actually responsible?"),
+        opts: [
+          {v:"clear",     l:T(lang,"Klar — Rollen und Entscheidungsrechte sind bekannt","Net — roller ve karar hakları biliniyor","Clear — roles and decision rights are known"), hint:T(lang,"Jeder weiß bei welchen Themen er selbst entscheiden kann und wann er eskaliert.","Herkes hangi konularda kendisinin karar verebileceğini ve ne zaman eskalasyon yapacağını biliyor.","Everyone knows which topics they can decide and when to escalate.")},
+          {v:"mixed",     l:T(lang,"Gemischt — meistens klar, manchmal nicht","Karışık — çoğunlukla net, bazen değil","Mixed — usually clear, sometimes not"), hint:T(lang,"In den meisten Fällen klar, aber bei bestimmten Themen entsteht Verwirrung.","Çoğu durumda net, ama belirli konularda kafa karışıklığı oluşuyor.","Clear in most cases, but with certain topics confusion arises.")},
+          {v:"unclear",   l:T(lang,"Unklar — viele wissen nicht wer entscheidet","Belirsiz — pek çoğu kimin karar verdiğini bilmiyor","Unclear — many don't know who decides"), hint:T(lang,"Entscheidungen entstehen durch Mehrheit, Zufall oder wer am lautesten ist &mdash; nicht durch Klarheit.","Kararlar çoğunluk, şans ya da en yüksek sese göre alınıyor &mdash; netlikten değil.","Decisions happen through majority, chance or who is loudest &mdash; not through clarity.")}
+        ]}
+    ];
+
+    // ── BUSINESS / ORGANISATION ──────────────────────────────────
+    const qs_business = [
+      { id:"bz_q1",
+        title: T(lang,"Wo entsteht aktuell die größte Verzögerung?","En büyük gecikme şu an nerede oluşuyor?","Where is the biggest delay occurring right now?"),
+        help:  T(lang,"Denk an die letzte Woche: Was hat am längsten gedauert? Auf eine Entscheidung warten, eine Übergabe, Nacharbeiten oder fehlende Kapazität?","Geçen haftayı düşün: En uzun süren ne oldu? Bir karar beklemek, devir, yeniden işlemek ya da kapasite eksikliği?","Think of the last week: what took longest? Waiting for a decision, a handoff, rework or missing capacity?"),
+        opts: [
+          {v:"decisions", l:T(lang,"Entscheidungen","Kararlar","Decisions"),              hint:T(lang,"Dinge warten auf ein Ja/Nein, das nicht kommt oder zu lange braucht.","Bir evet/hayır bekliyor — gelmiyor ya da çok uzun sürüyor.","Things wait for a yes/no that doesn't come or takes too long.")},
+          {v:"handoff",   l:T(lang,"Übergaben zwischen Teams","Ekipler arası devirler","Handoffs between teams"), hint:T(lang,"Aufgaben fallen zwischen Teams oder Rollen durch den Tisch.","Görevler ekipler ya da roller arasında kaybolup gidiyor.","Tasks fall through the cracks between teams or roles.")},
+          {v:"quality",   l:T(lang,"Qualität & Nacharbeit","Kalite & Yeniden işleme","Quality & Rework"),         hint:T(lang,"Dinge müssen regelmäßig wiederholt oder korrigiert werden.","Şeyler düzenli olarak tekrarlanmak ya da düzeltilmek zorunda kalıyor.","Things regularly need to be repeated or corrected.")},
+          {v:"capacity",  l:T(lang,"Kapazität & Know-how","Kapasite & Bilgi","Capacity & Know-how"),              hint:T(lang,"Zu wenig Leute, Zeit oder Wissen für das was ansteht.","Bekleyenler için yeterli insan, zaman ya da bilgi yok.","Not enough people, time or knowledge for what lies ahead.")}
+        ]},
+      { id:"bz_q2",
+        title: T(lang,"Was passiert, wenn die wichtigste Person 2 Wochen weg ist?","En kritik kişi 2 hafta yoksa ne olur?","What happens if the key person is away for 2 weeks?"),
+        help:  T(lang,"Die Person mit den meisten Entscheidungen oder dem meisten Wissen &mdash; krank oder im Urlaub, nicht gekündigt. Läuft das System trotzdem?","En fazla karara ya da bilgiye sahip kişi &mdash; hasta ya da izinde, istifa etmedi. Sistem yine de işliyor mu?","The person with the most decisions or knowledge &mdash; sick or on holiday, not resigned. Does the system still run?"),
+        opts: [
+          {v:"fine",  l:T(lang,"Läuft weiter","Devam eder","Continues fine"),    hint:T(lang,"Andere übernehmen nahtlos, kein Stau, kein Qualitätsverlust.","Diğerleri sorunsuz devralır, tıkanma ya da kalite kaybı yok.","Others take over seamlessly, no backlog, no quality loss.")},
+          {v:"slow",  l:T(lang,"Wird spürbar langsamer","Belirgin şekilde yavaşlar","Slows down noticeably"), hint:T(lang,"Entscheidungen dauern länger oder Qualität sinkt spürbar.","Kararlar daha uzun sürüyor ya da kalite belirgin düşüyor.","Decisions take longer or quality drops noticeably.")},
+          {v:"break", l:T(lang,"Bricht zusammen","Çöker","Breaks down"),          hint:T(lang,"Ohne diese Person entstehen sofort Staus, Fehler oder Stillstand.","Bu kişi olmadan hemen tıkanmalar, hatalar ya da durma yaşanır.","Without this person, backlogs, errors or standstill appear immediately.")}
+        ]},
+      { id:"bz_q3",
+        title: T(lang,"Wie klar sind Rollen & Entscheidungsrechte?","Roller ve karar hakları ne kadar net?","How clear are roles & decision rights?"),
+        help:  T(lang,"Gibt es Bereiche, wo zwei Personen glauben zuständig zu sein &mdash; oder niemand sicher ist wer entscheidet? Beides ist ein Zeichen struktureller Unklarheit.","İki kişinin sorumlu olduğunu düşündüğü ya da kimin karar vereceğinden kimsenin emin olmadığı alanlar var mı? Her ikisi de yapısal belirsizliğin işareti.","Are there areas where two people think they own something &mdash; or no one is sure who decides? Both signal structural ambiguity."),
+        opts: [
+          {v:"clear",   l:T(lang,"Sehr klar","Çok net","Very clear"),  hint:T(lang,"Jeder weiß wer was verantwortet &mdash; ohne nachfragen zu müssen.","Herkes kimin neyi üstlendiğini biliyor &mdash; sormak zorunda kalmadan.","Everyone knows who owns what &mdash; without having to ask.")},
+          {v:"mixed",   l:T(lang,"Meistens klar","Çoğunlukla net","Mostly clear"),  hint:T(lang,"Die meisten Bereiche sind klar, aber einzelne Themen erzeugen regelmäßig Doppelzuständigkeit.","Çoğu alan net, ama belirli konular düzenli olarak çakışan sorumluluk yaratıyor.","Most areas are clear, but certain topics regularly create overlapping ownership.")},
+          {v:"unclear", l:T(lang,"Unklar","Belirsiz","Unclear"),        hint:T(lang,"Regelmäßig unklar wer entscheidet &mdash; erzeugt Reibung, Stau und Energieverlust.","Kimin karar verdiği düzenli olarak belirsiz &mdash; sürtüşme, tıkanma ve enerji kaybı yaratır.","Regularly unclear who decides &mdash; creates friction, bottlenecks and energy loss.")}
+        ]}
+    ];
+
+    // ── select correct set ───────────────────────────────────────
+    const qs = mode === "business" ? qs_business
+      : mode === "team"            ? qs_team
+      : mode === "employee"        ? qs_employee
+      : qs_private;
 
     const root = $("#questions");
     root.innerHTML = "";
