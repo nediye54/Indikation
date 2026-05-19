@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Diagnose – MDG</title>
+  <title>Diagnose – Moral des Gleichgewichts</title>
   <meta name="description" content="In welchem System spürst du eine Spannung die du nicht benennen kannst?" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -594,7 +594,7 @@
 <body>
 
 <header class="header">
-  <a class="brand" href="./index.html">MDG</a>
+  <a class="brand" href="./index.html">Moral des Gleichgewichts</a>
   <div class="header__right">
     <span id="headerModeTag" class="mode-tag" style="display:none;"></span>
     <div class="lang-row">
@@ -752,7 +752,7 @@
 </main>
 
 <footer class="footer">
-  <a class="brand" href="./index.html" style="font-size:.85rem;letter-spacing:.18em;">MDG</a>
+  <a class="brand" href="./index.html" style="font-size:.95rem;letter-spacing:.06em;">Moral des Gleichgewichts</a>
   <div class="footer__links">
     <a href="./impressum.html">Impressum</a>
     <a href="./datenschutz.html">Datenschutz</a>
@@ -901,11 +901,14 @@
   }
 
   // Trigger picker if token type is personal or org and no sub-mode chosen yet
+  // Only trigger if the user actually has a valid paid token
   if (businessOk && !storedSubMode) {
     if (tokenType === "personal") { showSubModePicker("personal"); }
     else if (tokenType === "org")  { showSubModePicker("org"); }
-    else if (storedMode === "employee" || storedMode === "relationship") { showSubModePicker("personal"); }
-    else if (storedMode === "business" || storedMode === "team") { showSubModePicker("org"); }
+    // Legacy: only trigger if mode is actually paid (not private fallback)
+    else if (mode !== "private" && (storedMode === "employee" || storedMode === "relationship")) { showSubModePicker("personal"); }
+    else if (mode !== "private" && (storedMode === "business" || storedMode === "team")) { showSubModePicker("org"); }
+  }
   }
 
   // If team/relationship mode with session, show member onboarding
@@ -983,7 +986,7 @@
   /* ── i18n dictionary ─────────────────────── */
   const dict = {
     de: {
-      "nav.how":"Wie es funktioniert","nav.why":"Warum MDG","nav.faq":"FAQ","cta.backHome":"Zur Homepage",
+      "nav.how":"Wie es funktioniert","nav.why":"Warum Moral des Gleichgewichts","nav.faq":"FAQ","cta.backHome":"Zur Homepage",
       "dx.title":"Diagnose",
       "dx.sub":"Beantworte die Fragen so konkret wie möglich. Assessment und Report werden dann erstellt.",
       "dx.s1":"Kontext","dx.s2":"Quick Scan","dx.s3":"Präzisionsfragen",
@@ -1003,7 +1006,7 @@
       "fb.q3":"3) Bewertung (0–10)","fb.hint":"0 = nicht hilfreich · 10 = extrem hilfreich","fb.send":"Senden"
     },
     tr: {
-      "nav.how":"Nasıl çalışır","nav.why":"Neden MDG","nav.faq":"SSS","cta.backHome":"Anasayfa",
+      "nav.how":"Nasıl çalışır","nav.why":"Neden Moral des Gleichgewichts","nav.faq":"SSS","cta.backHome":"Anasayfa",
       "dx.title":"Analiz",
       "dx.sub":"Soruları mümkün olduğunca somut cevapla. Değerlendirme ve rapor otomatik olarak oluşturulur.",
       "dx.s1":"Bağlam","dx.s2":"Hızlı tarama","dx.s3":"Kesinleştirme soruları",
@@ -1023,7 +1026,7 @@
       "fb.q3":"3) Puan (0–10)","fb.hint":"0 = faydasız · 10 = çok faydalı","fb.send":"Gönder"
     },
     en: {
-      "nav.how":"How it works","nav.why":"Why MDG","nav.faq":"FAQ","cta.backHome":"Home",
+      "nav.how":"How it works","nav.why":"Why Moral des Gleichgewichts","nav.faq":"FAQ","cta.backHome":"Home",
       "dx.title":"Diagnosis",
       "dx.sub":"Answer the questions as concretely as possible. Assessment and report are then generated.",
       "dx.s1":"Context","dx.s2":"Quick Scan","dx.s3":"Precision Questions",
@@ -1418,79 +1421,140 @@
   }
 
   /* ── quick scan cards ───────────────────── */
-  const QS_DATA = {
-    de: [
-      { id: "sLoad",      q: "Wie ist die Last verteilt?",
-        a: [ { v:1, l:"Gleichmäßig", hint:"Niemand ist strukturell überlastet." },
-             { v:4, l:"Ungleich",    hint:"Einzelne tragen deutlich mehr als andere." },
-             { v:6, l:"Engpass",     hint:"Das System hängt an 1–2 Personen." } ] },
-      { id: "sDecisions", q: "Wie werden Entscheidungen getroffen?",
-        a: [ { v:1, l:"Klar & schnell",  hint:"Jeder weiß, wer was entscheidet." },
-             { v:4, l:"Langsam",          hint:"Viele Abstimmungsrunden, kaum Klarheit." },
-             { v:6, l:"Blockiert",        hint:"Entscheidungen stauen sich oder passieren gar nicht." } ] },
-      { id: "sEnergy",    q: "Wie ist der Energiezustand?",
-        a: [ { v:1, l:"Stabil",       hint:"Fehler werden offen besprochen und genutzt." },
-             { v:4, l:"Erschöpft",    hint:"Initiative sinkt, Fehler werden vermieden." },
-             { v:6, l:"Ausgebrannt",  hint:"Niemand zeigt Probleme, alle reagieren defensiv." } ] },
-      { id: "sGrowth",    q: "Wie kommt die Struktur mit Komplexität mit?",
-        a: [ { v:1, l:"Kontrolliert",   hint:"Struktur und Wachstum sind synchron." },
-             { v:4, l:"Überdehnt",      hint:"Prozesse werden regelmäßig überholt." },
-             { v:6, l:"Überwältigt",    hint:"Niemand hat mehr den vollen Überblick." } ] },
-      { id: "sPower",     q: "Wie sind Macht und Verantwortung verteilt?",
-        a: [ { v:1, l:"Gekoppelt",    hint:"Wer verantwortlich ist, kann auch entscheiden." },
-             { v:4, l:"Verschoben",   hint:"Manche tragen Verantwortung ohne Entscheidungsmacht." },
-             { v:6, l:"Entkoppelt",   hint:"Wer entscheidet, trägt die Konsequenzen nicht." } ] }
-    ],
-    tr: [
-      { id: "sLoad",      q: "Yük nasıl dağılmış?",
-        a: [ { v:1, l:"Dengeli",     hint:"Kimse yapısal olarak aşırı yüklü değil." },
-             { v:4, l:"Dengesiz",    hint:"Bazıları diğerlerinden çok daha fazla yük taşıyor." },
-             { v:6, l:"Darboğaz",    hint:"Sistem 1–2 kişiye bağlı." } ] },
-      { id: "sDecisions", q: "Kararlar nasıl alınıyor?",
-        a: [ { v:1, l:"Net & hızlı",   hint:"Herkes kimin ne kararı verdiğini biliyor." },
-             { v:4, l:"Yavaş",         hint:"Çok tur onay, az netlik." },
-             { v:6, l:"Bloke",         hint:"Kararlar birikyor ya da alınmıyor." } ] },
-      { id: "sEnergy",    q: "Enerji durumu nasıl?",
-        a: [ { v:1, l:"Dengeli",      hint:"Hatalar açıkça tartışılıyor ve öğrenme kaynağı." },
-             { v:4, l:"Tükenmiş",     hint:"İnisiyatif azalıyor, hatalardan kaçınılıyor." },
-             { v:6, l:"Yanmış",       hint:"Kimse sorun çıkarmıyor, herkes savunmacı." } ] },
-      { id: "sGrowth",    q: "Yapı karmaşıklıkla ne kadar başa çıkıyor?",
-        a: [ { v:1, l:"Kontrollü",   hint:"Yapı ve büyüme senkron." },
-             { v:4, l:"Zorlanıyor",  hint:"Süreçler düzenli olarak aşılıyor." },
-             { v:6, l:"Ezilmiş",     hint:"Artık kimsenin tam genel görünümü yok." } ] },
-      { id: "sPower",     q: "Güç ve sorumluluk nasıl dağılmış?",
-        a: [ { v:1, l:"Uyumlu",    hint:"Sorumlu olan karar da verebiliyor." },
-             { v:4, l:"Kaymış",    hint:"Bazıları karar yetkisi olmadan sorumluluk taşıyor." },
-             { v:6, l:"Ayrılmış",  hint:"Karar veren sonuçları taşımıyor." } ] }
-    ],
-    en: [
-      { id: "sLoad",      q: "How is load distributed?",
-        a: [ { v:1, l:"Evenly",      hint:"Nobody is structurally overloaded." },
-             { v:4, l:"Uneven",      hint:"Some carry significantly more than others." },
-             { v:6, l:"Bottleneck",  hint:"The system depends on 1–2 people." } ] },
-      { id: "sDecisions", q: "How are decisions made?",
-        a: [ { v:1, l:"Clear & fast",  hint:"Everyone knows who decides what." },
-             { v:4, l:"Slow",           hint:"Many alignment rounds, little clarity." },
-             { v:6, l:"Blocked",        hint:"Decisions pile up or don't happen at all." } ] },
-      { id: "sEnergy",    q: "What is the energy level?",
-        a: [ { v:1, l:"Stable",      hint:"Errors are openly discussed and learned from." },
-             { v:4, l:"Drained",     hint:"Initiative falls, errors are avoided." },
-             { v:6, l:"Burned out",  hint:"Nobody surfaces problems, everyone reacts defensively." } ] },
-      { id: "sGrowth",    q: "How well does structure keep up with complexity?",
-        a: [ { v:1, l:"Controlled",   hint:"Structure and growth are in sync." },
-             { v:4, l:"Overstretched", hint:"Processes are regularly overtaken." },
-             { v:6, l:"Overwhelmed",  hint:"Nobody has a complete overview anymore." } ] },
-      { id: "sPower",     q: "How are power and responsibility distributed?",
-        a: [ { v:1, l:"Coupled",     hint:"Those responsible can also decide." },
-             { v:4, l:"Shifted",     hint:"Some carry responsibility without decision authority." },
-             { v:6, l:"Decoupled",   hint:"Those who decide don't bear the consequences." } ] }
-    ]
-  };
+  function getQsData(lang, currentMode) {
+    const T3 = (de, tr, en) => lang==="tr" ? tr : lang==="en" ? en : de;
+
+    // ── PRIVAT ───────────────────────────────────────────────────
+    const qs_private = [
+      { id:"sLoad",      q: T3("Wie viel passiert gleichzeitig?","Aynı anda ne kadar çok şey oluyor?","How much is happening at once?"),
+        a: [ { v:1, l:T3("Überschaubar","Yönetilebilir","Manageable"),  hint:T3("Du kommst durch – mit Luft zum Atmen.","Üstesinden geliyorsun – biraz nefes alma payın var.","You get through – with room to breathe.") },
+             { v:4, l:T3("Viel",        "Fazla",          "A lot"),      hint:T3("Vieles gleichzeitig – Puffer schwindet.","Aynı anda çok şey – tampon azalıyor.","Many things at once – buffer is shrinking.") },
+             { v:6, l:T3("Zu viel",     "Çok fazla",      "Too much"),   hint:T3("Kein Raum mehr – alles zieht gleichzeitig.","Artık alan yok – her şey aynı anda çekiyor.","No room left – everything pulls at once.") } ] },
+      { id:"sDecisions", q: T3("Wie klar weißt du was du willst?","Ne istediğini ne kadar net biliyorsun?","How clearly do you know what you want?"),
+        a: [ { v:1, l:T3("Klar",      "Net",        "Clear"),     hint:T3("Du weißt wohin – auch wenn der Weg noch offen ist.","Nereye gittiğini biliyorsun – yol henüz açık olsa da.","You know where to go – even if the path is still open.") },
+             { v:4, l:T3("Unklar",    "Belirsiz",   "Unclear"),   hint:T3("Mehrere Richtungen – du schwankst zwischen ihnen.","Birden fazla yön – aralarında gidip geliyorsun.","Multiple directions – you're wavering between them.") },
+             { v:6, l:T3("Orientierungslos","Yönünü kaybetmiş","Lost"), hint:T3("Du weißt nicht mehr was du wirklich willst.","Ne gerçekten istediğini artık bilmiyorsun.","You no longer know what you really want.") } ] },
+      { id:"sEnergy",    q: T3("Wie ist dein Energiezustand?","Enerji durumun nasıl?","What is your energy level?"),
+        a: [ { v:1, l:T3("Stabil",      "Dengeli",     "Stable"),    hint:T3("Du kannst geben ohne leer zu werden.","Boşalmadan verebiliyorsun.","You can give without becoming empty.") },
+             { v:4, l:T3("Erschöpft",   "Yorgun",      "Drained"),   hint:T3("Die Energie reicht noch – aber der Puffer ist dünn.","Enerji hâlâ yeterli – ama tampon ince.","Energy still sufficient – but the buffer is thin.") },
+             { v:6, l:T3("Leer",        "Boşalmış",    "Empty"),     hint:T3("Du funktionierst noch – aber von innen ist kaum noch was da.","Hâlâ işliyorsun – ama içten neredeyse hiçbir şey kalmadı.","Still functioning – but inside there's barely anything left.") } ] },
+      { id:"sGrowth",    q: T3("Wie sehr zieht dich die Situation?","Durum seni ne kadar çekiyor?","How much does the situation pull at you?"),
+        a: [ { v:1, l:T3("Kaum",        "Pek az",      "Barely"),    hint:T3("Es ist da – aber du kannst es loslassen.","Var – ama bırakabiliyorsun.","It's there – but you can let it go.") },
+             { v:4, l:T3("Spürbar",     "Hissedilir",  "Noticeably"),hint:T3("Du denkst oft daran – auch wenn du eigentlich woanders bist.","Sık sık düşünüyorsun – başka yerde olsan bile.","You think about it often – even when you're elsewhere.") },
+             { v:6, l:T3("Ständig",     "Sürekli",     "Constantly"),hint:T3("Es lässt dich nicht los – auch nachts oder in Ruhemomenten.","Bırakmıyor – geceleri ya da dinlenme anlarında bile.","It won't let you go – even at night or in quiet moments.") } ] },
+      { id:"sPower",     q: T3("Wie viel Handlungsspielraum hast du?","Ne kadar hareket alanın var?","How much room to act do you have?"),
+        a: [ { v:1, l:T3("Viel",        "Fazla",       "A lot"),     hint:T3("Du kannst entscheiden und handeln – niemand blockiert dich.","Karar verip harekete geçebiliyorsun – kimse seni bloke etmiyor.","You can decide and act – nobody is blocking you.") },
+             { v:4, l:T3("Begrenzt",    "Sınırlı",     "Limited"),   hint:T3("Manche Optionen sind offen – andere fühlen sich nicht realisierbar an.","Bazı seçenekler açık – diğerleri gerçekleştirilemez gibi hissettiriyor.","Some options are open – others don't feel achievable.") },
+             { v:6, l:T3("Keiner",      "Hiç yok",     "None"),      hint:T3("Du trägst die Last – aber die Entscheidungen liegen woanders.","Yükü taşıyorsun – ama kararlar başka yerde.","You carry the load – but decisions lie elsewhere.") } ] }
+    ];
+
+    // ── EMPLOYEE ─────────────────────────────────────────────────
+    const qs_employee = [
+      { id:"sLoad",      q: T3("Wie viel nimmt die Arbeit von dir?","İş senden ne kadar alıyor?","How much does work take from you?"),
+        a: [ { v:1, l:T3("Angemessen","Uygun",      "Appropriate"), hint:T3("Die Arbeit fordert – aber gibt auch zurück.","İş talep ediyor – ama karşılığını da veriyor.","Work demands – but also gives back.") },
+             { v:4, l:T3("Zu viel",  "Çok fazla",  "Too much"),    hint:T3("Mehr raus als rein – der Akku lädt nicht mehr richtig auf.","Dışarı çıkan içeriye girenden fazla – pil artık tam şarj olmuyor.","More going out than in – the battery no longer charges properly.") },
+             { v:6, l:T3("Alles",    "Her şeyi",   "Everything"),  hint:T3("Kaum noch Energie für etwas außerhalb der Arbeit.","İşin dışındaki şeyler için neredeyse enerji kalmadı.","Barely any energy for anything outside work.") } ] },
+      { id:"sDecisions", q: T3("Wie klar ist deine Entscheidung?","Kararın ne kadar net?","How clear is your decision?"),
+        a: [ { v:1, l:T3("Klar",     "Net",        "Clear"),    hint:T3("Du weißt innerlich was du willst – hast es nur noch nicht umgesetzt.","İçinde ne istediğini biliyorsun – henüz uygulamadın.","You know inside what you want – just haven't acted yet.") },
+             { v:4, l:T3("Unklar",   "Belirsiz",   "Unclear"),  hint:T3("Bleiben und Gehen haben beide echte Argumente – du kommst nicht raus.","Kalmak ve gitmek her ikisinin de gerçek argümanları var – çıkamıyorsun.","Both staying and leaving have real arguments – you can't get out.") },
+             { v:6, l:T3("Blockiert","Bloke",      "Blocked"),  hint:T3("Du weißt es eigentlich – aber irgendetwas hält dich davon ab zu handeln.","Aslında biliyorsun – ama bir şey harekete geçmeni engelliyor.","You actually know – but something prevents you from acting.") } ] },
+      { id:"sEnergy",    q: T3("Wie ist dein Energiezustand bei der Arbeit?","İşteki enerji durumun nasıl?","What is your energy level at work?"),
+        a: [ { v:1, l:T3("Stabil",    "Dengeli",  "Stable"),   hint:T3("Du gehst rein und kommst nicht leer raus.","Giriyorsun ve boş çıkmıyorsun.","You go in and don't come out empty.") },
+             { v:4, l:T3("Erschöpft","Yorgun",    "Drained"),  hint:T3("Die Motivation sinkt – es kostet mehr als es bringt.","Motivasyon düşüyor – getirdiğinden fazlasına mal oluyor.","Motivation is falling – it costs more than it gives.") },
+             { v:6, l:T3("Ausgebrannt","Yanmış",  "Burned out"),hint:T3("Die Arbeit ist zur reinen Last geworden.","İş salt bir yüke dönüştü.","Work has become a pure burden.") } ] },
+      { id:"sGrowth",    q: T3("Wie gut passt die Rolle zu dir?","Rol sana ne kadar uyuyor?","How well does the role fit you?"),
+        a: [ { v:1, l:T3("Gut",      "İyi",       "Well"),     hint:T3("Was du tust entspricht dem was du kannst und willst.","Yaptığın şey yapabildiğinle ve istediğinle örtüşüyor.","What you do matches what you can and want.") },
+             { v:4, l:T3("Teilweise","Kısmen",    "Partly"),   hint:T3("Manche Teile passen – andere fühlen sich falsch an.","Bazı kısımlar uyuyor – diğerleri yanlış hissettiriyor.","Some parts fit – others feel wrong.") },
+             { v:6, l:T3("Gar nicht","Hiç",       "Not at all"),hint:T3("Du bist falsch am Platz – die Rolle ist nicht für dich.","Yanlış yerdesin – bu rol senin için değil.","You're in the wrong place – the role is not for you.") } ] },
+      { id:"sPower",     q: T3("Wie viel kannst du in deiner Arbeit selbst entscheiden?","İşinde ne kadar kendi kararlarını verebiliyorsun?","How much can you decide for yourself in your work?"),
+        a: [ { v:1, l:T3("Viel",     "Fazla",     "A lot"),    hint:T3("Du hast Autonomie – Entscheidungen liegen bei dir.","Özerkliğin var – kararlar sende.","You have autonomy – decisions rest with you.") },
+             { v:4, l:T3("Wenig",    "Az",        "Little"),   hint:T3("Vieles wird vorgegeben – du hast wenig Gestaltungsspielraum.","Çoğu şey dikte ediliyor – çok az tasarım alanın var.","Much is dictated – you have little room to shape things.") },
+             { v:6, l:T3("Keines",   "Hiç yok",   "None"),     hint:T3("Du führst aus – aber hast keinen Einfluss auf das Was oder Wie.","Uyguluyorsun – ama ne ya da nasıl üzerinde hiç etkinn yok.","You execute – but have no influence on what or how.") } ] }
+    ];
+
+    // ── TEAM ─────────────────────────────────────────────────────
+    const qs_team = [
+      { id:"sLoad",      q: T3("Wie ist die Last im Team verteilt?","Ekipte yük nasıl dağılmış?","How is load distributed in the team?"),
+        a: [ { v:1, l:T3("Gleichmäßig","Dengeli",   "Evenly"),     hint:T3("Niemand trägt strukturell mehr als andere.","Kimse yapısal olarak diğerlerinden fazla taşımıyor.","Nobody carries structurally more than others.") },
+             { v:4, l:T3("Ungleich",   "Dengesiz",  "Unevenly"),   hint:T3("Einzelne tragen deutlich mehr – ohne dass es klar adressiert wird.","Bazıları belirgin şekilde daha fazla taşıyor – açıkça ele alınmadan.","Some carry noticeably more – without it being clearly addressed.") },
+             { v:6, l:T3("Engpass",    "Darboğaz",  "Bottleneck"), hint:T3("Das Team hängt an 1–2 Personen – Ausfall wäre kritisch.","Ekip 1–2 kişiye bağlı – çıkmaları kritik olur.","The team depends on 1–2 people – their absence would be critical.") } ] },
+      { id:"sDecisions", q: T3("Wie klar sind Entscheidungsrechte im Team?","Ekipte karar hakları ne kadar net?","How clear are decision rights in the team?"),
+        a: [ { v:1, l:T3("Klar",       "Net",       "Clear"),   hint:T3("Jeder weiß wer was entscheidet – ohne Rückfragen.","Herkes kimin ne kararı verdiğini biliyor – sormadan.","Everyone knows who decides what – without asking.") },
+             { v:4, l:T3("Gemischt",   "Karışık",   "Mixed"),   hint:T3("Meistens klar – bei bestimmten Themen entsteht Verwirrung.","Çoğunlukla net – belirli konularda kafa karışıklığı oluşuyor.","Usually clear – confusion arises with certain topics.") },
+             { v:6, l:T3("Unklar",     "Belirsiz",  "Unclear"), hint:T3("Entscheidungen entstehen durch Zufall oder Lautstärke – nicht Klarheit.","Kararlar şans ya da ses yüksekliğiyle alınıyor – netlikle değil.","Decisions happen by chance or loudness – not clarity.") } ] },
+      { id:"sEnergy",    q: T3("Wie offen geht das Team mit Problemen um?","Ekip sorunlarla ne kadar açık başa çıkıyor?","How openly does the team deal with problems?"),
+        a: [ { v:1, l:T3("Offen",      "Açık",      "Open"),    hint:T3("Probleme kommen auf den Tisch – ohne Angst vor Konsequenzen.","Sorunlar masaya geliyor – sonuç korkusu olmadan.","Problems come to the table – without fear of consequences.") },
+             { v:4, l:T3("Selektiv",   "Seçici",    "Selective"),hint:T3("Manche Dinge werden besprochen – andere lieber vermieden.","Bazı şeyler konuşuluyor – diğerleri kaçınılıyor.","Some things are discussed – others preferred to be avoided.") },
+             { v:6, l:T3("Vermeidend", "Kaçınan",   "Avoidant"),hint:T3("Spannungen bleiben unausgesprochen – alle wissen es, niemand sagt es.","Gerilimler söylenmez kalıyor – herkes biliyor, kimse söylemiyor.","Tensions remain unspoken – everyone knows, nobody says it.") } ] },
+      { id:"sGrowth",    q: T3("Wie gut stimmt das Team im Tempo überein?","Ekip hız uyumunda ne kadar uyumlu?","How well does the team align on pace?"),
+        a: [ { v:1, l:T3("Synchron",   "Senkron",   "In sync"),  hint:T3("Alle arbeiten im selben Rhythmus – Übergaben funktionieren.","Herkes aynı ritimde çalışıyor – devirler işliyor.","Everyone works in the same rhythm – handoffs work.") },
+             { v:4, l:T3("Teilweise",  "Kısmen",    "Partly"),   hint:T3("Meistens passt es – gelegentlich entstehen Staus durch unterschiedliches Tempo.","Çoğunlukla uyuyor – zaman zaman farklı tempodan tıkanmalar oluşuyor.","Usually fine – occasionally bottlenecks from different paces.") },
+             { v:6, l:T3("Auseinander","Ayrışmış",  "Misaligned"),hint:T3("Unterschiedliches Tempo blockiert ständig – Frustration auf allen Seiten.","Farklı tempo sürekli bloke ediyor – her tarafta hayal kırıklığı.","Different paces constantly block – frustration on all sides.") } ] },
+      { id:"sPower",     q: T3("Wie sind Verantwortung und Entscheidungsmacht verteilt?","Sorumluluk ve karar yetkisi nasıl dağılmış?","How are responsibility and decision authority distributed?"),
+        a: [ { v:1, l:T3("Gekoppelt",  "Bağlı",     "Coupled"),  hint:T3("Wer verantwortlich ist, kann auch entscheiden.","Sorumlu olan karar da verebiliyor.","Those responsible can also decide.") },
+             { v:4, l:T3("Verschoben", "Kaymış",    "Shifted"),  hint:T3("Manche tragen Verantwortung ohne die nötige Entscheidungsmacht.","Bazıları gerekli karar yetkisi olmadan sorumluluk taşıyor.","Some carry responsibility without the necessary decision authority.") },
+             { v:6, l:T3("Entkoppelt", "Ayrışmış",  "Decoupled"),hint:T3("Wer entscheidet, trägt die Konsequenzen nicht.","Karar veren sonuçları taşımıyor.","Those who decide don't bear the consequences.") } ] }
+    ];
+
+    // ── RELATIONSHIP ─────────────────────────────────────────────
+    const qs_relationship = [
+      { id:"sLoad",      q: T3("Wie ist die emotionale Last verteilt?","Duygusal yük nasıl dağılmış?","How is the emotional load distributed?"),
+        a: [ { v:1, l:T3("Ausgeglichen","Dengeli",    "Balanced"),  hint:T3("Beide tragen – niemand trägt alles allein.","Her ikisi de taşıyor – kimse her şeyi tek başına taşımıyor.","Both carry – nobody carries everything alone.") },
+             { v:4, l:T3("Ungleich",    "Dengesiz",   "Uneven"),    hint:T3("Eine Seite trägt mehr – das wird selten offen besprochen.","Bir taraf daha fazla taşıyor – bu nadiren açıkça konuşuluyor.","One side carries more – this is rarely openly discussed.") },
+             { v:6, l:T3("Einseitig",   "Tek taraflı","One-sided"), hint:T3("Eine Person trägt fast alles – auf Dauer nicht tragbar.","Bir kişi neredeyse her şeyi taşıyor – uzun vadede sürdürülemez.","One person carries almost everything – not sustainable long-term.") } ] },
+      { id:"sDecisions", q: T3("Wie werden gemeinsame Entscheidungen getroffen?","Ortak kararlar nasıl alınıyor?","How are shared decisions made?"),
+        a: [ { v:1, l:T3("Gemeinsam",  "Birlikte",  "Together"),  hint:T3("Beide kommen zu Wort – und beide fühlen sich gehört.","Her ikisi de söz hakkı alıyor – ve her ikisi de duyulduğunu hissediyor.","Both get a say – and both feel heard.") },
+             { v:4, l:T3("Teilweise",  "Kısmen",    "Partly"),    hint:T3("Manche Entscheidungen werden geteilt – andere von einer Seite dominiert.","Bazı kararlar paylaşılıyor – diğerleri bir tarafça domine ediliyor.","Some decisions are shared – others dominated by one side.") },
+             { v:6, l:T3("Einseitig",  "Tek yönlü", "One-sided"), hint:T3("Eine Seite entscheidet meistens – die andere zieht mit oder zieht sich zurück.","Bir taraf çoğunlukla karar veriyor – diğeri ya kabul ediyor ya çekiliyor.","One side usually decides – the other goes along or withdraws.") } ] },
+      { id:"sEnergy",    q: T3("Wie fühlen sich Gespräche über das Problem an?","Sorun hakkındaki konuşmalar nasıl hissettiriyor?","How do conversations about the problem feel?"),
+        a: [ { v:1, l:T3("Offen",      "Açık",      "Open"),    hint:T3("Ihr könnt darüber reden ohne dass es eskaliert.","Tırmanmadan konuşabiliyorsunuz.","You can talk about it without it escalating.") },
+             { v:4, l:T3("Angespannt", "Gergin",    "Tense"),   hint:T3("Das Thema ist schwer anzusprechen – Gespräche enden oft frustrierend.","Konuyu dile getirmek zor – konuşmalar çoğunlukla hayal kırıklığıyla bitiyor.","The topic is hard to raise – conversations often end in frustration.") },
+             { v:6, l:T3("Vermieden",  "Kaçınılan", "Avoided"), hint:T3("Das Thema wird gar nicht mehr angesprochen – zu schmerzhaft oder sinnlos.","Konu artık hiç gündeme getirilmiyor – çok acı verici ya da anlamsız.","The topic is no longer raised at all – too painful or pointless.") } ] },
+      { id:"sGrowth",    q: T3("Wie lange besteht dieses Muster schon?","Bu örüntü ne süredir devam ediyor?","How long has this pattern existed?"),
+        a: [ { v:1, l:T3("Neu",        "Yeni",      "New"),     hint:T3("Relativ frisch – noch kein verfestigter Kreislauf.","Nispeten taze – henüz yerleşik bir döngü yok.","Relatively fresh – no entrenched cycle yet.") },
+             { v:4, l:T3("Einige Monate","Birkaç ay","Months"),  hint:T3("Es hat sich eingespielt – gelegentliche Verbesserungen aber kein Durchbruch.","Yerleşti – ara sıra iyileşmeler var ama kırılma yok.","It has set in – occasional improvements but no breakthrough.") },
+             { v:6, l:T3("Lange",      "Uzun süredir","Long"),   hint:T3("Das ist fast normal geworden – beide haben sich irgendwie arrangiert.","Bu neredeyse normal hale geldi – her ikisi de bir şekilde düzenledi.","This has almost become normal – both have somehow arranged themselves.") } ] },
+      { id:"sPower",     q: T3("Wie fühlt sich die Machtverteilung an?","Güç dağılımı nasıl hissettiriyor?","How does the power distribution feel?"),
+        a: [ { v:1, l:T3("Ausgeglichen","Dengeli",   "Balanced"), hint:T3("Beide haben Einfluss – keiner dominiert dauerhaft.","Her ikisi de etkili – kimse kalıcı olarak domine etmiyor.","Both have influence – neither dominates permanently.") },
+             { v:4, l:T3("Verschoben", "Kaymış",    "Shifted"),  hint:T3("Eine Seite hat mehr Einfluss auf den Verlauf – die andere passt sich an.","Bir tarafın süreç üzerinde daha fazla etkisi var – diğeri uyum sağlıyor.","One side has more influence over the course – the other adapts.") },
+             { v:6, l:T3("Einseitig",  "Tek taraflı","One-sided"),hint:T3("Eine Person bestimmt – die andere folgt oder kämpft dagegen an.","Bir kişi belirliyor – diğeri takip ediyor ya da karşı mücadele ediyor.","One person determines – the other follows or fights against it.") } ] }
+    ];
+
+    // ── BUSINESS ─────────────────────────────────────────────────
+    const qs_business = [
+      { id:"sLoad",      q: T3("Wie ist die Last verteilt?","Yük nasıl dağılmış?","How is load distributed?"),
+        a: [ { v:1, l:T3("Gleichmäßig","Dengeli",   "Evenly"),    hint:T3("Niemand ist strukturell überlastet.","Kimse yapısal olarak aşırı yüklü değil.","Nobody is structurally overloaded.") },
+             { v:4, l:T3("Ungleich",   "Dengesiz",  "Uneven"),    hint:T3("Einzelne tragen deutlich mehr als andere.","Bazıları diğerlerinden belirgin şekilde daha fazla taşıyor.","Some carry significantly more than others.") },
+             { v:6, l:T3("Engpass",    "Darboğaz",  "Bottleneck"),hint:T3("Das System hängt an 1–2 Personen.","Sistem 1–2 kişiye bağlı.","The system depends on 1–2 people.") } ] },
+      { id:"sDecisions", q: T3("Wie werden Entscheidungen getroffen?","Kararlar nasıl alınıyor?","How are decisions made?"),
+        a: [ { v:1, l:T3("Klar & schnell","Net & hızlı","Clear & fast"), hint:T3("Jeder weiß wer was entscheidet.","Herkes kimin ne kararı verdiğini biliyor.","Everyone knows who decides what.") },
+             { v:4, l:T3("Langsam",       "Yavaş",      "Slow"),         hint:T3("Viele Abstimmungsrunden, kaum Klarheit.","Çok tur onay, az netlik.","Many alignment rounds, little clarity.") },
+             { v:6, l:T3("Blockiert",     "Bloke",      "Blocked"),      hint:T3("Entscheidungen stauen sich oder passieren gar nicht.","Kararlar birikyor ya da alınmıyor.","Decisions pile up or don't happen at all.") } ] },
+      { id:"sEnergy",    q: T3("Wie ist der Energiezustand?","Enerji durumu nasıl?","What is the energy level?"),
+        a: [ { v:1, l:T3("Stabil",     "Dengeli",  "Stable"),   hint:T3("Fehler werden offen besprochen und genutzt.","Hatalar açıkça tartışılıyor ve kullanılıyor.","Errors are openly discussed and used as learning.") },
+             { v:4, l:T3("Erschöpft",  "Tükenmiş", "Drained"),  hint:T3("Initiative sinkt, Fehler werden vermieden.","İnisiyatif azalıyor, hatalardan kaçınılıyor.","Initiative falls, errors are avoided.") },
+             { v:6, l:T3("Ausgebrannt","Yanmış",   "Burned out"),hint:T3("Niemand zeigt Probleme, alle reagieren defensiv.","Kimse sorun göstermiyor, herkes savunmacı tepki veriyor.","Nobody surfaces problems, everyone reacts defensively.") } ] },
+      { id:"sGrowth",    q: T3("Wie kommt die Struktur mit Komplexität mit?","Yapı karmaşıklıkla ne kadar başa çıkıyor?","How well does structure keep up with complexity?"),
+        a: [ { v:1, l:T3("Kontrolliert", "Kontrollü","Controlled"),   hint:T3("Struktur und Wachstum sind synchron.","Yapı ve büyüme senkron.","Structure and growth are in sync.") },
+             { v:4, l:T3("Überdehnt",    "Zorlanıyor","Overstretched"),hint:T3("Prozesse werden regelmäßig überholt.","Süreçler düzenli olarak aşılıyor.","Processes are regularly overtaken.") },
+             { v:6, l:T3("Überwältigt",  "Ezilmiş",  "Overwhelmed"),  hint:T3("Niemand hat mehr den vollen Überblick.","Artık kimsenin tam genel görünümü yok.","Nobody has a complete overview anymore.") } ] },
+      { id:"sPower",     q: T3("Wie sind Macht und Verantwortung verteilt?","Güç ve sorumluluk nasıl dağılmış?","How are power and responsibility distributed?"),
+        a: [ { v:1, l:T3("Gekoppelt",  "Bağlı",    "Coupled"),  hint:T3("Wer verantwortlich ist, kann auch entscheiden.","Sorumlu olan karar da verebiliyor.","Those responsible can also decide.") },
+             { v:4, l:T3("Verschoben", "Kaymış",   "Shifted"),  hint:T3("Manche tragen Verantwortung ohne Entscheidungsmacht.","Bazıları karar yetkisi olmadan sorumluluk taşıyor.","Some carry responsibility without decision authority.") },
+             { v:6, l:T3("Entkoppelt", "Ayrışmış", "Decoupled"),hint:T3("Wer entscheidet, trägt die Konsequenzen nicht.","Karar veren sonuçları taşımıyor.","Those who decide don't bear the consequences.") } ] }
+    ];
+
+    if (currentMode === "business")      return qs_business;
+    if (currentMode === "team")          return qs_team;
+    if (currentMode === "employee")      return qs_employee;
+    if (currentMode === "relationship")  return qs_relationship;
+    return qs_private;
+  }
 
   function renderQuickScan(lang) {
     const container = document.getElementById("quickScanCards");
     if (!container) return;
-    const data = QS_DATA[lang] || QS_DATA.de;
+    const data = getQsData(lang, mode);
     container.innerHTML = "";
     data.forEach(item => {
       const card = document.createElement("div");
@@ -1596,10 +1660,11 @@
   function buildPayload() {
     const radios = {};
     $$('input[type="radio"]:checked').forEach(r => { radios[r.name] = r.value; });
+    const isPaid = ["business","team","relationship","employee"].includes(mode);
     return {
       version: "v4",
       mode,
-      token:   mode==="business" ? tokenStored : undefined,
+      token:   isPaid ? tokenStored : undefined,
       lang:    getLang(),
       problem: ($("#oneLiner").value || "").trim(),
       intent:  $("#goalSelect").value,
