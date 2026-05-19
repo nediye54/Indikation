@@ -1051,7 +1051,7 @@
       body: JSON.stringify({ token })
     });
     const data = await res.json().catch(()=>({}));
-    return { ok: Boolean(data?.ok), mode: data?.mode };
+    return { ok: Boolean(data?.ok), mode: data?.mode, type: data?.type };
   }
 
   /* ── modal helpers ── */
@@ -1081,10 +1081,10 @@
     if (!r.ok) { status.textContent = dict[lang]["err.invalid"]; return; }
     status.textContent = dict[lang]["ok"];
     const mode = r.mode || "employee";
-    ["mdg_mode","mdg_business_ok","mdg_business_token"].forEach(k => {
-      const v = k==="mdg_mode" ? mode : k==="mdg_business_ok" ? "1" : token;
+    [["mdg_mode", mode], ["mdg_business_ok", "1"], ["mdg_business_token", token], ["mdg_token_type", r.type || "personal"]].forEach(([k,v]) => {
       ss.setItem(k,v); ls.setItem(k,v);
     });
+    ss.removeItem("mdg_sub_mode"); ls.removeItem("mdg_sub_mode");
     setTimeout(() => { window.location.href = `./diagnose.html?mode=${mode}&lang=${lang}`; }, 350);
   });
   document.getElementById("personalTokenInput").addEventListener("keydown", e => {
@@ -1108,10 +1108,10 @@
     if (!r.ok) { status.textContent = dict[lang]["err.invalid"]; return; }
     status.textContent = dict[lang]["ok"];
     const mode = r.mode || "business";
-    ["mdg_mode","mdg_business_ok","mdg_business_token"].forEach(k => {
-      const v = k==="mdg_mode" ? mode : k==="mdg_business_ok" ? "1" : token;
+    [["mdg_mode", mode], ["mdg_business_ok", "1"], ["mdg_business_token", token], ["mdg_token_type", r.type || "org"]].forEach(([k,v]) => {
       ss.setItem(k,v); ls.setItem(k,v);
     });
+    ss.removeItem("mdg_sub_mode"); ls.removeItem("mdg_sub_mode");
     setTimeout(() => { window.location.href = `./diagnose.html?mode=${mode}&lang=${lang}`; }, 350);
   });
   document.getElementById("orgTokenInput").addEventListener("keydown", e => {
