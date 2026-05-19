@@ -909,7 +909,6 @@
     else if (mode !== "private" && (storedMode === "employee" || storedMode === "relationship")) { showSubModePicker("personal"); }
     else if (mode !== "private" && (storedMode === "business" || storedMode === "team")) { showSubModePicker("org"); }
   }
-  }
 
   // If team/relationship mode with session, show member onboarding
   if ((mode === "team" || mode === "relationship") && teamSession) {
@@ -1618,10 +1617,11 @@
   /* ── KPI pills ───────────────────────────── */
   function resetKpis(lang) {
     const k = dict[lang] || dict.de;
-    $("#kpiPrimary").textContent = k["kpi.primary"] + ": —";
-    $("#kpiPath").textContent    = k["kpi.path"]    + ": —";
-    $("#kpiRisk").textContent    = k["kpi.risk"]    + ": —";
-    [$('#kpiPrimary'),$('#kpiPath'),$('#kpiRisk')].forEach(el => el?.classList.remove("active"));
+    const p = $("#kpiPrimary"), pa = $("#kpiPath"), r = $("#kpiRisk");
+    if (p) p.textContent = k["kpi.primary"] + ": —";
+    if (pa) pa.textContent = k["kpi.path"]  + ": —";
+    if (r) r.textContent  = k["kpi.risk"]   + ": —";
+    [p, pa, r].forEach(el => el?.classList.remove("active"));
   }
   function setKpis(lang, data) {
     const k = dict[lang] || dict.de;
